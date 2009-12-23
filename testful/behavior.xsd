@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" targetNamespace="http://home.dei.polimi.it/miraz/testful/behavior" xmlns:ns1="http://home.dei.polimi.it/miraz/testful" xmlns:tns="http://home.dei.polimi.it/miraz/testful/behavior" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:import namespace="http://home.dei.polimi.it/miraz/testful" schemaLocation="schema2.xsd"/>
+
+  <xs:complexType name="behavior">
+    <xs:complexContent>
+      <xs:extension base="ns1:extra">
+        <xs:sequence>
+          <xs:element name="abstraction" type="tns:abstraction" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="abstraction">
+    <xs:sequence/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+    <xs:attribute name="range" type="xs:string" use="required"/>
+    <xs:attribute name="function" type="xs:string"/>
+  </xs:complexType>
+</xs:schema>
+
