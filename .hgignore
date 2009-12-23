@@ -1,0 +1,7 @@
+syntax: glob
+
+*~
+./.metadata/
+*/bin/
+*/build/
+*/run/
