@@ -41,7 +41,7 @@ public class OptimalTestCreator {
 	 * 
 	 * @param test the test with coverage
 	 * @return true if the test is "innovative" (achieves higher coverage
-	 *         criteria), false otherwize.
+	 *         criteria), false otherwise.
 	 */
 	public boolean update(TestCoverage test) {
 		boolean innovative = false;

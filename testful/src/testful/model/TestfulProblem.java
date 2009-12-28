@@ -4,7 +4,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.Serializable;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -260,7 +266,6 @@ public class TestfulProblem implements Serializable {
 
 		try {
 			Test test = createTest(ops);
-			//			return runnerCaching.execute(finder, reloadClasses, test, data);
 			return runnerCaching.executeParts(finder, reloadClasses, test, data);
 		} catch(Exception e) {
 			throw new TestfulException(e);
@@ -282,6 +287,24 @@ public class TestfulProblem implements Serializable {
 			throw new TestfulException(e);
 		}
 	}
+
+	public Collection<TestCoverage> evaluate(Collection<Test> tests) throws InterruptedException {
+		Map<Test, Future<ElementManager<String, CoverageInformation>>> futures = new LinkedHashMap<Test, Future<ElementManager<String,CoverageInformation>>>();
+		for(Test t : tests)
+			futures.put(t, runnerCaching.executeParts(finder, reloadClasses, t, data));
+
+		Collection<TestCoverage> ret = new ArrayList<TestCoverage>();
+		for (Entry<Test, Future<ElementManager<String, CoverageInformation>>> f : futures.entrySet()) {
+			try {
+				ret.add(new TestCoverage(f.getKey(), f.getValue().get()));
+			} catch (ExecutionException e) {
+				System.err.println("Error valuating test: " + e);
+			}
+		}
+
+		return ret;
+	}
+
 
 	public Test createTest(List<Operation> ops) {
 		return new Test(cluster, refFactory, ops.toArray(new Operation[ops.size()]));

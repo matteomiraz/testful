@@ -7,14 +7,14 @@ public class Configuration {
 	private final String dirBase;
 
 	public Configuration(String baseDir) {
-		if(baseDir == null) this.dirBase = "cut";
-		else this.dirBase = baseDir;
+		if(baseDir == null) dirBase = "cut";
+		else dirBase = baseDir;
 	}
-	
+
 	public Configuration() {
 		this(null);
 	}
-	
+
 	private String cut;
 	public void setCut(String cut) throws TestfulException {
 		if(cut == null || cut.trim().length() <= 0) throw new TestfulException("You must specify the class name");
@@ -47,5 +47,10 @@ public class Configuration {
 	/** classes instrumented */
 	public String getDirInstrumented() {
 		return dirBase + File.separator + "instrumented";
+	}
+
+	/** generated tests */
+	public String getDirGeneratedTests() {
+		return dirBase + File.separator + "genTests";
 	}
 }
