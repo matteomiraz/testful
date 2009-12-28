@@ -35,7 +35,7 @@ public class TestfulProblem implements Serializable {
 	public static class TestfulConfig extends Configuration {
 		public final Fitness fitness = new Fitness();
 		public final Cluster cluster = new Cluster();
-		
+
 		public TestfulConfig() {
 			super();
 		}
@@ -43,7 +43,7 @@ public class TestfulProblem implements Serializable {
 		public TestfulConfig(String baseDir) {
 			super(baseDir);
 		}
-		
+
 		public static class Fitness {
 			public boolean toMinimize;
 			public boolean len;
@@ -53,47 +53,47 @@ public class TestfulProblem implements Serializable {
 			public boolean brd;
 			public boolean brn;
 		}
-		
+
 		public static class Cluster {
 			private String[] aux;
 			private int repoSize;
 			private int repoCutSize;
-			
+
 			public void setAux(String[] aux) {
 				this.aux = aux;
 			}
-			
+
 			public void setRepoSize(int repoSize) {
 				this.repoSize = repoSize;
 			}
-			
+
 			public void setRepoCutSize(int repoCutSize) {
 				this.repoCutSize = repoCutSize;
 			}
-			
+
 			public String[] getAux() {
 				return aux;
 			}
-			
+
 			public int getRepoSize() {
 				return repoSize;
 			}
-			
+
 			public int getRepoCutSize() {
 				return repoCutSize;
 			}
 		}
 	}
-	
+
 	private final int numObjs;
 
 	private TestfulConfig config;
-	
+
 	private TestCluster cluster;
 	private ReferenceFactory refFactory;
 
 	private final AnalysisWhiteBox whiteAnalysis;
-	
+
 	private final RunnerCaching runnerCaching;
 
 	/** cumulative number of invocations */
@@ -115,7 +115,7 @@ public class TestfulProblem implements Serializable {
 
 	public TestfulProblem(IRunner runner, boolean enableCache, boolean reloadClasses, TestfulConfig config) throws TestfulException {
 		this.config = config;
-		this.runnerCaching = new RunnerCaching(runner, enableCache);
+		runnerCaching = new RunnerCaching(runner, enableCache);
 		this.reloadClasses = reloadClasses;
 
 		try {
@@ -124,7 +124,7 @@ public class TestfulProblem implements Serializable {
 			cluster = new TestCluster(tcl, config);
 			cluster.clearCache();
 
-			whiteAnalysis = AnalysisWhiteBox.read(config.getDirInstrumented(), config.getCut()); 
+			whiteAnalysis = AnalysisWhiteBox.read(config.getDirInstrumented(), config.getCut());
 			data = Utils.readData(whiteAnalysis);
 
 		} catch(ClassNotFoundException e) {
@@ -134,10 +134,10 @@ public class TestfulProblem implements Serializable {
 			throw new TestfulException(e);
 		}
 
-		numObjs = (config.fitness.len ? 1 : 0) + 
-							(config.fitness.bug ? 1 : 0) + 
-							(config.fitness.bbd ? 1 : 0) + (config.fitness.bbd ? 1 : 0) + 
-							(config.fitness.brd ? 1 : 0) + (config.fitness.brn ? 1 : 0); 
+		numObjs = (config.fitness.len ? 1 : 0) +
+		(config.fitness.bug ? 1 : 0) +
+		(config.fitness.bbd ? 1 : 0) + (config.fitness.bbd ? 1 : 0) +
+		(config.fitness.brd ? 1 : 0) + (config.fitness.brn ? 1 : 0);
 
 		refFactory = new ReferenceFactory(cluster, config.cluster.repoCutSize, config.cluster.repoSize);
 
@@ -165,14 +165,14 @@ public class TestfulProblem implements Serializable {
 	public RunnerCaching getRunnerCaching() {
 		return runnerCaching;
 	}
-	
+
 	public AnalysisWhiteBox getWhiteAnalysis() {
 		return whiteAnalysis;
 	}
-	
+
 	public void doneGeneration(int num) {
-		this.generationNumber = num;
-		
+		generationNumber = num;
+
 		runnerCaching.updateCacheScore();
 
 		optimal.write();
@@ -180,11 +180,11 @@ public class TestfulProblem implements Serializable {
 		for(Tracker tracker : trackers)
 			tracker.write();
 	}
-	
+
 	public int getGenerationNumber() {
 		return generationNumber;
 	}
-	
+
 	public float[] evaluate(long gen, List<Operation> ops, ElementManager<String, CoverageInformation> infos) {
 		float[] ret = new float[numObjs];
 
@@ -237,11 +237,11 @@ public class TestfulProblem implements Serializable {
 				i++;
 			}
 
-			if(config.fitness.len) { 
-				CoverageInformation cov = infos.get(TestSizeInformation.KEY);
+			if(config.fitness.len) {
+				TestSizeInformation cov = (TestSizeInformation) infos.get(TestSizeInformation.KEY);
 				if(cov != null) {
-					final float q = cov.getQuality() - (float) Math.log(covTot);
-					ret[0] = config.fitness.toMinimize ? q : -1.0f * q;
+					cov.setOtherCovs(covTot);
+					ret[0] = config.fitness.toMinimize ? -1.0f * cov.getQuality() : cov.getQuality();
 				}
 			}
 
@@ -260,7 +260,7 @@ public class TestfulProblem implements Serializable {
 
 		try {
 			Test test = createTest(ops);
-//			return runnerCaching.execute(finder, reloadClasses, test, data);
+			//			return runnerCaching.execute(finder, reloadClasses, test, data);
 			return runnerCaching.executeParts(finder, reloadClasses, test, data);
 		} catch(Exception e) {
 			throw new TestfulException(e);

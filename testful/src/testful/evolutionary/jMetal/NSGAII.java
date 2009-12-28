@@ -205,8 +205,8 @@ public class NSGAII<V extends Variable>
         
         //TBD: rifare con prob uniforme
         final float k = 0.5f;
-        final float po = INHERIT_PROBABILITY * n / (n + f*(k - 1.0f));
-        final float pf = po > .5 ? 1 : k * po; 
+        final float pf = k * INHERIT_PROBABILITY * n / (n + f*(k - 1.0f));
+        final float po = (pf / k) >= 1 ? 1 : pf / k;
         
         int presi = 0;
         

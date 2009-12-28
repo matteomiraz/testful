@@ -6,10 +6,11 @@
 
 	<!-- classes loaded using the TestfulClassLoader -->
 	<patternset id="testfulClassLoader">
+		<include name="testful/coverage/TestSizeInformation.class" />
 		<include name="testful/coverage/**/*.class" />
 		<exclude name="testful/coverage/TrackerDatum.class"/>
 		<exclude name="testful/coverage/**/*Instrumenter*.class"/>
-
+		
 		<include name="testful/model/**/*.class"/>
 		<include name="jmetal/base/Variable.class"/>
 
@@ -31,6 +32,7 @@
 	<patternset id="runner">
 	    <include name="testful/coverage/TrackerDatum*.class"/>
 	    <include name="testful/coverage/RunnerCaching*.class"/>
+		
 	    <include name="testful/runner/**"/>
 	    <include name="testful/utils/**"/>
 	    <include name="testful/*.class"/>
@@ -42,7 +44,8 @@
 	<!-- classes needed for generating and running tests -->
 	<patternset id="auto">
 		<patternset refid="runner"/>
-		
+		<include name="testful/coverage/TestSizeInformation.clazz" />
+		<include name="testful/coverage/TestSizeInformation.class" />
 		<include name="testful/coverage/**/*.clazz"/>
 		<include name="testful/coverage/CoverageExecutionManager*.class"/>
 		<include name="testful/coverage/CoverageInformation*.class"/>
