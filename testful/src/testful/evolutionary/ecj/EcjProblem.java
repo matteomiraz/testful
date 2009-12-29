@@ -42,7 +42,7 @@ public class EcjProblem extends FutureProblem implements SimpleProblemForm {
 	public static final String PROP_RELOAD_CLASSES = "reload";
 
 	public static final String PROP_ENABLE_CACHE = "enable-cache";
-	
+
 	private int lastGen = 0;
 
 	/**
@@ -52,7 +52,7 @@ public class EcjProblem extends FutureProblem implements SimpleProblemForm {
 	//private static final Map<String, CoverageInformation> bugCoverage = new FastMap<String, CoverageInformation>();
 
 	private TestfulProblem problem;
-	
+
 	@Override
 	public void setup(final EvolutionState state, final Parameter base) {
 		super.setup(state, base);
@@ -87,17 +87,17 @@ public class EcjProblem extends FutureProblem implements SimpleProblemForm {
 		else repoSize = 4;
 
 		boolean enableCache = state.parameters.getBoolean(base.push(PROP_ENABLE_CACHE), def.push(PROP_ENABLE_CACHE), false);
-		
+
 		IRunner executor = Launcher.getSingleton().getExecutor();
 		try {
-			TestfulProblem.TestfulConfig config = new TestfulProblem.TestfulConfig();
+			TestfulProblem.TestfulConfig config = new TestfulProblem.TestfulConfig("cut");
 
 			VariableGeneVectorIndividual.MAX_SIZE = maxIndSize;
-			
+
 			config.setCut(cut);
 			config.cluster.setRepoSize(repoSize);
 			config.cluster.setRepoCutSize(repoCutSize);
-			
+
 			config.fitness.toMinimize = false;
 			config.fitness.len = fitness_len;
 			config.fitness.bug = fitness_bug;
@@ -105,7 +105,7 @@ public class EcjProblem extends FutureProblem implements SimpleProblemForm {
 			config.fitness.bbn = fitness_bbn;
 			config.fitness.brd = fitness_brd;
 			config.fitness.brn = fitness_brn;
-			
+
 			problem = new TestfulProblem(executor, enableCache, reloadClasses, config);
 
 			((EcjInitializer) state.initializer).setProblem(problem);

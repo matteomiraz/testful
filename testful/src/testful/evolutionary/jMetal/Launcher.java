@@ -176,7 +176,7 @@ public class Launcher {
 
 		final TestfulProblem.TestfulConfig config;
 		if (opt.baseDir != null) config = new TestfulProblem.TestfulConfig(opt.baseDir);
-		else config = new TestfulProblem.TestfulConfig();
+		else config = new TestfulProblem.TestfulConfig("cut");
 
 		config.setCut(opt.cut);
 		config.cluster.setRepoSize(opt.auxSize);
@@ -245,14 +245,6 @@ public class Launcher {
 		/* evaluate small tests */
 		Collection<TestCoverage> testCoverage = problem.evaluate(parts);
 
-		{
-			int i = 0;
-			JUnitTestGenerator gen = new JUnitTestGenerator(config);
-			gen.executeTests();
-			for(Test t : testCoverage)
-				gen.read(File.separator + "TestBase" + i++, t);
-		}
-
 		/* select best small tests */
 		OptimalTestCreator optimal = new OptimalTestCreator();
 		for (TestCoverage tc : testCoverage)
@@ -263,9 +255,9 @@ public class Launcher {
 		JUnitTestGenerator gen = new JUnitTestGenerator(config);
 		gen.executeTests();
 		for(Test t : optimal.get())
-			gen.read(File.separator + "TestFul" + i++, t);
+			gen.read(File.separator + "Ful_" + getClassName(config.getCut()) + "_" + i++, t);
 
-		gen.writeSuite(getPackageName(config.getCut()), "AllTests");
+		gen.writeSuite(getPackageName(config.getCut()), "AllTests_" + getClassName(config.getCut()));
 	}//main
 
 	private static String getPackageName(String className) {
@@ -278,4 +270,11 @@ public class Launcher {
 		}
 		return pkgBuilder.toString();
 	}
-} // NSGAII_main
+
+	private static String getClassName(String className) {
+		if(!className.contains(".")) return className;
+
+		String[] parts = className.split("\\.");
+		return parts[parts.length - 1];
+	}
+}

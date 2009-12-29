@@ -2,17 +2,23 @@ package testful;
 
 import java.io.File;
 
+/**
+ * Stores the configuration of the project being tested
+ * 
+ * @author matteo
+ */
 public class Configuration {
 
+	/** the base directory (e.g. $HOME/workspace/project/ ) */
 	private final String dirBase;
 
+	/**
+	 * Create the description for a project
+	 * @param baseDir the base directory (e.g. $HOME/workspace/project/ )
+	 */
 	public Configuration(String baseDir) {
 		if(baseDir == null) dirBase = "cut";
 		else dirBase = baseDir;
-	}
-
-	public Configuration() {
-		this((String) null);
 	}
 
 	protected Configuration(Configuration c) {

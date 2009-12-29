@@ -35,11 +35,11 @@ public class TestCoverageReporter extends TestReader {
 	public TestCoverageReporter(Configuration config) throws TestfulException {
 		try {
 			this.config = config;
-			
+
 			exec = RunnerPool.createExecutor(null, false);
 
 			finder = new ClassFinderCaching(new ClassFinderImpl(new File(config.getDirInstrumented()), new File(config.getDirJml()), new File(config.getDirVanilla())));
-			
+
 		} catch(RemoteException e) {
 			// never happens
 			throw new TestfulException(e);
@@ -50,7 +50,7 @@ public class TestCoverageReporter extends TestReader {
 		try {
 			testful.TestFul.printHeader("Test coverage reporter");
 
-			TestCoverageReporter coverage = new TestCoverageReporter(new Configuration());
+			TestCoverageReporter coverage = new TestCoverageReporter(new Configuration("cut"));
 			coverage.read(args);
 		} catch(TestfulException e) {
 			System.err.println("Error: " + e.getMessage());
@@ -65,7 +65,7 @@ public class TestCoverageReporter extends TestReader {
 			OperationPrimitiveResult.remove(test);
 
 			TrackerDatum[] data= Utils.readData(AnalysisWhiteBox.read(config.getDirInstrumented(), test.getCluster().getCut().getClassName()));
-			
+
 			Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = CoverageExecutionManager.getContext(finder, test, data);
 			Future<ElementManager<String, CoverageInformation>> future = exec.execute(ctx);
 			ElementManager<String, CoverageInformation> coverage = future.get();

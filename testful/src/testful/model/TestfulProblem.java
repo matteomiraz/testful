@@ -42,10 +42,6 @@ public class TestfulProblem implements Serializable {
 		public final Fitness fitness = new Fitness();
 		public final Cluster cluster = new Cluster();
 
-		public TestfulConfig() {
-			super();
-		}
-
 		public TestfulConfig(String baseDir) {
 			super(baseDir);
 		}

@@ -66,8 +66,8 @@ public class TestReducer extends TestReader {
 	private Configuration config;
 
 	private void init() {
-		this.config = new Configuration();
-		
+		config = new Configuration("cut");
+
 		if(simplify) try {
 			IRunner executor = RunnerPool.createExecutor(null, false);
 			ClassFinder finder = new ClassFinderCaching(new ClassFinderImpl(new File(config.getDirJml()), new File(config.getDirVanilla())));

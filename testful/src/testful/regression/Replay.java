@@ -41,7 +41,7 @@ public class Replay extends TestReader {
 	public static void main(String[] args) {
 		testful.TestFul.printHeader("Regression Testing");
 
-		Replay replay = new Replay(new Configuration());
+		Replay replay = new Replay(new Configuration("cut"));
 		CmdLineParser parser = new CmdLineParser(replay);
 
 		try {
