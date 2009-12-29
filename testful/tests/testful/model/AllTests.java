@@ -8,7 +8,9 @@ public class AllTests {
 	public static Test suite() {
 		TestSuite suite = new TestSuite("Test for testful.model");
 		//$JUnit-BEGIN$
-		suite.addTestSuite(ExecutorTestCase.class);
+		//suite.addTestSuite(ExecutorTestCase.class);
+
+		suite.addTestSuite(OptimalTestCase.class);
 
 		suite.addTestSuite(Test_removeUselessDefsTestCase.class);
 		suite.addTestSuite(Test_getSSATestCase.class);

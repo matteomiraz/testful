@@ -50,6 +50,10 @@ public class TestfulProblem implements Serializable {
 			super(baseDir);
 		}
 
+		public TestfulConfig(Configuration config) {
+			super(config);
+		}
+
 		public static class Fitness {
 			public boolean toMinimize;
 			public boolean len;

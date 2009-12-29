@@ -12,7 +12,12 @@ public class Configuration {
 	}
 
 	public Configuration() {
-		this(null);
+		this((String) null);
+	}
+
+	protected Configuration(Configuration c) {
+		dirBase = c.dirBase;
+		cut = c.cut;
 	}
 
 	private String cut;

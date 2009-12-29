@@ -55,7 +55,7 @@ public class TestSizeInformation implements CoverageInformation {
 
 	@Override
 	public boolean contains(CoverageInformation other) {
-		return false;
+		return true;
 	}
 
 	@Override
@@ -73,5 +73,11 @@ public class TestSizeInformation implements CoverageInformation {
 
 		if(len > 1)
 			quality = 1.0f*covTot*covTot / (float) Math.log(len);
+	}
+
+	@Override
+	public String toString() {
+		if(quality > 0) return String.format("Length: %d, Time: %d, Quality: %.2f", length, time, quality);
+		else return String.format("Length: %d, Time: %d", length, time);
 	}
 }

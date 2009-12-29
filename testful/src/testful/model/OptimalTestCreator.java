@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 import java.util.zip.GZIPOutputStream;
 
 import testful.coverage.CoverageInformation;
+import testful.coverage.TestSizeInformation;
 import testful.utils.ElementManager;
 import testful.utils.TestfulLogger;
 
@@ -47,6 +48,8 @@ public class OptimalTestCreator {
 		boolean innovative = false;
 
 		for(CoverageInformation coverage : test.getCoverage()) {
+			if(coverage instanceof TestSizeInformation) continue;
+
 			String key = coverage.getKey();
 			CoverageInformation combined = combinedCoverage.get(key);
 			if(combined == null) {

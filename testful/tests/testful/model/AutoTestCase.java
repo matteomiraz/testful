@@ -24,10 +24,7 @@ public abstract class AutoTestCase extends GenericTestCase {
 
 	protected String[] getCuts() {
 		return new String[] {
-				"statemachine.Hard",
-				"statemachine.SimpleImpl",
-				"prova.Coffee"
-//				"apache.Fraction"
+				"dummy.Simple",
 		};
 	}
 
@@ -49,14 +46,14 @@ public abstract class AutoTestCase extends GenericTestCase {
 
 	protected void check(Test t, Operation[][] expected) throws Exception {
 		List<Test> tests = perform(t);
-		
+
 		System.out.println("original:");
 		for(Operation o : t.getTest()) {
 			final OperationInformation info = o.getInfo(OperationPosition.KEY);
 			System.out.println((info!=null?info:"") + "\t" + o);
 		}
 		System.out.println("---");
-		
+
 		System.out.println("Modified: " + tests.size());
 		for(Test t1 : tests) {
 			for(Operation o : t1.getTest()) {
@@ -71,10 +68,10 @@ public abstract class AutoTestCase extends GenericTestCase {
 		Operation[][] actual = new Operation[tests.size()][];
 		for(int i = 0; i < actual.length; i++)
 			actual[i] = tests.get(i).getTest();
-		
+
 		Arrays.sort(expected, dummyTestComparator);
 		Arrays.sort(actual, dummyTestComparator);
-		
+
 		for(int i = 0; i < expected.length; i++) {
 			assertEquals("Test " + i + ": wrong result size", expected[i].length, actual[i].length);
 			for(int j = 0; j < expected[i].length; j++)
@@ -85,11 +82,11 @@ public abstract class AutoTestCase extends GenericTestCase {
 		@Override
 		public int compare(Operation[] o1, Operation[] o2) {
 			if(o1.length != o2.length) return o1.length - o2.length;
-			
+
 			return Arrays.hashCode(o1) - Arrays.hashCode(o2);
 		}
 	};
-	
+
 	protected boolean autoTest(String cut, int size, long seed) throws Exception {
 		System.out.print("Testing " + cut + " with " + size + " operations with seed: " + seed);
 		System.out.flush();

@@ -13,7 +13,7 @@ import testful.runner.TestfulClassLoader;
 public class ExecutorTestCase extends GenericTestCase {
 
 	public void testBehavior1() throws Exception {
-		TestfulConfig config = new TestfulConfig();
+		TestfulConfig config = new TestfulConfig(GenericTestCase.config);
 		config.setCut("dummy.WhiteSample");
 		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
 		ReferenceFactory refFactory = new ReferenceFactory(cluster, 4, 4);
@@ -55,7 +55,7 @@ public class ExecutorTestCase extends GenericTestCase {
 	}
 
 	public void testBehavior2() throws Exception {
-		TestfulConfig config = new TestfulConfig();
+		TestfulConfig config = new TestfulConfig(GenericTestCase.config);
 		config.setCut("dummy.WhiteSample");
 		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
 		ReferenceFactory refFactory = new ReferenceFactory(cluster, 4, 4);

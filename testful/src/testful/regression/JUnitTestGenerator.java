@@ -7,7 +7,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
+
 import testful.Configuration;
+import testful.TestfulException;
 import testful.coverage.CoverageInformation;
 import testful.model.AssignPrimitive;
 import testful.model.Clazz;
@@ -29,7 +34,17 @@ import testful.runner.RunnerPool;
 
 public class JUnitTestGenerator extends TestReader {
 
-	private static final boolean EXECUTE = false;
+	@Option(required = false, name = "-execute", usage = "Should I re-execute the test?")
+	private boolean execute;
+
+	@Option(required = false, name = "-contracts", usage = "Should I use JML contracts?")
+	private boolean contracts;
+
+	@Option(required = true, name = "-test", usage = "The test to convert", multiValued=true)
+	private List<String> tests;
+
+	@Option(required = false, name = "-baseDir", usage = "Specify the CUT's base directory")
+	private String baseDir;
 
 	private List<String> suite = new ArrayList<String>();
 
@@ -41,16 +56,54 @@ public class JUnitTestGenerator extends TestReader {
 	public static void main(String[] args) {
 		testful.TestFul.printHeader("Regression Testing");
 
-		JUnitTestGenerator gen = new JUnitTestGenerator(new Configuration());
-		gen.read(args);
-		gen.writeSuite("", "AllTests");
+		try {
+			new JUnitTestGenerator(args);
+		} catch (TestfulException e) {
+			System.err.println("Unable to generate JUnit tests: " + e.getMessage());
+		}
 
-		System.out.println("done");
 		System.exit(0);
+	}
+
+	public void executeTests() {
+		execute = true;
+	}
+
+	public void useContracts() {
+		contracts = true;
+	}
+
+	private JUnitTestGenerator(String[] args) throws TestfulException {
+		CmdLineParser parser = new CmdLineParser(this);
+
+		try {
+			// parse the arguments.
+			parser.parseArgument(args);
+
+			config = new Configuration(baseDir);
+
+			executor = RunnerPool.createExecutor(null, false);
+			simplifier = new TestSimplifier(executor, new ClassFinderImpl(new File(config.getDirInstrumented())));
+
+			read(tests);
+			writeSuite("", "AllTests");
+
+		} catch(CmdLineException e) {
+			System.err.println(e.getMessage());
+			System.err.println("java " + JUnitTestGenerator.class.getCanonicalName() + " [options...] arguments...");
+			parser.printUsage(System.err);
+			System.err.println();
+
+			// print option sample. This is useful some time
+			System.err.println("   Example: java " + JUnitTestGenerator.class.getCanonicalName() + parser.printExample(org.kohsuke.args4j.ExampleMode.REQUIRED));
+
+			throw new TestfulException("Invalid command line");
+		}
 	}
 
 	public JUnitTestGenerator(Configuration config) {
 		this.config = config;
+
 		executor = RunnerPool.createExecutor(null, false);
 		simplifier = new TestSimplifier(executor, new ClassFinderImpl(new File(config.getDirInstrumented())));
 	}
@@ -59,7 +112,7 @@ public class JUnitTestGenerator extends TestReader {
 	public void read(String fileName, Test t) {
 		PrintWriter out = null;
 		try {
-			if(EXECUTE) {
+			if(execute) {
 				t = simplifier.analyze(t);
 				t.getCluster().clearCache();
 			}
@@ -85,7 +138,9 @@ public class JUnitTestGenerator extends TestReader {
 			out.println("public class " + testName + " extends junit.framework.TestCase {");
 			out.println();
 			out.println("\tprivate static final float EPSILON = 0.001f;");
-			out.println("\tprivate boolean withContracts;");
+
+			if(contracts) out.println("\tprivate boolean withContracts;");
+
 			out.println();
 
 			writeInit(out, t);
@@ -107,7 +162,7 @@ public class JUnitTestGenerator extends TestReader {
 		}
 	}
 
-	private static void writeTest(PrintWriter out, int testNum, Test test) {
+	private void writeTest(PrintWriter out, int testNum, Test test) {
 		out.println("\tpublic void testFul" + testNum + "() throws Exception {");
 		out.println();
 
@@ -128,12 +183,20 @@ public class JUnitTestGenerator extends TestReader {
 				if(status == null) {
 					if(op instanceof Invoke || op instanceof CreateObject) {
 						out.println("\t\ttry {");
-						out.println("\t\t\t" + op + ";");
+						out.println("\t\t\t" + op + "; // " + i);
 						out.println("\t\t} catch(Throwable e) {");
-						out.println("\t\t\tif(!withContracts) System.err.println(e);");
-						out.println("\t\t\telse if(e instanceof org.jmlspecs.jmlrac.runtime.JMLAssertionError && !(e instanceof org.jmlspecs.jmlrac.runtime.JMLPreconditionError)) fail(e.getMessage());");
+
+
+						if(contracts) {
+							out.println("\t\t\tif(!withContracts) System.err.println(e);");
+							out.println("\t\t\telse if(e instanceof org.jmlspecs.jmlrac.runtime.JMLAssertionError && !(e instanceof org.jmlspecs.jmlrac.runtime.JMLPreconditionError)) fail(e.getMessage());");
+						} else {
+							out.println("\t\t\tSystem.err.println(\"" + i + ") \" + e);");
+						}
+
+
 						out.println("\t\t}");
-					} else out.println("\t\t" + op + ";");
+					} else out.println("\t\t" + op + "; // " + i);
 
 				} else if(status.getStatus() == Status.SUCCESSFUL) {
 					out.println("\t\t" + op + ";");
@@ -196,14 +259,16 @@ public class JUnitTestGenerator extends TestReader {
 		out.println("\t}");
 	}
 
-	private static void writeInit(PrintWriter out, Test test) {
+	private void writeInit(PrintWriter out, Test test) {
 		for(Reference ref : test.getReferenceFactory().getReferences())
 			out.println("\tprivate " + ref.getClazz().getClassName() + " " + ref.toString() + ";");
 		out.println();
 
 		out.println("\tprivate void init() {");
-		out.println("\t\tthis.withContracts = org.jmlspecs.jmlrac.runtime.JMLCheckable.class.isAssignableFrom(" + test.getCluster().getCut().getClassName() + ".class);");
-		//		out.println("\t\tSystem.out.println(\"Running with JML contracts: \" + this.withContracts);");
+
+		if(contracts)
+			out.println("\t\tthis.withContracts = org.jmlspecs.jmlrac.runtime.JMLCheckable.class.isAssignableFrom(" + test.getCluster().getCut().getClassName() + ".class);");
+
 		for(Reference ref : test.getReferenceFactory().getReferences())
 			out.println("\t\t" + ref.toString() + " =  null;");
 		out.println("\t}");

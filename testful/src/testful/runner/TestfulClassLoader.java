@@ -23,6 +23,7 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 	/** for these classes force to use the testful classloader */
 	private static final String[] TESTFUL_CLASSES = {
 		"testful.utils.Cloner",
+		"testful.model.TestExecutionManager",
 		"testful.mutation.MutationExecutionManager",
 		"testful.mutation.MutationExecutionManagerSingle",
 		"testful.mutation.MutationExecutionManagerSingle$TestThread",

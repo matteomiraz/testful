@@ -45,11 +45,11 @@ public class ClassFinderImpl implements ClassFinder {
 				try {
 					byte[] ret = ByteReader.readBytes(w);
 					if(ret != null) {
-						logger.fine("(" + key + ") serving class " + name + " from " + w);
+						logger.info("(" + key + ") serving class " + name + " from " + w);
 						return ret;
 					}
 				} catch(IOException e) {
-					logger.warning("(" + key + ") " + "cannot load class " + name + " from " + w + ": " + e.getMessage());
+					// logger.warning("(" + key + ") " + "cannot load class " + name + " from " + w + ": " + e.getMessage());
 				}
 			}
 		}
@@ -62,7 +62,7 @@ public class ClassFinderImpl implements ClassFinder {
 				try {
 					byte[] ret = ByteReader.readBytes(resource.openStream());
 					if(ret != null) {
-						logger.fine("(" + key + ") serving class " + name + " from " + resource);
+						logger.info("(" + key + ") serving class " + name + " from " + resource);
 						return ret;
 					}
 				} catch(IOException e) {
