@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project default="create_jars" name="TestFul">
 
-	<property name="base" value="build"/>
-	<property name="build" value="${base}/build"/>
+	<property name="artefacts" value="build"/>
+	<property name="build" value="bin"/>
 
 	<!-- classes loaded using the TestfulClassLoader -->
 	<patternset id="testfulClassLoader">
@@ -92,20 +92,21 @@
           target: clean              
          ================================= -->
     <target name="clean" depends="" description="Clean all">
+    	<delete dir="${artefacts}"/>
     	<delete dir="${build}"/>
+    	<mkdir dir="${build}"/>
     </target>
 
 	<!-- ================================= 
           target: create_jars              
          ================================= -->
-    <target name="create_jars" depends="create_instrumenter_jar,create_runner_jar,create_junitCreator_jar,create_testful_jar,create_randomTest_jar" description="Creater executable jars">
+    <target name="create_jars" depends="create_instrumenter_jar,create_runner_jar,create_testful_jar,create_randomTest_jar" description="Creater executable jars">
     </target>
 
 	<!-- ================================= 
           target: compile              
          ================================= -->
     <target name="compile" depends="" description="Compile classes">
-
     	<mkdir dir="${build}"/>
 
     	<unjar dest="${build}" overwrite="false">
@@ -135,7 +136,8 @@
           target: create_instrumenter_jar              
          ================================= -->
     <target name="create_instrumenter_jar" depends="compile" description="Crete runnable jar for instrumenter">
-        <jar destfile="${base}/instrumenter.jar" filesetmanifest="mergewithoutmain">
+    	<mkdir dir="${artefacts}"/>
+        <jar destfile="${artefacts}/instrumenter.jar" filesetmanifest="mergewithoutmain">
             <manifest>
                 <attribute name="Built-By" value="${user.name}"/>
                 <attribute name="Main-Class" value="testful.coverage.Launcher"/>
@@ -166,7 +168,8 @@
           target: create_runner_jar              
          ================================= -->
     <target name="create_runner_jar" depends="compile" description="Crete the runner">
-        <jar destfile="${base}/runner.jar" filesetmanifest="mergewithoutmain">
+    	<mkdir dir="${artefacts}"/>
+        <jar destfile="${artefacts}/runner.jar" filesetmanifest="mergewithoutmain">
             <manifest>
                 <attribute name="Built-By" value="${user.name}"/>
                 <attribute name="Main-Class" value="testful.runner.Launcher"/>
@@ -182,7 +185,8 @@
           target: create_junitCreator_jar              
          ================================= -->
     <target name="create_junitCreator_jar" depends="compile" description="Crete the runner">
-        <jar destfile="${base}/junitCreator.jar" filesetmanifest="mergewithoutmain">
+    	<mkdir dir="${artefacts}"/>
+        <jar destfile="${artefacts}/junitCreator.jar" filesetmanifest="mergewithoutmain">
             <manifest>
                 <attribute name="Built-By" value="${user.name}"/>
                 <attribute name="Main-Class" value="testful.regression.JUnitTestGenerator"/>
@@ -201,7 +205,8 @@
           target: create_randomTest_jar              
          ================================= -->
     <target name="create_randomTest_jar" depends="compile" description="Crete runnable jar for random testing">
-        <jar destfile="${base}/randomTest.jar" filesetmanifest="mergewithoutmain" compress="true" index="true">
+    	<mkdir dir="${artefacts}"/>
+        <jar destfile="${artefacts}/randomTest.jar" filesetmanifest="mergewithoutmain" compress="true" index="true">
             <manifest>
                 <attribute name="Built-By" value="${user.name}"/>
                 <attribute name="Main-Class" value="testful.random.Launcher"/>
@@ -220,7 +225,8 @@
           target: create_testful_jar              
          ================================= -->
     <target name="create_testful_jar" depends="compile" description="Crete runnable jar for testful">
-        <jar destfile="${base}/testful.jar" filesetmanifest="mergewithoutmain">
+    	<mkdir dir="${artefacts}"/>
+        <jar destfile="${artefacts}/testful.jar" filesetmanifest="mergewithoutmain">
             <manifest>
                 <attribute name="Built-By" value="${user.name}"/>
                 <attribute name="Main-Class" value="testful.evolutionary.jMetal.Launcher"/>
@@ -238,31 +244,12 @@
     </target>
 	
 	<!-- ================================= 
-          target: create_testful_SPEA2_jar              
-         ================================= -->
-    <target name="create_testful_SPEA2_jar" depends="compile" description="Crete runnable jar for testful">
-        <jar destfile="${base}/testful-SPEA2.jar" filesetmanifest="mergewithoutmain">
-            <manifest>
-                <attribute name="Built-By" value="${user.name}"/>
-                <attribute name="Main-Class" value="testful.evolutionary.ecj.Launcher"/>
-                <attribute name="Class-Path" value="."/>
-            </manifest>
-			<fileset dir="${build}">
-				<patternset>
-					<patternset refid="auto"/>
-					<include name="ec/**/*.class"/>
-					<include name="testful/evolutionary/ecj/**/*.class"/>
-				</patternset>
-			</fileset>
-        </jar>
-    </target>
-	
-	<!-- ================================= 
           target: javadoc              
          ================================= -->
     <target name="javadoc" depends="compile" description="Create the javadoc">
+    	<mkdir dir="${artefacts}"/>
     	<javadoc
-    	           destdir="${base}/docs/api"
+    	           destdir="${artefacts}/docs/api"
     	           author="true"
     	           version="true"
     	           use="true"
@@ -296,5 +283,4 @@
     		<link href="http://www.cs.gmu.edu/~eclab/projects/ecj/docs/classdocs/"/>
     	  </javadoc>
     </target>
-
 </project>

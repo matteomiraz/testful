@@ -11,12 +11,6 @@
 	<classpathentry kind="lib" path="lib/ecj.jar"/>
 	<classpathentry kind="lib" path="lib/polyglotclasses-1.3.5.jar"/>
 	<classpathentry kind="lib" path="lib/jmetal.jar"/>
-	<classpathentry kind="lib" path="build/build">
-		<accessrules>
-			<accessrule kind="accessible" pattern="**/*.clazz"/>
-			<accessrule kind="nonaccessible" pattern="**/*.class"/>
-		</accessrules>
-	</classpathentry>
 	<classpathentry kind="lib" path="lib/paddle-nightly.jar"/>
 	<classpathentry kind="lib" path="lib/jasminclasses-nightly.jar"/>
 	<classpathentry kind="lib" path="lib/jedd-runtime-nightly.jar"/>
