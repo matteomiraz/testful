@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import testful.ConfigCut;
 import testful.GenericTestCase;
 import testful.coverage.whiteBox.ConditionTargetDatum;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
@@ -21,7 +22,6 @@ import testful.model.Reference;
 import testful.model.ReferenceFactory;
 import testful.model.Test;
 import testful.model.TestCluster;
-import testful.model.TestfulProblem.TestfulConfig;
 import testful.runner.TestfulClassLoader;
 import testful.utils.ElementManager;
 
@@ -48,7 +48,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 
 	@Override
 	protected void setUp() throws Exception {
-		TestfulConfig config = new TestfulConfig(GenericTestCase.config);
+		ConfigCut config = new ConfigCut(GenericTestCase.config);
 		config.setCut("dummy.WhiteSample");
 		cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
 		refFactory = new ReferenceFactory(cluster, 2, 1);

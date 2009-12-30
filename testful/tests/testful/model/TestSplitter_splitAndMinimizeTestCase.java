@@ -18,7 +18,7 @@ public class TestSplitter_splitAndMinimizeTestCase extends AutoTestCase {
 
 	@Override
 	protected List<Test> perform(Test test) throws Exception {
-		IRunner exec = RunnerPool.createExecutor(null, false);
+		IRunner exec = RunnerPool.createExecutor("test", configRunner);
 
 		TrackerDatum[] data = Utils.readData(AnalysisWhiteBox.read(config.getDirInstrumented(), test.getCluster().getCut().getClassName()));
 

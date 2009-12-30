@@ -2,8 +2,8 @@ package testful.model;
 
 import java.util.List;
 
+import testful.ConfigCut;
 import testful.GenericTestCase;
-import testful.model.TestfulProblem.TestfulConfig;
 import testful.runner.TestfulClassLoader;
 
 /**
@@ -18,7 +18,7 @@ public class TestSplitter_splitTestCase extends AutoTestCase {
 	}
 
 	public void testHardStatemachine1() throws Exception {
-		TestfulConfig config = new TestfulConfig(GenericTestCase.config);
+		ConfigCut config = new ConfigCut(GenericTestCase.config);
 		config.setCut("dummy.StateMachine");
 		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
 		ReferenceFactory refFactory = new ReferenceFactory(cluster, 1, 2);
@@ -121,7 +121,7 @@ public class TestSplitter_splitTestCase extends AutoTestCase {
 	}
 
 	public void testHardStatemachine2() throws Exception {
-		TestfulConfig config = new TestfulConfig(GenericTestCase.config);
+		ConfigCut config = new ConfigCut(GenericTestCase.config);
 		config.setCut("dummy.StateMachine");
 		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
 		ReferenceFactory refFactory = new ReferenceFactory(cluster, 1, 2);
@@ -179,7 +179,7 @@ public class TestSplitter_splitTestCase extends AutoTestCase {
 	}
 
 	public void testHardStatemachine3() throws Exception {
-		TestfulConfig config = new TestfulConfig(GenericTestCase.config);
+		ConfigCut config = new ConfigCut(GenericTestCase.config);
 		config.setCut("dummy.StateMachine");
 		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
 		ReferenceFactory refFactory = new ReferenceFactory(cluster, 1, 2);
@@ -257,7 +257,7 @@ public class TestSplitter_splitTestCase extends AutoTestCase {
 	}
 
 	public void testHardStatemachine4() throws Exception {
-		TestfulConfig config = new TestfulConfig(GenericTestCase.config);
+		ConfigCut config = new ConfigCut(GenericTestCase.config);
 		config.setCut("dummy.StateMachine");
 		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
 		ReferenceFactory refFactory = new ReferenceFactory(cluster, 1, 2);
@@ -342,7 +342,7 @@ public class TestSplitter_splitTestCase extends AutoTestCase {
 
 
 	public void testHardStatemachine5() throws Exception {
-		TestfulConfig config = new TestfulConfig(GenericTestCase.config);
+		ConfigCut config = new ConfigCut(GenericTestCase.config);
 		config.setCut("dummy.StateMachine");
 		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
 		ReferenceFactory refFactory = new ReferenceFactory(cluster, 2, 3);
@@ -410,7 +410,7 @@ public class TestSplitter_splitTestCase extends AutoTestCase {
 	}
 
 	public void testHardStatemachine6() throws Exception {
-		TestfulConfig config = new TestfulConfig(GenericTestCase.config);
+		ConfigCut config = new ConfigCut(GenericTestCase.config);
 		config.setCut("dummy.StateMachine");
 		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
 		ReferenceFactory refFactory = new ReferenceFactory(cluster, 2, 3);

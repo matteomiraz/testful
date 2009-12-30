@@ -6,7 +6,6 @@ import testful.model.Methodz;
 import testful.model.Reference;
 import testful.model.ReferenceFactory;
 import testful.model.TestCluster;
-import testful.model.TestfulProblem.TestfulConfig;
 import testful.runner.TestfulClassLoader;
 
 public class SimpleDummyTestCase extends GenericTestCase {
@@ -28,7 +27,7 @@ public class SimpleDummyTestCase extends GenericTestCase {
 	protected void setUp() throws Exception {
 		super.setUp();
 
-		TestfulConfig config = new TestfulConfig("testCut");
+		ConfigCut config = new ConfigCut(GenericTestCase.config);
 		config.setCut("dummy.Simple");
 		cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
 		refFactory = new ReferenceFactory(cluster, 4, 4);

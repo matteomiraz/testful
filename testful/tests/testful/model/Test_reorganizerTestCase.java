@@ -3,8 +3,8 @@ package testful.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import testful.ConfigCut;
 import testful.GenericTestCase;
-import testful.model.TestfulProblem.TestfulConfig;
 import testful.runner.TestfulClassLoader;
 
 /**
@@ -21,7 +21,7 @@ public class Test_reorganizerTestCase extends AutoTestCase {
 	}
 
 	public void testHardStatemachine1() throws Exception {
-		TestfulConfig config = new TestfulConfig(GenericTestCase.config);
+		ConfigCut config = new ConfigCut(GenericTestCase.config);
 		config.setCut("dummy.WhiteSample");
 		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
 		ReferenceFactory refFactory = new ReferenceFactory(cluster, 1, 2);

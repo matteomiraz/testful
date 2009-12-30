@@ -26,7 +26,7 @@ public class TestExecutionManagerTestCase extends SimpleDummyTestCase {
 	}
 
 	private Operation[] execute(Test test) throws RemoteException, InterruptedException, ExecutionException {
-		IRunner exec = RunnerPool.createExecutor(null, false);
+		IRunner exec = RunnerPool.createExecutor("test", configRunner);
 
 		OperationPrimitiveResult.insert(test.getTest());
 		OperationStatus.insert(test.getTest());

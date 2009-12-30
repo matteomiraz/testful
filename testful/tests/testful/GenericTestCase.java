@@ -17,7 +17,6 @@ import testful.model.Operation;
 import testful.model.ReferenceFactory;
 import testful.model.Test;
 import testful.model.TestCluster;
-import testful.model.TestfulProblem.TestfulConfig;
 import testful.runner.ClassFinder;
 import testful.runner.ClassFinderCaching;
 import testful.runner.ClassFinderImpl;
@@ -34,7 +33,14 @@ import ec.util.MersenneTwisterFast;
  */
 public abstract class GenericTestCase  extends TestCase {
 
-	protected final static Configuration config = new Configuration("testCut");
+	protected final static IConfigProject config;
+	protected final static IConfigRunner configRunner = new ConfigRunner();
+
+	static {
+		ConfigProject tmp = new ConfigProject();
+		tmp.setDirBase(new File("testCut"));
+		config = tmp;
+	}
 
 	protected static final TestFailedException SETUP = new TestFailedException("Please setup correctly your system!");
 
@@ -132,7 +138,7 @@ public abstract class GenericTestCase  extends TestCase {
 
 	private static IRunner exec;
 	protected static IRunner getExec() {
-		if(exec == null) exec = RunnerPool.createExecutor(null, false);
+		if(exec == null) exec = RunnerPool.createExecutor("test", configRunner);
 		return exec;
 	}
 
@@ -150,7 +156,7 @@ public abstract class GenericTestCase  extends TestCase {
 	public Test createRandomTest(String cut, int lenght, long seed) throws RemoteException, ClassNotFoundException, TestfulException {
 		MersenneTwisterFast random = new MersenneTwisterFast(seed);
 
-		final TestfulConfig testfulConfig = new TestfulConfig(config);
+		ConfigCut testfulConfig = new ConfigCut(config);
 		testfulConfig.setCut(cut);
 
 		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), testfulConfig);
@@ -167,7 +173,7 @@ public abstract class GenericTestCase  extends TestCase {
 	private static ClassFinder finder = null;
 	protected static ClassFinder getFinder() throws RemoteException {
 		if(finder == null)
-			finder = new ClassFinderCaching(new ClassFinderImpl(new File(config.getDirInstrumented()), new File(config.getDirJml()), new File(config.getDirVanilla())));
+			finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
 
 		return finder;
 	}

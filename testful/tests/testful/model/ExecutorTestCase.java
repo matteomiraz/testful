@@ -2,8 +2,8 @@ package testful.model;
 
 import java.lang.reflect.Field;
 
+import testful.ConfigCut;
 import testful.GenericTestCase;
-import testful.model.TestfulProblem.TestfulConfig;
 import testful.runner.TestfulClassLoader;
 
 /**
@@ -13,7 +13,7 @@ import testful.runner.TestfulClassLoader;
 public class ExecutorTestCase extends GenericTestCase {
 
 	public void testBehavior1() throws Exception {
-		TestfulConfig config = new TestfulConfig(GenericTestCase.config);
+		ConfigCut config = new ConfigCut(GenericTestCase.config);
 		config.setCut("dummy.WhiteSample");
 		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
 		ReferenceFactory refFactory = new ReferenceFactory(cluster, 4, 4);
@@ -55,7 +55,7 @@ public class ExecutorTestCase extends GenericTestCase {
 	}
 
 	public void testBehavior2() throws Exception {
-		TestfulConfig config = new TestfulConfig(GenericTestCase.config);
+		ConfigCut config = new ConfigCut(GenericTestCase.config);
 		config.setCut("dummy.WhiteSample");
 		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
 		ReferenceFactory refFactory = new ReferenceFactory(cluster, 4, 4);

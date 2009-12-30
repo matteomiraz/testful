@@ -14,34 +14,26 @@ import jmetal.util.JMException;
 import jmetal.util.PseudoRandom;
 import testful.TestfulException;
 import testful.coverage.CoverageInformation;
+import testful.evolutionary.IConfigEvolutionary;
 import testful.model.Operation;
 import testful.model.Test;
 import testful.model.TestCoverage;
 import testful.model.TestfulProblem;
-import testful.model.TestfulProblem.TestfulConfig;
-import testful.runner.IRunner;
 import testful.utils.ElementManager;
 
 public class JMProblem extends Problem<Operation> {
 
 	private static final long serialVersionUID = 1715317823344831168L;
 
-	public static JMProblem currentProblem;
-
 	private final TestfulProblem problem;
 
-	public static JMProblem getProblem(IRunner executor, boolean enableCache, boolean reloadClasses, TestfulConfig config) throws JMException {
-		currentProblem = new JMProblem(executor, enableCache, reloadClasses, config);
-		return currentProblem;
-	}
-
-	private JMProblem(IRunner executor, boolean enableCache, boolean reloadClasses, TestfulConfig config) throws JMException {
+	public JMProblem(IConfigEvolutionary config) throws JMException {
 		try {
 			problemName_ = "Testful";
 
-			config.fitness.toMinimize = true;
+			config.setToMinimize(true);
 
-			problem = new TestfulProblem(executor, enableCache, reloadClasses, config);
+			problem = new TestfulProblem(config);
 
 			numberOfObjectives_ = problem.getNumObjs();
 

@@ -1,9 +1,9 @@
 package testful.model;
 
+import testful.ConfigCut;
 import testful.GenericTestCase;
 import testful.coverage.CoverageInformation;
 import testful.coverage.bug.BugCoverage;
-import testful.model.TestfulProblem.TestfulConfig;
 import testful.runner.TestfulClassLoader;
 import testful.utils.ElementManager;
 
@@ -22,7 +22,7 @@ public class BugCoverageTestCase extends GenericTestCase {
 
 	@Override
 	protected void setUp() throws Exception {
-		TestfulConfig config = new TestfulConfig(GenericTestCase.config);
+		ConfigCut config = new ConfigCut(GenericTestCase.config);
 		config.setCut("dummy.WhiteSample");
 		cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
 		refFactory = new ReferenceFactory(cluster, 1, 3);

@@ -7,12 +7,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
-import testful.Configuration;
-import testful.TestfulException;
+import testful.ConfigProject;
+import testful.ConfigRunner;
+import testful.IConfigProject;
+import testful.TestFul;
 import testful.coverage.CoverageInformation;
 import testful.model.AssignPrimitive;
 import testful.model.Clazz;
@@ -34,85 +35,80 @@ import testful.runner.RunnerPool;
 
 public class JUnitTestGenerator extends TestReader {
 
-	@Option(required = false, name = "-execute", usage = "Should I re-execute the test?")
-	private boolean execute;
+	private static class Config extends ConfigProject implements IConfigProject.Args4j {
 
-	@Option(required = false, name = "-contracts", usage = "Should I use JML contracts?")
-	private boolean contracts;
+		@Option(required = false, name = "-execute", usage = "Should I re-execute the test?")
+		private boolean execute;
 
-	@Option(required = true, name = "-test", usage = "The test to convert", multiValued=true)
-	private List<String> tests;
+		@Option(required = false, name = "-contracts", usage = "Should I use JML contracts?")
+		private boolean contracts;
 
-	@Option(required = false, name = "-baseDir", usage = "Specify the CUT's base directory")
-	private String baseDir;
+		@Option(required = false, name = "-dirTests", usage = "Specify the directory in which generated tests will be put")
+		private File dirGeneratedTests;
 
-	private List<String> suite = new ArrayList<String>();
+		@Argument
+		private List<String> tests = new ArrayList<String>();
 
-	private final IRunner executor;
+		public boolean isExecute() {
+			return execute;
+		}
+
+		public boolean isContracts() {
+			return contracts;
+		}
+
+		public List<String> getTests() {
+			return tests;
+		}
+
+		public File getDirGeneratedTests() {
+			if(!dirGeneratedTests.isAbsolute()) dirGeneratedTests = new File(getDirBase(), dirGeneratedTests.getPath()).getAbsoluteFile();
+			return dirGeneratedTests;
+		}
+	}
+
+	private final boolean contracts;
 	private final TestSimplifier simplifier;
 
-	private final Configuration config;
+	private final File destDir;
+	private List<String> suite = new ArrayList<String>();
+
 
 	public static void main(String[] args) {
-		testful.TestFul.printHeader("Regression Testing");
+		TestFul.printHeader("Regression Testing");
 
-		try {
-			new JUnitTestGenerator(args);
-		} catch (TestfulException e) {
-			System.err.println("Unable to generate JUnit tests: " + e.getMessage());
-		}
+		Config config = new Config();
+		TestFul.parseCommandLine(config, args, JUnitTestGenerator.class);
+
+		IRunner executor = null;
+		if(config.isExecute())
+			executor = RunnerPool.createExecutor("JUnitGenerator", new ConfigRunner());
+
+		JUnitTestGenerator gen = new JUnitTestGenerator(config, executor, config.isContracts(), config.getDirGeneratedTests());
+
+		gen.read(config.getTests());
+		gen.writeSuite("", "AllTests");
 
 		System.exit(0);
 	}
 
-	public void executeTests() {
-		execute = true;
-	}
+	public JUnitTestGenerator(IConfigProject config, IRunner executor, boolean contracts, File destDir) {
+		this.contracts = contracts;
+		this.destDir = destDir;
 
-	public void useContracts() {
-		contracts = true;
-	}
-
-	private JUnitTestGenerator(String[] args) throws TestfulException {
-		CmdLineParser parser = new CmdLineParser(this);
-
-		try {
-			// parse the arguments.
-			parser.parseArgument(args);
-
-			config = new Configuration(baseDir);
-
-			executor = RunnerPool.createExecutor(null, false);
-			simplifier = new TestSimplifier(executor, new ClassFinderImpl(new File(config.getDirInstrumented())));
-
-			read(tests);
-			writeSuite("", "AllTests");
-
-		} catch(CmdLineException e) {
-			System.err.println(e.getMessage());
-			System.err.println("java " + JUnitTestGenerator.class.getCanonicalName() + " [options...] arguments...");
-			parser.printUsage(System.err);
-			System.err.println();
-
-			// print option sample. This is useful some time
-			System.err.println("   Example: java " + JUnitTestGenerator.class.getCanonicalName() + parser.printExample(org.kohsuke.args4j.ExampleMode.REQUIRED));
-
-			throw new TestfulException("Invalid command line");
+		if(executor != null) {
+			simplifier = new TestSimplifier(executor, new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
+		} else {
+			simplifier = null;
 		}
-	}
 
-	public JUnitTestGenerator(Configuration config) {
-		this.config = config;
-
-		executor = RunnerPool.createExecutor(null, false);
-		simplifier = new TestSimplifier(executor, new ClassFinderImpl(new File(config.getDirInstrumented())));
 	}
 
 	@Override
 	public void read(String fileName, Test t) {
 		PrintWriter out = null;
 		try {
-			if(execute) {
+			if(simplifier != null) {
 				t = simplifier.analyze(t);
 				t.getCluster().clearCache();
 			}
@@ -122,7 +118,7 @@ public class JUnitTestGenerator extends TestReader {
 			String pkg = getPackageName(className);
 			String testName = getTestName(fileName);
 
-			File dir = new File(config.getDirGeneratedTests() + File.separator + pkg.replace('.', File.separatorChar));
+			File dir = new File(destDir, pkg.replace('.', File.separatorChar));
 			dir.mkdirs();
 
 			File testFile = new File(dir, testName + ".java");
@@ -324,7 +320,7 @@ public class JUnitTestGenerator extends TestReader {
 		if(packageName == null) packageName = "";
 
 		try {
-			File testFile = new File(config.getDirGeneratedTests() + File.separator + packageName.replace('.', File.separatorChar) + File.separatorChar + className + ".java");
+			File testFile = new File(destDir, packageName.replace('.', File.separatorChar) + File.separatorChar + className + ".java");
 			PrintWriter wr = new PrintWriter(testFile);
 
 			if(!packageName.isEmpty()) {
