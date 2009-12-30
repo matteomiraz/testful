@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import testful.ConfigCut;
 import testful.GenericTestCase;
 import testful.coverage.whiteBox.ConditionTargetDatum;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
@@ -21,7 +22,6 @@ import testful.model.Reference;
 import testful.model.ReferenceFactory;
 import testful.model.Test;
 import testful.model.TestCluster;
-import testful.model.TestfulProblem.TestfulConfig;
 import testful.runner.TestfulClassLoader;
 import testful.utils.ElementManager;
 
@@ -30,7 +30,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 
 	private TestCluster cluster;
 	private ReferenceFactory refFactory;
-	
+
 	private Reference c0;
 	private Reference c1;
 	private Reference i0;
@@ -38,8 +38,8 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 	private Reference d0;
 
 	private Constructorz cns;
-	
-	private Methodz intif; 
+
+	private Methodz intif;
 	private Methodz doubleif;
 	private Methodz boolif;
 	private Methodz objif;
@@ -48,7 +48,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 
 	@Override
 	protected void setUp() throws Exception {
-		TestfulConfig config = new TestfulConfig();
+		ConfigCut config = new ConfigCut(GenericTestCase.config);
 		config.setCut("dummy.WhiteSample");
 		cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
 		refFactory = new ReferenceFactory(cluster, 2, 1);
@@ -67,7 +67,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		assertNotNull("cannot find boolean class", bClazz);
 		assertNotNull("cannot find integer class", iClazz);
 		assertNotNull("cannot find double class",  dClazz);
-		
+
 		c0 = refFactory.getReferences(cut)[0];
 		c1 = refFactory.getReferences(cut)[1];
 		i0 = refFactory.getReferences(iClazz)[0];
@@ -75,7 +75,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		d0 = refFactory.getReferences(dClazz)[0];
 
 		cns = cut.getConstructors()[0];
-		
+
 		intif = null;
 		doubleif = null;
 		boolif = null;
@@ -90,7 +90,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 			if("tSwitch".equals(m.getName())) tSwitch = m;
 			if("lSwitch".equals(m.getName())) lSwitch = m;
 		}
-		
+
 		assertNotNull("method not found", intif);
 		assertNotNull("method not found", doubleif);
 		assertNotNull("method not found", boolif);
@@ -103,13 +103,13 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 	protected void tearDown() throws Exception {
 		cluster = null;
 		refFactory = null;
-		
-		c0 = null; 
-		c1 = null; 
-		i0 = null; 
-		b0 = null; 
-		d0 = null; 
-		
+
+		c0 = null;
+		c1 = null;
+		i0 = null;
+		b0 = null;
+		d0 = null;
+
 		cns = null;
 
 		intif = null;
@@ -119,35 +119,35 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		tSwitch = null;
 		lSwitch = null;
 	}
-	
+
 	private void checkBBCov(ElementManager<String, CoverageInformation> cov, Set<Integer> expected) {
 		final CoverageBasicBlocks bbCov = (CoverageBasicBlocks) cov.get(CoverageBasicBlocks.KEY_CODE);
 
 		assertEquals((float) expected.size(), bbCov.getQuality());
-		
-		for(Integer i : expected) 
+
+		for(Integer i : expected)
 			assertTrue(bbCov.coverage.get(i));
 	}
 
 	private void checkCondCov(ElementManager<String, CoverageInformation> cov, Set<Integer> expected) {
 		final CoverageConditions condCov = (CoverageConditions) cov.get(CoverageConditions.KEY_CODE);
 		assertEquals((float) expected.size(), condCov.getQuality());
-		
-		for(Integer i : expected) 
+
+		for(Integer i : expected)
 			assertTrue(condCov.coverage.get(i));
 	}
 
 	private void checkDistance(Test t, Map<Integer, Double> distance) throws Exception {
-		
+
 		for(int br : distance.keySet()) {
 			ElementManager<String, CoverageInformation> cov = getCoverage(t, new ConditionTargetDatum(br));
 			CoverageConditionTarget ct = (CoverageConditionTarget) cov.get(CoverageConditionTarget.getKEY(br));
-			
+
 			assertEquals("Wrong distance on branch " + br, (float) (1.0f/distance.get(br)), ct.getQuality());
 		}
-		
+
 	}
-	
+
 	public void testTracktSwitchn1() throws Exception {
 		Operation[] ops = new Operation[] {
 				new CreateObject(c0, cns, new Reference[] { }),
@@ -162,14 +162,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-	
+
 		expBB.add(4);  // constructor
 		expBB.add(92); // start method "tSwitch"
 		expBB.add(100);// end method "tSwitch"
-		
+
 		expBr.add(38);
 		expBB.add(99);
-		
+
 		distance.put(32, 1.0); // case: 0
 		distance.put(33, 2.0); // case: 1
 		distance.put(34, 3.0); // case: 2
@@ -182,7 +182,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
-	
+
 	public void testTracktSwitch0() throws Exception {
 		Operation[] ops = new Operation[] {
 				new CreateObject(c0, cns, new Reference[] { }),
@@ -197,17 +197,17 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-	
+
 		expBB.add(4);  // constructor
 		expBB.add(92); // start method "tSwitch"
 		expBB.add(100);// end method "tSwitch"
-		
+
 		expBr.add(32);
 		expBB.add(93);
 		expBB.add(94);
 		expBB.add(95);
 		expBB.add(96);
-		
+
 		distance.put(32, 0.0); // case: 0
 		distance.put(33, 1.0); // case: 1
 		distance.put(34, 2.0); // case: 2
@@ -220,7 +220,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
-	
+
 	public void testTracktSwitch1() throws Exception {
 		Operation[] ops = new Operation[] {
 				new CreateObject(c0, cns, new Reference[] { }),
@@ -235,16 +235,16 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-	
+
 		expBB.add(4);  // constructor
 		expBB.add(92); // start method "tSwitch"
 		expBB.add(100);// end method "tSwitch"
-		
+
 		expBr.add(33);
 		expBB.add(94);
 		expBB.add(95);
 		expBB.add(96);
-		
+
 		distance.put(32, 1.0); // case: 0
 		distance.put(33, 0.0); // case: 1
 		distance.put(34, 1.0); // case: 2
@@ -257,7 +257,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
-	
+
 	public void testTracktSwitch2() throws Exception {
 		Operation[] ops = new Operation[] {
 				new CreateObject(c0, cns, new Reference[] { }),
@@ -272,15 +272,15 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-	
+
 		expBB.add(4);  // constructor
 		expBB.add(92); // start method "tSwitch"
 		expBB.add(100);// end method "tSwitch"
-		
+
 		expBr.add(34);
 		expBB.add(95);
 		expBB.add(96);
-		
+
 		distance.put(32, 2.0); // case: 0
 		distance.put(33, 1.0); // case: 1
 		distance.put(34, 0.0); // case: 2
@@ -308,14 +308,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-	
+
 		expBB.add(4);  // constructor
 		expBB.add(92); // start method "tSwitch"
 		expBB.add(100);// end method "tSwitch"
-		
+
 		expBr.add(35);
 		expBB.add(96);
-		
+
 		distance.put(32, 3.0); // case: 0
 		distance.put(33, 2.0); // case: 1
 		distance.put(34, 1.0); // case: 2
@@ -344,14 +344,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-	
+
 		expBB.add(4);  // constructor
 		expBB.add(92); // start method "tSwitch"
 		expBB.add(100);// end method "tSwitch"
-		
+
 		expBr.add(36);
 		expBB.add(97);
-		
+
 		distance.put(32, 4.0); // case: 0
 		distance.put(33, 3.0); // case: 1
 		distance.put(34, 2.0); // case: 2
@@ -380,14 +380,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-	
+
 		expBB.add(4);  // constructor
 		expBB.add(92); // start method "tSwitch"
 		expBB.add(100);// end method "tSwitch"
-		
+
 		expBr.add(37);
 		expBB.add(98);
-		
+
 		distance.put(32, 5.0); // case: 0
 		distance.put(33, 4.0); // case: 1
 		distance.put(34, 3.0); // case: 2
@@ -416,14 +416,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-	
+
 		expBB.add(4);  // constructor
 		expBB.add(92); // start method "tSwitch"
 		expBB.add(100);// end method "tSwitch"
-		
+
 		expBr.add(38);
 		expBB.add(99);
-		
+
 		distance.put(32, 6.0); // case: 0
 		distance.put(33, 5.0); // case: 1
 		distance.put(34, 4.0); // case: 2
@@ -451,19 +451,19 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-	
+
 		expBB.add(4);  // constructor
 		expBB.add(88); // end method "ifObj"
 		expBB.add(64); // method _false
-		
-		//if(i == j) 
+
+		//if(i == j)
 		expBB.add(80);
 		expBr.add(29);
 		distance.put(28, 1.0);
 		distance.put(29, 0.0);
 		expBB.add(81);
 
-		//if(i != j) 
+		//if(i != j)
 		expBB.add(84);
 		expBr.add(30);
 		distance.put(30, 0.0);
@@ -476,7 +476,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		checkDistance(t, distance);
 	}
 
-	
+
 	public void testTrackIfObjNotSame() throws Exception {
 		Operation[] ops = new Operation[] {
 				new CreateObject(c0, cns, new Reference[] { }),
@@ -491,12 +491,12 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-		
+
 		expBB.add(4);  // constructor
 		expBB.add(88); // end method "ifObj"
 		expBB.add(64); // method _false
-		
-		//if(i == j) 
+
+		//if(i == j)
 		expBB.add(80);
 		expBr.add(28);
 		distance.put(28, 0.0);
@@ -504,7 +504,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(82);
 		expBB.add(83);
 
-		//if(i != j) 
+		//if(i != j)
 		expBB.add(84);
 		expBr.add(31);
 		distance.put(30, 1.0);
@@ -529,12 +529,12 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-		
+
 		expBB.add(4);  // constructor
 		expBB.add(88); // end method "ifObj"
 		expBB.add(64); // method _false
-		
-		//if(i == j) 
+
+		//if(i == j)
 		expBB.add(80);
 		expBr.add(28);
 		distance.put(28, 0.0);
@@ -542,7 +542,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(82);
 		expBB.add(83);
 
-		//if(i != j) 
+		//if(i != j)
 		expBB.add(84);
 		expBr.add(31);
 		distance.put(30, 2.0);
@@ -569,12 +569,12 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-		
+
 		expBB.add(4);  // constructor
 		expBB.add(88); // end method "ifObj"
 		expBB.add(64); // method _false
-		
-		//if(i == j) 
+
+		//if(i == j)
 		expBB.add(80);
 		expBr.add(28);
 		expBr.add(29);
@@ -584,7 +584,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(82);
 		expBB.add(83);
 
-		//if(i != j) 
+		//if(i != j)
 		expBB.add(84);
 		expBr.add(30);
 		expBr.add(31);
@@ -615,19 +615,19 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-	
+
 		expBB.add(4);  // constructor
 		expBB.add(76); // end method "ifBool"
 		expBB.add(64); // method _false
-		
-		//if(i == true) 
+
+		//if(i == true)
 		expBB.add(68);
 		expBr.add(25);
 		distance.put(24, 1.0);
 		distance.put(25, 0.0);
 		expBB.add(69);
 
-		//if(i != true) 
+		//if(i != true)
 		expBB.add(72);
 		expBr.add(26);
 		distance.put(26, 0.0);
@@ -640,7 +640,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		checkDistance(t, distance);
 	}
 
-	
+
 	public void testTrackIfBoolFalse() throws Exception {
 		Operation[] ops = new Operation[] {
 				new CreateObject(c0, cns, new Reference[] { }),
@@ -655,12 +655,12 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-	
+
 		expBB.add(4);  // constructor
 		expBB.add(76); // end method "ifBool"
 		expBB.add(64); // method _false
-		
-		//if(i == true) 
+
+		//if(i == true)
 		expBB.add(68);
 		expBr.add(24);
 		distance.put(24, 0.0);
@@ -668,7 +668,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(70);
 		expBB.add(71);
 
-		//if(i != true) 
+		//if(i != true)
 		expBB.add(72);
 		expBr.add(27);
 		distance.put(26, 1.0);
@@ -680,7 +680,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		checkDistance(t, distance);
 	}
 
-	
+
 	public void testTrackIfBoolAll() throws Exception {
 		Operation[] ops = new Operation[] {
 				new CreateObject(c0, cns, new Reference[] { }),
@@ -697,12 +697,12 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-	
+
 		expBB.add(4);  // constructor
 		expBB.add(76); // end method "ifBool"
 		expBB.add(64); // method _false
-		
-		//if(i == true) 
+
+		//if(i == true)
 		expBB.add(68);
 		expBr.add(24);
 		expBr.add(25);
@@ -712,7 +712,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(70);
 		expBB.add(71);
 
-		//if(i != true) 
+		//if(i != true)
 		expBB.add(72);
 		expBr.add(26);
 		expBr.add(27);
@@ -742,12 +742,12 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-	
+
 		expBB.add(4);  // constructor
 		expBB.add(60); // end method "ifDouble"
 		expBB.add(64); // method _false
-		
-		//if(i >= 0) 
+
+		//if(i >= 0)
 		expBB.add(36);
 		expBr.add(12);
 		distance.put(12, 0.0);
@@ -769,14 +769,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(16,  2.0); //was: 4.0
 		distance.put(17,  0.0);
 		expBB.add(45);
-		
+
 		//if(i < 3)
 		expBB.add(48);
 		expBr.add(19);
 		distance.put(18,  2.0); //was: 5.0
 		distance.put(19,  0.0);
 		expBB.add(49);
-		
+
 		//if(i == 4)
 		expBB.add(52);
 		expBr.add(20);
@@ -784,14 +784,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(21,  2.0); //was: 6.0
 		expBB.add(54);
 		expBB.add(55);
-		
+
 		//if(i != 5)
 		expBB.add(56);
 		expBr.add(23);
 		distance.put(22, 2.0); //was: 7.0
 		distance.put(23, 0.0);
 		expBB.add(57);
-		
+
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
@@ -813,14 +813,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(4);  // constructor
 		expBB.add(60); // end method "ifDouble"
 		expBB.add(64); // method _false
-		
-		//if(i >= 0) 
+
+		//if(i >= 0)
 		expBB.add(36);
 		expBr.add(13);
 		distance.put(12, 1.0);
 		distance.put(13, 0.0);
 		expBB.add(37);
-		
+
 		//if(i > 1)
 		expBB.add(40);
 		expBr.add(14);
@@ -835,14 +835,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(16, 2.0); //was:  3.0);
 		distance.put(17,  0.0);
 		expBB.add(45);
-		
+
 		//if(i < 3)
 		expBB.add(48);
 		expBr.add(19);
 		distance.put(18, 2.0); //was:  4.0);
 		distance.put(19,  0.0);
 		expBB.add(49);
-		
+
 		//if(i == 4)
 		expBB.add(52);
 		expBr.add(20);
@@ -850,7 +850,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(21, 2.0); //was:  5.0);
 		expBB.add(54);
 		expBB.add(55);
-		
+
 		//if(i != 5)
 		expBB.add(56);
 		expBr.add(23);
@@ -880,8 +880,8 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(4);  // constructor
 		expBB.add(60); // end method "ifDouble"
 		expBB.add(64); // method _false
-		
-		//if(i >= 0) 
+
+		//if(i >= 0)
 		expBB.add(36);
 		expBr.add(13);
 		distance.put(12, 2.0); //was: 2.0);
@@ -902,14 +902,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(16, 2.0); //was: 2.0);
 		distance.put(17,  0.0);
 		expBB.add(45);
-		
+
 		//if(i < 3)
 		expBB.add(48);
 		expBr.add(19);
 		distance.put(18, 2.0); //was: 3.0);
 		distance.put(19,  0.0);
 		expBB.add(49);
-		
+
 		//if(i == 4)
 		expBB.add(52);
 		expBr.add(20);
@@ -917,7 +917,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(21, 2.0); //was: 4.0);
 		expBB.add(54);
 		expBB.add(55);
-		
+
 		//if(i != 5)
 		expBB.add(56);
 		expBr.add(23);
@@ -947,8 +947,8 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(4);  // constructor
 		expBB.add(60); // end method "ifDouble"
 		expBB.add(64); // method _false
-		
-		//if(i >= 0) 
+
+		//if(i >= 0)
 		expBB.add(36);
 		expBr.add(13);
 		distance.put(12, 2.0); //was: 3.0);
@@ -968,14 +968,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(16, 1.0);
 		distance.put(17,  0.0);
 		expBB.add(45);
-		
+
 		//if(i < 3)
 		expBB.add(48);
 		expBr.add(19);
 		distance.put(18, 2.0); //was: 2.0);
 		distance.put(19,  0.0);
 		expBB.add(49);
-		
+
 		//if(i == 4)
 		expBB.add(52);
 		expBr.add(20);
@@ -983,7 +983,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(21, 2.0); //was: 3.0);
 		expBB.add(54);
 		expBB.add(55);
-		
+
 		//if(i != 5)
 		expBB.add(56);
 		expBr.add(23);
@@ -1013,8 +1013,8 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(4);  // constructor
 		expBB.add(60); // end method "ifDouble"
 		expBB.add(64); // method _false
-		
-		//if(i >= 0) 
+
+		//if(i >= 0)
 		expBB.add(36);
 		expBr.add(13);
 		distance.put(12, 2.0); //was:4.0);
@@ -1035,7 +1035,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(17,  2.0);
 		expBB.add(46);
 		expBB.add(47);
-		
+
 		//if(i < 3)
 		expBB.add(48);
 		expBr.add(18);
@@ -1043,7 +1043,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(19,  1.0);
 		expBB.add(50);
 		expBB.add(51);
-		
+
 		//if(i == 4)
 		expBB.add(52);
 		expBr.add(20);
@@ -1051,7 +1051,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(21,  2.0);
 		expBB.add(54);
 		expBB.add(55);
-		
+
 		//if(i != 5)
 		expBB.add(56);
 		expBr.add(23);
@@ -1081,8 +1081,8 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(4);  // constructor
 		expBB.add(60); // end method "ifDouble"
 		expBB.add(64); // method _false
-		
-		//if(i >= 0) 
+
+		//if(i >= 0)
 		expBB.add(36);
 		expBr.add(13);
 		distance.put(12, 2.0); //was: 5.0);
@@ -1103,7 +1103,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(17,  2.0); //was: 3.0);
 		expBB.add(46);
 		expBB.add(47);
-		
+
 		//if(i < 3)
 		expBB.add(48);
 		expBr.add(18);
@@ -1111,14 +1111,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(19,  2.0);
 		expBB.add(50);
 		expBB.add(51);
-		
+
 		//if(i == 4)
 		expBB.add(52);
 		expBr.add(21);
 		distance.put(20,  1.0);
 		distance.put(21,  0.0);
 		expBB.add(53);
-		
+
 		//if(i != 5)
 		expBB.add(56);
 		expBr.add(23);
@@ -1148,8 +1148,8 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(4);  // constructor
 		expBB.add(60); // end method "ifDouble"
 		expBB.add(64); // method _false
-		
-		//if(i >= 0) 
+
+		//if(i >= 0)
 		expBB.add(36);
 		expBr.add(13);
 		distance.put(12, 2.0); //was: 6.0);
@@ -1170,7 +1170,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(17, 2.0); //was: 4.0);
 		expBB.add(46);
 		expBB.add(47);
-		
+
 		//if(i < 3)
 		expBB.add(48);
 		expBr.add(18);
@@ -1178,7 +1178,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(19, 2.0); //was: 3.0);
 		expBB.add(50);
 		expBB.add(51);
-		
+
 		//if(i == 4)
 		expBB.add(52);
 		expBr.add(20);
@@ -1186,7 +1186,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(21,  2.0);
 		expBB.add(54);
 		expBB.add(55);
-		
+
 		//if(i != 5)
 		expBB.add(56);
 		expBr.add(22);
@@ -1229,8 +1229,8 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(4);  // constructor
 		expBB.add(60); // end method "ifDouble"
 		expBB.add(64); // method _false
-		
-		//if(i >= 0) 
+
+		//if(i >= 0)
 		expBB.add(36);
 		expBr.add(12);
 		expBr.add(13);
@@ -1259,7 +1259,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(45);
 		expBB.add(46);
 		expBB.add(47);
-		
+
 		//if(i < 3)
 		expBB.add(48);
 		expBr.add(18);
@@ -1269,7 +1269,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(49);
 		expBB.add(50);
 		expBB.add(51);
-		
+
 		//if(i == 4)
 		expBB.add(52);
 		expBr.add(20);
@@ -1280,7 +1280,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(54);
 		expBB.add(55);
 
-		
+
 		//if(i != 5)
 		expBB.add(56);
 		expBr.add(22);
@@ -1311,12 +1311,12 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-	
+
 		expBB.add(4);  // constructor
 		expBB.add(32); // end method "ifInt"
 		expBB.add(64); // method _false
-		
-		//if(i >= 0) 
+
+		//if(i >= 0)
 		expBB.add(8);
 		expBr.add(0);
 		distance.put(0, 0.0);
@@ -1338,14 +1338,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(4, 4.0);
 		distance.put(5, 0.0);
 		expBB.add(17);
-		
+
 		//if(i < 3)
 		expBB.add(20);
 		expBr.add(7);
 		distance.put(6, 5.0);
 		distance.put(7, 0.0);
 		expBB.add(21);
-		
+
 		//if(i == 4)
 		expBB.add(24);
 		expBr.add(8);
@@ -1353,14 +1353,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(9, 6.0);
 		expBB.add(26);
 		expBB.add(27);
-		
+
 		//if(i != 5)
 		expBB.add(28);
 		expBr.add(11);
 		distance.put(10, 7.0);
 		distance.put(11, 0.0);
 		expBB.add(29);
-		
+
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
@@ -1382,14 +1382,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(4);  // constructor
 		expBB.add(32); // end method "ifInt"
 		expBB.add(64); // method _false
-		
-		//if(i >= 0) 
+
+		//if(i >= 0)
 		expBB.add(8);
 		expBr.add(1);
 		distance.put(0, 1.0);
 		distance.put(1, 0.0);
 		expBB.add(9);
-		
+
 		//if(i > 1)
 		expBB.add(12);
 		expBr.add(2);
@@ -1404,14 +1404,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(4, 3.0);
 		distance.put(5, 0.0);
 		expBB.add(17);
-		
+
 		//if(i < 3)
 		expBB.add(20);
 		expBr.add(7);
 		distance.put(6, 4.0);
 		distance.put(7, 0.0);
 		expBB.add(21);
-		
+
 		//if(i == 4)
 		expBB.add(24);
 		expBr.add(8);
@@ -1419,7 +1419,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(9, 5.0);
 		expBB.add(26);
 		expBB.add(27);
-		
+
 		//if(i != 5)
 		expBB.add(28);
 		expBr.add(11);
@@ -1449,8 +1449,8 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(4);  // constructor
 		expBB.add(32); // end method "ifInt"
 		expBB.add(64); // method _false
-		
-		//if(i >= 0) 
+
+		//if(i >= 0)
 		expBB.add(8);
 		expBr.add(1);
 		distance.put(0, 2.0);
@@ -1471,14 +1471,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(4, 2.0);
 		distance.put(5, 0.0);
 		expBB.add(17);
-		
+
 		//if(i < 3)
 		expBB.add(20);
 		expBr.add(7);
 		distance.put(6, 3.0);
 		distance.put(7, 0.0);
 		expBB.add(21);
-		
+
 		//if(i == 4)
 		expBB.add(24);
 		expBr.add(8);
@@ -1486,7 +1486,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(9, 4.0);
 		expBB.add(26);
 		expBB.add(27);
-		
+
 		//if(i != 5)
 		expBB.add(28);
 		expBr.add(11);
@@ -1516,8 +1516,8 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(4);  // constructor
 		expBB.add(32); // end method "ifInt"
 		expBB.add(64); // method _false
-		
-		//if(i >= 0) 
+
+		//if(i >= 0)
 		expBB.add(8);
 		expBr.add(1);
 		distance.put(0, 3.0);
@@ -1537,14 +1537,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(4, 1.0);
 		distance.put(5, 0.0);
 		expBB.add(17);
-		
+
 		//if(i < 3)
 		expBB.add(20);
 		expBr.add(7);
 		distance.put(6, 2.0);
 		distance.put(7, 0.0);
 		expBB.add(21);
-		
+
 		//if(i == 4)
 		expBB.add(24);
 		expBr.add(8);
@@ -1552,7 +1552,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(9, 3.0);
 		expBB.add(26);
 		expBB.add(27);
-		
+
 		//if(i != 5)
 		expBB.add(28);
 		expBr.add(11);
@@ -1582,8 +1582,8 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(4);  // constructor
 		expBB.add(32); // end method "ifInt"
 		expBB.add(64); // method _false
-		
-		//if(i >= 0) 
+
+		//if(i >= 0)
 		expBB.add(8);
 		expBr.add(1);
 		distance.put(0, 4.0);
@@ -1604,7 +1604,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(5, 2.0);
 		expBB.add(18);
 		expBB.add(19);
-		
+
 		//if(i < 3)
 		expBB.add(20);
 		expBr.add(6);
@@ -1612,7 +1612,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(7, 1.0);
 		expBB.add(22);
 		expBB.add(23);
-		
+
 		//if(i == 4)
 		expBB.add(24);
 		expBr.add(8);
@@ -1620,7 +1620,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(9, 2.0);
 		expBB.add(26);
 		expBB.add(27);
-		
+
 		//if(i != 5)
 		expBB.add(28);
 		expBr.add(11);
@@ -1650,8 +1650,8 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(4);  // constructor
 		expBB.add(32); // end method "ifInt"
 		expBB.add(64); // method _false
-		
-		//if(i >= 0) 
+
+		//if(i >= 0)
 		expBB.add(8);
 		expBr.add(1);
 		distance.put(0, 5.0);
@@ -1672,7 +1672,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(5, 3.0);
 		expBB.add(18);
 		expBB.add(19);
-		
+
 		//if(i < 3)
 		expBB.add(20);
 		expBr.add(6);
@@ -1680,14 +1680,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(7, 2.0);
 		expBB.add(22);
 		expBB.add(23);
-		
+
 		//if(i == 4)
 		expBB.add(24);
 		expBr.add(9);
 		distance.put(8, 1.0);
 		distance.put(9, 0.0);
 		expBB.add(25);
-		
+
 		//if(i != 5)
 		expBB.add(28);
 		expBr.add(11);
@@ -1717,8 +1717,8 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(4);  // constructor
 		expBB.add(32); // end method "ifInt"
 		expBB.add(64); // method _false
-		
-		//if(i >= 0) 
+
+		//if(i >= 0)
 		expBB.add(8);
 		expBr.add(1);
 		distance.put(0, 6.0);
@@ -1739,7 +1739,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(5, 4.0);
 		expBB.add(18);
 		expBB.add(19);
-		
+
 		//if(i < 3)
 		expBB.add(20);
 		expBr.add(6);
@@ -1747,7 +1747,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(7, 3.0);
 		expBB.add(22);
 		expBB.add(23);
-		
+
 		//if(i == 4)
 		expBB.add(24);
 		expBr.add(8);
@@ -1755,7 +1755,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		distance.put(9, 2.0);
 		expBB.add(26);
 		expBB.add(27);
-		
+
 		//if(i != 5)
 		expBB.add(28);
 		expBr.add(10);
@@ -1798,8 +1798,8 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(4);  // constructor
 		expBB.add(32); // end method "ifInt"
 		expBB.add(64); // method _false
-		
-		//if(i >= 0) 
+
+		//if(i >= 0)
 		expBB.add(8);
 		expBr.add(0);
 		expBr.add(1);
@@ -1828,7 +1828,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(17);
 		expBB.add(18);
 		expBB.add(19);
-		
+
 		//if(i < 3)
 		expBB.add(20);
 		expBr.add(6);
@@ -1838,7 +1838,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(21);
 		expBB.add(22);
 		expBB.add(23);
-		
+
 		//if(i == 4)
 		expBB.add(24);
 		expBr.add(8);
@@ -1849,7 +1849,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		expBB.add(26);
 		expBB.add(27);
 
-		
+
 		//if(i != 5)
 		expBB.add(28);
 		expBr.add(10);
@@ -1880,14 +1880,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-	
+
 		expBB.add(4);  // constructor
 		expBB.add(104); // start method "tSwitch"
 		expBB.add(112);// end method "tSwitch"
-		
+
 		expBr.add(45);
 		expBB.add(111);
-		
+
 		distance.put(39, 1.0); // case: 0
 		distance.put(40, 11.0); // case: 10
 		distance.put(41, 21.0); // case: 20
@@ -1900,7 +1900,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
-	
+
 	public void testTracklSwitch0() throws Exception {
 		Operation[] ops = new Operation[] {
 				new CreateObject(c0, cns, new Reference[] { }),
@@ -1915,17 +1915,17 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-	
+
 		expBB.add(4);  // constructor
 		expBB.add(104); // start method "tSwitch"
 		expBB.add(112);// end method "tSwitch"
-		
+
 		expBr.add(39);
 		expBB.add(105);
 		expBB.add(106);
 		expBB.add(107);
 		expBB.add(108);
-		
+
 		distance.put(39,  0.0); // case: 0
 		distance.put(40, 10.0); // case: 10
 		distance.put(41, 20.0); // case: 20
@@ -1953,16 +1953,16 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-	
+
 		expBB.add(4);  // constructor
 		expBB.add(104); // start method "tSwitch"
 		expBB.add(112);// end method "tSwitch"
-		
+
 		expBr.add(40);
 		expBB.add(106);
 		expBB.add(107);
 		expBB.add(108);
-		
+
 		distance.put(39, 10.0); // case: 0
 		distance.put(40,  0.0); // case: 10
 		distance.put(41, 10.0); // case: 20
@@ -1990,15 +1990,15 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-	
+
 		expBB.add(4);  // constructor
 		expBB.add(104); // start method "tSwitch"
 		expBB.add(112);// end method "tSwitch"
-		
+
 		expBr.add(41);
 		expBB.add(107);
 		expBB.add(108);
-		
+
 		distance.put(39, 20.0); // case: 0
 		distance.put(40, 10.0); // case: 10
 		distance.put(41,  0.0); // case: 20
@@ -2026,14 +2026,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-	
+
 		expBB.add(4);  // constructor
 		expBB.add(104); // start method "tSwitch"
 		expBB.add(112);// end method "tSwitch"
-		
+
 		expBr.add(42);
 		expBB.add(108);
-		
+
 		distance.put(39, 30.0); // case: 0
 		distance.put(40, 20.0); // case: 10
 		distance.put(41, 10.0); // case: 20
@@ -2061,14 +2061,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-	
+
 		expBB.add(4);  // constructor
 		expBB.add(104); // start method "tSwitch"
 		expBB.add(112);// end method "tSwitch"
-		
+
 		expBr.add(43);
 		expBB.add(109);
-		
+
 		distance.put(39, 40.0); // case: 0
 		distance.put(40, 30.0); // case: 10
 		distance.put(41, 20.0); // case: 20
@@ -2096,14 +2096,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-	
+
 		expBB.add(4);  // constructor
 		expBB.add(104); // start method "tSwitch"
 		expBB.add(112);// end method "tSwitch"
-		
+
 		expBr.add(44);
 		expBB.add(110);
-		
+
 		distance.put(39, 50.0); // case: 0
 		distance.put(40, 40.0); // case: 10
 		distance.put(41, 30.0); // case: 20
@@ -2131,14 +2131,14 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
 		Set<Integer> expBr = new HashSet<Integer>();
-	
+
 		expBB.add(4);  // constructor
 		expBB.add(104); // start method "tSwitch"
 		expBB.add(112);// end method "tSwitch"
-		
+
 		expBr.add(45);
 		expBB.add(111);
-		
+
 		distance.put(39, 51.0); // case: 0
 		distance.put(40, 41.0); // case: 10
 		distance.put(41, 31.0); // case: 20
@@ -2151,5 +2151,5 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
-	
+
 }

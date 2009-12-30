@@ -18,6 +18,7 @@ import testful.utils.ByteReader;
 public class ClassFinderImpl implements ClassFinder {
 
 	private static Logger logger = Logger.getLogger("testful.executor.classloader");
+	private static final ClassLoader classLoader = ClassFinderImpl.class.getClassLoader();
 
 	private final File[] where;
 	private final String key;
@@ -37,41 +38,41 @@ public class ClassFinderImpl implements ClassFinder {
 	public synchronized byte[] getClass(String name) throws ClassNotFoundException {
 		String fileName = name.replace('.', File.separatorChar) + ".class";
 
-		for(File element : where)
-			try {
+		// try looking in the where class directories
+		{
+			for(File element : where) {
 				File w = new File(element, fileName);
-				byte[] ret = ByteReader.readBytes(w);
-				if(ret != null) {
-					logger.fine("(" + key + ") serving class " + name + " from " + w);
-					return ret;
-				}
-			} catch(IOException e) {
-			}
-
-			fileName = name.replace('.', '/') + ".clazz";
-			
-			URL resource = ClassLoader.getSystemResource(fileName);
-
-			if(resource != null)
 				try {
-					byte[] ret = ByteReader.readBytes(resource.openStream());
+					byte[] ret = ByteReader.readBytes(w);
 					if(ret != null) {
-						logger.fine("(" + key + ") serving class " + name + " from " + resource);
+						logger.info("(" + key + ") serving class " + name + " from " + w);
 						return ret;
 					}
 				} catch(IOException e) {
-					String msg = "cannot load class " + name + " from " + resource;
-					System.err.println(msg);
-					logger.warning("(" + key + ") " + msg);
-
-					throw new ClassNotFoundException(msg, e);
+					// logger.warning("(" + key + ") " + "cannot load class " + name + " from " + w + ": " + e.getMessage());
 				}
+			}
+		}
 
-			String msg = "cannot find class " + name;
-			System.err.println(msg);
-			logger.warning("(" + key + ") " + msg);
+		// try using the classLoader
+		fileName = name.replace('.', '/') + ".clazz";
+		{
+			URL resource = classLoader.getResource(fileName);
+			if(resource != null) {
+				try {
+					byte[] ret = ByteReader.readBytes(resource.openStream());
+					if(ret != null) {
+						logger.info("(" + key + ") serving class " + name + " from " + resource);
+						return ret;
+					}
+				} catch(IOException e) {
+					logger.warning("(" + key + ") " + "cannot load class " + name + " from " + resource + ": " + e.getMessage());
+				}
+			}
+		}
 
-			throw new ClassNotFoundException(msg);
+		logger.warning("(" + key + ") " + "cannot find class " + name);
+		throw new ClassNotFoundException("cannot find class " + name);
 	}
 
 	@Override

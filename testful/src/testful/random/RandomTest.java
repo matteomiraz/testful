@@ -11,8 +11,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
-import ec.util.MersenneTwisterFast;
-
 import testful.coverage.CoverageInformation;
 import testful.coverage.RunnerCaching;
 import testful.coverage.TrackerDatum;
@@ -27,6 +25,7 @@ import testful.runner.IRunner;
 import testful.utils.ElementManager;
 import testful.utils.TestfulLogger;
 import testful.utils.TestfulLogger.CombinedCoverageWriter;
+import ec.util.MersenneTwisterFast;
 
 public abstract class RandomTest {
 	protected static Logger logger = Logger.getLogger("testful.random");
@@ -47,12 +46,12 @@ public abstract class RandomTest {
 	protected final TrackerDatum[] data;
 
 	protected final MersenneTwisterFast random;
-	
+
 	public RandomTest(IRunner runner, boolean enableCache, ClassFinder finder, TestCluster cluster, ReferenceFactory refFactory, TrackerDatum ... data) {
 		long seed = System.currentTimeMillis();
 		System.out.println("MersenneTwisterFast: seed=" + seed);
 		random = new MersenneTwisterFast(seed);
-		
+
 		this.runner = new RunnerCaching(runner, enableCache);
 
 		this.cluster = cluster;
@@ -72,7 +71,7 @@ public abstract class RandomTest {
 		return tests.size();
 	}
 
-	public void startNotificationThread(final boolean verbose) throws FileNotFoundException {
+	public void startNotificationThread(final boolean verbose) {
 		Thread t = new Thread(new Runnable() {
 
 			@Override
@@ -83,7 +82,7 @@ public abstract class RandomTest {
 						ElementManager<String, CoverageInformation> cov = entry.getValue().get();
 						testsDone.incrementAndGet();
 						numCall += entry.getKey().length;
-						
+
 						final TestCoverage testCoverage = new TestCoverage(new Test(cluster, refFactory, entry.getKey()), cov);
 						optimal.update(testCoverage);
 
@@ -97,7 +96,13 @@ public abstract class RandomTest {
 		t.setDaemon(true);
 		t.start();
 
-		final CombinedCoverageWriter wr = TestfulLogger.singleton.getCombinedCoverageWriter(("combined.csv"));	
+		CombinedCoverageWriter wrTmp = null;
+		try {
+			wrTmp = TestfulLogger.singleton.getCombinedCoverageWriter(("combined.csv"));
+		} catch (FileNotFoundException e1) {
+			System.err.println("Cannot write to file: " + e1.getMessage());
+		}
+		final CombinedCoverageWriter wr = wrTmp;
 
 		t = new Thread(new Runnable() {
 
@@ -110,11 +115,12 @@ public abstract class RandomTest {
 						return;
 					}
 
-					wr.write(0, numCall, optimal.getCoverage(), null);
+					if(wr != null)
+						wr.write(0, numCall, optimal.getCoverage(), null);
 					optimal.write();
-					
+
 					runner.updateCacheScore();
-					
+
 					if(verbose) {
 						long now = System.currentTimeMillis();
 						StringBuilder sb = new StringBuilder();
@@ -125,7 +131,7 @@ public abstract class RandomTest {
 
 						sb.append("Running ").append(getRunningJobs()).append(" jobs (").append(testsDone.get()).append(" done)\n");
 						if(runner.isEnabled()) sb.append(runner).append("\n");
-						
+
 						if(!optimal.getCoverage().isEmpty()) {
 							sb.append("Coverage:\n");
 							for(CoverageInformation info : optimal.getCoverage())

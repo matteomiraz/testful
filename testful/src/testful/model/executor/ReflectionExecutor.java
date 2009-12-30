@@ -62,8 +62,8 @@ public class ReflectionExecutor implements Executor {
 	private transient Map<Operation, FaultyExecutionException> faults;
 
 	public ReflectionExecutor(Test test) {
-		this.cluster = test.getCluster();
-		this.repositoryType = test.getReferenceFactory().getReferences();
+		cluster = test.getCluster();
+		repositoryType = test.getReferenceFactory().getReferences();
 		this.test = test.getTest();
 	}
 
@@ -71,7 +71,7 @@ public class ReflectionExecutor implements Executor {
 	public int getTestLength() {
 		return test.length;
 	}
-	
+
 	public Operation[] getTest() {
 		return test;
 	}
@@ -88,15 +88,15 @@ public class ReflectionExecutor implements Executor {
 
 		Clazz cut = cluster.getCut();
 		cut.toJavaClass();
-		
+
 		if(DEBUG) {
 			System.out.println("Cluster: \n" + cluster + "\n---" );
 
 			System.out.println("Executing:");
-			for(Operation op : test) 
+			for(Operation op : test)
 				System.out.println(op);
 			System.out.println("---");
-			
+
 		}
 
 		repository = new Object[repositoryType.length];
@@ -219,11 +219,11 @@ public class ReflectionExecutor implements Executor {
 			else {
 				initargs[i] = get(params[i]);
 
-				if(constructozParamsType[i] instanceof PrimitiveClazz) 
+				if(constructozParamsType[i] instanceof PrimitiveClazz)
 					if(initargs[i] == null) {
-						if(opStatus != null) opStatus.setPreconditionError(); 
+						if(opStatus != null) opStatus.setPreconditionError();
 						return false;
-					} else 
+					} else
 						initargs[i] = ((PrimitiveClazz) constructozParamsType[i]).cast(initargs[i]);
 			}
 
@@ -249,11 +249,12 @@ public class ReflectionExecutor implements Executor {
 				e.printStackTrace();
 				System.err.println("Reflection error in perform(CreateObject): " + e);
 			}
-			
+
 			throw new ExceptionRaisedException(e);
 		}
 
-		if(opStatus != null && opStatus.getStatus() != Status.EXCEPTIONAL) opStatus.setSuccessful();
+		if(opStatus != null && opStatus.getStatus() != Status.EXCEPTIONAL)
+			opStatus.setSuccessful();
 
 		// save results
 		if(targetPos != null) set(op, targetPos, newObject);

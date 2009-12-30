@@ -1,6 +1,8 @@
 package testful.coverage.bug;
 
 
+import java.io.File;
+
 import soot.Body;
 import soot.Local;
 import soot.RefLikeType;
@@ -56,7 +58,7 @@ public class BugInstrumenter implements UnifiedInstrumentator {
 
 	@Override
 	public void preprocess(SootClass sClass) { }
-	
+
 	@Override
 	public void init(Chain<Unit> newUnits, Body newBody, Body oldBody, boolean classWithContracts, boolean contractMethod) {
 		// skip non-public methods!!!
@@ -76,16 +78,16 @@ public class BugInstrumenter implements UnifiedInstrumentator {
 		body.getLocals().add(localTracker);
 		body.getUnits().addLast(Jimple.v().newAssignStmt(localTracker, Jimple.v().newStaticInvokeExpr(trackerSingleton.makeRef())));
 	}
-	
+
 	@Override
 	public void processPre(Chain<Unit> newUnits, Stmt op) { }
-	
+
 	@Override
 	public void processPost(Chain<Unit> newUnits, Stmt op) { }
-	
+
 	@Override
 	public void processPostExc(Chain<Unit> newUnits, Stmt op, Local exception) { }
-	
+
 
 	@Override
 	public void exceptional(Chain<Unit> newUnits, Local exc) {
@@ -93,7 +95,7 @@ public class BugInstrumenter implements UnifiedInstrumentator {
 
 		final Unit end = Jimple.v().newNopStmt();
 		end.addTag(new StringTag("bugTracker:end"));
-		
+
 		// if the class does not have contracts, check if has null parameters
 		if(!classWithContracts) {
 			int nParams = body.getMethod().getParameterCount();
@@ -109,8 +111,8 @@ public class BugInstrumenter implements UnifiedInstrumentator {
 
 		newUnits.add(end);
 	}
-	
+
 	@Override
-	public void done(String baseDir, String cutName) {
+	public void done(File baseDir, String cutName) {
 	}
 }

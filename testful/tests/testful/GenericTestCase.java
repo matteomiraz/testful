@@ -11,6 +11,7 @@ import java.util.concurrent.Future;
 import junit.framework.TestCase;
 import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
+import testful.coverage.TestSizeInformation;
 import testful.coverage.TrackerDatum;
 import testful.coverage.behavior.BehaviorCoverage;
 import testful.coverage.behavior.BehaviorTrackerData;
@@ -18,7 +19,6 @@ import testful.model.Operation;
 import testful.model.ReferenceFactory;
 import testful.model.Test;
 import testful.model.TestCluster;
-import testful.model.TestfulProblem.TestfulConfig;
 import testful.runner.ClassFinder;
 import testful.runner.ClassFinderCaching;
 import testful.runner.ClassFinderImpl;
@@ -35,7 +35,14 @@ import ec.util.MersenneTwisterFast;
  */
 public abstract class GenericTestCase  extends TestCase {
 
-	protected final static Configuration config = new Configuration();
+	protected final static IConfigProject config;
+	protected final static IConfigRunner configRunner = new ConfigRunner();
+
+	static {
+		ConfigProject tmp = new ConfigProject();
+		tmp.setDirBase(new File("testCut"));
+		config = tmp;
+	}
 
 	protected static final TestFailedException SETUP = new TestFailedException("Please setup correctly your system!");
 
@@ -54,11 +61,11 @@ public abstract class GenericTestCase  extends TestCase {
 
 		public TestFailedException(String msg, String differentCov) {
 			super(msg);
-			if(differentCov == null) this.differentCovs = null;
+			if(differentCov == null) differentCovs = null;
 			else {
 				String[] covs = differentCov.split(":");
 				Arrays.sort(covs);
-				this.differentCovs = covs;
+				differentCovs = covs;
 			}
 		}
 	}
@@ -68,6 +75,7 @@ public abstract class GenericTestCase  extends TestCase {
 
 		boolean err = false;
 		for(CoverageInformation o : origCov) {
+			if(o instanceof TestSizeInformation) continue;
 			if(SKIP_CONTRACTS && !o.getKey().endsWith("n")) continue;
 			if(ONLY_BEH && !o.getKey().equals(BehaviorCoverage.KEY)) continue;
 
@@ -121,41 +129,42 @@ public abstract class GenericTestCase  extends TestCase {
 			msg.append("---------");
 		}
 
-		msg.append("\nCoverage:\n");
-		for(CoverageInformation cov : covs)
-			msg.append("  ").append(cov.getKey()).append(" ").append(cov.getQuality()).append("\n");
-		msg.append("---------\n");
+		if(covs != null) {
+			msg.append("\nCoverage:\n");
+			for(CoverageInformation cov : covs)
+				if(!(cov instanceof TestSizeInformation))
+					msg.append("  ").append(cov.getKey()).append(" ").append(cov.getQuality()).append("\n");
+			msg.append("---------");
+		}
 
-		msg.append("Behavioral coverage:\n").append(covs.get(BehaviorCoverage.KEY)).append("\n");
-
-		msg.append("=========\n");
+		msg.append("\n");
 	}
 
 	private static IRunner exec;
 	protected static IRunner getExec() {
-		if(exec == null) exec = RunnerPool.createExecutor(null, false);
+		if(exec == null) exec = RunnerPool.createExecutor("test", configRunner);
 		return exec;
 	}
 
 	protected static ElementManager<String, CoverageInformation> getCoverage(Test test, TrackerDatum ... data) throws RemoteException, InterruptedException, ExecutionException {
-		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = 
-			data == null 
-				? CoverageExecutionManager.getContext(getFinder(), test, new BehaviorTrackerData(test.getCluster().getXmlClasses()))
-				: CoverageExecutionManager.getContext(getFinder(), test, data);
-				
-		ctx.setRecycleClassLoader(RECYCLE_CLASS_LOADER);
-		Future<ElementManager<String, CoverageInformation>> future = getExec().execute(ctx);
-		ElementManager<String, CoverageInformation> coverage = future.get();
+		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx =
+			data == null
+			? CoverageExecutionManager.getContext(getFinder(), test, new BehaviorTrackerData(test.getCluster().getXmlClasses()))
+					: CoverageExecutionManager.getContext(getFinder(), test, data);
 
-		return coverage;
+			ctx.setRecycleClassLoader(RECYCLE_CLASS_LOADER);
+			Future<ElementManager<String, CoverageInformation>> future = getExec().execute(ctx);
+			ElementManager<String, CoverageInformation> coverage = future.get();
+
+			return coverage;
 	}
 
 	public Test createRandomTest(String cut, int lenght, long seed) throws RemoteException, ClassNotFoundException, TestfulException {
 		MersenneTwisterFast random = new MersenneTwisterFast(seed);
 
-		final TestfulConfig testfulConfig = new TestfulConfig();
+		ConfigCut testfulConfig = new ConfigCut(config);
 		testfulConfig.setCut(cut);
-		
+
 		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), testfulConfig);
 		ReferenceFactory refFactory = new ReferenceFactory(cluster, 4, 4);
 
@@ -170,7 +179,7 @@ public abstract class GenericTestCase  extends TestCase {
 	private static ClassFinder finder = null;
 	protected static ClassFinder getFinder() throws RemoteException {
 		if(finder == null)
-			finder = new ClassFinderCaching(new ClassFinderImpl(new File(config.getDirInstrumented()), new File(config.getDirJml()), new File(config.getDirVanilla())));
+			finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
 
 		return finder;
 	}

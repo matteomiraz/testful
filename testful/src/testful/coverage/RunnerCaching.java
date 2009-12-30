@@ -32,12 +32,13 @@ import testful.model.Test;
 import testful.model.TestSplitter;
 import testful.runner.ClassFinder;
 import testful.runner.Context;
+import testful.runner.ExecutionManager;
 import testful.runner.IRunner;
 import testful.utils.Cloner;
 import testful.utils.ElementManager;
 import testful.utils.TestfulLogger;
 
-public class RunnerCaching {
+public class RunnerCaching implements IRunner{
 
 	private boolean enabled;
 
@@ -45,8 +46,8 @@ public class RunnerCaching {
 	private final static int SCORE = 8;
 
 	private final static boolean DISK_ENABLED = false;
-	
-	private final File dir; 
+
+	private final File dir;
 
 	private long origJobs = 0;
 
@@ -67,29 +68,39 @@ public class RunnerCaching {
 
 	public RunnerCaching(IRunner runner, boolean enableCache) {
 		this.runner = runner;
-		this.enabled = enableCache;
+		enabled = enableCache;
 
-		this.evaluating = new HashMap<TestWithData, Future<ElementManager<String,CoverageInformation>>>();
-		this.cache = new Cache<TestWithData, ElementManager<String,CoverageInformation>>(RAM_SIZE, SCORE);
+		evaluating = new HashMap<TestWithData, Future<ElementManager<String,CoverageInformation>>>();
+		cache = new Cache<TestWithData, ElementManager<String,CoverageInformation>>(RAM_SIZE, SCORE);
 
 		if(DISK_ENABLED) {
-			this.diskEntries = new LinkedHashMap<String, Set<String>>();
-			this.dir = new File(TestfulLogger.singleton.getBaseDir(), "cache");
-			this.dir.mkdir();
+			diskEntries = new LinkedHashMap<String, Set<String>>();
+			dir = new File(TestfulLogger.singleton.getBaseDir(), "cache");
+			dir.mkdir();
 		} else {
-			this.diskEntries = null;
-			this.dir = null;
+			diskEntries = null;
+			dir = null;
 		}
 	}
 
-	private long timeSplit = 0; 
+	@Override
+	public boolean addRemoteWorker(String rmiAddress) {
+		return runner.addRemoteWorker(rmiAddress);
+	}
+
+	@Override
+	public <T extends Serializable> Future<T> execute(Context<T, ? extends ExecutionManager<T>> ctx) {
+		return runner.execute(ctx);
+	}
+
+	private long timeSplit = 0;
 	private long timeReorganize = 0;
 	private long timeReferenceSort = 0;
 	private long timePrepare = 0;
 	private long timePostProcess = 0;
 
 	/**
-	 * Split the test into smaller parts, and execute each of them independelty.
+	 * Split the test into smaller parts, and execute each of them independently.
 	 * Uses a caching mechanism to ensure that each part is executed only once: subsequent evaluations reuses previous result.
 	 */
 	public Future<ElementManager<String, CoverageInformation>> executeParts(ClassFinder finder, boolean reloadClasses, Test test, TrackerDatum[] data) {
@@ -147,9 +158,9 @@ public class RunnerCaching {
 		enabled = false;
 	}
 
-	private long timeTot = 0; 
-	private long timeDisk = 0; 
-	private long timeMiss = 0; 
+	private long timeTot = 0;
+	private long timeDisk = 0;
+	private long timeMiss = 0;
 
 	private void execute(ClassFinder finder, boolean reloadClasses, Test test, TrackerDatum[] data, CachingFuture ret) {
 		long start = System.nanoTime();
@@ -170,7 +181,7 @@ public class RunnerCaching {
 		start = System.nanoTime();
 
 		TestWithData testWithData = new TestWithData(test, data);
-		
+
 		ElementManager<String, CoverageInformation> cov;
 		if((cov = cache.get(testWithData)) == null) {
 			synchronized(evaluating) {
@@ -300,7 +311,7 @@ public class RunnerCaching {
 		if(DISK_ENABLED)
 			ret += String.format(": %5.2f%% from ram, %5.2f%% from disk", cacheHitRam*100.0/cacheAccess, cacheHitDisk*100.0/cacheAccess);
 
-		ret += "\n    " 
+		ret += "\n    "
 			+ "time mgmt:"
 			+ " pre: " + timePrepare/10000/100.0 + "ms"
 			+ " split: " + timeSplit/10000/100.0 + "ms"
@@ -315,7 +326,7 @@ public class RunnerCaching {
 		if(DISK_ENABLED) ret += ", disk: " + timeDisk/10000/100.0 + "ms";
 		ret += ", miss: " + timeMiss/10000/100.0 + "ms";;
 
-		ret += "\n    "; 
+		ret += "\n    ";
 		ret += "jobs: " + cacheAccess;
 		ret += " (" + 100*(cacheAccess+1)/(origJobs+1)/100.0 + "x)";
 		ret += "; ram: "  + (cacheHitRam);
@@ -357,7 +368,7 @@ public class RunnerCaching {
 		public TestWithData(Test test, TrackerDatum[] data) {
 			this.test = test;
 			this.data = data;
-			this.hashCode = 31*(31 + Arrays.hashCode(data)) + ((test == null) ? 0 : test.hashCode());
+			hashCode = 31*(31 + Arrays.hashCode(data)) + ((test == null) ? 0 : test.hashCode());
 		}
 
 		@Override
@@ -377,19 +388,19 @@ public class RunnerCaching {
 			} else if(!test.equals(other.test)) return false;
 			return true;
 		}
-		
-		
-		
+
+
+
 	}
-	
+
 	private class CachingFuture implements Future<ElementManager<String, CoverageInformation>> {
 
 		private final ElementManager<String, CoverageInformation> coverage;
 		private final Map<TestWithData, Future<ElementManager<String, CoverageInformation>>> waiting;
 
 		public CachingFuture() {
-			this.coverage = new ElementManager<String, CoverageInformation>();
-			this.waiting = new LinkedHashMap<TestWithData, Future<ElementManager<String,CoverageInformation>>>();
+			coverage = new ElementManager<String, CoverageInformation>();
+			waiting = new LinkedHashMap<TestWithData, Future<ElementManager<String,CoverageInformation>>>();
 		}
 
 		public void add(TestWithData test, Future<ElementManager<String, CoverageInformation>> future) {
@@ -476,7 +487,7 @@ public class RunnerCaching {
 			public void updateScore() {
 				score >>= 1;
 			}
-			
+
 			public boolean isExpired() {
 				return score == 0;
 			}

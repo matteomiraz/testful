@@ -12,14 +12,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.zip.GZIPOutputStream;
 
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
-
 import soot.PackManager;
 import soot.Transform;
 import soot.jimple.toolkits.scalar.NopEliminator;
+import testful.TestFul;
 import testful.coverage.CoverageInformation;
 import testful.model.Test;
 import testful.model.TestCoverage;
@@ -37,100 +33,15 @@ import testful.utils.SootMain;
 
 public class Launcher {
 
-	@Option(required = false, name = "-help", usage = "Print this help")
-	private boolean help;
-
-	public boolean isHelp() {
-		return help;
-	}
-
-	@Option(required = false, name = "-generateMutant", usage = "Generate mutants for this class", multiValued = true, metaVar = "full.qualified.ClassName")
-	private List<String> genMutant = new ArrayList<String>();
-
-	@Option(required = false, name = "-localWorkers", usage = "Evaluate tests also in local")
-	private boolean createLocalWorkers;
-
-	@Option(required = false, name = "-remoteWorker", usage = "Remote worker RMI address", multiValued = true)
-	private List<String> remoteWorkers = new ArrayList<String>();
-
-	@Option(required = false, name = "-disableTrack", usage = "When generating mutants, disable the track of excuted mutants")
-	private boolean disableTrack;
-
-	@Option(required = false, name = "-disableRecycleClassLoader", usage = "Ensure that each test on each mutant is runned in a new class loader")
-	private boolean disableClassloaderRecycle;
-	
-	public boolean isTrack() {
-		return !disableTrack;
-	}
-
-	@Option(required = false, name = "-disableAbs", usage = "When generating mutants, disable ABS")
-	private boolean disableAbs;
-
-	public boolean isAbs() {
-		return !disableAbs;
-	}
-
-	@Option(required = false, name = "-disableAor", usage = "When generating mutants, disable AOR")
-	private boolean disableAor;
-
-	public boolean isAor() {
-		return !disableAor;
-	}
-
-	@Option(required = false, name = "-disableLcr", usage = "When generating mutants, disable LCR")
-	private boolean disableLcr;
-
-	public boolean isLcr() {
-		return !disableLcr;
-	}
-
-	@Option(required = false, name = "-disableRor", usage = "When generating mutants, disable ROR")
-	private boolean disableRor;
-
-	public boolean isRor() {
-		return !disableRor;
-	}
-
-	@Option(required = false, name = "-disableUoi", usage = "When generating mutants, disable UOI")
-	private boolean disableUoi;
-
-	public boolean isUoi() {
-		return !disableUoi;
-	}
-
-	@Argument
-	private List<String> arguments = new ArrayList<String>();
-
-	public static final Launcher singleton = new Launcher();
-
-	private Launcher() {}
-
 	public static void main(String[] args) throws Exception {
 		testful.TestFul.printHeader("Mutation testing");
 
-		CmdLineParser parser = new CmdLineParser(singleton);
+		ConfigMutation config = new ConfigMutation();
+		TestFul.parseCommandLine(config, args, Launcher.class);
 
-		try {
-			// parse the arguments.
-			parser.parseArgument(args);
+		generate(config);
 
-			if(singleton.isHelp()) throw new CmdLineException("");
-
-			if(!singleton.genMutant.isEmpty()) singleton.generate();
-
-			singleton.run();
-		} catch(CmdLineException e) {
-			if(e.getMessage() != null && e.getMessage().trim().length() > 0) System.err.println(e.getMessage());
-
-			System.err.println("java " + Launcher.class.getCanonicalName() + " [options...] arguments...");
-			parser.printUsage(System.err);
-			System.err.println();
-
-			// print option sample. This is useful some time
-			System.err.println("   Example: java " + Launcher.class.getCanonicalName() + parser.printExample(org.kohsuke.args4j.ExampleMode.REQUIRED));
-
-			System.exit(1);
-		}
+		run(config);
 
 		System.out.println("\n\nDone\n");
 		System.exit(0);
@@ -143,15 +54,14 @@ public class Launcher {
 	private static final boolean postWriter = false;
 	private static final boolean nopEliminator = true;
 
-	public static final String BASE_DIR = "cut";
-	public static final String INPUT_DIR = BASE_DIR + File.separator + "jml-compiled";
-	public static final String OUTPUT_DIR = BASE_DIR + File.separator + "mutants";
+	private static final String[] SOOT_CONF = new String[] { "--keep-line-number", "--xml-attributes", "-validate", "-f", "c" };
 
-	private static final String[] SOOT_CONF = new String[] { "--keep-line-number", "--xml-attributes", "-validate", "-f", "c", "-output-dir", OUTPUT_DIR };
+	private static void generate(ConfigMutation config) {
+		if(config.getGenMutant().isEmpty()) return;
 
-	private void generate() {
 		List<String> sootClassPath = new ArrayList<String>();
-		sootClassPath.add(INPUT_DIR);
+		sootClassPath.add(config.getDirContracts().getAbsolutePath());
+		sootClassPath.add(config.getDirCompiled().getAbsolutePath());
 		sootClassPath.add(System.getProperty("java.class.path"));
 
 		String bootClassPath = System.getProperty("sun.boot.class.path");
@@ -162,7 +72,7 @@ public class Launcher {
 			System.exit(1);
 		}
 
-		String params[] = new String[SOOT_CONF.length + 2 + genMutant.size()];
+		String params[] = new String[SOOT_CONF.length + 2 + 2 + config.getGenMutant().size()];
 
 		params[0] = "-cp";
 		for(String cp : sootClassPath) {
@@ -175,12 +85,17 @@ public class Launcher {
 		for(String s : SOOT_CONF)
 			params[i++] = s;
 
-		for(String className : genMutant)
+		params[i++] = "-output-dir";
+		params[i++] = config.getDirOutput().getAbsolutePath();
+
+		for(String className : config.getGenMutant())
 			params[i++] = className;
 
 		SootMain.singleton.processCmdLine(params);
 
-		for(String className : genMutant)
+		ConfigHandler.track = config.isTrack();
+
+		for(String className : config.getGenMutant())
 			ConfigHandler.singleton.manage(className);
 
 		String last = null;
@@ -194,8 +109,8 @@ public class Launcher {
 		if(mutator) {
 			String newPhase = "jtp.mutator";
 			System.out.println("Enabled phase: " + newPhase);
-			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, MutatorFunctions.singleton));
-			else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, MutatorFunctions.singleton), last);
+			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, new MutatorFunctions(config)));
+			else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, new MutatorFunctions(config)), last);
 			last = newPhase;
 		}
 
@@ -236,12 +151,12 @@ public class Launcher {
 		SootMain.singleton.run();
 
 		try {
-			ConfigHandler.singleton.done(OUTPUT_DIR + File.separatorChar);
+			ConfigHandler.singleton.done(config.getDirOutput());
 		} catch(IOException e) {
 			System.err.println("Cannot write config: " + e);
 		}
-		
-		for(String className : genMutant) {
+
+		for(String className : config.getGenMutant()) {
 			try {
 				PrintStream statFile = new PrintStream(className + ".txt");
 				ConfigHandler.singleton.writeStats(statFile);
@@ -252,21 +167,14 @@ public class Launcher {
 		}
 	}
 
-	private void run() {
+	public static void run(ConfigMutation config) {
 		try {
-			IRunner exec = RunnerPool.createExecutor("mutation", createLocalWorkers, -1);
+			IRunner exec = RunnerPool.createExecutor("mutation", config);
 
-			for(String rmiAddress : remoteWorkers) {
-				System.out.print("Connecting to " + rmiAddress + " ... ");
-				boolean ok = exec.addRemoteWorker(rmiAddress);
-				if(ok) System.out.println("done");
-				else System.out.println("error");
-			}
+			ClassFinder finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirOutput()));
 
-			ClassFinder finder = new ClassFinderCaching(new ClassFinderImpl(new File(OUTPUT_DIR)));
-
-			MutationRunner mutationRunner = new MutationRunner(exec, finder);
-			mutationRunner.read(arguments);
+			MutationRunner mutationRunner = new MutationRunner(exec, finder, config.isReload());
+			mutationRunner.read(config.getArguments());
 			mutationRunner.join();
 		} catch(Exception e) {
 			System.err.println("Error while running tests: " + e);
@@ -286,7 +194,9 @@ public class Launcher {
 		}
 	}
 
-	private class MutationRunner extends TestReader {
+	private static class MutationRunner extends TestReader {
+
+		private final boolean reload;
 
 		private final BlockingQueue<MutJob> submitted;
 		private final ClassFinder finder;
@@ -295,7 +205,8 @@ public class Launcher {
 
 		private final Thread futureWaiter;
 
-		public MutationRunner(IRunner exec, ClassFinder finder) throws SecurityException {
+		public MutationRunner(IRunner exec, ClassFinder finder, boolean reload) throws SecurityException {
+			this.reload = reload;
 			this.exec = exec;
 			submitted = new ArrayBlockingQueue<MutJob>(50);
 			this.finder = finder;
@@ -339,7 +250,7 @@ public class Launcher {
 		protected void read(String fileName, Test test) {
 			try {
 				Context<MutationCoverage, MutationExecutionManager> ctx = MutationExecutionManager.getContext(finder, new Test(test.getCluster(), test.getReferenceFactory(), test.getTest()));
-				if(disableClassloaderRecycle) ctx.setRecycleClassLoader(false);
+				if(reload) ctx.setRecycleClassLoader(false);
 				MutJob mutJob = new MutJob(fileName, test, exec.execute(ctx));
 				submitted.put(mutJob);
 				System.out.println("submitted: " + fileName);

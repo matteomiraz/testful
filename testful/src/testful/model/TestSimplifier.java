@@ -16,10 +16,10 @@ import testful.runner.IRunner;
  * <li>removing operations with false preconditions (this reduces the contract
  * coverage)</li>
  * <li>removing dependencies through primitive fields.<br>
- * For example, 
+ * For example,
  * <ol>
  * <li>integer_1 = 10;
- * <li>integer_0 = Math.abs(integer_1); 
+ * <li>integer_0 = Math.abs(integer_1);
  * <li>foo(integer_0);
  * </ol>
  * becomes
@@ -65,6 +65,7 @@ public class TestSimplifier {
 	public Test analyze(Test test) {
 		Operation[] testOperations = null;
 		if(executor != null) {
+
 			OperationPrimitiveResult.insert(test.getTest());
 			OperationStatus.insert(test.getTest());
 			Context<Operation[], TestExecutionManager> ctx = TestExecutionManager.getContext(finder, test, data);
@@ -94,7 +95,8 @@ public class TestSimplifier {
 		for(Operation op : testOperations) {
 			OperationStatus status = (OperationStatus) op.getInfo(OperationStatus.KEY);
 
-			if(status != null) switch(status.getStatus()) {
+			if(status != null) {
+				switch(status.getStatus()) {
 				case NOT_EXECUTED:
 				case PRECONDITION_ERROR:
 					continue;
@@ -116,11 +118,9 @@ public class TestSimplifier {
 					break;
 				case SUCCESSFUL:
 					manageOperation(ops, op);
-			}
-			else manageOperation(ops, op);
+				}
+			} else manageOperation(ops, op);
 		}
-
-		System.out.println("Simplifier: from " + test.getTest().length + " -> " + ops.size());
 
 		if(test instanceof TestCoverage) return new TestCoverage(test.getCluster(), test.getReferenceFactory(), ops.toArray(new Operation[ops.size()]), ((TestCoverage) test).getCoverage());
 		else return new Test(test.getCluster(), test.getReferenceFactory(), ops.toArray(new Operation[ops.size()]));

@@ -1,5 +1,6 @@
 package testful.coverage.behavior;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,7 +36,7 @@ import soot.jimple.ReturnVoidStmt;
 import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
 import soot.util.Chain;
-import testful.Configuration;
+import testful.IConfigProject;
 import testful.coverage.Instrumenter;
 import testful.model.xml.Parser;
 import testful.model.xml.XmlClass;
@@ -46,10 +47,10 @@ public class BehaviorInstrumenter implements Instrumenter.UnifiedInstrumentator 
 
 	private static BehaviorInstrumenter singleton;
 
-	public static BehaviorInstrumenter getSingleton(Configuration config) {
+	public static BehaviorInstrumenter getSingleton(IConfigProject config) {
 		if(singleton == null)
 			singleton = new BehaviorInstrumenter(config);
-		
+
 		return singleton;
 	}
 
@@ -91,9 +92,9 @@ public class BehaviorInstrumenter implements Instrumenter.UnifiedInstrumentator 
 
 	private final Map<String, XmlClass> xml;
 
-	private final Configuration config;
-	
-	private BehaviorInstrumenter(Configuration config) {
+	private final IConfigProject config;
+
+	private BehaviorInstrumenter(IConfigProject config) {
 		Scene.v().loadClassAndSupport(Object.class.getCanonicalName());
 		object = Scene.v().getSootClass(Object.class.getCanonicalName());
 
@@ -135,10 +136,10 @@ public class BehaviorInstrumenter implements Instrumenter.UnifiedInstrumentator 
 		this.config = config;
 	}
 
-	
+
 	private boolean toSkip;
 	private boolean isStatic;
-	
+
 	private Local thisLocal;
 	private Local localTracker;
 	private Local pre;
@@ -147,23 +148,23 @@ public class BehaviorInstrumenter implements Instrumenter.UnifiedInstrumentator 
 	private Local tmpObj;
 	private Local partition;
 	private Local params;
-	
+
 	@Override
 	public void preprocess(SootClass sClass) { }
-	
+
 	@Override
 	public void init(Chain<Unit> newUnits, Body newBody, Body oldBody, boolean classWithContracts, boolean contractMethod) {
 		SootMethod method = newBody.getMethod();
 		boolean cns = SootMethod.constructorName.equals(method.getName());
 		String className = method.getDeclaringClass().getName();
-		
+
 		toSkip = checkSkip(method, cns, className);
 		if(toSkip) return;
 
 		isStatic = method.isStatic();
 
 		thisLocal = (isStatic ? null : newBody.getThisLocal());
-		
+
 		// some useful locals
 		localTracker = Jimple.v().newLocal(LOCAL_TRACKER, trackerClass.getType());
 		newBody.getLocals().add(localTracker);
@@ -187,13 +188,13 @@ public class BehaviorInstrumenter implements Instrumenter.UnifiedInstrumentator 
 		params = Jimple.v().newLocal("__testful_behavior_params__", ArrayType.v(object.getType(), 1));
 		newBody.getLocals().add(params);
 
-		
+
 		// track initial abstraction
 		if(!isStatic) {
 			if(cns) newUnits.add(Jimple.v().newAssignStmt(pre, NullConstant.v()));
 			else newUnits.add(Jimple.v().newAssignStmt(pre, Jimple.v().newVirtualInvokeExpr(localTracker, abstractState.makeRef(), newBody.getThisLocal())));
 		}
-			
+
 		// create params array
 		int nParams = method.getParameterCount();
 		newUnits.add(Jimple.v().newAssignStmt(params, Jimple.v().newNewArrayExpr(object.getType(), IntConstant.v(nParams))));
@@ -255,10 +256,10 @@ public class BehaviorInstrumenter implements Instrumenter.UnifiedInstrumentator 
 
 	@Override
 	public void processPost(Chain<Unit> newUnits, Stmt op) { }
-	
+
 	@Override
 	public void processPostExc(Chain<Unit> newUnits, Stmt op, Local exception) { }
-	
+
 	@Override
 	public void exceptional(Chain<Unit> newUnits, Local exc) {
 		if(toSkip) return;
@@ -278,10 +279,10 @@ public class BehaviorInstrumenter implements Instrumenter.UnifiedInstrumentator 
 		// throw catched exception
 		newUnits.add(skip);
 	}
-	
+
 	private XmlClass getXmlClass(String className) {
 		XmlClass xmlClass = xml.get(className);
-		
+
 		if(xmlClass == null) {
 			try {
 				xmlClass = Parser.singleton.parse(config, className);
@@ -290,10 +291,10 @@ public class BehaviorInstrumenter implements Instrumenter.UnifiedInstrumentator 
 				System.err.println("ERROR: cannot read xml descriptor: " + e.getMessage());
 			}
 		}
-		
+
 		return xmlClass;
 	}
-	
+
 	private boolean checkSkip(SootMethod method, boolean cns, String className) {
 		// skip non-public methods
 		if(!method.isPublic()) return true;
@@ -335,15 +336,16 @@ public class BehaviorInstrumenter implements Instrumenter.UnifiedInstrumentator 
 
 				XmlMethod xmlMeth = xmlClass.getMethod(method.getName(), params);
 				if(xmlMeth == null) System.out.println("WARN: no xml description for method " + className + "." + method.getName() + " " + Arrays.toString(params));
-				else 
+				else
 					if(xmlMeth.getKind() == Kind.OBSERVER) return true;
 			}
 		}
-		
+
 		return false;
 	}
-	
+
+
 	@Override
-	public void done(String baseDir, String cutName) {
+	public void done(File baseDir, String cutName) {
 	}
 }

@@ -111,7 +111,8 @@ public class TestfulLogger {
 		public void write(long gen, long len, ElementManager<String, CoverageInformation> infos) {
 			if(keys == null) {
 
-				if(infos.isEmpty()) return;
+				if(infos.size() <= 1)
+					return;
 
 				int n = 0;
 				StringBuilder sb = new StringBuilder("gen;len");
@@ -145,7 +146,7 @@ public class TestfulLogger {
 
 		CombinedCoverageWriter(PrintWriter wr) {
 			this.wr = wr;
-			this.init = System.currentTimeMillis();
+			init = System.currentTimeMillis();
 		}
 
 		public void write(int gen, long inv, ElementManager<String, CoverageInformation> infos, Map<String, Set<TestCoverage>> optimal) {
@@ -176,7 +177,7 @@ public class TestfulLogger {
 					for(Test s : solutions)
 						tot += s.getTest().length;
 				}
-				
+
 				sb.append(";").append(infos.get(key).getQuality()).append(";").append(nSolutions).append(";").append(tot);
 			}
 			wr.println(sb.toString());
