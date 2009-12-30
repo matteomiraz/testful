@@ -7,7 +7,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import testful.Configuration;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
+
+import testful.ConfigProject;
+import testful.ConfigRunner;
+import testful.IConfigProject;
+import testful.TestFul;
 import testful.coverage.CoverageInformation;
 import testful.model.AssignPrimitive;
 import testful.model.Clazz;
@@ -29,38 +35,80 @@ import testful.runner.RunnerPool;
 
 public class JUnitTestGenerator extends TestReader {
 
-	private static final boolean EXECUTE = false;
+	private static class Config extends ConfigProject implements IConfigProject.Args4j {
 
-	public static final String OUT_DIR = "cut" + File.separator + "test";
-//	public static final String PKG_PREFIX = "generatedTests";
-	public static final String PKG_PREFIX = "";
+		@Option(required = false, name = "-execute", usage = "Should I re-execute the test?")
+		private boolean execute;
 
+		@Option(required = false, name = "-contracts", usage = "Should I use JML contracts?")
+		private boolean contracts;
+
+		@Option(required = false, name = "-dirTests", usage = "Specify the directory in which generated tests will be put")
+		private File dirGeneratedTests;
+
+		@Argument
+		private List<String> tests = new ArrayList<String>();
+
+		public boolean isExecute() {
+			return execute;
+		}
+
+		public boolean isContracts() {
+			return contracts;
+		}
+
+		public List<String> getTests() {
+			return tests;
+		}
+
+		public File getDirGeneratedTests() {
+			if(!dirGeneratedTests.isAbsolute()) dirGeneratedTests = new File(getDirBase(), dirGeneratedTests.getPath()).getAbsoluteFile();
+			return dirGeneratedTests;
+		}
+	}
+
+	private final boolean contracts;
+	private final TestSimplifier simplifier;
+
+	private final File destDir;
 	private List<String> suite = new ArrayList<String>();
 
-	private IRunner executor;
-	private TestSimplifier simplifier;
 
 	public static void main(String[] args) {
-		testful.TestFul.printHeader("Regression Testing");
+		TestFul.printHeader("Regression Testing");
 
-		JUnitTestGenerator gen = new JUnitTestGenerator(new Configuration());
-		gen.read(args);
-		gen.writeSuite();
+		Config config = new Config();
+		TestFul.parseCommandLine(config, args, JUnitTestGenerator.class);
 
-		System.out.println("done");
+		IRunner executor = null;
+		if(config.isExecute())
+			executor = RunnerPool.createExecutor("JUnitGenerator", new ConfigRunner());
+
+		JUnitTestGenerator gen = new JUnitTestGenerator(config, executor, config.isContracts(), config.getDirGeneratedTests());
+
+		gen.read(config.getTests());
+		gen.writeSuite("", "AllTests");
+
 		System.exit(0);
 	}
 
-	public JUnitTestGenerator(Configuration config) {
-		executor = RunnerPool.createExecutor(null, false);
-		simplifier = new TestSimplifier(executor, new ClassFinderImpl(new File(config.getDirInstrumented())));
+	public JUnitTestGenerator(IConfigProject config, IRunner executor, boolean contracts, File destDir) {
+		this.contracts = contracts;
+		this.destDir = destDir;
+
+		if(executor != null) {
+			simplifier = new TestSimplifier(executor, new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
+		} else {
+			simplifier = null;
+		}
+
 	}
 
 	@Override
 	public void read(String fileName, Test t) {
 		PrintWriter out = null;
 		try {
-			if(EXECUTE) {
+			if(simplifier != null) {
 				t = simplifier.analyze(t);
 				t.getCluster().clearCache();
 			}
@@ -70,7 +118,7 @@ public class JUnitTestGenerator extends TestReader {
 			String pkg = getPackageName(className);
 			String testName = getTestName(fileName);
 
-			File dir = new File(OUT_DIR + File.separator + pkg.replace('.', File.separatorChar));
+			File dir = new File(destDir, pkg.replace('.', File.separatorChar));
 			dir.mkdirs();
 
 			File testFile = new File(dir, testName + ".java");
@@ -86,7 +134,9 @@ public class JUnitTestGenerator extends TestReader {
 			out.println("public class " + testName + " extends junit.framework.TestCase {");
 			out.println();
 			out.println("\tprivate static final float EPSILON = 0.001f;");
-			out.println("\tprivate boolean withContracts;");
+
+			if(contracts) out.println("\tprivate boolean withContracts;");
+
 			out.println();
 
 			writeInit(out, t);
@@ -108,7 +158,7 @@ public class JUnitTestGenerator extends TestReader {
 		}
 	}
 
-	private static void writeTest(PrintWriter out, int testNum, Test test) {
+	private void writeTest(PrintWriter out, int testNum, Test test) {
 		out.println("\tpublic void testFul" + testNum + "() throws Exception {");
 		out.println();
 
@@ -129,12 +179,20 @@ public class JUnitTestGenerator extends TestReader {
 				if(status == null) {
 					if(op instanceof Invoke || op instanceof CreateObject) {
 						out.println("\t\ttry {");
-						out.println("\t\t\t" + op + ";");
+						out.println("\t\t\t" + op + "; // " + i);
 						out.println("\t\t} catch(Throwable e) {");
-						out.println("\t\t\tif(!withContracts) System.err.println(e);");
-						out.println("\t\t\telse if(e instanceof org.jmlspecs.jmlrac.runtime.JMLAssertionError && !(e instanceof org.jmlspecs.jmlrac.runtime.JMLPreconditionError)) fail(e.getMessage());");
+
+
+						if(contracts) {
+							out.println("\t\t\tif(!withContracts) System.err.println(e);");
+							out.println("\t\t\telse if(e instanceof org.jmlspecs.jmlrac.runtime.JMLAssertionError && !(e instanceof org.jmlspecs.jmlrac.runtime.JMLPreconditionError)) fail(e.getMessage());");
+						} else {
+							out.println("\t\t\tSystem.err.println(\"" + i + ") \" + e);");
+						}
+
+
 						out.println("\t\t}");
-					} else out.println("\t\t" + op + ";");
+					} else out.println("\t\t" + op + "; // " + i);
 
 				} else if(status.getStatus() == Status.SUCCESSFUL) {
 					out.println("\t\t" + op + ";");
@@ -147,38 +205,38 @@ public class JUnitTestGenerator extends TestReader {
 					if(target != null && result != null && result.isSet()) {
 						Clazz type = target.getClazz();
 						if(type instanceof PrimitiveClazz) switch(((PrimitiveClazz) type).getType()) {
-							case BooleanClass:
-							case BooleanType:
-								out.println("\t\tassertEquals((boolean)" + AssignPrimitive.getValueString(result.getValue()) + ", (boolean)" + target.toString() + ");");
-								break;
-							case ByteClass:
-							case ByteType:
-								out.println("\t\tassertEquals((byte)" + AssignPrimitive.getValueString(result.getValue()) + ", (byte)" + target.toString() + ");");
-								break;
-							case CharacterClass:
-							case CharacterType:
-								out.println("\t\tassertEquals((char)" + AssignPrimitive.getValueString(result.getValue()) + ", (char)" + target.toString() + ");");
-								break;
-							case ShortClass:
-							case ShortType:
-								out.println("\t\tassertEquals((short)" + AssignPrimitive.getValueString(result.getValue()) + ", (short)" + target.toString() + ");");
-								break;
-							case IntegerClass:
-							case IntegerType:
-								out.println("\t\tassertEquals((int)" + AssignPrimitive.getValueString(result.getValue()) + ", (int)" + target.toString() + ");");
-								break;
-							case LongClass:
-							case LongType:
-								out.println("\t\tassertEquals((long)" + AssignPrimitive.getValueString(result.getValue()) + ", (long)" + target.toString() + ");");
-								break;
-							case FloatClass:
-							case FloatType:
-								out.println("\t\tassertEquals((float)" + AssignPrimitive.getValueString(result.getValue()) + ", (float)" + target.toString() + ", EPSILON);");
-								break;
-							case DoubleClass:
-							case DoubleType:
-								out.println("\t\tassertEquals((double)" + AssignPrimitive.getValueString(result.getValue()) + ", (double)" + target.toString() + ", EPSILON);");
-								break;
+						case BooleanClass:
+						case BooleanType:
+							out.println("\t\tassertEquals((boolean)" + AssignPrimitive.getValueString(result.getValue()) + ", (boolean)" + target.toString() + ");");
+							break;
+						case ByteClass:
+						case ByteType:
+							out.println("\t\tassertEquals((byte)" + AssignPrimitive.getValueString(result.getValue()) + ", (byte)" + target.toString() + ");");
+							break;
+						case CharacterClass:
+						case CharacterType:
+							out.println("\t\tassertEquals((char)" + AssignPrimitive.getValueString(result.getValue()) + ", (char)" + target.toString() + ");");
+							break;
+						case ShortClass:
+						case ShortType:
+							out.println("\t\tassertEquals((short)" + AssignPrimitive.getValueString(result.getValue()) + ", (short)" + target.toString() + ");");
+							break;
+						case IntegerClass:
+						case IntegerType:
+							out.println("\t\tassertEquals((int)" + AssignPrimitive.getValueString(result.getValue()) + ", (int)" + target.toString() + ");");
+							break;
+						case LongClass:
+						case LongType:
+							out.println("\t\tassertEquals((long)" + AssignPrimitive.getValueString(result.getValue()) + ", (long)" + target.toString() + ");");
+							break;
+						case FloatClass:
+						case FloatType:
+							out.println("\t\tassertEquals((float)" + AssignPrimitive.getValueString(result.getValue()) + ", (float)" + target.toString() + ", EPSILON);");
+							break;
+						case DoubleClass:
+						case DoubleType:
+							out.println("\t\tassertEquals((double)" + AssignPrimitive.getValueString(result.getValue()) + ", (double)" + target.toString() + ", EPSILON);");
+							break;
 						}
 						else if(type.getClassName().equals(String.class.getCanonicalName())) out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(result.getValue()) + "," + target.toString() + ");");
 					}
@@ -197,14 +255,16 @@ public class JUnitTestGenerator extends TestReader {
 		out.println("\t}");
 	}
 
-	private static void writeInit(PrintWriter out, Test test) {
+	private void writeInit(PrintWriter out, Test test) {
 		for(Reference ref : test.getReferenceFactory().getReferences())
 			out.println("\tprivate " + ref.getClazz().getClassName() + " " + ref.toString() + ";");
 		out.println();
 
 		out.println("\tprivate void init() {");
-		out.println("\t\tthis.withContracts = org.jmlspecs.jmlrac.runtime.JMLCheckable.class.isAssignableFrom(" + test.getCluster().getCut().getClassName() + ".class);");
-		//		out.println("\t\tSystem.out.println(\"Running with JML contracts: \" + this.withContracts);");
+
+		if(contracts)
+			out.println("\t\tthis.withContracts = org.jmlspecs.jmlrac.runtime.JMLCheckable.class.isAssignableFrom(" + test.getCluster().getCut().getClassName() + ".class);");
+
 		for(Reference ref : test.getReferenceFactory().getReferences())
 			out.println("\t\t" + ref.toString() + " =  null;");
 		out.println("\t}");
@@ -235,20 +295,14 @@ public class JUnitTestGenerator extends TestReader {
 	}
 
 	private static String getPackageName(final String className) {
-		StringBuilder pkgBuilder = null;
-		if(PKG_PREFIX != null && !PKG_PREFIX.isEmpty())
-			pkgBuilder = new StringBuilder(PKG_PREFIX);
-		
+		StringBuilder pkgBuilder =  new StringBuilder();
 		String[] parts = className.split("\\.");
-		for(int i = 0; i < parts.length-1; i++) {
-			
-			if(pkgBuilder == null) pkgBuilder = new StringBuilder();
-			else pkgBuilder.append(".");
 
+		for(int i = 0; i < parts.length-1; i++) {
+			if(i > 0) pkgBuilder.append(".");
 			pkgBuilder.append(parts[i]);
 		}
 
-		if(pkgBuilder == null) return "";
 		return pkgBuilder.toString();
 	}
 
@@ -262,15 +316,22 @@ public class JUnitTestGenerator extends TestReader {
 		return testName;
 	}
 
-	public void writeSuite() {
+	public void writeSuite(String packageName, String className) {
+		if(packageName == null) packageName = "";
+
 		try {
-			File testFile = new File(OUT_DIR + File.separator + "AllTests.java");
+			File testFile = new File(destDir, packageName.replace('.', File.separatorChar) + File.separatorChar + className + ".java");
 			PrintWriter wr = new PrintWriter(testFile);
-			
+
+			if(!packageName.isEmpty()) {
+				wr.println("package " + packageName + ";");
+				wr.println();
+			}
+
 			wr.println("import junit.framework.*;");
 			wr.println("import junit.textui.*;");
 			wr.println();
-			wr.println("public class AllTests {");
+			wr.println("public class " + className + " {");
 			wr.println();
 			wr.println("\tpublic static void main(String[] args) {");
 			wr.println("\t\tTestRunner runner = new TestRunner();");
@@ -279,7 +340,7 @@ public class JUnitTestGenerator extends TestReader {
 			wr.println("\t\tif (! result.wasSuccessful())");
 			wr.println("\t\t\tSystem.exit(1);");
 			wr.println("\t}");
-			
+
 			wr.println("\tpublic static junit.framework.Test suite() {");
 			wr.println("\t\tjunit.framework.TestSuite suite = new junit.framework.TestSuite(\"Test generated by testFul\");");
 			wr.println();

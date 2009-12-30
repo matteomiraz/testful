@@ -4,47 +4,40 @@ package testful.coverage;
 public class TestSizeInformation implements CoverageInformation {
 
 	private static final long serialVersionUID = -357803584845798269L;
-	
-	public static final String KEY = "LEN"; 
-	public static final String NAME = "Test size"; 
-	
-	private static final float TIME_FACTOR = 1.0f / 100;
-	
+
+	public static final String KEY = "LEN";
+	public static final String NAME = "Test size";
+
+	private static final float TIME_FACTOR = 0.1f;
+
 	private final long time;
 	private final int length;
-	
-	private final float quality;
-	
+
+	private float quality = Float.NEGATIVE_INFINITY;
+
 	/**
 	 * Create a test length information
 	 * @param time the time required for executing the test (in milliseconds)
-	 * @param length the lenght of the test (# of operations)
+	 * @param length the length of the test (# of operations)
 	 */
-	public TestSizeInformation(long time, int length) {
-		this.time = time;
-		this.length = length;
-		
-		if(this.time <= 0 && this.length <= 0) 
-			this.quality =  Float.POSITIVE_INFINITY;
-		else
-			this.quality = 
-				time <= 0   ? 0 : time * TIME_FACTOR + 
-				length <= 0 ? 0 : length;
+	public TestSizeInformation(final long time, final int length) {
+		this.time = time > 0 ? time : 0;
+		this.length = length > 0 ? length : 0;
 	}
 
 	@Override
 	public float getQuality() {
 		return quality;
 	}
-	
+
 	public long getTime() {
 		return time;
 	}
-	
+
 	public int getLength() {
 		return length;
 	}
-	
+
 	@Override
 	public String getKey() {
 		return KEY;
@@ -62,16 +55,29 @@ public class TestSizeInformation implements CoverageInformation {
 
 	@Override
 	public boolean contains(CoverageInformation other) {
-		return false;
+		return true;
 	}
 
 	@Override
 	public CoverageInformation createEmpty() {
-		throw new IllegalStateException("Cannot create an empty TestSizeInformation");
+		return new TestSizeInformation(0, 0);
 	}
-	
+
 	@Override
 	public TestSizeInformation clone() throws CloneNotSupportedException {
 		return new TestSizeInformation(time, length);
+	}
+
+	public void setOtherCovs(float covTot) {
+		float len = time * TIME_FACTOR + length;
+
+		if(len > 1)
+			quality = 1.0f*covTot*covTot / (float) Math.log(len);
+	}
+
+	@Override
+	public String toString() {
+		if(quality > 0) return String.format("Length: %d, Time: %d, Quality: %.2f", length, time, quality);
+		else return String.format("Length: %d, Time: %d", length, time);
 	}
 }

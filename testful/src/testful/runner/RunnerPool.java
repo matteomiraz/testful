@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
+import testful.IConfigRunner;
 import testful.utils.Cloner;
 import testful.utils.ElementManager;
 import testful.utils.ElementWithKey;
@@ -41,7 +42,7 @@ public class RunnerPool implements IRunner, ITestRepository {
 	 *          limits)
 	 * @return the test executor
 	 */
-	public static IRunner createExecutor(String moduleName, boolean noLocal, int bufferSize) {
+	private static IRunner createExecutor(String moduleName, boolean noLocal, int bufferSize) {
 		RunnerPool executor = new RunnerPool(moduleName, bufferSize);
 
 		logger.info("Created Runner Pool ");
@@ -89,24 +90,27 @@ public class RunnerPool implements IRunner, ITestRepository {
 				registry = null;
 			}
 		}
-	
+
 		if(!noLocal || registry == null || remote == null) WorkerManager.createLocalWorkers(executor);
 
 		return executor;
 	}
 
-	private static IRunner executors;
-	public static IRunner createExecutor(String moduleName, boolean noLocal) {
-		if(executors == null)
-			executors = createExecutor(moduleName, noLocal, MAX_BUFFER);
+	private static IRunner executor;
+	public static IRunner createExecutor(String moduleName, IConfigRunner config) {
+		if(executor == null)
+			executor = createExecutor(moduleName, !config.isLocalEvaluation(), MAX_BUFFER);
 
-		return executors;
+		for (String remote : config.getRemote())
+			executor.addRemoteWorker(remote);
+
+		return executor;
 	}
 
 	@Override
 	public boolean addRemoteWorker(String rmiAddress) {
 		if(rmiAddress == null) return false;
-		
+
 		try {
 			IWorkerManager wm = (IWorkerManager) Naming.lookup(rmiAddress);
 			wm.addTestRepository(this);
@@ -179,7 +183,7 @@ public class RunnerPool implements IRunner, ITestRepository {
 
 		@Override
 		public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-			if(!completed) 
+			if(!completed)
 				synchronized(this) {
 					if(!completed) {
 						if(unit != null && timeout >= 0) this.wait(unit.toMillis(timeout));
@@ -203,7 +207,7 @@ public class RunnerPool implements IRunner, ITestRepository {
 		public boolean isDone() {
 			return completed;
 		}
-		
+
 		@Override
 		public TestfulFuture<T> clone() throws CloneNotSupportedException {
 			throw new CloneNotSupportedException("Clone not supported in TestfulFuture");
@@ -219,14 +223,14 @@ public class RunnerPool implements IRunner, ITestRepository {
 	private final ConcurrentHashMap<String, Context<?, ?>> testsEval;
 
 	private final String name;
-	
+
 	private RunnerPool(String name, int bufferSize) {
 		if(bufferSize > 0) tests = new ArrayBlockingQueue<Context<?, ?>>(bufferSize);
 		else tests = new LinkedBlockingQueue<Context<?, ?>>();
 
 		futures = new ElementManager<String, TestfulFuture<?>>(new ConcurrentHashMap<String, TestfulFuture<?>>());
 		testsEval = new ConcurrentHashMap<String, Context<?, ?>>();
-		
+
 		this.name = name;
 	}
 
@@ -234,7 +238,7 @@ public class RunnerPool implements IRunner, ITestRepository {
 	public String getName() throws RemoteException {
 		return name;
 	}
-	
+
 	@Override
 	public <T extends Serializable> Future<T> execute(Context<T, ? extends ExecutionManager<T>> ctx) {
 		TestfulFuture<T> ret = new TestfulFuture<T>(ctx.id);

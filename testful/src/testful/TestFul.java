@@ -5,10 +5,13 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+
 import testful.utils.TestfulLogger;
 
 public class TestFul {
-	
+
 	public static final boolean DEBUG = false;
 
 	public static void printHeader(String module) {
@@ -34,5 +37,29 @@ public class TestFul {
 			System.err.println("Cannot log: " + e);
 		}
 	}
+
+	public static void parseCommandLine(Object config, String[] args, Class<?> launcher) {
+
+		CmdLineParser parser = new CmdLineParser(config);
+		try {
+			// parse the arguments.
+			parser.parseArgument(args);
+		} catch(CmdLineException e) {
+
+			System.err.println(e.getMessage());
+
+			System.err.println();
+			System.err.println("Usage: java " + launcher.getCanonicalName() + " [options...] arguments...");
+			parser.setUsageWidth(120);
+			parser.printUsage(System.err);
+			System.err.println();
+
+			// print option sample. This is useful some time
+			System.err.println("   Example: java " + launcher.getCanonicalName() + parser.printExample(org.kohsuke.args4j.ExampleMode.REQUIRED));
+
+			System.exit(1);
+		}
+	}
+
 
 }

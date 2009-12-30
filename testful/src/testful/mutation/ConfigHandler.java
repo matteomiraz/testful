@@ -30,7 +30,7 @@ import soot.util.JasminOutputStream;
 
 /**
  * This class is used during the mutant-generation phase to store the mutator operators
- * applied and the number of mutation of each class. 
+ * applied and the number of mutation of each class.
  * It also creates and manages the <code>testful.mutation.Config</code> class, that hosts:
  * <ul>
  * <li>a method with the name of <code>__max_mutation_full_mutated_class_Name__</code> that returns id of the
@@ -51,8 +51,10 @@ public class ConfigHandler {
 
 	public static final ConfigHandler singleton = new ConfigHandler();
 
+	public static boolean track = false;
+
 	private final SootClass config;
-	
+
 	private final Map<SootClass, Config> map;
 
 	private ConfigHandler() {
@@ -67,30 +69,30 @@ public class ConfigHandler {
 		if(tmpConfig == null) {
 			tmpConfig = new SootClass(Utils.CONFIG_CLASS, Modifier.PUBLIC);
 
-      Scene.v().loadClassAndSupport("java.lang.Object");
+			Scene.v().loadClassAndSupport("java.lang.Object");
 			tmpConfig.setSuperclass(Scene.v().getSootClass("java.lang.Object"));
-      Scene.v().addClass(tmpConfig);
+			Scene.v().addClass(tmpConfig);
 		}
 
 		config = tmpConfig;
 	}
 
-	public void done(String outputDir) throws IOException {
-    File out = new File(outputDir + Utils.CONFIG_CLASS.replace('.', File.separatorChar) + ".class");
-    
-    out.getParentFile().mkdirs();
-    
-    System.out.println("Writing config to " + out.getAbsolutePath());
-    
-    PrintWriter writerOut = new PrintWriter(
-    		new OutputStreamWriter(
-    				new JasminOutputStream(
-    						new FileOutputStream(out))));
-    
-    JasminClass jasminClass = new soot.jimple.JasminClass(config);
-    jasminClass.print(writerOut);
-    writerOut.flush();
-    writerOut.close();
+	public void done(File outputDir) throws IOException {
+		File out = new File(outputDir, Utils.CONFIG_CLASS.replace('.', File.separatorChar) + ".class");
+
+		out.getParentFile().mkdirs();
+
+		System.out.println("Writing config to " + out.getAbsolutePath());
+
+		PrintWriter writerOut = new PrintWriter(
+				new OutputStreamWriter(
+						new JasminOutputStream(
+								new FileOutputStream(out))));
+
+		JasminClass jasminClass = new soot.jimple.JasminClass(config);
+		jasminClass.print(writerOut);
+		writerOut.flush();
+		writerOut.close();
 	}
 
 	public int getMutationNumber(SootClass sClass, SootMethod meth, String type) {
@@ -125,7 +127,7 @@ public class ConfigHandler {
 
 			config.addField(new SootField(Utils.getCurField(sClass.getName()), IntType.v(), Modifier.PUBLIC | Modifier.STATIC | Modifier.VOLATILE));
 
-			if(testful.mutation.Launcher.singleton.isTrack()) {
+			if(track) {
 				Scene.v().loadClassAndSupport(BitSet.class.getCanonicalName());
 				SootClass bitSet = Scene.v().getSootClass(BitSet.class.getCanonicalName());
 				sClass.addField(new SootField(Utils.EXECUTED_MUTANTS, bitSet.getType(), Modifier.PUBLIC | Modifier.STATIC));

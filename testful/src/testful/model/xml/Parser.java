@@ -17,7 +17,10 @@ import javax.xml.bind.ValidationEvent;
 import javax.xml.bind.ValidationEventHandler;
 import javax.xml.bind.ValidationEventLocator;
 
-import testful.Configuration;
+import testful.ConfigCut;
+import testful.IConfigCut;
+import testful.IConfigProject;
+import testful.TestFul;
 import testful.model.Methodz;
 import testful.model.xml.XmlMethod.Kind;
 
@@ -25,7 +28,7 @@ public class Parser {
 
 	/** Should I create the behavior element? */
 	private static final boolean ADD_EMPTY_ELEMENTS = false;
-	
+
 	private static final Class<?>[] CLASSES = { XmlClass.class };
 
 	public static final Parser singleton;
@@ -54,17 +57,16 @@ public class Parser {
 		marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 	}
 
-	public XmlClass parse(Configuration config, String fullQualifiedClassName) throws JAXBException {
-		String fileName = config.getDirSource() + File.separator + fullQualifiedClassName.replace('.', File.separatorChar) + ".xml";
-		
-		return (XmlClass) unmarshaller.unmarshal(new File(fileName));
+	public XmlClass parse(IConfigProject config, String fullQualifiedClassName) throws JAXBException {
+		File file = new File(config.getDirSource(), fullQualifiedClassName.replace('.', File.separatorChar) + ".xml");
+		return (XmlClass) unmarshaller.unmarshal(file);
 	}
 
-	public void encode(XmlClass xml, Configuration config) throws JAXBException {
+	public void encode(XmlClass xml, IConfigProject config) throws JAXBException {
 		FileOutputStream out = null;
-		
+
 		try {
-			out = new FileOutputStream(config.getDirSource() + File.separator + xml.getName().replace('.', File.separatorChar) + ".xml");
+			out = new FileOutputStream(new File(config.getDirSource(), xml.getName().replace('.', File.separatorChar) + ".xml"));
 			marshaller.marshal(xml, out);
 		} catch(IOException e) {
 			System.err.println("Cannot write to file: " + e);
@@ -77,7 +79,7 @@ public class Parser {
 				}
 			}
 		}
-		
+
 	}
 
 	public XmlClass createClassModel(Class<?> c) {
@@ -107,7 +109,7 @@ public class Parser {
 				System.out.println("Skipping " + meth.getName());
 				continue;
 			}
-			
+
 			XmlMethod xmeth = testful.model.xml.ObjectFactory.factory.createMethod();
 
 			xmeth.setExposeState(meth.getReturnType().isArray());
@@ -132,19 +134,19 @@ public class Parser {
 	}
 
 	public static void main(String[] args) throws JAXBException, IOException {
-		Configuration config = new Configuration(); 
-		final URLClassLoader loader = new URLClassLoader(new URL[] { new File(config.getDirVanilla()).toURI().toURL() });
+		IConfigCut config = new ConfigCut();
 
-		for(String className : args)
-			try {
+		TestFul.parseCommandLine(config, args, Parser.class);
 
-				Class<?> clazz = loader.loadClass(className);
-				XmlClass xmlClass = singleton.createClassModel(clazz);
-				singleton.encode(xmlClass, config);
-				
-			} catch(ClassNotFoundException e) {
-				System.err.println("Class not found: " + e);
-			}
+		final URLClassLoader loader = new URLClassLoader(new URL[] { config.getDirCompiled().toURI().toURL() });
+
+		try {
+			Class<?> clazz = loader.loadClass(config.getCut());
+			XmlClass xmlClass = singleton.createClassModel(clazz);
+			singleton.encode(xmlClass, config);
+		} catch(ClassNotFoundException e) {
+			System.err.println("Class not found: " + e);
+		}
 	}
 
 	private static class TestfulValidationEventHandler implements ValidationEventHandler {

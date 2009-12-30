@@ -1,9 +1,9 @@
 package testful.model;
 
+import testful.ConfigCut;
 import testful.GenericTestCase;
 import testful.coverage.CoverageInformation;
 import testful.coverage.bug.BugCoverage;
-import testful.model.TestfulProblem.TestfulConfig;
 import testful.runner.TestfulClassLoader;
 import testful.utils.ElementManager;
 
@@ -17,12 +17,12 @@ public class BugCoverageTestCase extends GenericTestCase {
 	private Reference i2;
 	private Reference f0;
 	private Constructorz cns;
-	
+
 	private Methodz sum;
 
 	@Override
 	protected void setUp() throws Exception {
-		TestfulConfig config = new TestfulConfig();
+		ConfigCut config = new ConfigCut(GenericTestCase.config);
 		config.setCut("dummy.WhiteSample");
 		cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
 		refFactory = new ReferenceFactory(cluster, 1, 3);
@@ -49,10 +49,10 @@ public class BugCoverageTestCase extends GenericTestCase {
 		}
 
 		assertNotNull(sum);
-		
+
 		cns = cut.getConstructors()[0];
 	}
-	
+
 	@Override
 	protected void tearDown() throws Exception {
 		cluster = null;
@@ -65,10 +65,10 @@ public class BugCoverageTestCase extends GenericTestCase {
 		cns = null;
 		sum = null;
 	}
-	
+
 	public void testNormalExecution() throws Exception {
 		System.err.println("BugCoverageTestCase.testNormalExecution()");
-		
+
 		Operation[] ops = new Operation[] {
 				new AssignPrimitive(i0, 1),
 				new AssignPrimitive(i1, 2),
@@ -88,7 +88,7 @@ public class BugCoverageTestCase extends GenericTestCase {
 
 	public void testPostconditionError() throws Exception {
 		System.err.println("BugCoverageTestCase.testPostconditionError()");
-		
+
 		Operation[] ops = new Operation[] {
 				new AssignPrimitive(i0, 1),
 				new AssignPrimitive(i1, 2),
@@ -110,7 +110,7 @@ public class BugCoverageTestCase extends GenericTestCase {
 	 */
 	public void testPreconditionError() throws Exception {
 		System.err.println("BugCoverageTestCase.testPreconditionError()");
-		
+
 		Operation[] ops = new Operation[] {
 				new AssignPrimitive(i0, -1),
 				new AssignPrimitive(i1, -2),
@@ -134,7 +134,7 @@ public class BugCoverageTestCase extends GenericTestCase {
 	 */
 	public void testInvalidCall() throws Exception {
 		System.err.println("BugCoverageTestCase.testInvalidCall()");
-		
+
 		Operation[] ops = new Operation[] {
 				new AssignPrimitive(i0, 1),
 				new AssignPrimitive(i1, 2),

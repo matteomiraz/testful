@@ -21,7 +21,7 @@ public class AnalysisWhiteBox implements Serializable {
 
 	private static final String FILE_SUFFIX = ".wb.gz";
 
-	public static AnalysisWhiteBox read(String baseDir, String className) {
+	public static AnalysisWhiteBox read(File baseDir, String className) {
 		ObjectInput oi = null;
 		try {
 			oi = new ObjectInputStream(new GZIPInputStream(new FileInputStream(getFile(baseDir, className))));
@@ -29,15 +29,15 @@ public class AnalysisWhiteBox implements Serializable {
 		} catch(Exception e) {
 			return null;
 		} finally {
-			if(oi != null) 
+			if(oi != null)
 				try {
 					oi.close();
 				} catch(IOException e) {
 				}
 		}
 	}
-	
-	public void write(String baseDir, String className) {
+
+	public void write(File baseDir, String className) {
 		ObjectOutput oo = null;
 		try {
 			oo = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream(getFile(baseDir, className))));
@@ -45,20 +45,20 @@ public class AnalysisWhiteBox implements Serializable {
 		} catch(IOException e) {
 			System.err.println("Cannot write the white box data file: " + e);
 		} finally {
-			if(oo != null) 
+			if(oo != null)
 				try {
 					oo.close();
 				} catch(IOException e) {
 				}
 		}
 	}
-	
-	private static File getFile(String baseDir, String className) {
+
+	private static File getFile(File baseDir, String className) {
 		return new File(baseDir, className.replace('.', File.separatorChar) + AnalysisWhiteBox.FILE_SUFFIX);
 	}
-	
+
 	private final Map<String, BlockClass> classes;
-	
+
 	public AnalysisWhiteBox() {
 		classes = new HashMap<String, BlockClass>();
 	}
@@ -70,7 +70,7 @@ public class AnalysisWhiteBox implements Serializable {
 	public BlockClass getBlockClass(String className) {
 		return classes.get(className);
 	}
-	
+
 	@Override
 	public AnalysisWhiteBox clone() throws CloneNotSupportedException {
 		return (AnalysisWhiteBox) super.clone();
@@ -101,7 +101,7 @@ public class AnalysisWhiteBox implements Serializable {
 		if(conditionBlocks == null) {
 			conditionBlocks = new BitSet();
 			mapBlockCondition = new HashMap<Integer, BitSet>();
-			
+
 			for(BlockClass bClass : classes.values()) {
 				for(Block block : bClass) {
 					Condition condition = block.getCondition();
@@ -118,31 +118,31 @@ public class AnalysisWhiteBox implements Serializable {
 
 							branches.set(cSwi.getDefaultBranch().getId());
 							for(EdgeConditional br : cSwi.getBranches().values())
-								branches.set(br.getId());	
+								branches.set(br.getId());
 						}
-						
+
 						conditionBlocks.set(block.getId());
 						mapBlockCondition.put(block.getId(), branches);
 					}
 				}
 			}
 		}
-		
+
 		blockCoverage = (BitSet) blockCoverage.clone();
 		blockCoverage.and(conditionBlocks);
-		
+
 		BitSet reachable = new BitSet();
 		for (int blockId = blockCoverage.nextSetBit(0); blockId >= 0; blockId = blockCoverage.nextSetBit(blockId+1))
 			reachable.or(mapBlockCondition.get(blockId));
-		
+
 		return reachable;
 	}
-	
+
 	private transient Map<Integer, Condition> mapBranchCondition;
 	public Condition getConditionFromBranch(int branchId) {
 		if(mapBranchCondition == null) {
 			mapBranchCondition = new HashMap<Integer, Condition>();
-			
+
 			for(BlockClass bClass : classes.values()) {
 				for(Block block : bClass) {
 					Condition condition = block.getCondition();
@@ -167,5 +167,5 @@ public class AnalysisWhiteBox implements Serializable {
 
 		return mapBranchCondition.get(branchId);
 	}
-	
+
 }
