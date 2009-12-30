@@ -3,7 +3,8 @@ package testful.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import testful.model.TestfulProblem.TestfulConfig;
+import testful.ConfigCut;
+import testful.GenericTestCase;
 import testful.runner.TestfulClassLoader;
 
 /**
@@ -18,9 +19,9 @@ public class Test_reorganizerTestCase extends AutoTestCase {
 		ret.add(test.reorganize());
 		return ret;
 	}
-	
+
 	public void testHardStatemachine1() throws Exception {
-		TestfulConfig config = new TestfulConfig();
+		ConfigCut config = new ConfigCut(GenericTestCase.config);
 		config.setCut("dummy.WhiteSample");
 		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
 		ReferenceFactory refFactory = new ReferenceFactory(cluster, 1, 2);
@@ -48,14 +49,14 @@ public class Test_reorganizerTestCase extends AutoTestCase {
 				else nextCharC = m;
 			}
 		}
-		
+
 		Constructorz cns = cut.getConstructors()[0];
 
 		//statemachine_Hard_1 = new statemachine.Hard();
-	  //java_lang_Character_2 = (char) statemachine_Hard_1.nextChar();
-	  //java_lang_Character_2 = (char)((int) 44 /* , */ );
-	  //java_lang_Character_0 = (char) statemachine_Hard_1.nextChar();
-	  //statemachine_Hard_1.nextChar(java_lang_Character_0);
+		//java_lang_Character_2 = (char) statemachine_Hard_1.nextChar();
+		//java_lang_Character_2 = (char)((int) 44 /* , */ );
+		//java_lang_Character_0 = (char) statemachine_Hard_1.nextChar();
+		//statemachine_Hard_1.nextChar(java_lang_Character_0);
 		Operation[] ops = new Operation[] {
 				new CreateObject(s0, cns, new Reference[] { }),
 				new Invoke(c1, s0, nextCharV, new Reference[] { }),

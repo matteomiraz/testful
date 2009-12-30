@@ -1,6 +1,7 @@
 package testful.evolutionary.jMetal;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,33 +14,26 @@ import jmetal.util.JMException;
 import jmetal.util.PseudoRandom;
 import testful.TestfulException;
 import testful.coverage.CoverageInformation;
+import testful.evolutionary.IConfigEvolutionary;
 import testful.model.Operation;
 import testful.model.Test;
+import testful.model.TestCoverage;
 import testful.model.TestfulProblem;
-import testful.model.TestfulProblem.TestfulConfig;
-import testful.runner.IRunner;
 import testful.utils.ElementManager;
 
 public class JMProblem extends Problem<Operation> {
 
 	private static final long serialVersionUID = 1715317823344831168L;
 
-	public static JMProblem currentProblem;
-
 	private final TestfulProblem problem;
-	
-	public static JMProblem getProblem(IRunner executor, boolean enableCache, boolean reloadClasses, TestfulConfig config) throws JMException {
-		currentProblem = new JMProblem(executor, enableCache, reloadClasses, config);
-		return currentProblem;
-	}
 
-	private JMProblem(IRunner executor, boolean enableCache, boolean reloadClasses, TestfulConfig config) throws JMException {
+	public JMProblem(IConfigEvolutionary config) throws JMException {
 		try {
 			problemName_ = "Testful";
 
-			config.fitness.toMinimize = true;
-			
-			problem = new TestfulProblem(executor, enableCache, reloadClasses, config);
+			config.setToMinimize(true);
+
+			problem = new TestfulProblem(config);
 
 			numberOfObjectives_ = problem.getNumObjs();
 
@@ -47,7 +41,7 @@ public class JMProblem extends Problem<Operation> {
 			throw new JMException(e.getMessage());
 		}
 	}
-	
+
 	public Test getTest(Solution<Operation> sol) {
 		return problem.createTest(sol.getDecisionVariables().variables_);
 	}
@@ -132,4 +126,9 @@ public class JMProblem extends Problem<Operation> {
 		problem.doneGeneration(currentGeneration);
 		if(problem.getRunnerCaching().isEnabled()) System.out.println(problem.getRunnerCaching().toString());
 	}
+
+	public Collection<TestCoverage> evaluate(Collection<Test> tests) throws InterruptedException {
+		return problem.evaluate(tests);
+	}
+
 }

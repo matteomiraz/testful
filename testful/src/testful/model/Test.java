@@ -24,21 +24,21 @@ import java.util.Map.Entry;
 public class Test implements Serializable {
 
 	private static final long serialVersionUID = 1591209932563881988L;
-	
+
 	/** the test cluster */
 	private final TestCluster cluster;
 	/** the reference factory */
 	private final ReferenceFactory refFactory;
 	/** the test as sequence of operation */
 	private final Operation[] test;
-	
+
 	private final int hashCode;
 
 	public Test(TestCluster cluster, ReferenceFactory refFactory, Operation[] test) {
 		this.cluster = cluster;
 		this.refFactory = refFactory;
 		this.test = test;
-		this.hashCode = Arrays.hashCode(test);
+		hashCode = Arrays.hashCode(test);
 	}
 
 	public Test(Test ... parts) throws Exception {
@@ -64,7 +64,7 @@ public class Test implements Serializable {
 			for(Operation op : other.test)
 				test[i++] = op.adapt(cluster, refFactory);
 		}
-		this.hashCode = Arrays.hashCode(test);
+		hashCode = Arrays.hashCode(test);
 	}
 
 	public TestCluster getCluster() {
@@ -173,11 +173,11 @@ public class Test implements Serializable {
 
 		return ret;
 	}
-	
+
 	/**
-	 * Returns an equivalent copy of the test, in which useless operations are modified, 
+	 * Returns an equivalent copy of the test, in which useless operations are modified,
 	 * removing useless assignments.<br>
-	 * For example, the operation <code>target = foo.bar()</code> is modified in 
+	 * For example, the operation <code>target = foo.bar()</code> is modified in
 	 * <code>foo.bar()</code> if <code>target</code> is never used in subsequent operations
 	 * @return a modified copy of the test
 	 */
@@ -185,14 +185,14 @@ public class Test implements Serializable {
 		Deque<Operation> ret = new LinkedList<Operation>();
 
 		Clazz cut = cluster.getCut();
-		
+
 		// usedReference[i] == true <==> exist a live use of i between the current point and the end of the test
 		boolean[] usedReference = new boolean[refFactory.getReferences().length];
 		for(int j = 0; j < usedReference.length; j++) usedReference[j] = false;
-		
+
 		for(int i = test.length - 1; i >= 0; i--) {
 			Operation op = test[i];
-			
+
 			if(op instanceof ResetRepository) {
 				for(int j = 0; j < usedReference.length; j++) usedReference[j] = false;
 				ret.addFirst(op);
@@ -202,12 +202,12 @@ public class Test implements Serializable {
 			if(op instanceof AssignConstant) {
 				AssignConstant ac = (AssignConstant) op;
 				Reference target = ac.getTarget();
-				
+
 				if(target == null) continue;
-				
+
 				if(target.getClazz() != cut && !usedReference[target.getId()])
 					op = new AssignConstant(null, ac.getValue());
-				
+
 			} else if(op instanceof AssignPrimitive) {
 				AssignPrimitive ap = (AssignPrimitive) op;
 				Reference target = ap.getTarget();
@@ -220,17 +220,17 @@ public class Test implements Serializable {
 			} else if(op instanceof CreateObject) {
 				CreateObject co = (CreateObject) op;
 				Reference target = co.getTarget();
-				
+
 				if(target != null && target.getClazz() != cut && !usedReference[target.getId()])
 					op = new CreateObject(null, co.getConstructor(), co.getParams());
-				
+
 			} else if(op instanceof Invoke) {
 				Invoke in = (Invoke) op;
 				Reference target = in.getTarget();
-				
+
 				if(target != null && target.getClazz() != cut && !usedReference[target.getId()])
 					op = new Invoke(null, in.getThis(), in.getMethod(), in.getParams());
-				
+
 			}
 
 			ret.addFirst(op);
@@ -238,7 +238,7 @@ public class Test implements Serializable {
 			for(Reference r : op.getUses())
 				usedReference[r.getId()] = true;
 		}
-		
+
 		return new Test(cluster, refFactory, ret.toArray(new Operation[ret.size()]));
 	}
 
@@ -249,30 +249,30 @@ public class Test implements Serializable {
 	public Test simplify() {
 		List<Operation> ops = new ArrayList<Operation>(test.length);
 		Reference[] refs = getReferenceFactory().getReferences();
-		
+
 		/** initialized[i] true if the i-th reference is non-null */
 		boolean[] initialized = new boolean[refs.length];
-		
+
 		/** initializedNull[i] true if has been emitted "ref_i = null" */
 		boolean[] initializedNull = new boolean[refs.length];
-		
+
 		for(int i = 0; i < initialized.length; i++) initialized[i] = false;
-		
+
 		for(Operation op : test) {
 			if(op instanceof AssignConstant) {
 				AssignConstant ac = (AssignConstant) op;
-				
+
 				if(ac.getTarget() != null) {
 					initialized[ac.getTarget().getId()] = (ac.getValue() != null);
 					initializedNull[ac.getTarget().getId()] = (ac.getValue() == null);
-					
+
 					ops.add(op);
 				}
-				
+
 			} else if(op instanceof AssignPrimitive) {
 				AssignPrimitive ap = (AssignPrimitive) op;
 
-				if(ap.getTarget() != null) { 
+				if(ap.getTarget() != null) {
 					initialized[ap.getTarget().getId()] = ap.getValue() != null;
 					initializedNull[ap.getTarget().getId()] = ap.getValue() == null;
 					ops.add(op);
@@ -285,7 +285,7 @@ public class Test implements Serializable {
 
 				simplifyAddNullRef(ops, co.getParams(), initialized, initializedNull);
 
-				if(co.getTarget() != null) 
+				if(co.getTarget() != null)
 					initialized[co.getTarget().getId()] = true;
 
 				ops.add(op);
@@ -296,10 +296,10 @@ public class Test implements Serializable {
 				if(!simplifyIsInvokable(in.getMethod().getParameterTypes(), in.getParams(), initialized)) continue;
 
 				if(in.getThis() != null && !initialized[in.getThis().getId()]) continue;
-				
+
 				simplifyAddNullRef(ops, in.getParams(), initialized, initializedNull);
-				
-				if(in.getTarget() != null) 
+
+				if(in.getTarget() != null)
 					initialized[in.getTarget().getId()] = true;
 
 				ops.add(op);
@@ -307,14 +307,14 @@ public class Test implements Serializable {
 			} else if(op instanceof ResetRepository) {
 				for(int i = 0; i < initialized.length; i++) initialized[i] = false;
 				for(int i = 0; i < initializedNull.length; i++) initializedNull[i] = false;
-				
+
 				ops.add(op);
 			}
 		}
-		
-		return new Test(this.getCluster(), this.getReferenceFactory(), ops.toArray(new Operation[ops.size()]));
+
+		return new Test(getCluster(), getReferenceFactory(), ops.toArray(new Operation[ops.size()]));
 	}
-	
+
 	private boolean simplifyIsInvokable(Clazz[] paramsType, Reference[] params, boolean[] initialized) {
 		for(int i = 0; i < paramsType.length; i++)
 			if(paramsType[i] instanceof PrimitiveClazz && // the parameter is primitive
@@ -324,10 +324,10 @@ public class Test implements Serializable {
 
 		return true;
 	}
-	
+
 	private void simplifyAddNullRef(List<Operation> ops, Reference[] params, boolean[] initialized, boolean[] nullInitialized) {
 		for(int i = 0; i < params.length; i++) {
-			if(!initialized[params[i].getId()] && 
+			if(!initialized[params[i].getId()] &&
 					!nullInitialized[params[i].getId()]) {
 
 				ops.add(new AssignConstant(params[i], null));
@@ -335,12 +335,12 @@ public class Test implements Serializable {
 			}
 		}
 	}
-	
+
 	public Test getSSA() {
 		// for each clazz, counts the number of assignments (i.e. the number of required references)
 		Map<Clazz, Integer> refs = new HashMap<Clazz, Integer>();
 		for(Operation op : test) {
-			
+
 			Reference t = null;
 			if(op instanceof AssignConstant)
 				t = ((AssignConstant) op).getTarget();
@@ -350,7 +350,7 @@ public class Test implements Serializable {
 				t = ((CreateObject) op).getTarget();
 			else if(op instanceof Invoke)
 				t = ((Invoke) op).getTarget();
-			
+
 			if(t != null) {
 				Integer num = refs.get(t.getClazz());
 				if(num == null) num = 2; // this assignemnt and a null assignment
@@ -358,7 +358,7 @@ public class Test implements Serializable {
 				refs.put(t.getClazz(), num);
 			}
 		}
-		
+
 		/** the new reference factory */
 		ReferenceFactory refFactory = new ReferenceFactory(refs);
 
@@ -368,32 +368,32 @@ public class Test implements Serializable {
 			for(Reference r : refFactory.getReferences(c)) d.add(r);
 			newRefs.put(c, d);
 		}
-		
+
 		Map<Clazz, Reference> nullValues = new HashMap<Clazz, Reference>();
 		for(Entry<Clazz, Deque<Reference>> e : newRefs.entrySet())
 			nullValues.put(e.getKey(), e.getValue().remove());
-		
+
 		/** for each original reference (key) store the new reference to use (value) */
 		Map<Reference, Reference> convert = new HashMap<Reference, Reference>();
-		
+
 		ssaInitConvert(convert, nullValues, this.refFactory.getReferences());
-		
+
 		Operation[] newTest = new Operation[test.length];
 		for(int i = 0; i < test.length; i++) {
 			Operation op = test[i];
 
 			if(op instanceof AssignConstant) {
 				op = new AssignConstant(ssaCreate(newRefs, convert, ((AssignConstant) op).getTarget()), ((AssignConstant) op).getValue());
-				
+
 			} else if(op instanceof AssignPrimitive) {
 				op = new AssignPrimitive(ssaCreate(newRefs, convert, ((AssignPrimitive) op).getTarget()), ((AssignPrimitive) op).getValue());
-				
+
 			} else if(op instanceof CreateObject) {
 				CreateObject co = (CreateObject) op;
 				Reference[] params = ssaConvert(convert, co.getParams());
 				Reference target = ssaCreate(newRefs, convert, co.getTarget());
 				op = new CreateObject(target, co.getConstructor(), params);
-				
+
 			} else if(op instanceof Invoke) {
 				Invoke in = (Invoke) op;
 				Reference _this = ssaConvert(convert, in.getThis());
@@ -404,10 +404,10 @@ public class Test implements Serializable {
 				convert = new HashMap<Reference, Reference>();
 				ssaInitConvert(convert, nullValues, this.refFactory.getReferences());
 			}
-			
+
 			newTest[i] = op;
 		}
-		
+
 		return new Test(getCluster(), refFactory, newTest);
 	}
 
@@ -418,15 +418,15 @@ public class Test implements Serializable {
 
 	private Reference ssaCreate(Map<Clazz, Deque<Reference>> newRefs, Map<Reference, Reference> convert, Reference ref) {
 		if(ref == null) return null;
-		
+
 		Reference newRef = newRefs.get(ref.getClazz()).remove();
 		convert.put(ref, newRef);
 		return newRef;
 	}
-	
+
 	private Reference ssaConvert(Map<Reference, Reference> convert, Reference ref) {
 		if(ref == null) return null;
-		
+
 		Reference newRef = convert.get(ref);
 		if(newRef == null) throw new NullPointerException("Running SSA on a test not valid (run simplify() )");
 		return newRef;
@@ -441,39 +441,39 @@ public class Test implements Serializable {
 
 	public Test sortReferences() {
 		Operation[] ops = getTest().clone();
-		
+
 		// for each class, stores unused references
 		Map<Clazz, Queue<Reference>> freeRefs = sortReferencesGetFreeRefs();
-		
+
 		int numRefs = getReferenceFactory().getReferences().length;
 
-		// new references: ref will be replaced with refs[ref.getId()] 
+		// new references: ref will be replaced with refs[ref.getId()]
 		Reference[] refs = new Reference[numRefs];
 
 		for(int i = 0; i < ops.length; i++) {
 			if(ops[i] instanceof AssignConstant) {
 				AssignConstant o = (AssignConstant) ops[i];
 				ops[i] = new AssignConstant(sortReferences(refs, freeRefs, o.getTarget()), o.getValue());
-				
+
 			} else if(ops[i] instanceof AssignPrimitive) {
 				AssignPrimitive o = (AssignPrimitive) ops[i];
 				ops[i] = new AssignPrimitive(sortReferences(refs, freeRefs, o.getTarget()), o.getValue());
-				
+
 			} else if(ops[i] instanceof CreateObject) {
 				CreateObject o = (CreateObject) ops[i];
 				ops[i] = new CreateObject(sortReferences(refs, freeRefs, o.getTarget()), o.getConstructor(), sortReferences(refs, freeRefs, o.getParams()));
-				
+
 			} else if(ops[i] instanceof Invoke) {
 				Invoke o = (Invoke) ops[i];
 				ops[i] = new Invoke(sortReferences(refs, freeRefs, o.getTarget()), sortReferences(refs, freeRefs, o.getThis()), o.getMethod(), sortReferences(refs, freeRefs, o.getParams()));
-				
+
 			} else if(ops[i] instanceof ResetRepository) {
 				freeRefs = sortReferencesGetFreeRefs();
 				refs = new Reference[numRefs];
-				
+
 			}
 		}
-		
+
 		return new Test(getCluster(), getReferenceFactory(), ops);
 	}
 
@@ -483,7 +483,7 @@ public class Test implements Serializable {
 			c = c.getReferenceClazz();
 
 			final Reference[] refs = getReferenceFactory().getReferences(c);
-			
+
 			if(refs != null) {
 				Queue<Reference> q = new LinkedList<Reference>();
 				for(Reference r : refs)
@@ -492,77 +492,77 @@ public class Test implements Serializable {
 			}
 		}
 		return freeRefs;
-	}	
-	
+	}
+
 	private static Reference[] sortReferences(Reference[] refs, Map<Clazz, Queue<Reference>> freeRefs, Reference[] r) {
 		if(r == null) return null;
 
 		Reference[] ret = new Reference[r.length];
-		
+
 		for(int i = 0; i < ret.length; i++) {
 			ret[i] = sortReferences(refs, freeRefs, r[i]);
 		}
-		
+
 		return ret;
 	}
 
 	private static Reference sortReferences(Reference[] refs, Map<Clazz, Queue<Reference>> freeRefs, Reference r) {
 		if(r == null) return null;
-		
+
 		Reference ret = refs[r.getId()];
-		
+
 		if(ret == null) {
 			ret = freeRefs.get(r.getClazz().getReferenceClazz()).remove();
 			refs[r.getId()] = ret;
 		}
-		
+
 		return ret;
 	}
-	
+
 	public Test reorganize() {
 		// contains the reversed clustered version of the test
 		LinkedList<ReorganizeOperationSet> builder = new LinkedList<ReorganizeOperationSet>();
 
 		for(Operation op : test)
 			reorganizeAdd(builder, op);
-		
+
 		int i = 0;
 		Operation[] newOps = new Operation[test.length];
 		Iterator<ReorganizeOperationSet> iter = builder.descendingIterator();
 		while(iter.hasNext()) {
 			Collection<Operation> next = iter.next();
-			
+
 			Operation[] array = next.toArray(new Operation[next.size()]);
 			Arrays.sort(array, ReorganizeOperationComparator.singleton);
-			
+
 			for(Operation op : array)
 				newOps[i++] = op;
 		}
-		
+
 		return new Test(cluster, refFactory, newOps);
 	}
-	
+
 	private static void reorganizeAdd(List<ReorganizeOperationSet> builder, Operation op) {
 		ListIterator<ReorganizeOperationSet> iter = builder.listIterator();
-		
+
 		while(iter.hasNext()) {
 			ReorganizeOperationSet next = iter.next();
-			
+
 			if(!next.isSwappable(op)) {
 				// Add op before next!
-				
+
 				// go before next
 				iter.previous();
-				
+
 				if(iter.hasPrevious()) {
 					iter.previous().add(op);
 				} else {
 					iter.add(new ReorganizeOperationSet(op));
 				}
-				
+
 				return;
 			}
-			
+
 			// reached the first element
 			if(!iter.hasNext()) {
 				next.add(op);
@@ -582,19 +582,19 @@ public class Test implements Serializable {
 
 		private final BitSet defs = new BitSet();
 		private final BitSet uses = new BitSet();
-		
+
 		public ReorganizeOperationSet(Operation op) {
 			super();
 			add(op);
 		}
-		
+
 		@Override
 		public boolean add(Operation e) {
 			boolean added = super.add(e);
-			
+
 			if(added) {
-				
-				if(e instanceof ResetRepository) 
+
+				if(e instanceof ResetRepository)
 					containsResetRepository = true;
 
 				else {
@@ -602,12 +602,12 @@ public class Test implements Serializable {
 					uses.or(e.getUsesBitset());
 				}
 			}
-			
+
 			return added;
 		}
 
 		public boolean isSwappable(Operation op) {
-			if(containsResetRepository || op instanceof ResetRepository) 
+			if(containsResetRepository || op instanceof ResetRepository)
 				return false;
 
 			// check def-def or use-def
@@ -615,7 +615,7 @@ public class Test implements Serializable {
 			tmp.or(uses);
 			tmp.and(op.getDefsBitset());
 			if(!tmp.isEmpty()) return false;
-			
+
 			// check def-use
 			tmp = (BitSet) defs.clone();
 			tmp.and(op.getUsesBitset());
@@ -623,9 +623,9 @@ public class Test implements Serializable {
 
 			return true;
 		}
-		
+
 	}
-	
+
 	private static class ReorganizeOperationComparator implements Comparator<Operation> {
 		static final ReorganizeOperationComparator singleton = new ReorganizeOperationComparator();
 
@@ -642,10 +642,10 @@ public class Test implements Serializable {
 
 				cmp = compare(c1.getValue(), c2.getValue());
 				if(cmp != 0) return cmp;
-				
+
 				cmp = compareFull(c1.getTarget(), c2.getTarget());
 				return cmp;
-				
+
 			} else if(o1 instanceof AssignPrimitive) {
 				AssignPrimitive p1 = (AssignPrimitive) o1;
 				AssignPrimitive p2 = (AssignPrimitive) o2;
@@ -659,7 +659,7 @@ public class Test implements Serializable {
 			} else if(o1 instanceof CreateObject) {
 				CreateObject c1 = (CreateObject) o1;
 				CreateObject c2 = (CreateObject) o2;
-				
+
 				name1 = c1.getConstructor().getFullConstructorName();
 				name2 = c2.getConstructor().getFullConstructorName();
 				cmp = name1.compareTo(name2);
@@ -667,7 +667,7 @@ public class Test implements Serializable {
 
 				cmp = compare(c1.getParams(), c2.getParams());
 				if(cmp != 0) return cmp;
-				
+
 				cmp = compareFull(c1.getTarget(), c2.getTarget());
 				if(cmp != 0) return cmp;
 
@@ -677,9 +677,9 @@ public class Test implements Serializable {
 			} else if(o1 instanceof Invoke) {
 				Invoke i1 = (Invoke) o1;
 				Invoke i2 = (Invoke) o2;
-				
+
 				cmp = compare(i1.getThis(), i2.getThis());
-				
+
 				name1 = i1.getMethod().getFullMethodName();
 				name2 = i2.getMethod().getFullMethodName();
 				cmp = name1.compareTo(name2);
@@ -690,7 +690,7 @@ public class Test implements Serializable {
 
 				cmp = compare(i1.getParams(), i2.getParams());
 				if(cmp != 0) return cmp;
-				
+
 				cmp = compareFull(i1.getThis(), i2.getThis());
 				if(cmp != 0) return cmp;
 
@@ -700,8 +700,8 @@ public class Test implements Serializable {
 				cmp = compareFull(i1.getParams(), i2.getParams());
 				return cmp;
 			}
-			
- 			return o1.toString().compareTo(o2.toString());
+
+			return o1.toString().compareTo(o2.toString());
 		}
 
 		private int compare(final Reference[] params1, final Reference[] params2) {
@@ -730,7 +730,7 @@ public class Test implements Serializable {
 				return -1;
 			} else {
 				if(r2 == null) return 1;
-				
+
 				return r1.getClazz().getClassName().compareTo(r2.getClazz().getClassName());
 			}
 		}
@@ -741,10 +741,10 @@ public class Test implements Serializable {
 				return -1;
 			} else {
 				if(r2 == null) return 1;
-				
+
 				int cmp = r1.getClazz().getClassName().compareTo(r2.getClazz().getClassName());
 				if(cmp != 0) return cmp;
-				
+
 				return r1.getPos() - r2.getPos();
 			}
 		}
@@ -753,9 +753,9 @@ public class Test implements Serializable {
 			if(value1 == null) {
 				if(value2 == null)
 					return 0;
-				else 
+				else
 					return  1;
-			} 
+			}
 
 			if(value2 == null) return -1;
 
@@ -766,16 +766,16 @@ public class Test implements Serializable {
 			if(value1 == null) {
 				if(value2 == null)
 					return 0;
-				else 
+				else
 					return  1;
-			} 
+			}
 
 			if(value2 == null) return -1;
-			
+
 			return value1.toString().compareTo(value2.toString());
-		} 
+		}
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -784,8 +784,6 @@ public class Test implements Serializable {
 
 		for(Operation op : test)
 			sb.append("  ").append(op.toString()).append(";\n");
-		//		sb.append("  ").append(op.getClass().getName()).append("  ").append(op.toString()).append(";\n");
-		//		sb.append("  ").append(op.toString()).append(";\n");
 
 		return sb.toString();
 	}

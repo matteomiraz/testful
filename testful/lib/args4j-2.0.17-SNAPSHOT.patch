@@ -1,0 +1,46 @@
+Index: args4j/src/org/kohsuke/args4j/ClassParser.java
+===================================================================
+RCS file: /cvs/args4j/args4j/src/org/kohsuke/args4j/ClassParser.java,v
+retrieving revision 1.2
+diff -u -r1.2 ClassParser.java
+--- args4j/src/org/kohsuke/args4j/ClassParser.java	4 Sep 2009 05:43:55 -0000	1.2
++++ args4j/src/org/kohsuke/args4j/ClassParser.java	30 Dec 2009 18:22:29 -0000
+@@ -39,5 +39,18 @@
+                 }
+             }
+         }
++        
++        for (Class<?> i : bean.getClass().getInterfaces()) {
++            for( Method m : i.getDeclaredMethods() ) {
++                Option o = m.getAnnotation(Option.class);
++                if(o!=null)
++                	parser.addOption(new MethodSetter(parser,bean,m), o);
++
++                Argument a = m.getAnnotation(Argument.class);
++                if(a!=null) {
++                    parser.addArgument(new MethodSetter(parser,bean,m), a);
++                }
++            }
++		}
+ 	}
+ }
+Index: args4j/test/org/kohsuke/args4j/InheritanceTest.java
+===================================================================
+RCS file: /cvs/args4j/args4j/test/org/kohsuke/args4j/InheritanceTest.java,v
+retrieving revision 1.3
+diff -u -r1.3 InheritanceTest.java
+--- args4j/test/org/kohsuke/args4j/InheritanceTest.java	9 Nov 2006 20:23:26 -0000	1.3
++++ args4j/test/org/kohsuke/args4j/InheritanceTest.java	30 Dec 2009 18:22:29 -0000
+@@ -45,9 +45,9 @@
+         Inheritance bo = testObject;
+         try {
+             parser.parseArgument(args);
+-            assertNull("Annotations are not designed for use in interfaces", bo.mom);
++            assertEquals("Value for class itself not arrived", "Hi Mom", bo.mom);
+         } catch (CmdLineException e) {
+-            //no-op
++            fail("This exception should not occur");
+         }
+     }
+     
+

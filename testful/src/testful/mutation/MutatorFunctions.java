@@ -76,11 +76,9 @@ import testful.utils.Skip;
 
 public class MutatorFunctions extends BodyTransformer {
 
-	public static final MutatorFunctions singleton;
-
 	/** reference to the config class (see <code>ConfigHandler.CONFIG_CLASS</config>) */
 	private static final SootClass config;
-	
+
 	/** reference to Math.abs(int) */
 	private static final SootMethod mathAbsInt;
 	/** reference to Math.abs(long) */
@@ -106,15 +104,6 @@ public class MutatorFunctions extends BodyTransformer {
 	private final static SootMethod bitSet_constructor;
 
 	static {
-		if(testful.mutation.Launcher.singleton.isAbs()) System.out.println("  ABS mutation function enabled");
-		if(testful.mutation.Launcher.singleton.isAor()) System.out.println("  AOR mutation function enabled");
-		if(testful.mutation.Launcher.singleton.isLcr()) System.out.println("  LCR mutation function enabled");
-		if(testful.mutation.Launcher.singleton.isRor()) System.out.println("  ROR mutation function enabled");
-		if(testful.mutation.Launcher.singleton.isUoi()) System.out.println("  UOI mutation function enabled");
-		if(testful.mutation.Launcher.singleton.isTrack()) System.out.println("  Track execution of mutants enabled");
-
-		singleton = new MutatorFunctions();
-
 		Scene.v().loadClassAndSupport(Utils.CONFIG_CLASS);
 		config = Scene.v().getSootClass(Utils.CONFIG_CLASS);
 
@@ -138,7 +127,17 @@ public class MutatorFunctions extends BodyTransformer {
 		bitSet_constructor = bitSet.getMethod(SootMethod.constructorName, new ArrayList<Object>());
 	}
 
-	private MutatorFunctions() {}
+	private final ConfigMutation configMutation;
+	MutatorFunctions(ConfigMutation configMutation) {
+		this.configMutation = configMutation;
+
+		if(configMutation.isAbs()) System.out.println("  ABS mutation function enabled");
+		if(configMutation.isAor()) System.out.println("  AOR mutation function enabled");
+		if(configMutation.isLcr()) System.out.println("  LCR mutation function enabled");
+		if(configMutation.isRor()) System.out.println("  ROR mutation function enabled");
+		if(configMutation.isUoi()) System.out.println("  UOI mutation function enabled");
+		if(configMutation.isTrack()) System.out.println("  Track execution of mutants enabled");
+	}
 
 	@Override
 	@SuppressWarnings("rawtypes")
@@ -153,11 +152,11 @@ public class MutatorFunctions extends BodyTransformer {
 			return;
 		}
 
-		// with the new execution environment, I can also mutate the static initializer  
-//		if(SootMethod.staticInitializerName.equals(method.getName())) {
-//			System.out.println("Skipping static initializer of " + className);
-//			return;
-//		}
+		// with the new execution environment, I can also mutate the static initializer
+		//		if(SootMethod.staticInitializerName.equals(method.getName())) {
+		//			System.out.println("Skipping static initializer of " + className);
+		//			return;
+		//		}
 
 		System.out.println("Mutating " + className + "::" + method.getName());
 
@@ -196,7 +195,7 @@ public class MutatorFunctions extends BodyTransformer {
 
 		// create a reference to the bitset of live mutants
 		Local tmpLiveMutants = null;
-		if(testful.mutation.Launcher.singleton.isTrack()) {
+		if(configMutation.isTrack()) {
 			tmpLiveMutants = Jimple.v().newLocal("__live_mutants__", bitSet.getType());
 			newBody.getLocals().add(tmpLiveMutants);
 			newUnits.add(Jimple.v().newAssignStmt(tmpLiveMutants, Jimple.v().newStaticFieldRef(sClass.getFieldByName(Utils.EXECUTED_MUTANTS).makeRef())));
@@ -275,20 +274,20 @@ public class MutatorFunctions extends BodyTransformer {
 							((type instanceof IntegerType && !(type instanceof BooleanType)) || type instanceof LongType || type instanceof FloatType || type instanceof DoubleType)) {
 
 						// ABS
-						if(testful.mutation.Launcher.singleton.isAbs()) abs(sClass, method, assign, mutations, newUnits, tmpLocal, nopAfter);
+						if(configMutation.isAbs()) abs(sClass, method, assign, mutations, newUnits, tmpLocal, nopAfter);
 
 						// AOR
-						if(testful.mutation.Launcher.singleton.isAor()) aor(sClass, method, assign, mutations, newUnits, tmpLocal, nopAfter);
+						if(configMutation.isAor()) aor(sClass, method, assign, mutations, newUnits, tmpLocal, nopAfter);
 
 					}
 
 				// apply mutator functions working on booleans
 					else if(type instanceof BooleanType) {
 						// LCR
-						if(testful.mutation.Launcher.singleton.isLcr()) lcr(sClass, method, assign, mutations, newUnits, tmpLocal, nopAfter);
+						if(configMutation.isLcr()) lcr(sClass, method, assign, mutations, newUnits, tmpLocal, nopAfter);
 
 						// ROR
-						if(testful.mutation.Launcher.singleton.isRor()) ror(sClass, method, assign, mutations, newUnits, tmpLocal, nopAfter);
+						if(configMutation.isRor()) ror(sClass, method, assign, mutations, newUnits, tmpLocal, nopAfter);
 					}
 			} else if(stmt instanceof IfStmt) {
 				IfStmt ifStmt = (IfStmt) stmt;
@@ -299,12 +298,12 @@ public class MutatorFunctions extends BodyTransformer {
 				// WARN: cannot easily apply LCR!
 
 				// ROR
-				if(testful.mutation.Launcher.singleton.isRor()) ror(sClass, method, ifStmt, mutations, newUnits, tmpLocal, nopAfter);
+				if(configMutation.isRor()) ror(sClass, method, ifStmt, mutations, newUnits, tmpLocal, nopAfter);
 			}
 
-			if(testful.mutation.Launcher.singleton.isUoi()) uoi(sClass, method, stmt, mutations, newUnits, tmpLocal, tempLocals, nopAfter);
+			if(configMutation.isUoi()) uoi(sClass, method, stmt, mutations, newUnits, tmpLocal, tempLocals, nopAfter);
 
-			if(testful.mutation.Launcher.singleton.isTrack()) track(mutations, newUnits, tmpLocal, liveMutants);
+			if(configMutation.isTrack()) track(mutations, newUnits, tmpLocal, liveMutants);
 
 			newUnits.add((Unit) stmt.clone());
 			newUnits.add(nopAfter);

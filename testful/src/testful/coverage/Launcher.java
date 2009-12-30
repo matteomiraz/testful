@@ -5,16 +5,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
-
 import soot.PackManager;
 import soot.Scene;
 import soot.SootClass;
 import soot.Transform;
 import soot.jimple.toolkits.scalar.NopEliminator;
-import testful.Configuration;
+import testful.ConfigCut;
+import testful.IConfigCut;
+import testful.TestFul;
 import testful.model.TestCluster;
 import testful.runner.ClassFinderCaching;
 import testful.runner.ClassFinderImpl;
@@ -30,12 +28,6 @@ import testful.utils.SootMain;
  */
 public class Launcher {
 
-	@Option(required = true, name = "-cut", usage = "The class to test", metaVar = "full.qualified.ClassName")
-	private String cut;
-
-	@Option(required = false, name = "-baseDir", usage = "Specify the CUT's base directory")
-	private String baseDir;
-
 	private static final boolean preWriter     = false;
 	private static final boolean instrumenter  = true;
 	private static final boolean postWriter    = false;
@@ -43,20 +35,18 @@ public class Launcher {
 
 	public static void main(String[] args) {
 
-		Launcher l = new Launcher();
-		l.parseCommands(args);
+		IConfigCut config  = new ConfigCut();
+
+		TestFul.parseCommandLine(config, args, Launcher.class);
 
 		try {
 			testful.TestFul.printHeader("Instrumenter");
 
-			Configuration config = new Configuration(l.baseDir);
-			config.setCut(l.cut);
-			
-			String[] SOOT_CONF = new String[] { "-validate", "--keep-line-number", "--xml-attributes", "-f", "c", "-output-dir", config.getDirInstrumented() };
+			String[] SOOT_CONF = new String[] { "-validate", "--keep-line-number", "--xml-attributes", "-f", "c", "-output-dir", config.getDirInstrumented().getAbsolutePath() };
 
 			List<String> sootClassPath = new ArrayList<String>();
-			sootClassPath.add(config.getDirJml());
-			sootClassPath.add(config.getDirVanilla());
+			sootClassPath.add(config.getDirContracts().getAbsolutePath());
+			sootClassPath.add(config.getDirCompiled().getAbsolutePath());
 			sootClassPath.add(System.getProperty("java.class.path"));
 
 			String bootClassPath = System.getProperty("sun.boot.class.path");
@@ -67,13 +57,13 @@ public class Launcher {
 				System.exit(1);
 			}
 
-			ClassFinderCaching finder = new ClassFinderCaching(new ClassFinderImpl(new File(config.getDirInstrumented()), new File(config.getDirJml()), new File(config.getDirVanilla())));
+			ClassFinderCaching finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
 			TestfulClassLoader tcl = new TestfulClassLoader(finder);
 			TestCluster tc = new TestCluster(tcl, config);
 
 			Collection<String> toInstrument = tc.getClassesToInstrument();
 			System.out.println("Instrumenting: " + toInstrument);
-			
+
 			String params[] = new String[SOOT_CONF.length + 2 + toInstrument.size()];
 
 			params[0] = "-cp";
@@ -101,7 +91,7 @@ public class Launcher {
 					Instrumenter.singleton.preprocess(sClass);
 				}
 			}
-			
+
 			String last = null;
 			if(preWriter) {
 				String newPhase = "jtp.preWriter";
@@ -139,34 +129,15 @@ public class Launcher {
 			SootMain.singleton.run();
 
 			if(instrumenter)
-				Instrumenter.singleton.done(config.getDirInstrumented(), l.cut);
-			
-			
+				Instrumenter.singleton.done(config.getDirInstrumented(), config.getCut());
+
+
 			System.out.println("Done");
 			System.exit(0);
-			
+
 		} catch (Exception e) {
 			System.err.println("Error: " + e.getMessage());
 			e.printStackTrace();
-			System.exit(1);
-		}
-	}
-
-	private void parseCommands(String[] args) {
-		CmdLineParser parser = new CmdLineParser(this);
-
-		try {
-			// parse the arguments.
-			parser.parseArgument(args);
-		} catch(CmdLineException e) {
-			System.err.println(e.getMessage());
-			System.err.println("java " + Launcher.class.getCanonicalName() + " [options...] arguments...");
-			parser.printUsage(System.err);
-			System.err.println();
-
-			// print option sample. This is useful some time
-			System.err.println("   Example: java " + Launcher.class.getCanonicalName() + parser.printExample(org.kohsuke.args4j.ExampleMode.REQUIRED));
-
 			System.exit(1);
 		}
 	}

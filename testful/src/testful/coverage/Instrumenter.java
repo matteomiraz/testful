@@ -1,5 +1,6 @@
 package testful.coverage;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -27,7 +28,7 @@ import testful.utils.Skip;
 public class Instrumenter extends BodyTransformer {
 
 	static final Instrumenter singleton;
-	
+
 	/** java.lang.Exception soot class */
 	public static final SootClass exceptionClass;
 
@@ -45,20 +46,20 @@ public class Instrumenter extends BodyTransformer {
 	}
 
 	private final UnifiedInstrumentator[] instrumenters = {
-//			testful.coverage.behavior.BehaviorInstrumenter.singleton,
-//			testful.coverage.bug.BugInstrumenter.singleton,
+			//			testful.coverage.behavior.BehaviorInstrumenter.singleton,
+			//			testful.coverage.bug.BugInstrumenter.singleton,
 			testful.coverage.whiteBox.WhiteInstrumenter.singleton
 	};
 
-	public void done(String dir, String cutName) {
+	public void done(File dir, String cutName) {
 		for(UnifiedInstrumentator instr : instrumenters)
 			instr.done(dir, cutName);
 	}
 
 	/**
 	 * Preprocess a class. In this phase it is allowed to add methods to the class.
-	 * Notice that new methods will be processed in subsequent phases. To skip them (or to 
-	 * skip pre-existent methods) annotate them with testful.utils.Skip. 
+	 * Notice that new methods will be processed in subsequent phases. To skip them (or to
+	 * skip pre-existent methods) annotate them with testful.utils.Skip.
 	 * @param sClass the class being preprocessed
 	 */
 	public void preprocess(SootClass sClass) {
@@ -76,7 +77,7 @@ public class Instrumenter extends BodyTransformer {
 			System.err.println("Skipping " + method.getName());
 			return;
 		}
-		
+
 		final SootClass sClass = method.getDeclaringClass();
 		final Iterator<Unit> oldStmtIt = oldBody.getUnits().snapshotIterator();
 
@@ -92,7 +93,7 @@ public class Instrumenter extends BodyTransformer {
 		// checking if the class has (JML) contracts
 		boolean classWithContracts = sClass.implementsInterface(org.jmlspecs.jmlrac.runtime.JMLCheckable.class.getCanonicalName());
 		boolean contractMethod = classWithContracts && !methodName.startsWith("internal$");
-		
+
 		System.out.println("Instrumenting " + sClass.getName() + "." + methodName + " (" + (contractMethod ? "contract" : "implementation") + ")");
 
 		/** stores the start of an operation (i.e. nopPre) */
@@ -107,7 +108,7 @@ public class Instrumenter extends BodyTransformer {
 		//   initial tracker code
 		// :NOP_POST_INIT
 		//
-		// :NOP_BEGIN ( try { ) 
+		// :NOP_BEGIN ( try { )
 		//
 		// :NOP_PRE
 		//   tracking code
@@ -123,15 +124,15 @@ public class Instrumenter extends BodyTransformer {
 		// :NOP_POST
 		//   tracking code
 		// :NOP_AFTER
-		// 
+		//
 		// :NOP_END ( } catch(Throwable) { )
 		//   exceptional tracker code
-		// 
+		//
 
 		// --------------------------------------------------------------------------
 		// initial method code (@this=this, params, superCall)
 		// --------------------------------------------------------------------------
-		
+
 		// skip special statements: this
 		if(!method.isStatic()) newUnits.add(oldStmtIt.next());
 
@@ -144,17 +145,17 @@ public class Instrumenter extends BodyTransformer {
 		if(SootMethod.constructorName.equals(methodName)) newUnits.add(oldStmtIt.next());
 
 		// --------------------------------------------------------------------------
-		// initialization 
+		// initialization
 		// --------------------------------------------------------------------------
 
 		{
 			final Unit nopPre = Jimple.v().newNopStmt();
 			nopPre.addTag(new StringTag("nopInitPre"));
 			newUnits.add(nopPre);
-			
+
 			for(UnifiedInstrumentator i : instrumenters)
 				i.init(newUnits, newBody, oldBody, classWithContracts, contractMethod);
-			
+
 			final Unit nopPost = Jimple.v().newNopStmt();
 			nopPost.addTag(new StringTag("nopInitAfter"));
 			newUnits.add(nopPost);
@@ -170,7 +171,7 @@ public class Instrumenter extends BodyTransformer {
 
 		while(oldStmtIt.hasNext()) {
 			Stmt stmt = (Stmt) oldStmtIt.next();
-			
+
 			final Unit nopPre = Jimple.v().newNopStmt();
 			nopPre.addTag(new StringTag("nopPre"));
 			start.put(stmt, nopPre);
@@ -184,7 +185,7 @@ public class Instrumenter extends BodyTransformer {
 
 			final Unit nopPost = Jimple.v().newNopStmt();
 			nopPost.addTag(new StringTag("nopPost"));
-			
+
 			Unit nopPostExc = null;
 			if(stmt.containsInvokeExpr()) {
 				nopPostExc = Jimple.v().newNopStmt();
@@ -198,14 +199,14 @@ public class Instrumenter extends BodyTransformer {
 			// preprocess
 			for(UnifiedInstrumentator i : instrumenters)
 				i.processPre(newUnits, stmt);
-			
+
 			// insert original stmt
 			newUnits.add(nopOrig1);
 			newUnits.add((Stmt) stmt.clone());
-			if(stmt.containsInvokeExpr()) 
+			if(stmt.containsInvokeExpr())
 				newUnits.add(Jimple.v().newGotoStmt(nopPost));
 			newUnits.add(nopOrig2);
-			
+
 			// postprocess exceptional
 			if(nopPostExc != null) {
 				newUnits.add(nopPostExc);
@@ -213,9 +214,9 @@ public class Instrumenter extends BodyTransformer {
 				newUnits.add(Jimple.v().newIdentityStmt(exc, Jimple.v().newCaughtExceptionRef()));
 				for(UnifiedInstrumentator i : instrumenters)
 					i.processPostExc(newUnits, stmt, exc);
-				
+
 				newUnits.add(Jimple.v().newThrowStmt(exc));
-				
+
 				newTraps.add(Jimple.v().newTrap(throwableClass, nopOrig1, nopOrig2, nopPostExc));
 			}
 
@@ -265,7 +266,7 @@ public class Instrumenter extends BodyTransformer {
 
 				Unit newTarget = start.get(sw.getDefaultTarget());
 				if(newTarget != null) sw.setDefaultTarget(newTarget);
-				
+
 				final int lowIndex = sw.getLowIndex();
 				for(int idx = 0; idx <= sw.getHighIndex()-lowIndex; idx++) {
 					newTarget = start.get(sw.getTarget(idx));
@@ -273,17 +274,17 @@ public class Instrumenter extends BodyTransformer {
 				}
 			} else if(unit instanceof LookupSwitchStmt) {
 				LookupSwitchStmt sw = (LookupSwitchStmt) unit;
-				
+
 				Unit newTarget = start.get(sw.getDefaultTarget());
 				if(newTarget != null) sw.setDefaultTarget(newTarget);
-				
+
 				for(int i = 0; i < sw.getTargetCount(); i++) {
 					newTarget = start.get(sw.getTarget(i));
 					if(newTarget != null) sw.setTarget(i, newTarget);
 				}
 			}
 		}
-		
+
 		// fix traps (try-catch)
 		for(Trap trap : oldBody.getTraps()) {
 			final Unit newBegin = start.get(trap.getBeginUnit());
@@ -293,16 +294,16 @@ public class Instrumenter extends BodyTransformer {
 			newTraps.add(Jimple.v().newTrap(trap.getException(), newBegin, newEnd, newHandler));
 		}
 	}
-	
+
 	public static interface UnifiedInstrumentator {
 		/**
 		 * Preprocess a class. In this phase it is allowed to add methods to the class.
-		 * Notice that new methods will be processed in subsequent phases. To skip them (or to 
-		 * skip pre-existent methods) annotate them with testful.utils.Skip. 
+		 * Notice that new methods will be processed in subsequent phases. To skip them (or to
+		 * skip pre-existent methods) annotate them with testful.utils.Skip.
 		 * @param sClass the class being preprocessed
 		 */
 		public void preprocess(SootClass sClass);
-		
+
 		/**
 		 * Called at the beginning of the method (after identity statements).
 		 * Instrumenters can safely initialize their variables and do initial stuff.
@@ -313,7 +314,7 @@ public class Instrumenter extends BodyTransformer {
 		 * @param contractMethod true if the method being analyzed is the java version of a contract
 		 */
 		public void init(Chain<Unit> newUnits, Body newBody, Body oldBody, boolean classWithContracts, boolean contractMethod);
-		
+
 		/**
 		 * Do something before an operation
 		 * @param newUnits the chain that will be emitted
@@ -342,12 +343,12 @@ public class Instrumenter extends BodyTransformer {
 		 * @param exc the exception is stored in this local (do not modify it)
 		 */
 		public void exceptional(Chain<Unit> newUnits, Local exc);
-		
+
 		/**
 		 * This method is called at the end of the processing (after analyzing all classes' methods)
-		 * @param	baseDir	the base directory of the project under test 
+		 * @param	baseDir	the base directory of the project under test
 		 * @param cutName the name of the class under test
 		 */
-		public void done(String baseDir, String cutName);
+		public void done(File baseDir, String cutName);
 	}
 }
