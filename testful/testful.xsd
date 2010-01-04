@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" targetNamespace="http://home.dei.polimi.it/miraz/testful" xmlns:tns="http://home.dei.polimi.it/miraz/testful" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="class" type="tns:class"/>
+
+  <xs:complexType name="class">
+    <xs:sequence>
+      <xs:element name="aux" type="tns:aux" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="constructor" type="tns:constructor" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="method" type="tns:method" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="extra" type="tns:extra" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="instrument" type="xs:boolean" use="required"/>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="aux">
+    <xs:sequence/>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="constructor">
+    <xs:sequence>
+      <xs:element name="parameter" type="tns:parameter" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="extra" type="tns:extra" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="parameter">
+    <xs:sequence>
+      <xs:element name="extra" type="tns:extra" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="exchangeStateWith" type="xs:string"/>
+    <xs:attribute name="exposedByReturn" type="xs:boolean"/>
+    <xs:attribute name="captured" type="xs:boolean"/>
+    <xs:attribute name="mutated" type="xs:boolean"/>
+    <xs:attribute name="array" type="xs:boolean" use="required"/>
+    <xs:attribute name="type" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="extra" abstract="true">
+    <xs:sequence/>
+  </xs:complexType>
+
+  <xs:complexType name="method">
+    <xs:sequence>
+      <xs:element name="parameter" type="tns:parameter" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="extra" type="tns:extra" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="kind" type="tns:kind" use="required"/>
+    <xs:attribute name="exposeState" type="xs:boolean"/>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:simpleType name="kind">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="static"/>
+      <xs:enumeration value="observer"/>
+      <xs:enumeration value="worker"/>
+      <xs:enumeration value="mutator"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>
+
