@@ -120,7 +120,8 @@ public class TestfulLogger {
 		public void write(long gen, long len, ElementManager<String, CoverageInformation> infos) {
 			if(keys == null) {
 
-				if(infos.isEmpty()) return;
+				if(infos.size() <= 1)
+					return;
 
 				int n = 0;
 				StringBuilder sb = new StringBuilder("gen;len");

@@ -1,17 +1,17 @@
 package testful.regression;
 
-import java.io.File;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 
 import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import testful.Configuration;
+import testful.ConfigProject;
+import testful.ConfigRunner;
+import testful.IConfigProject;
+import testful.TestFul;
 import testful.model.Operation;
 import testful.model.OperationStatus;
 import testful.model.Test;
@@ -26,49 +26,39 @@ import testful.runner.RunnerPool;
 
 public class Replay extends TestReader {
 
-	@Option(required = false, name = "-exitOnBug", usage = "Exit when a bug is found")
-	public boolean EXIT_ON_BUG;
+	private static class Config extends ConfigProject implements IConfigProject.Args4j {
 
-	@Option(required = false, name = "-verbose", usage = "Be more verbose")
-	public boolean VERBOSE;
+		@Option(required = false, name = "-exitOnBug", usage = "Exit when a bug is found")
+		public boolean exitOnBug;
 
-	@Argument
-	private List<String> arguments = new ArrayList<String>();
+		@Argument
+		private List<String> arguments = new ArrayList<String>();
+	}
+
+	private final boolean exitOnBug;
 
 	private IRunner executor;
 	private ClassFinder finder;
 
 	public static void main(String[] args) {
-		testful.TestFul.printHeader("Regression Testing");
+		TestFul.printHeader("Regression Testing");
 
-		Replay replay = new Replay(new Configuration());
-		CmdLineParser parser = new CmdLineParser(replay);
+		Config config = new Config();
+		TestFul.parseCommandLine(config, args, Replay.class);
 
-		try {
-			// parse the arguments.
-			parser.parseArgument(args);
+		Replay replay = new Replay(config, config.exitOnBug);
+		replay.read(config.arguments);
 
-			replay.read(replay.arguments);
-		} catch(CmdLineException e) {
-			if(e.getMessage() != null && e.getMessage().trim().length() > 0) System.err.println(e.getMessage());
-
-			System.err.println("java " + Replay.class.getCanonicalName() + " [options...] arguments...");
-			parser.printUsage(System.err);
-			System.err.println();
-
-			// print option sample. This is useful some time
-			System.err.println("   Example: java " + Replay.class.getCanonicalName() + parser.printExample(org.kohsuke.args4j.ExampleMode.REQUIRED));
-
-			System.exit(1);
-		}
 
 		System.exit(0);
 	}
 
-	public Replay(Configuration config) {
-		executor = RunnerPool.createExecutor(null, false);
+	public Replay(IConfigProject config, boolean exitOnBug) {
+		this.exitOnBug = exitOnBug;
+
+		executor = RunnerPool.createExecutor("Replay", new ConfigRunner());
 		try {
-			finder = new ClassFinderCaching(new ClassFinderImpl(new File(config.getDirInstrumented()), new File(config.getDirJml()), new File(config.getDirVanilla())));
+			finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
 		} catch(RemoteException e) {
 			// never happens!
 		}
@@ -90,7 +80,7 @@ public class Replay extends TestReader {
 
 				if(info != null && info.getStatus() == Status.POSTCONDITION_ERROR) {
 					dump(operations);
-					if(EXIT_ON_BUG) System.exit(1);
+					if(exitOnBug) System.exit(1);
 				}
 			}
 		} catch(Exception e) {

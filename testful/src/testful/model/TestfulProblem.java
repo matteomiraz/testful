@@ -1,14 +1,18 @@
 package testful.model;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.Serializable;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
-import testful.Configuration;
 import testful.TestfulException;
 import testful.coverage.CoverageInformation;
 import testful.coverage.RunnerCaching;
@@ -18,9 +22,11 @@ import testful.coverage.bug.BugCoverage;
 import testful.coverage.whiteBox.AnalysisWhiteBox;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
 import testful.coverage.whiteBox.CoverageConditions;
+import testful.evolutionary.IConfigEvolutionary;
 import testful.runner.ClassFinderCaching;
 import testful.runner.ClassFinderImpl;
 import testful.runner.IRunner;
+import testful.runner.RunnerPool;
 import testful.runner.TestfulClassLoader;
 import testful.utils.ElementManager;
 import testful.utils.TestfulLogger;
@@ -32,62 +38,9 @@ public class TestfulProblem implements Serializable {
 
 	private static final long serialVersionUID = 6895567012306544198L;
 
-	public static class TestfulConfig extends Configuration {
-		public final Fitness fitness = new Fitness();
-		public final Cluster cluster = new Cluster();
-
-		public TestfulConfig() {
-			super();
-		}
-
-		public TestfulConfig(String baseDir) {
-			super(baseDir);
-		}
-
-		public static class Fitness {
-			public boolean toMinimize;
-			public boolean len;
-			public boolean bug;
-			public boolean bbd;
-			public boolean bbn;
-			public boolean brd;
-			public boolean brn;
-		}
-
-		public static class Cluster {
-			private String[] aux;
-			private int repoSize;
-			private int repoCutSize;
-
-			public void setAux(String[] aux) {
-				this.aux = aux;
-			}
-
-			public void setRepoSize(int repoSize) {
-				this.repoSize = repoSize;
-			}
-
-			public void setRepoCutSize(int repoCutSize) {
-				this.repoCutSize = repoCutSize;
-			}
-
-			public String[] getAux() {
-				return aux;
-			}
-
-			public int getRepoSize() {
-				return repoSize;
-			}
-
-			public int getRepoCutSize() {
-				return repoCutSize;
-			}
-		}
-	}
-
 	private final int numObjs;
 
-	private TestfulConfig config;
+	private IConfigEvolutionary config;
 
 	private TestCluster cluster;
 	private ReferenceFactory refFactory;
@@ -100,7 +53,6 @@ public class TestfulProblem implements Serializable {
 	private AtomicLong invTot = new AtomicLong(0);
 	private final ClassFinderCaching finder;
 	private final TrackerDatum[] data;
-	private final boolean reloadClasses;
 
 	private int generationNumber;
 
@@ -113,13 +65,14 @@ public class TestfulProblem implements Serializable {
 		//		new Tracker(DefUseCoverage.KEY + "d")
 	};
 
-	public TestfulProblem(IRunner runner, boolean enableCache, boolean reloadClasses, TestfulConfig config) throws TestfulException {
+	public TestfulProblem(IConfigEvolutionary config) throws TestfulException {
+		IRunner runner = RunnerPool.createExecutor("TestFul", config);
+
 		this.config = config;
-		runnerCaching = new RunnerCaching(runner, enableCache);
-		this.reloadClasses = reloadClasses;
+		runnerCaching = new RunnerCaching(runner, config.isCache());
 
 		try {
-			finder = new ClassFinderCaching(new ClassFinderImpl(new File(config.getDirInstrumented()), new File(config.getDirJml()), new File(config.getDirVanilla())));
+			finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
 			TestfulClassLoader tcl = new TestfulClassLoader(finder);
 			cluster = new TestCluster(tcl, config);
 			cluster.clearCache();
@@ -134,12 +87,12 @@ public class TestfulProblem implements Serializable {
 			throw new TestfulException(e);
 		}
 
-		numObjs = (config.fitness.len ? 1 : 0) +
-		(config.fitness.bug ? 1 : 0) +
-		(config.fitness.bbd ? 1 : 0) + (config.fitness.bbd ? 1 : 0) +
-		(config.fitness.brd ? 1 : 0) + (config.fitness.brn ? 1 : 0);
+		numObjs = (config.isLength() ? 1 : 0) +
+		(config.isBug() ? 1 : 0) +
+		(config.isBbd() ? 1 : 0) + (config.isBbn() ? 1 : 0) +
+		(config.isBrd() ? 1 : 0) + (config.isBrn() ? 1 : 0);
 
-		refFactory = new ReferenceFactory(cluster, config.cluster.repoCutSize, config.cluster.repoSize);
+		refFactory = new ReferenceFactory(cluster, config.getNumVarCut(), config.getNumVar());
 
 		try {
 			coverageWriter = TestfulLogger.singleton.getCoverageWriter("coverage.csv");
@@ -194,58 +147,58 @@ public class TestfulProblem implements Serializable {
 
 		float covTot = 1;
 		if(infos != null) {
-			int i = config.fitness.len ? 1 : 0;
+			int i = config.isLength() ? 1 : 0;
 
-			if(config.fitness.bug) {
+			if(config.isBug()) {
 				CoverageInformation cov = infos.get(BugCoverage.KEY);
 				if(cov != null) {
 					covTot += cov.getQuality();
-					ret[i] = config.fitness.toMinimize ? -1 * cov.getQuality() : cov.getQuality();
+					ret[i] = config.isToMinimize() ? -1 * cov.getQuality() : cov.getQuality();
 				}
 				i++;
 			}
 
-			if(config.fitness.bbd) {
+			if(config.isBbd()) {
 				CoverageInformation cov = infos.get(CoverageBasicBlocks.KEY_CODE);
 				if(cov != null) {
 					covTot += cov.getQuality();
-					ret[i] = config.fitness.toMinimize ? -1 * cov.getQuality() : cov.getQuality();
+					ret[i] = config.isToMinimize() ? -1 * cov.getQuality() : cov.getQuality();
 				}
 				i++;
 			}
 
-			if(config.fitness.bbn) {
+			if(config.isBbn()) {
 				CoverageInformation cov = infos.get(CoverageBasicBlocks.KEY_CONTRACT);
 				if(cov != null) {
 					covTot += cov.getQuality();
-					ret[i] = config.fitness.toMinimize ? -1 * cov.getQuality() : cov.getQuality();
+					ret[i] = config.isToMinimize() ? -1 * cov.getQuality() : cov.getQuality();
 				}
 				i++;
 			}
 
-			if(config.fitness.brd) {
+			if(config.isBrd()) {
 				CoverageInformation cov = infos.get(CoverageConditions.KEY_CODE);
 				if(cov != null) {
 					covTot += cov.getQuality();
-					ret[i] = config.fitness.toMinimize ? -1 * cov.getQuality() : cov.getQuality();
+					ret[i] = config.isToMinimize() ? -1 * cov.getQuality() : cov.getQuality();
 				}
 				i++;
 			}
 
-			if(config.fitness.brn) {
+			if(config.isBrn()) {
 				CoverageInformation cov = infos.get(CoverageConditions.KEY_CONTRACT);
 				if(cov != null) {
 					covTot += cov.getQuality();
-					ret[i] = config.fitness.toMinimize ? -1 * cov.getQuality() : cov.getQuality();
+					ret[i] = config.isToMinimize() ? -1 * cov.getQuality() : cov.getQuality();
 				}
 				i++;
 			}
 
-			if(config.fitness.len) {
-				CoverageInformation cov = infos.get(TestSizeInformation.KEY);
+			if(config.isLength()) {
+				TestSizeInformation cov = (TestSizeInformation) infos.get(TestSizeInformation.KEY);
 				if(cov != null) {
-					final float q = cov.getQuality() - (float) Math.log(covTot);
-					ret[0] = config.fitness.toMinimize ? q : -1.0f * q;
+					cov.setOtherCovs(covTot);
+					ret[0] = config.isToMinimize() ? -1.0f * cov.getQuality() : cov.getQuality();
 				}
 			}
 
@@ -264,8 +217,7 @@ public class TestfulProblem implements Serializable {
 
 		try {
 			Test test = createTest(ops);
-			//			return runnerCaching.execute(finder, reloadClasses, test, data);
-			return runnerCaching.executeParts(finder, reloadClasses, test, data);
+			return runnerCaching.executeParts(finder, config.isReload(), test, data);
 		} catch(Exception e) {
 			throw new TestfulException(e);
 		}
@@ -273,7 +225,7 @@ public class TestfulProblem implements Serializable {
 
 	public Future<ElementManager<String, CoverageInformation>> evaluate(List<Operation> ops, TrackerDatum[] data) throws TestfulException {
 		try {
-			return runnerCaching.execute(finder, reloadClasses, createTest(ops), data);
+			return runnerCaching.execute(finder, config.isReload(), createTest(ops), data);
 		} catch(Exception e) {
 			throw new TestfulException(e);
 		}
@@ -281,11 +233,29 @@ public class TestfulProblem implements Serializable {
 
 	public Future<ElementManager<String, CoverageInformation>> evaluate(Test test) throws TestfulException {
 		try {
-			return runnerCaching.executeParts(finder, reloadClasses, test, data);
+			return runnerCaching.executeParts(finder, config.isReload(), test, data);
 		} catch(Exception e) {
 			throw new TestfulException(e);
 		}
 	}
+
+	public Collection<TestCoverage> evaluate(Collection<Test> tests) throws InterruptedException {
+		Map<Test, Future<ElementManager<String, CoverageInformation>>> futures = new LinkedHashMap<Test, Future<ElementManager<String,CoverageInformation>>>();
+		for(Test t : tests)
+			futures.put(t, runnerCaching.executeParts(finder, config.isReload(), t, data));
+
+		Collection<TestCoverage> ret = new ArrayList<TestCoverage>();
+		for (Entry<Test, Future<ElementManager<String, CoverageInformation>>> f : futures.entrySet()) {
+			try {
+				ret.add(new TestCoverage(f.getKey(), f.getValue().get()));
+			} catch (ExecutionException e) {
+				System.err.println("Error valuating test: " + e);
+			}
+		}
+
+		return ret;
+	}
+
 
 	public Test createTest(List<Operation> ops) {
 		return new Test(cluster, refFactory, ops.toArray(new Operation[ops.size()]));

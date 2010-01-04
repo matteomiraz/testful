@@ -15,8 +15,10 @@ import ec.util.MersenneTwisterFast;
 
 public class TestfulMutation extends Mutation<Operation> {
 
-
-	public TestfulMutation() {}
+	private JMProblem problem;
+	public TestfulMutation(JMProblem problem) {
+		this.problem = problem;
+	}
 
 	private float probRemove = 0.5f;
 	public void setProbRemove(float probRemove) {
@@ -27,7 +29,7 @@ public class TestfulMutation extends Mutation<Operation> {
 	public void setProbSimplify(float probSimplify) {
 		this.probSimplify = probSimplify;
 	}
-	
+
 	/**
 	 * Executes the operation
 	 * 
@@ -38,8 +40,8 @@ public class TestfulMutation extends Mutation<Operation> {
 		List<Operation> repr = solution.getDecisionVariables().variables_;
 
 		MersenneTwisterFast random = PseudoRandom.getMersenneTwisterFast();
-		TestCluster cluster = JMProblem.currentProblem.getProblem().getCluster();
-		ReferenceFactory refFactory = JMProblem.currentProblem.getProblem().getRefFactory();
+		TestCluster cluster = problem.getProblem().getCluster();
+		ReferenceFactory refFactory = problem.getProblem().getRefFactory();
 
 		if(repr.isEmpty()) {
 			//			if(random.nextBoolean(probability))
@@ -60,7 +62,7 @@ public class TestfulMutation extends Mutation<Operation> {
 			for(int i = 0; i < repr.size(); i++)
 				if(random.nextBoolean(probability)) {
 
-					if(random.nextBoolean(probRemove)) { 
+					if(random.nextBoolean(probRemove)) {
 						repr.remove(random.nextInt(repr.size()));
 						i--;
 					} else {

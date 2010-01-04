@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:class xmlns:ns2="http://home.dei.polimi.it/miraz/testful" instrument="true" name="dummy.Simple">
+    <constructor/>
+    <method kind="mutator" exposeState="false" name="mInc"/>
+    <method kind="mutator" exposeState="false" name="mDec"/>
+    <method kind="observer" exposeState="false" name="oStatus"/>
+    <method kind="worker" exposeState="false" name="wModulo">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" array="false" type="int"/>
+    </method>
+    <method kind="observer" exposeState="false" name="oAbs"/>
+</ns2:class>

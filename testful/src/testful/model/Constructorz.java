@@ -12,12 +12,12 @@ import testful.model.xml.XmlParameter;
 public class Constructorz implements Serializable {
 
 	private static final long serialVersionUID = -6107876679557652859L;
-	
+
 	private final Clazz clazz;
 	private final Clazz[] params;
 	private final MethodInformation info;
 	private final String fullConstructorName;
-	
+
 	private transient Constructor<?> constructor = null;
 
 	Constructorz(TestCluster cluster, Constructor<?> c, XmlConstructor xml) {
@@ -64,11 +64,13 @@ public class Constructorz implements Serializable {
 	}
 
 	public Constructor<?> toConstructor() {
-		if(constructor == null) try {
-			constructor = clazz.toJavaClass().getConstructor(Clazz.convert(params));
-		} catch(Exception e) {
-			e.printStackTrace();
-			return null; // never happens
+		if(constructor == null) {
+			try {
+				constructor = clazz.toJavaClass().getConstructor(Clazz.convert(params));
+			} catch(Exception e) {
+				e.printStackTrace();
+				return null; // never happens
+			}
 		}
 		return constructor;
 	}

@@ -12,6 +12,7 @@ import testful.utils.ElementWithKey;
  */
 public class TestfulClassLoader extends ClassLoader implements ElementWithKey<String> {
 
+	private static final ClassLoader superClassLoader = TestfulClassLoader.class.getClassLoader();
 	/** for these classes, use always the system classloader */
 	private static final String[] SYSTEM_CLASSES = {
 		"testful.coverage.TrackerDatum"
@@ -20,6 +21,7 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 	/** for these classes force to use the testful classloader */
 	private static final String[] TESTFUL_CLASSES = {
 		"testful.utils.Cloner",
+		"testful.model.TestExecutionManager",
 		"testful.mutation.MutationExecutionManager",
 		"testful.mutation.MutationExecutionManagerSingle",
 		"testful.mutation.MutationExecutionManagerSingle$TestThread",
@@ -58,21 +60,23 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 	private final String key;
 
 	public TestfulClassLoader(ClassFinder finder) throws RemoteException {
+		super(superClassLoader);
+
 		id = idGenerator++;
 		loaded = new HashSet<String>();
 
 		this.finder = finder;
 		key = finder.getKey();
 	}
-	
+
 	public TestfulClassLoader getNew() throws RemoteException {
 		return new TestfulClassLoader(finder);
 	}
-	
+
 	public ClassFinder getFinder() {
 		return finder;
 	}
-	
+
 	@Override
 	protected synchronized Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
 		if(canUseSystemClassLoader(name) || loaded.contains(name)) return super.loadClass(name, resolve);

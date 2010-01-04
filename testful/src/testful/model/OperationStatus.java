@@ -3,7 +3,7 @@ package testful.model;
 public class OperationStatus extends OperationInformation {
 
 	private static final long serialVersionUID = 2202341615366183486L;
-	
+
 	public static final String KEY = "STATUS";
 
 	public static enum Status {

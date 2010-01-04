@@ -1,6 +1,7 @@
 package testful.evolutionary.jMetal;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,49 +14,28 @@ import jmetal.util.JMException;
 import jmetal.util.PseudoRandom;
 import testful.TestfulException;
 import testful.coverage.CoverageInformation;
+import testful.evolutionary.IConfigEvolutionary;
 import testful.model.Operation;
 import testful.model.Test;
+import testful.model.TestCoverage;
 import testful.model.TestfulProblem;
 import testful.model.TestsCollection;
-import testful.model.TestfulProblem.TestfulConfig;
-import testful.runner.IRunner;
 import testful.utils.ElementManager;
 
 public class JMProblem extends Problem<Operation> {
 
 	private static final long serialVersionUID = 1715317823344831168L;
 
-	public static JMProblem currentProblem;
-
 	private final TestfulProblem problem;
-	public TestfulProblem getProblem() {return problem; }
 
-	private TestsCollection initialPopulation; //Tudor
-
-	/**
-	 * Sets the initial population, turning off the internal generator.
-	 * If no initial population is set, then it will be generated internally
-	 * @author Tudor
-	 * @param iPopulation
-	 */
-	public void setInitPopulation(TestsCollection iPopulation){
-		if (iPopulation==null){
-			System.err.println("JMProblem - Setting Iniital Populaton: initialPopulation is null");
-		}
-		initialPopulation = iPopulation;
-	}
-
-	public static JMProblem getProblem(IRunner executor, boolean enableCache, boolean reloadClasses, TestfulConfig config) throws JMException {
-		currentProblem = new JMProblem(executor, enableCache, reloadClasses, config);
-		return currentProblem;
-	}
-
-	private JMProblem(IRunner executor, boolean enableCache, boolean reloadClasses, TestfulConfig config) throws JMException {
+	public JMProblem(IConfigEvolutionary config) throws JMException {
 		try {
 			problemName_ = "Testful";
 
-			config.fitness.toMinimize = true;
-			problem = new TestfulProblem(executor, enableCache, reloadClasses, config);
+			config.setToMinimize(true);
+
+			problem = new TestfulProblem(config);
+
 			numberOfObjectives_ = problem.getNumObjs();
 
 		} catch (TestfulException e) {
@@ -126,6 +106,17 @@ public class JMProblem extends Problem<Operation> {
 	}
 
 
+	private TestsCollection initialPopulation;
+
+	/**
+	 * Sets the initial population.
+	 * @author Tudor
+	 * @param iPopulation the Initial population to use
+	 */
+	public void setInitPopulation(TestsCollection iPopulation){
+		initialPopulation = iPopulation;
+	}
+
 	@Override
 	public List<Operation> generateNewDecisionVariable() {
 		final int size = 10;
@@ -151,10 +142,19 @@ public class JMProblem extends Problem<Operation> {
 		return ret;
 	}
 
+	TestfulProblem getProblem() {
+		return problem;
+	}
+
 	@Override
 	public void setCurrentGeneration(int currentGeneration) {
 		super.setCurrentGeneration(currentGeneration);
 		problem.doneGeneration(currentGeneration);
 		if(problem.getRunnerCaching().isEnabled()) System.out.println(problem.getRunnerCaching().toString());
 	}
+
+	public Collection<TestCoverage> evaluate(Collection<Test> tests) throws InterruptedException {
+		return problem.evaluate(tests);
+	}
+
 }

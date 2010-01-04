@@ -15,7 +15,8 @@ import java.util.TreeSet;
 
 import javax.xml.bind.JAXBException;
 
-import testful.Configuration;
+import testful.IConfigCut;
+import testful.IConfigProject;
 import testful.model.xml.Parser;
 import testful.model.xml.XmlAux;
 import testful.model.xml.XmlClass;
@@ -109,8 +110,8 @@ public class TestCluster implements Serializable {
 	private transient ClassLoader classLoader;
 
 	private transient Map<String, XmlClass> xml;
-	
-	public TestCluster(ClassLoader classLoader, Configuration config) throws ClassNotFoundException {
+
+	public TestCluster(ClassLoader classLoader, IConfigCut config) throws ClassNotFoundException {
 		Set<Clazz> clusterBuilder = new HashSet<Clazz>();
 		Set<Clazz> toDo = new HashSet<Clazz>();
 		registry = new ClassRegistry();
@@ -119,28 +120,28 @@ public class TestCluster implements Serializable {
 		cut = getRegistry().getClazz(classLoader.loadClass(config.getCut()));
 		clusterBuilder.add(cut);
 		addClazz(toDo, cut, config);
-		
+
 		// adding aux classes (as declared in xmls descriptors)
 		while(!toDo.isEmpty()) {
 			Clazz clazz = toDo.iterator().next();
 			toDo.remove(clazz);
-			
+
 			if(!clusterBuilder.contains(clazz)) {
 				clusterBuilder.add(clazz);
 				addClazz(toDo, clazz, config);
 			}
-			
+
 			if(clazz instanceof PrimitiveClazz) continue;
-			
+
 			XmlClass xmlClass = xml.get(clazz.getClassName());
 			if(xmlClass != null && xmlClass.getAux() != null) {
 				for(XmlAux aux : xmlClass.getAux())
 					if(aux.getName() != null)
 						toDo.add(getRegistry().getClazz(this.classLoader.loadClass(aux.getName())));
 			}
-			
+
 		}
-		
+
 		PrimitiveClazz.refine(clusterBuilder);
 
 		cluster = clusterBuilder.toArray(new Clazz[clusterBuilder.size()]);
@@ -163,7 +164,7 @@ public class TestCluster implements Serializable {
 		}
 	}
 
-	public Collection<XmlClass> readXmlClasses(Configuration config) {
+	public Collection<XmlClass> readXmlClasses(IConfigProject config) {
 		if(xml != null) {
 			xml = new HashMap<String, XmlClass>();
 			for(Clazz c : all) {
@@ -175,14 +176,14 @@ public class TestCluster implements Serializable {
 				}
 			}
 		}
-		
+
 		return xml.values();
 	}
-	
+
 	public Collection<XmlClass> getXmlClasses() {
 		return xml.values();
 	}
-	
+
 	public Collection<String> getClassesToInstrument() {
 		Collection<String> ret = new TreeSet<String>();
 
@@ -190,17 +191,17 @@ public class TestCluster implements Serializable {
 			XmlClass xmlClazz = xml.get(c.getClassName());
 			if(xmlClazz != null && xmlClazz.isInstrument()) ret.add(c.getClassName());
 		}
-		
+
 		return ret;
 	}
-	
-	private void addClazz(Set<Clazz> todo, Clazz clazz, Configuration config) throws ClassNotFoundException {
+
+	private void addClazz(Set<Clazz> todo, Clazz clazz, IConfigCut config) throws ClassNotFoundException {
 		todo.add(clazz);
 
 		Class<?> javaClass = clazz.toJavaClass();
 
 		if(xml == null) xml = new HashMap<String, XmlClass>();
-		
+
 		if(!xml.containsKey(clazz.getClassName()))
 			try {
 				XmlClass xmlClass = Parser.singleton.parse(config, clazz.getClassName());
@@ -209,15 +210,15 @@ public class TestCluster implements Serializable {
 				System.err.println("Cannot parse XML descriptor of class " + clazz.getClassName());
 			}
 
-		// Inserting in the test cluster all input parameters of constructors of CUT
-		for(Constructor<?> cns : javaClass.getConstructors())
-			for(Class<?> param : cns.getParameterTypes())
-				todo.add(getRegistry().getClazz(param));
+			// Inserting in the test cluster all input parameters of constructors of CUT
+			for(Constructor<?> cns : javaClass.getConstructors())
+				for(Class<?> param : cns.getParameterTypes())
+					todo.add(getRegistry().getClazz(param));
 
-		// Inserting in the test cluster all input parameters of methods of CUT
-		for(Method meth : javaClass.getMethods())
-			if(!Methodz.toSkip(meth)) for(Class<?> param : meth.getParameterTypes())
-				todo.add(getRegistry().getClazz(param));
+			// Inserting in the test cluster all input parameters of methods of CUT
+			for(Method meth : javaClass.getMethods())
+				if(!Methodz.toSkip(meth)) for(Class<?> param : meth.getParameterTypes())
+					todo.add(getRegistry().getClazz(param));
 	}
 
 	/**

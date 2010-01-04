@@ -1,14 +1,19 @@
 package testful.regression;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Future;
 import java.util.zip.GZIPOutputStream;
 
-import testful.Configuration;
-import testful.TestfulException;
+import org.kohsuke.args4j.Argument;
+
+import testful.ConfigProject;
+import testful.ConfigRunner;
+import testful.IConfigProject;
+import testful.TestFul;
 import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
@@ -28,34 +33,39 @@ import testful.utils.Utils;
 
 public class TestCoverageReporter extends TestReader {
 
+	private static class Config extends ConfigProject implements IConfigProject.Args4j {
+
+		@Argument
+		private List<String> arguments = new ArrayList<String>();
+
+	}
+
+
 	private IRunner exec;
 	private final ClassFinderCaching finder;
-	private final Configuration config;
+	private final IConfigProject config;
 
-	public TestCoverageReporter(Configuration config) throws TestfulException {
+	public TestCoverageReporter(IConfigProject config) {
 		try {
 			this.config = config;
-			
-			exec = RunnerPool.createExecutor(null, false);
 
-			finder = new ClassFinderCaching(new ClassFinderImpl(new File(config.getDirInstrumented()), new File(config.getDirJml()), new File(config.getDirVanilla())));
-			
+			exec = RunnerPool.createExecutor("TestCoverageReporter", new ConfigRunner());
+			finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
+
 		} catch(RemoteException e) {
 			// never happens
-			throw new TestfulException(e);
+			throw new RuntimeException("should never happen");
 		}
 	}
 
 	public static void main(String[] args) {
-		try {
-			testful.TestFul.printHeader("Test coverage reporter");
+		testful.TestFul.printHeader("Test coverage reporter");
 
-			TestCoverageReporter coverage = new TestCoverageReporter(new Configuration());
-			coverage.read(args);
-		} catch(TestfulException e) {
-			System.err.println("Error: " + e.getMessage());
-			e.printStackTrace();
-		}
+		Config config = new Config();
+		TestFul.parseCommandLine(config, args, TestCoverageReporter.class);
+
+		TestCoverageReporter coverage = new TestCoverageReporter(config);
+		coverage.read(config.arguments);
 	}
 
 	@Override
@@ -65,7 +75,7 @@ public class TestCoverageReporter extends TestReader {
 			OperationPrimitiveResult.remove(test);
 
 			TrackerDatum[] data= Utils.readData(AnalysisWhiteBox.read(config.getDirInstrumented(), test.getCluster().getCut().getClassName()));
-			
+
 			Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = CoverageExecutionManager.getContext(finder, test, data);
 			Future<ElementManager<String, CoverageInformation>> future = exec.execute(ctx);
 			ElementManager<String, CoverageInformation> coverage = future.get();
