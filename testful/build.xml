@@ -30,6 +30,8 @@
 
 	<!-- classes needed for running tests -->
 	<patternset id="runner">
+		<include name="testful/TestFul*.class"/>
+			
 		<include name="testful/coverage/TrackerDatum*.class"/>
 		<include name="testful/coverage/RunnerCaching*.class"/>
 
@@ -165,6 +167,7 @@
 				<include name="testful/runner/ClassFinder*.class"/>
 				<include name="testful/runner/TestfulClassLoader*.class"/>
 				<include name="testful/TestFul.class"/>
+				<include name="testful/TestFul$*.class"/>
 				<include name="testful/TestfulException.class"/>
 				
 				<include name="testful/IConfigProject*.class"/>

@@ -17,11 +17,12 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import testful.TestFul;
 import testful.utils.CachingMap;
 import testful.utils.Cloner;
-import testful.utils.TestfulLogger;
 import testful.utils.CachingMap.Cacheable;
 
 public class WorkerManager implements IWorkerManager, ITestRepository {
@@ -51,7 +52,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	private AtomicLong sentBytes = new AtomicLong();
 
 	public WorkerManager(int cpu, int buffer) {
-		logger.info("Starting: Worker Manager (" + TestfulLogger.singleton.runId + ")");
+		logger.fine("Starting: Worker Manager (" + TestFul.runId + ")");
 
 		if(buffer <= 0) buffer = CACHE_SIZE;
 		tests = new ArrayBlockingQueue<Context<?, ?>>(buffer);
@@ -66,7 +67,6 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 
 		String msg = "Started " + cpu + " workers";
 		logger.info(msg);
-		System.out.println(msg);
 	}
 
 	@Override
@@ -82,12 +82,11 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 				try {
 					String msg = "Added " + name;
 					logger.info(msg);
-					System.out.println(msg);
 
 					while(running) {
 						Context<?, ?> t = rep.getTest();
 						receivedBytes.addAndGet(t.getSize());
-						logger.fine("Retrieved test: " + t.id);
+						logger.finest("Retrieved test: " + t.id);
 						results.put(t.id, rep);
 						tests.put(t);
 					}
@@ -95,17 +94,14 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 				} catch(InterruptedException e) {
 					String msg = "Interrupted: " + e.getMessage();
 					logger.warning(msg);
-					System.err.println(msg);
 					return;
 				} catch(RemoteException e) {
 					if(e.getCause() instanceof EOFException) {
-						System.out.println("Test Repository disconnected");
 						logger.info("Test Repository disconnected");
 						return;
 					} else {
 						String msg = "Cannot contact test repository: " + e.getMessage();
 						logger.warning(msg);
-						System.err.println(msg);
 						return;
 					}
 				}
@@ -124,11 +120,11 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 
 	@Override
 	public String getName() throws RemoteException {
-		return "runner-" + TestfulLogger.singleton.runId;
+		return "runner-" + TestFul.runId;
 	}
 
 	public void stop() {
-		System.out.println("Stopping all jobs");
+		logger.info("Stopping all jobs");
 
 		try {
 			running = false;
@@ -137,15 +133,14 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 		}
 
 		while(!tests.isEmpty()) {
-			System.out.println("Waiting for " + tests.size() + " tests to execute...");
+			logger.info("Waiting for " + tests.size() + " tests to execute...");
 			try {
 				TimeUnit.SECONDS.sleep(5);
 			} catch(InterruptedException e) {
 			}
 		}
 
-		System.out.println("Bye\n");
-		System.exit(0);
+		logger.info("Bye\n");
 	}
 
 	private void createWorker() {
@@ -196,9 +191,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 			ITestRepository rep = results.remove(key);
 			rep.putException(key, exc);
 		} catch(Exception e) {
-			String msg = "Cannot put the result back in the test repository: " + e.getMessage();
-			logger.warning(msg);
-			System.err.println(msg);
+			logger.log(Level.WARNING, "Cannot put the result back in the test repository: " + e.getMessage(), e);
 		}
 
 		executedJobs.incrementAndGet();
@@ -221,9 +214,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 			ITestRepository rep = results.remove(key);
 			rep.putResult(key, result);
 		} catch(Exception e) {
-			String msg = "Cannot put the result back in the test repository: " + e.getMessage();
-			logger.warning(msg);
-			System.err.println(msg);
+			logger.log(Level.WARNING, "Cannot put the result back in the test repository: " + e.getMessage(), e);
 		}
 
 		executedJobs.incrementAndGet();

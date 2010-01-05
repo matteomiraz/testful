@@ -9,6 +9,8 @@ import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -16,6 +18,8 @@ import testful.coverage.CoverageInformation;
 import testful.model.Tracker.DataLight;
 
 public abstract class TestReader {
+
+	protected abstract Logger getLogger();
 
 	public void read(List<String> fileNames) {
 		for(String fileName : fileNames)
@@ -36,14 +40,13 @@ public abstract class TestReader {
 		String fileName = file.getAbsolutePath();
 		if(file.isDirectory()) {
 			File[] list = file.listFiles();
-			System.out.println("Reading files inside directory " + fileName + " (" + list.length + " elements)");
+			getLogger().fine("Reading files inside directory " + fileName + " (" + list.length + " elements)");
 			read(list);
 		} else {
-			System.out.print("Reading " + fileName + "... ");
 			long start = System.currentTimeMillis();
 			Object read = readObject(file);
 			long stop = System.currentTimeMillis();
-			System.out.println("done (" + (stop - start) / 1000.0 + " s)");
+			getLogger().fine("Read " + fileName + "  in " + (stop - start) / 1000.0 + " seconds");
 
 			if(read == null) return;
 			else if(read instanceof DataLight[]) read(getBaseFileName(fileName), (DataLight[]) read);
@@ -52,7 +55,7 @@ public abstract class TestReader {
 			else if(read instanceof TestCoverage) read(getBaseFileName(fileName), (TestCoverage) read);
 			else if(read instanceof Test[]) read(getBaseFileName(fileName), (Test[]) read);
 			else if(read instanceof Test) read(getBaseFileName(fileName), (Test) read);
-			else System.err.println("Read an unknown object: " + read.getClass().getCanonicalName());
+			else getLogger().warning("Read an unknown object: " + read.getClass().getCanonicalName());
 		}
 	}
 
@@ -62,7 +65,7 @@ public abstract class TestReader {
 	}
 
 	protected void read(String fileName, DataLight read) {
-		System.out.println(fileName + " selectedCoverage: " + read.selectedCoverage);
+		getLogger().fine(fileName + " selectedCoverage: " + read.selectedCoverage);
 		read(fileName, read.tests);
 	}
 
@@ -89,7 +92,7 @@ public abstract class TestReader {
 		return fileName;
 	}
 
-	private static Object readObject(File file) {
+	private Object readObject(File file) {
 		InputStream is = null;
 		try {
 			is = new FileInputStream(file);
@@ -100,10 +103,10 @@ public abstract class TestReader {
 
 			return oi.readObject();
 		} catch(IOException e) {
-			System.err.println("Cannot read from " + file.getAbsolutePath() + ": " + e);
+			getLogger().log(Level.WARNING, "Cannot read from " + file.getAbsolutePath() + ": " + e.getMessage(), e);
 			return null;
 		} catch(ClassNotFoundException e) {
-			System.err.println("Cannot read from " + file.getAbsolutePath() + ": " + e);
+			getLogger().log(Level.WARNING, "Cannot read from " + file.getAbsolutePath() + ": " + e.getMessage(), e);
 			return null;
 		} finally {
 			if(is != null) try {
@@ -114,14 +117,21 @@ public abstract class TestReader {
 	}
 
 	public static void main(String[] args) {
+		final Logger logger = Logger.getLogger("testful.model.testReader");
+
 		TestReader r = new TestReader() {
+
+			@Override
+			protected Logger getLogger() {
+				return logger;
+			}
 
 			@Override
 			protected void read(String fileName, TestCoverage test) {
 				super.read(fileName, test);
 				for(CoverageInformation info : test.getCoverage()) {
 					write(fileName + "-" + info.getKey() + ".txt", info.toString());
-					System.out.println("  " + info.getKey() + ": " + info.getQuality() + "(" + info.getClass().getName() + ")");
+					getLogger().info("  " + info.getKey() + ": " + info.getQuality() + "(" + info.getClass().getName() + ")");
 				}
 			}
 
@@ -131,18 +141,18 @@ public abstract class TestReader {
 					pw.println(value);
 					pw.close();
 				} catch(IOException e) {
-					System.err.println("Cannot write " + fileName);
+					getLogger().log(Level.WARNING, "Cannot write " + fileName + ": " + e.getMessage(), e);
 				}
 			}
 
 			@Override
 			protected void read(String fileName, Test test) {
-				System.out.println(fileName + ": " + test.getTest().length + " operations");
+				getLogger().info(fileName + ": " + test.getTest().length + " operations");
 
 				try {
 					test.write(new GZIPOutputStream(new FileOutputStream(fileName + ".ser.gz")));
 				} catch(IOException e) {
-					System.err.println("Error writing the test: " + e);
+					getLogger().log(Level.WARNING, "Cannot write " + fileName + ": " + e.getMessage(), e);
 				}
 
 				PrintWriter out = null;
@@ -151,7 +161,7 @@ public abstract class TestReader {
 					for(Operation op : test.getTest())
 						out.println(op);
 				} catch(IOException e) {
-					System.err.println("Error writing the test: " + e);
+					getLogger().log(Level.WARNING, "Cannot write " + fileName + ": " + e.getMessage(), e);
 				} finally {
 					if(out != null) out.close();
 				}

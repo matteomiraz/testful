@@ -12,6 +12,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBException;
 
@@ -22,6 +24,8 @@ import testful.model.xml.XmlAux;
 import testful.model.xml.XmlClass;
 
 public class TestCluster implements Serializable {
+
+	private static final Logger logger = Logger.getLogger("testful.model");
 
 	private static final long serialVersionUID = -3821344984330181680L;
 
@@ -159,8 +163,8 @@ public class TestCluster implements Serializable {
 
 			calculateSubClasses();
 		} catch(ClassNotFoundException e) {
-			System.err.println("This shouldn't happen!!!");
-			e.printStackTrace();
+			// if happens, it is really weird
+			logger.log(Level.WARNING, "Cannot find a class: " + e.getMessage(), e);
 		}
 	}
 
@@ -172,7 +176,7 @@ public class TestCluster implements Serializable {
 					XmlClass xmlClass = Parser.singleton.parse(config, c.getClassName());
 					xml.put(c.getClassName(), xmlClass);
 				} catch(JAXBException e) {
-					System.err.println("Cannot parse XML descriptor of class " + c.getClassName() + ": " + e);
+					logger.log(Level.WARNING, "Cannot parse XML descriptor of class " + c.getClassName() + ": " + e.getMessage(), e);
 				}
 			}
 		}
@@ -207,7 +211,7 @@ public class TestCluster implements Serializable {
 				XmlClass xmlClass = Parser.singleton.parse(config, clazz.getClassName());
 				xml.put(clazz.getClassName(), xmlClass);
 			} catch(JAXBException e) {
-				System.err.println("Cannot parse XML descriptor of class " + clazz.getClassName());
+				logger.log(Level.WARNING, "Cannot parse XML descriptor of class " + clazz.getClassName() + ": " + e.getMessage(), e);
 			}
 
 			// Inserting in the test cluster all input parameters of constructors of CUT
@@ -258,8 +262,7 @@ public class TestCluster implements Serializable {
 			try {
 				registry = new ClassRegistry(all);
 			} catch(ClassNotFoundException e) {
-				System.err.println("ERROR: cannnot recreate the registry: " + e);
-				e.printStackTrace();
+				logger.log(Level.SEVERE, "Cannot create the registry: " + e.getMessage(), e);
 
 				registry = new ClassRegistry();
 			}
@@ -419,7 +422,7 @@ public class TestCluster implements Serializable {
 		for(Clazz c : all)
 			if(c.equals(clazz)) return c;
 
-		System.err.println("WARN: cannot adapt " + clazz);
+		logger.warning("Cannot adapt " + clazz);
 		return null;
 	}
 
@@ -439,7 +442,7 @@ public class TestCluster implements Serializable {
 		for(Methodz m : thisClass.getMethods())
 			if(m.equals(method)) return m;
 
-		System.err.println("WARN: cannot adapt " + method);
+		logger.warning("Cannot adapt " + method);
 		return null;
 	}
 
@@ -459,7 +462,7 @@ public class TestCluster implements Serializable {
 		for(Constructorz c : thisClass.getConstructors())
 			if(c.equals(cns)) return c;
 
-		System.err.println("WARN: cannot adapt " + cns);
+		logger.warning("Cannot adapt " + cns);
 		return null;
 	}
 
@@ -479,7 +482,7 @@ public class TestCluster implements Serializable {
 		for(StaticValue v : thisClass.getConstants())
 			if(v.equals(sv)) return v;
 
-		System.err.println("WARN: cannot adapt " + sv);
+		logger.warning("WARN: cannot adapt " + sv);
 		return null;
 	}
 }

@@ -16,9 +16,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.IConfigRunner;
+import testful.TestFul;
 import testful.utils.Cloner;
 import testful.utils.ElementManager;
 import testful.utils.ElementWithKey;
@@ -52,12 +54,12 @@ public class RunnerPool implements IRunner, ITestRepository {
 
 	private RunnerPool() {
 		tests = new ArrayBlockingQueue<Context<?, ?>>(MAX_BUFFER);
-		name = "testful-" + System.currentTimeMillis();
+		name = "testful-" + TestFul.runId;
 
 		futures = new ElementManager<String, TestfulFuture<?>>(new ConcurrentHashMap<String, TestfulFuture<?>>());
 		testsEval = new ConcurrentHashMap<String, Context<?, ?>>();
 
-		logger.info("Created Runner Pool ");
+		logger.fine("Created Runner Pool ");
 
 		Registry registry;
 		try {
@@ -69,9 +71,7 @@ public class RunnerPool implements IRunner, ITestRepository {
 				registry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
 				logger.finer("Created a new RMI registry");
 			} catch(RemoteException e1) {
-				String msg = "Distributed evaluation disabled: " + e1;
-				logger.warning(msg);
-				System.err.println(msg);
+				logger.log(Level.WARNING, "Distributed evaluation disabled", e);
 				registry = null;
 			}
 		}
@@ -80,22 +80,16 @@ public class RunnerPool implements IRunner, ITestRepository {
 		if(registry != null) try {
 			remote = UnicastRemoteObject.exportObject(this, 0);
 		} catch(RemoteException e) {
-			String msg = "Distributed evaluation disabled: " + e;
-			logger.warning(msg);
-			System.err.println(msg);
+			logger.log(Level.WARNING, "Distributed evaluation disabled", e);
 			remote = null;
 		}
 
 		try {
 			registry.bind(name, remote);
-			String msg = "Registered executorPool at " + name;
-			logger.info(msg);
-			System.out.println(msg);
+			logger.info("Registered executorPool at " + name);
 
 		} catch(Exception e) {
-			String msg = "Remote evaluation disabled: " + e;
-			logger.warning(msg);
-			System.err.println(msg);
+			logger.log(Level.WARNING, "Remote evaluation disabled: ", e);
 
 			registry = null;
 		}
@@ -134,17 +128,11 @@ public class RunnerPool implements IRunner, ITestRepository {
 			wm.addTestRepository(this);
 			return true;
 		} catch(MalformedURLException e) {
-			String msg = "Invalid RMI address: " + e.getMessage();
-			System.err.println(msg);
-			logger.warning(msg);
+			logger.log(Level.WARNING, "Invalid RMI address", e);
 		} catch(RemoteException e) {
-			String msg = "Error during the remote invocation: " + e.getMessage();
-			System.err.println(msg);
-			logger.warning(msg);
+			logger.log(Level.WARNING, "Error during the remote invocation", e);
 		} catch(NotBoundException e) {
-			String msg = "The RMI address is not bound: " + e.getMessage();
-			System.err.println(msg);
-			logger.warning(msg);
+			logger.log(Level.WARNING, "The RMI address is not bound", e);
 		}
 		return false;
 	}
@@ -190,7 +178,7 @@ public class RunnerPool implements IRunner, ITestRepository {
 		testsEval.remove(key);
 		TestfulFuture<Serializable> future = (TestfulFuture<Serializable>) futures.remove(key);
 
-		if(future == null) System.err.println("ERROR: " + key + " future does not exist!");
+		if(future == null) logger.warning("Future with " + key + " not found");
 		else future.setResult(Cloner.deserialize(result, true));
 	}
 
@@ -200,7 +188,7 @@ public class RunnerPool implements IRunner, ITestRepository {
 		testsEval.remove(key);
 		TestfulFuture<?> future = futures.remove(key);
 
-		if(future == null) System.err.println("ERROR: " + key + " future does not exist!");
+		if(future == null) logger.warning("Future with " + key + " not found");
 		else future.setException((Exception) Cloner.deserialize(exception, true));
 	}
 

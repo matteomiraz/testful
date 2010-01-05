@@ -1,5 +1,7 @@
 package testful.model;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
@@ -10,20 +12,23 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
 
+import testful.TestFul;
 import testful.coverage.CoverageInformation;
-import testful.utils.TestfulLogger;
 
 /**
  * Collects tests with a given coverage criterion.
  */
 public class Tracker {
 
+	private static final Logger logger = Logger.getLogger("testful.model");
+
 	public static class DataLight implements Serializable, Comparable<DataLight> {
 
 		private static final long serialVersionUID = 8103127933129031049L;
-		
+
 		public final int selectedCoverage;
 		public final TestCoverage[] tests;
 
@@ -51,6 +56,8 @@ public class Tracker {
 	private static final int ELEMS = 10;
 	private static final boolean KEEP_TOP_HALF = true;
 
+	private final File baseDir;
+
 	private final String coverageKey;
 	private final Map<Integer, SortedSet<TestCoverage>> coverage;
 
@@ -67,7 +74,8 @@ public class Tracker {
 
 	private int maxCov = Integer.MIN_VALUE;
 
-	public Tracker(String coverageKey) {
+	public Tracker(File baseDir, String coverageKey) {
+		this.baseDir = baseDir;
 		this.coverageKey = coverageKey;
 		coverage = new HashMap<Integer, SortedSet<TestCoverage>>();
 	}
@@ -123,19 +131,25 @@ public class Tracker {
 
 	public void write() {
 		if(wait < 0) {
-			System.out.println("Tracker" + coverageKey + ": tests not modified, skipping the update!");
+			logger.fine("Tracker" + coverageKey + ": tests not modified, skipping the update!");
 			return;
 		} else if(++wait < MAX_WAIT) return;
 
 		long start = System.currentTimeMillis();
 		ObjectOutput oo = null;
 		try {
-			oo = new ObjectOutputStream(new GZIPOutputStream(TestfulLogger.singleton.getOutputStreamWithBackup("tracker-" + coverageKey + ".ser.gz")));
+			oo = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream(TestFul.createFileWithBackup(baseDir, "tracker-" + coverageKey + ".ser.gz"))));
 			oo.writeObject(DataLight.toArray(coverage));
 			wait = -1;
 		} catch(IOException e) {
 			e.printStackTrace();
 		} finally {
+			if(oo != null) try {
+				oo.close();
+			} catch(IOException e) {
+				e.printStackTrace();
+			}
+
 			long stop = System.currentTimeMillis();
 
 			int numTest = 0;
@@ -150,16 +164,11 @@ public class Tracker {
 			StringBuilder sb = new StringBuilder();
 			sb.append("Tracker").append(coverageKey).append(": ").append(maxCov).append(" ").append((stop - start) / 1000.0).append("s for ").append(numTest).append(" tests ").append(totLength).append(
 			" operations, ").append(String.format("%.2f", newRatio)).append("op/test");
+
 			if(!improved) sb.append(" ").append(String.format("%.2f%%", ((newRatio - prevRatio) / prevRatio) * 100));
-			System.out.println(sb.toString());
+			logger.info(sb.toString());
 			prevRatio = newRatio;
 			improved = false;
-
-			if(oo != null) try {
-				oo.close();
-			} catch(IOException e) {
-				e.printStackTrace();
-			}
 		}
 	}
 }

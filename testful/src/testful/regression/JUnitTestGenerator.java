@@ -6,6 +6,8 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -32,6 +34,8 @@ import testful.runner.ClassFinderImpl;
 import testful.runner.RunnerPool;
 
 public class JUnitTestGenerator extends TestReader {
+
+	private static final Logger logger = Logger.getLogger("testful.regression");
 
 	private static class Config extends ConfigProject implements IConfigProject.Args4j {
 
@@ -73,10 +77,15 @@ public class JUnitTestGenerator extends TestReader {
 
 
 	public static void main(String[] args) {
-		TestFul.printHeader("Regression Testing");
 
 		Config config = new Config();
-		TestFul.parseCommandLine(config, args, JUnitTestGenerator.class);
+		TestFul.parseCommandLine(config, args, JUnitTestGenerator.class, "JUnit test generator");
+
+		if(config.isQuiet())
+			TestFul.printHeader("JUnit test generator");
+
+		TestFul.setupLogging(config);
+
 		RunnerPool.getRunnerPool().startLocalWorkers();
 
 		JUnitTestGenerator gen = new JUnitTestGenerator(config, config.isContracts(), config.getDirGeneratedTests(), config.isExecute());
@@ -117,7 +126,7 @@ public class JUnitTestGenerator extends TestReader {
 			dir.mkdirs();
 
 			File testFile = new File(dir, testName + ".java");
-			System.out.println("Converting test: " + fileName + " -> " + testFile.getAbsolutePath());
+			logger.info("Creating test " + testFile.getAbsolutePath());
 			out = new PrintWriter(testFile);
 
 			if(!pkg.isEmpty()) {
@@ -147,7 +156,7 @@ public class JUnitTestGenerator extends TestReader {
 			suite.add((pkg.isEmpty() ? "" : pkg + "." ) + testName);
 
 		} catch(IOException e) {
-			System.err.println("Cannot write the test: " + e);
+			logger.log(Level.WARNING, "Cannot write test: " + e.getMessage(), e);
 		} finally {
 			if(out != null) out.close();
 		}
@@ -349,7 +358,12 @@ public class JUnitTestGenerator extends TestReader {
 			wr.println("}");
 			wr.close();
 		} catch(IOException e) {
-			e.printStackTrace();
+			logger.log(Level.WARNING, "Cannot write the test suite: " + e.getMessage(), e);
 		}
+	}
+
+	@Override
+	public Logger getLogger() {
+		return logger;
 	}
 }

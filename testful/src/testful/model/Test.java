@@ -203,19 +203,17 @@ public class Test implements Serializable {
 				AssignConstant ac = (AssignConstant) op;
 				Reference target = ac.getTarget();
 
-				if(target == null) continue;
-
-				if(target.getClazz() != cut && !usedReference[target.getId()])
-					op = new AssignConstant(null, ac.getValue());
+				if(target == null) op = null;
+				else if(target.getClazz() != cut && !usedReference[target.getId()])
+					op = null;
 
 			} else if(op instanceof AssignPrimitive) {
 				AssignPrimitive ap = (AssignPrimitive) op;
 				Reference target = ap.getTarget();
 
-				if(target == null) continue;
-
-				if(target != null && target.getClazz() != cut && !usedReference[target.getId()])
-					op = new AssignPrimitive(null, ap.getValue());
+				if(target == null) op = null;
+				else if(target.getClazz() != cut && !usedReference[target.getId()])
+					op = null;
 
 			} else if(op instanceof CreateObject) {
 				CreateObject co = (CreateObject) op;
@@ -233,10 +231,12 @@ public class Test implements Serializable {
 
 			}
 
-			ret.addFirst(op);
+			if(op != null) {
+				ret.addFirst(op);
 
-			for(Reference r : op.getUses())
-				usedReference[r.getId()] = true;
+				for(Reference r : op.getUses())
+					usedReference[r.getId()] = true;
+			}
 		}
 
 		return new Test(cluster, refFactory, ret.toArray(new Operation[ret.size()]));

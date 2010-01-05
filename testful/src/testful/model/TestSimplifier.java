@@ -115,7 +115,7 @@ public class TestSimplifier {
 					} else if(op instanceof Invoke) {
 						Reference target = ((Invoke) op).getTarget();
 						if(target != null) ops.add(new AssignConstant(target, null));
-					} else System.err.println("Unexpected operation: " + op.getClass().getCanonicalName());
+					} else Logger.getLogger("testful.model").warning("Unexpected operation: " + op.getClass().getCanonicalName());
 					break;
 				case SUCCESSFUL:
 					manageOperation(ops, op);

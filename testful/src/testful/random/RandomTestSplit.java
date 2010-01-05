@@ -1,6 +1,8 @@
 package testful.random;
 
+import java.io.File;
 import java.util.concurrent.Future;
+import java.util.logging.Level;
 
 import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
@@ -18,14 +20,14 @@ public class RandomTestSplit extends RandomTest {
 
 	private final TestSplitter simplifier;
 
-	public RandomTestSplit(boolean enableCache, ClassFinder finder, TestCluster cluster, ReferenceFactory refFactory, TrackerDatum ... data) {
-		super(enableCache, finder, cluster, refFactory, data);
+	public RandomTestSplit(boolean enableCache, File logDirectory, ClassFinder finder, TestCluster cluster, ReferenceFactory refFactory, TrackerDatum ... data) {
+		super(enableCache, logDirectory, finder, cluster, refFactory, data);
 
 		simplifier = new TestSplitter(true, cluster, refFactory);
 	}
 
 	@Override
-	public void test(long duration) {
+	public void work(long duration) {
 		start = System.currentTimeMillis();
 		stop = start + duration;
 
@@ -37,7 +39,7 @@ public class RandomTestSplit extends RandomTest {
 					Future<ElementManager<String, CoverageInformation>> fut = runner.execute(finder, true, new Test(cluster, refFactory, ops), data);
 					tests.put(new SimpleEntry<Operation[], Future<ElementManager<String, CoverageInformation>>>(ops, fut));
 				} catch(InterruptedException e) {
-					logger.warning(e.getMessage());
+					logger.log(Level.WARNING, "Interrupted: " + e.getMessage(), e);
 				}
 			}
 		});
@@ -48,12 +50,5 @@ public class RandomTestSplit extends RandomTest {
 		}
 
 		simplifier.flush();
-
-		try {
-			while(getRunningJobs() > 0)
-				Thread.sleep(1000);
-		} catch(InterruptedException e) {}
-
-		keepRunning = false;
 	}
 }

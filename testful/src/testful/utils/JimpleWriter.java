@@ -38,7 +38,7 @@ public class JimpleWriter extends BodyTransformer {
 		for(SootField f : method.getDeclaringClass().getFields()) {
 			if(f.isFinal() && !f.isStatic()) System.out.println(" final " + f.getName());
 		}
-		
+
 		System.out.println();
 		System.out.println("Method: " + method.getBytecodeSignature());
 
@@ -63,17 +63,17 @@ public class JimpleWriter extends BodyTransformer {
 				TableSwitchStmt sw = (TableSwitchStmt) units[i];
 				System.out.println("tswitch(" + sw.getKey() + ")");
 				final int lowIndex = sw.getLowIndex();
-				for(int t = 0; t <= sw.getHighIndex() - lowIndex; t++) 
+				for(int t = 0; t <= sw.getHighIndex() - lowIndex; t++)
 					System.out.println("      case " + (t + lowIndex) + ": goto " + findIndex(units, sw.getTarget(t)));
 				System.out.println("      default: goto " + findIndex(units, sw.getDefaultTarget()));
 			} else if(units[i] instanceof LookupSwitchStmt) {
 				LookupSwitchStmt sw = (LookupSwitchStmt) units[i];
 				System.out.println("lswitch(" + sw.getKey() + ")");
-				for(int v = 0; v < sw.getTargetCount(); v++) 
+				for(int v = 0; v < sw.getTargetCount(); v++)
 					System.out.println("      case " + sw.getLookupValue(v) + ": goto " + findIndex(units, sw.getTarget(v)));
 				System.out.println("      default: goto " + findIndex(units, sw.getDefaultTarget()));
 			} else System.out.println(units[i].toString() + " " + units[i].getClass().getCanonicalName());
-			
+
 			if(units[i].hasTag("StringTag")) {
 				String info = ((StringTag) units[i].getTag("StringTag")).getInfo();
 

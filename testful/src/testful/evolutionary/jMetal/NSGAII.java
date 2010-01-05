@@ -1,10 +1,9 @@
 package testful.evolutionary.jMetal;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.logging.Logger;
 
 import jmetal.base.Algorithm;
 import jmetal.base.Problem;
@@ -29,6 +28,8 @@ public class NSGAII<V extends Variable>
 extends Algorithm<V, Crossover<V>, Mutation<V>, Selection<V, Solution<V>>, LocalSearch<V>>
 implements IUpdate {
 
+	private static final Logger logger = Logger.getLogger("testful.evolutionary");
+
 	private static final long serialVersionUID = 4970928169851043408L;
 
 	private List<Callback> callbacks = new LinkedList<Callback>();
@@ -43,9 +44,9 @@ implements IUpdate {
 		this.callbacks.remove(c);
 	}
 
-	private void update(long start, long current, long end, Map<String, Float> coverage) {
+	private void update(long start, long current, long end) {
 		for(Callback c : callbacks)
-			c.update(start, current, end, coverage);
+			c.update(start, current, end);
 	}
 
 	/** stores the problem  to solve */
@@ -106,7 +107,8 @@ implements IUpdate {
 		population = new SolutionSet<V>(populationSize);
 		int evaluations = 0;
 
-		System.out.println("Evaluating generation 0");
+		int currentGeneration = 0;
+		problem_.setCurrentGeneration(currentGeneration++, System.currentTimeMillis() - startTime);
 
 		// Create the initial solutionSet
 		for (int i = 0; i < populationSize; i++)
@@ -117,20 +119,17 @@ implements IUpdate {
 		for(Solution<V> solution : population)
 			problem_.evaluateConstraints(solution);
 
-		int currentGeneration = 0;
-		problem_.setCurrentGeneration(currentGeneration);
+		problem_.setCurrentGeneration(currentGeneration++, System.currentTimeMillis() - startTime);
 
 		// Generations ...
 		while ((System.currentTimeMillis() - startTime) < maxTime) {
-			currentGeneration++;
-
-			update(startTime, System.currentTimeMillis(), startTime+maxTime, new HashMap<String, Float>());
+			update(startTime, System.currentTimeMillis(), startTime+maxTime);
 
 			// perform the improvement
 			if(improvement != null && currentGeneration % localSearchPeriod == 0) {
 				SolutionSet<V> front = new Ranking<V>(population).getSubfront(0);
 
-				System.out.println("Local search on fronteer (" + front.size() + ")");
+				logger.info("Local search on fronteer (" + front.size() + ")");
 
 				if(improvement instanceof LocalSearchPopulation<?>) {
 					SolutionSet<V> mutated = ((LocalSearchPopulation<V>)improvement).execute(front);
@@ -141,11 +140,16 @@ implements IUpdate {
 					solution = improvement.execute(solution);
 					if(solution != null) problem_.evaluate(solution);
 				}
-
-				problem_.setCurrentGeneration(currentGeneration++);
 			}
 
-			System.out.printf("Evaluating generation %d (%5.2f%%)\n", currentGeneration, + (100.0*(System.currentTimeMillis() - startTime) / maxTime));
+			final long current = System.currentTimeMillis() - startTime;
+			final long remaining = (maxTime - current) / 1000;
+
+			logger.info(String.format("(%5.2f%%) Evaluating generation %d - %d:%02d to go",
+					(100.0 * current) / maxTime,
+					currentGeneration,
+					remaining / 60,
+					remaining % 60));
 
 			SolutionSet<V> offspringPopulation = new SolutionSet<V>(populationSize);
 
@@ -255,7 +259,7 @@ implements IUpdate {
 				remain = 0;
 			} // if
 
-			problem_.setCurrentGeneration(currentGeneration);
+			problem_.setCurrentGeneration(currentGeneration++, System.currentTimeMillis() - startTime);
 
 		} // while
 

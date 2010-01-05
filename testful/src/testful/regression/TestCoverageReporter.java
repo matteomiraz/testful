@@ -6,6 +6,8 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
 
 import org.kohsuke.args4j.Argument;
@@ -32,13 +34,14 @@ import testful.utils.Utils;
 
 public class TestCoverageReporter extends TestReader {
 
+	private static final Logger logger = Logger.getLogger("testful.regression");
+
 	private static class Config extends ConfigProject implements IConfigProject.Args4j {
 
 		@Argument
 		private List<String> arguments = new ArrayList<String>();
 
 	}
-
 
 	private IRunner exec;
 	private final ClassFinderCaching finder;
@@ -58,10 +61,14 @@ public class TestCoverageReporter extends TestReader {
 	}
 
 	public static void main(String[] args) {
-		testful.TestFul.printHeader("Test coverage reporter");
-
 		Config config = new Config();
-		TestFul.parseCommandLine(config, args, TestCoverageReporter.class);
+		TestFul.parseCommandLine(config, args, TestCoverageReporter.class, "Test coverage reporter");
+
+		if(config.isQuiet())
+			testful.TestFul.printHeader("Test coverage reporter");
+
+		TestFul.setupLogging(config);
+
 		RunnerPool.getRunnerPool().startLocalWorkers();
 
 		TestCoverageReporter coverage = new TestCoverageReporter(config);
@@ -86,12 +93,16 @@ public class TestCoverageReporter extends TestReader {
 
 			Test t = new TestCoverage(test.getCluster(), test.getReferenceFactory(), test.getTest(), coverage);
 			t.write(new GZIPOutputStream(new FileOutputStream(fileName + "-cov.ser.gz")));
-			System.out.println("Done.\n\n");
 		} catch(IOException e) {
-			System.err.println("Cannot write the test: " + e.getMessage());
+			logger.log(Level.WARNING, "Cannot write the test " + fileName + ": " + e.getMessage(), e);
 		} catch(Throwable e) {
-			System.err.println("Cannot execute the test: " + e.getMessage());
+			logger.log(Level.WARNING, "Cannot execute the test " + fileName + ": " + e.getMessage(), e);
 		}
 	}
 
+
+	@Override
+	public Logger getLogger() {
+		return logger;
+	}
 }

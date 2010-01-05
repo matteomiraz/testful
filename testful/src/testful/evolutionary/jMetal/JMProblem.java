@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import jmetal.base.Problem;
 import jmetal.base.Solution;
@@ -25,6 +27,8 @@ import testful.runner.ClassFinder;
 import testful.utils.ElementManager;
 
 public class JMProblem extends Problem<Operation> {
+
+	private static final Logger logger = Logger.getLogger("testful.evolutionary");
 
 	private static final long serialVersionUID = 1715317823344831168L;
 
@@ -71,7 +75,6 @@ public class JMProblem extends Problem<Operation> {
 	public int evaluate(Iterable<Solution<Operation>> set) throws JMException {
 		Map<Future<ElementManager<String, CoverageInformation>>, Solution<Operation>> futures = new LinkedHashMap<Future<ElementManager<String,CoverageInformation>>, Solution<Operation>>();
 
-		System.out.print("  Preparing...");
 		long start = System.nanoTime();
 
 		int n = 0;
@@ -80,12 +83,12 @@ public class JMProblem extends Problem<Operation> {
 				n++;
 				futures.put(problem.evaluate(solution.getDecisionVariables().variables_), solution);
 			} catch(TestfulException e) {
-				System.err.println("Error during the evaluation of an individual: " + e);
+				logger.log(Level.WARNING, "Error during the evaluation of an individual: " + e.getMessage(), e);
 			}
 		}
 
 		long prep = System.nanoTime();
-		System.out.printf(" done (%.2f ms) Evaluating...", (prep - start)/1000000.0);
+		logger.fine(String.format("Preparation time: %.2fms", (prep - start)/1000000.0));
 
 		try {
 			for(Entry<Future<ElementManager<String, CoverageInformation>>, Solution<Operation>> entry : futures.entrySet()) {
@@ -98,11 +101,13 @@ public class JMProblem extends Problem<Operation> {
 					solution.setObjective(i, fit[i]);
 			}
 		} catch(Exception e) {
+			logger.log(Level.WARNING, "Error during the evaluation of an individual: " + e.getMessage(), e);
 			throw new JMException(e);
 		}
 
 		long end = System.nanoTime();
-		System.out.printf(" done (%.2f ms)\n", (end-prep)/1000000.0);
+
+		logger.fine(String.format("Execution time: %.2fms", (end - prep)/1000000.0));
 
 		return n;
 	}
@@ -130,9 +135,9 @@ public class JMProblem extends Problem<Operation> {
 	}
 
 	@Override
-	public void setCurrentGeneration(int currentGeneration) {
-		super.setCurrentGeneration(currentGeneration);
-		problem.doneGeneration(currentGeneration);
+	public void setCurrentGeneration(int currentGeneration, long time) {
+		super.setCurrentGeneration(currentGeneration, time);
+		problem.doneGeneration(currentGeneration, time);
 	}
 
 	public Collection<TestCoverage> evaluate(Collection<Test> tests) throws InterruptedException {

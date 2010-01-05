@@ -14,6 +14,7 @@ import java.util.TreeSet;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.coverage.CoverageExecutionManager;
@@ -33,9 +34,8 @@ import testful.utils.ElementManager;
  */
 @SuppressWarnings("unchecked")
 public class TestSplitter {
-	private static Logger logger = Logger.getLogger("testful.model");
 
-	private static final boolean DEBUG = false;
+	private static Logger logger = Logger.getLogger("testful.model");
 
 	public static interface Listener {
 		public void notify(TestCluster cluster, ReferenceFactory refFactory, Operation[] test);
@@ -386,20 +386,16 @@ public class TestSplitter {
 		op.removeInfo(OperationPosition.KEY);
 		op.addInfo(new OperationPosition(position++));
 
-		if(DEBUG)
-			System.out.println(op.getInfo(OperationPosition.KEY) + "\t" + op + "\n");
+		logger.finest(op.getInfo(OperationPosition.KEY) + "\t" + op + "\n");
 
 		if(op instanceof AssignPrimitive) analyze((AssignPrimitive) op);
 		else if(op instanceof AssignConstant) analyze((AssignConstant) op);
 		else if(op instanceof CreateObject) analyze((CreateObject) op);
 		else if(op instanceof Invoke) analyze((Invoke) op);
 		else if(op instanceof ResetRepository) analyze((ResetRepository) op);
-		else System.err.println("Unknown operation: " + op.getClass().getCanonicalName() + " - " + op);
+		else logger.warning("Unknown operation: " + op.getClass().getCanonicalName() + " - " + op);
 
-		if(DEBUG) {
-			System.out.println(toString());
-			System.out.println("---");
-		}
+		logger.finest(toString());
 	}
 
 	public void analyze(Invoke op) {
@@ -752,11 +748,13 @@ public class TestSplitter {
 					(operations[i] == ops || operations[i].containsAll(ops)) )
 				return false;
 
-		if(DEBUG) {
-			System.out.println("-   emit   -");
+		if(logger.isLoggable(Level.FINEST)) {
+			StringBuilder sb = new StringBuilder();
+			sb.append("Emitting:\n");
 			for(Operation op : ops)
-				System.out.println(op.getInfo(OperationPosition.KEY) + "\t" + op);
-			System.out.println("- end emit -");
+				sb.append(op.getInfo(OperationPosition.KEY) + "\t" + op + "\n");
+
+			logger.finest(sb.toString());
 		}
 
 		for(Listener l : listener)

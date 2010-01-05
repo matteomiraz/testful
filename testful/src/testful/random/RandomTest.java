@@ -1,7 +1,6 @@
 package testful.random;
 
-import java.io.FileNotFoundException;
-import java.util.Date;
+import java.io.File;
 import java.util.Map.Entry;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
@@ -9,6 +8,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.coverage.CoverageInformation;
@@ -23,8 +23,6 @@ import testful.model.TestCoverage;
 import testful.model.TestSuite;
 import testful.runner.ClassFinder;
 import testful.utils.ElementManager;
-import testful.utils.TestfulLogger;
-import testful.utils.TestfulLogger.CombinedCoverageWriter;
 import ec.util.MersenneTwisterFast;
 
 public abstract class RandomTest {
@@ -41,7 +39,7 @@ public abstract class RandomTest {
 	private AtomicInteger testsDone = new AtomicInteger();
 
 	protected final BlockingQueue<Entry<Operation[], Future<ElementManager<String, CoverageInformation>>>> tests = new LinkedBlockingQueue<Entry<Operation[], Future<ElementManager<String, CoverageInformation>>>>();
-	private final OptimalTestCreator optimal = new OptimalTestCreator();
+	private final OptimalTestCreator optimal;
 	protected final ClassFinder finder;
 	protected final TrackerDatum[] data;
 
@@ -49,9 +47,11 @@ public abstract class RandomTest {
 
 	protected volatile boolean keepRunning = true;
 
-	public RandomTest(boolean enableCache, ClassFinder finder, TestCluster cluster, ReferenceFactory refFactory, TrackerDatum ... data) {
+	public RandomTest(boolean enableCache, File logDirectory, ClassFinder finder, TestCluster cluster, ReferenceFactory refFactory, TrackerDatum ... data) {
+		optimal = new OptimalTestCreator(logDirectory, logger);
+
 		long seed = System.currentTimeMillis();
-		System.out.println("MersenneTwisterFast: seed=" + seed);
+		logger.config("MersenneTwisterFast: seed=" + seed);
 		random = new MersenneTwisterFast(seed);
 
 		runner = new RunnerCaching(enableCache);
@@ -63,7 +63,20 @@ public abstract class RandomTest {
 		this.data = data;
 	}
 
-	public abstract void test(long duration);
+	protected abstract void work(long duration);
+
+	public final void test(long duration) {
+		startNotificationThread();
+
+		work(duration);
+
+		try {
+			while(getRunningJobs() > 0)
+				Thread.sleep(1000);
+		} catch(InterruptedException e) {}
+
+		keepRunning = false;
+	}
 
 	public ElementManager<String, CoverageInformation> getExecutionInformation() {
 		return optimal.getCoverage();
@@ -73,7 +86,7 @@ public abstract class RandomTest {
 		return tests.size();
 	}
 
-	public void startNotificationThread(final boolean verbose) {
+	private void startNotificationThread() {
 		Thread t = new Thread(new Runnable() {
 
 			@Override
@@ -87,24 +100,15 @@ public abstract class RandomTest {
 
 						final TestCoverage testCoverage = new TestCoverage(new Test(cluster, refFactory, entry.getKey()), cov);
 						optimal.update(testCoverage);
-
 					} catch(InterruptedException e) {
-						System.err.println("Interrupted: " + e);
+						logger.log(Level.WARNING, "Interrupted: " + e.getMessage(), e);
 					} catch(ExecutionException e) {
-						logger.warning(e.getMessage());
+						logger.log(Level.WARNING, "Error during a test evaluation: " + e.getMessage(), e);
 					}
 			}
 		}, "futureWaiter");
 		t.setDaemon(true);
 		t.start();
-
-		CombinedCoverageWriter wrTmp = null;
-		try {
-			wrTmp = TestfulLogger.singleton.getCombinedCoverageWriter(("combined.csv"));
-		} catch (FileNotFoundException e1) {
-			System.err.println("Cannot write to file: " + e1.getMessage());
-		}
-		final CombinedCoverageWriter wr = wrTmp;
 
 		t = new Thread(new Runnable() {
 
@@ -117,19 +121,23 @@ public abstract class RandomTest {
 						return;
 					}
 
-					if(wr != null)
-						wr.write(0, numCall, optimal.getCoverage(), null);
-					optimal.write();
+					long now = System.currentTimeMillis();
+
+					optimal.write(null, numCall, (now - start));
 
 					runner.updateCacheScore();
 
-					if(verbose) {
-						long now = System.currentTimeMillis();
+					if(logger.isLoggable(Level.INFO)) {
 						StringBuilder sb = new StringBuilder();
 
-						sb.append("Start: ").append(new Date(start)).append(" ").append(((now - start) / 1000) / 60).append(" minutes ").append(((now - start) / 1000) % 60).append(" seconds ago\n");
-						sb.append("Now  : ").append(new Date()).append("\n");
-						sb.append("End  : ").append(new Date(stop)).append(" ").append(((stop - now) / 1000) / 60).append(" minutes ").append(((stop - now) / 1000) % 60).append(" seconds").append("\n");
+						long remaining = (stop - now) / 1000;
+
+						sb.append(String.format("%5.2f%% %d:%02d to go ",
+								(100.0 * (now - start))/(stop-start),
+								remaining / 60,
+								remaining % 60
+						));
+
 
 						sb.append("Running ").append(getRunningJobs()).append(" jobs (").append(testsDone.get()).append(" done)\n");
 						if(runner.isEnabled()) sb.append(runner).append("\n");
@@ -140,8 +148,7 @@ public abstract class RandomTest {
 								sb.append("  ").append(info.getName()).append(": ").append(info.getQuality()).append("\n");
 						}
 
-						sb.append("---");
-						System.out.println(sb);
+						logger.info(sb.toString());
 					}
 				}
 			}

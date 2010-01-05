@@ -4,6 +4,8 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -25,6 +27,8 @@ import testful.runner.RunnerPool;
 
 public class Replay extends TestReader {
 
+	private static final Logger logger = Logger.getLogger("testful.regression");
+
 	private static class Config extends ConfigProject implements IConfigProject.Args4j {
 
 		@Option(required = false, name = "-exitOnBug", usage = "Exit when a bug is found")
@@ -40,10 +44,15 @@ public class Replay extends TestReader {
 	private ClassFinder finder;
 
 	public static void main(String[] args) {
-		TestFul.printHeader("Regression Testing");
 
 		Config config = new Config();
-		TestFul.parseCommandLine(config, args, Replay.class);
+		TestFul.parseCommandLine(config, args, Replay.class, "Regression Testing");
+
+		if(config.isQuiet())
+			TestFul.printHeader("Regression Testing");
+
+		TestFul.setupLogging(config);
+
 		RunnerPool.getRunnerPool().startLocalWorkers();
 
 		Replay replay = new Replay(config, config.exitOnBug);
@@ -69,12 +78,10 @@ public class Replay extends TestReader {
 	protected void read(String fileName, Test t) {
 		try {
 
-			System.out.print("Replaying " + fileName);
+			logger.info("Replaying " + fileName);
 			Test test = new Test(t.getCluster(), t.getReferenceFactory(), t.getTest());
 			Future<Operation[]> future = executor.execute(TestExecutionManager.getContext(finder, test));
-			System.out.print(" ... ");
 			Operation[] operations = future.get();
-			System.out.println("done");
 
 			for(Operation op : operations) {
 				OperationStatus info = (OperationStatus) op.getInfo(OperationStatus.KEY);
@@ -85,15 +92,26 @@ public class Replay extends TestReader {
 				}
 			}
 		} catch(Exception e) {
-			System.out.println("error:" + e);
+			logger.log(Level.WARNING, "Cannot execute the test " + fileName + ": " + e.getMessage(), e);
 		}
 	}
 
 	private void dump(Operation[] operations) {
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("I found an error:\n");
+
 		for(Operation op : operations) {
-			System.out.println(op);
+			sb.append(op).append("\n");
 			OperationStatus info = (OperationStatus) op.getInfo(OperationStatus.KEY);
-			if(info != null) System.out.println("  " + info);
+			if(info != null) sb.append("  ").append(info);
 		}
+
+		logger.info(sb.toString());
+	}
+
+	@Override
+	public Logger getLogger() {
+		return logger;
 	}
 }

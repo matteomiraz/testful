@@ -1,9 +1,7 @@
 package testful.random;
 
 import java.io.File;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.kohsuke.args4j.Option;
 
@@ -24,12 +22,6 @@ implements IConfigRandom, IConfigRunner.Args4j, IConfigGeneration.Args4j, IConfi
 	@Option(required = false, name = "-pGenNewObj", usage = "Probability to create new objects")
 	private float pGenNewObj = 0.35f;
 
-	@Option(required = false, name = "-noStats", usage = "Do not print randomTest stats")
-	private boolean noStats = false;
-
-	@Option(required = false, name = "-verbose")
-	private boolean verbose = false;
-
 	@Option(required = false, name = "-type", usage = "Choose the falvor of random testing")
 	private RandomType randomType = RandomType.SIMPLE;
 
@@ -43,30 +35,6 @@ implements IConfigRandom, IConfigRunner.Args4j, IConfigGeneration.Args4j, IConfi
 
 	public void setpGenNewObj(float pGenNewObj) {
 		this.pGenNewObj = pGenNewObj;
-	}
-
-	/* (non-Javadoc)
-	 * @see testful.random.IConfigRandom#isNoStats()
-	 */
-	@Override
-	public boolean isNoStats() {
-		return noStats;
-	}
-
-	public void setNoStats(boolean noStats) {
-		this.noStats = noStats;
-	}
-
-	/* (non-Javadoc)
-	 * @see testful.random.IConfigRandom#isVerbose()
-	 */
-	@Override
-	public boolean isVerbose() {
-		return verbose;
-	}
-
-	public void setVerbose(boolean verbose) {
-		this.verbose = verbose;
 	}
 
 	/* (non-Javadoc)
@@ -232,16 +200,32 @@ implements IConfigRandom, IConfigRunner.Args4j, IConfigGeneration.Args4j, IConfi
 	}
 
 	@Override
-	public Set<String> getSettings() {
-		Set<String> ret = new HashSet<String>();
+	public boolean isQuiet() {
+		return configGenerator.isQuiet();
+	}
 
-		ret.add("cut=" + getCut());
-		ret.add("cutSize=" + getNumVarCut());
-		ret.add("auxSize=" + getNumVar());
-		ret.add("pGenNewObj=" + pGenNewObj);
-		ret.add("stats=" + !noStats);
-		ret.add("time=" + getTime());
+	@Override
+	public void setQuiet(boolean quiet) {
+		configGenerator.setQuiet(quiet);
+	}
 
-		return ret;
+	@Override
+	public File getLog() {
+		return configGenerator.getLog();
+	}
+
+	@Override
+	public void setLog(File log) {
+		configGenerator.setLog(log);
+	}
+
+	@Override
+	public LogLevel getLogLevel() {
+		return configGenerator.getLogLevel();
+	}
+
+	@Override
+	public void setLogLevel(LogLevel logLevel) {
+		configGenerator.setLogLevel(logLevel);
 	}
 }

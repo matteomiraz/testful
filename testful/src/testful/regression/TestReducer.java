@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
 
 import org.kohsuke.args4j.Argument;
@@ -23,6 +25,7 @@ import testful.runner.ClassFinderImpl;
 import testful.runner.RunnerPool;
 
 public class TestReducer extends TestReader {
+	private static final Logger logger = Logger.getLogger("testful.regression");
 
 	private static class Config extends ConfigProject implements IConfigProject.Args4j {
 
@@ -34,14 +37,17 @@ public class TestReducer extends TestReader {
 
 		@Argument
 		private List<String> arguments = new ArrayList<String>();
-
 	}
 
 	public static void main(String[] args) {
-		testful.TestFul.printHeader("Test simplifier");
-
 		Config config = new Config();
-		TestFul.parseCommandLine(config, args, TestReducer.class);
+		TestFul.parseCommandLine(config, args, TestReducer.class, "Test simplifier");
+
+		if(config.isQuiet())
+			testful.TestFul.printHeader("Test simplifier");
+
+		TestFul.setupLogging(config);
+
 		RunnerPool.getRunnerPool().startLocalWorkers();
 
 		TestReducer reducer = new TestReducer(config, config.simplify, config.split);
@@ -73,19 +79,23 @@ public class TestReducer extends TestReader {
 
 	@Override
 	protected void read(final String fileName, Test test) {
-		System.out.println("Reducing test " + fileName + ": " + test.getTest().length);
+		logger.info("Reducing test " + fileName + ": " + test.getTest().length);
 
 		if(simplifier != null) test = simplifier.analyze(test);
 
 		if(split) test = TestSplitter.splitAndMerge(test);
 
 		String name = fileName + "-reduced.ser.gz";
-		System.out.println("Writing test " + name + ": " + test.getTest().length);
+		logger.info("Writing test " + name + ": " + test.getTest().length);
 		try {
 			test.write(new GZIPOutputStream(new FileOutputStream(name)));
 		} catch(IOException e) {
-			System.err.println("Error occoured when writing test " + name + ": " + e);
+			logger.log(Level.WARNING, "Error occoured when writing test " + name + ": " + e.getMessage(), e);
 		}
 	}
 
+	@Override
+	public Logger getLogger() {
+		return logger;
+	}
 }

@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import jmetal.base.Variable;
 import testful.utils.ElementManager;
@@ -169,8 +171,7 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 				} else op = Invoke.generate(c, cluster, refFactory, random);
 				if(op != null) return op;
 			} catch(Throwable e) {
-				System.err.println("EXC randomly generage: " + e);
-				e.printStackTrace();
+				Logger.getLogger("testful.model").log(Level.WARNING, "Cannot create a random element: " + e.getMessage(), e);
 			}
 		}
 	}

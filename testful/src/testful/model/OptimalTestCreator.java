@@ -1,6 +1,7 @@
 package testful.model;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
@@ -11,28 +12,43 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
 
+import testful.TestFul;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TestSizeInformation;
 import testful.utils.ElementManager;
-import testful.utils.TestfulLogger;
 
 public class OptimalTestCreator {
 
+	private final File baseDir;
+
+	private final Logger log;
+
 	/**
-	 * stores the combined coverage obtained so far. Key: coverage criteria;
+	 * stores the combined coverage obtained so far.
+	 * Key: coverage criteria;
 	 * value: combined coverage criteria
 	 */
 	private final ElementManager<String, CoverageInformation> combinedCoverage;
 
 	/**
-	 * stores the optimal solution found so far. Key: coverage criteria; value:
-	 * solutions
+	 * stores the optimal solution found so far.
+	 * Key: coverage criteria;
+	 * value: solutions
 	 */
 	private final Map<String, Set<TestCoverage>> optimal;
 
 	public OptimalTestCreator() {
+		this(null, null);
+	}
+
+	public OptimalTestCreator(File baseDir, Logger log) {
+		this.log = log;
+		this.baseDir = baseDir;
+
 		combinedCoverage = new ElementManager<String, CoverageInformation>();
 		optimal = new HashMap<String, Set<TestCoverage>>();
 	}
@@ -111,12 +127,22 @@ public class OptimalTestCreator {
 		return ret;
 	}
 
-	public void write() {
-		for(Entry<String, Set<TestCoverage>> entry : optimal.entrySet())
-			try {
-				String filename = "combined" + File.separator + entry.getKey();
+	public ElementManager<String, CoverageInformation> getCoverage() {
+		return combinedCoverage;
+	}
 
-				PrintWriter fw = TestfulLogger.singleton.getWriterWithBackup(filename + ".txt");
+	public Map<String, Set<TestCoverage>> getOptimal() {
+		return optimal;
+	}
+
+	public void write(Integer currentGeneration, long totInvocation, long time) {
+		if(baseDir == null) return;
+
+		for(Entry<String, Set<TestCoverage>> entry : optimal.entrySet()) {
+			try {
+				final File dir = new File(baseDir, "combined");
+
+				PrintWriter fw = new PrintWriter(TestFul.createFileWithBackup(dir, entry.getKey() + ".txt"));
 				CoverageInformation combinedInfo = combinedCoverage.get(entry.getKey());
 				fw.println("Combined coverage: " + combinedInfo.getQuality());
 				fw.println("Composed of " + entry.getValue().size() + " tests.");
@@ -130,20 +156,29 @@ public class OptimalTestCreator {
 					for(TestCoverage t : entry.getValue())
 						parts[i++] = t;
 
-					ObjectOutput out = new ObjectOutputStream(new GZIPOutputStream(TestfulLogger.singleton.getOutputStreamWithBackup(filename + ".ser.gz")));
+					ObjectOutput out = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream(TestFul.createFileWithBackup(dir, entry.getKey() + ".ser.gz"))));
 					out.writeObject(new Test(parts));
 					out.close();
 				}
 			} catch(Exception e) {
-				System.err.println("Exception thrown while writing optimal tests: " + e);
+				Logger.getLogger("testful.model").log(Level.WARNING, "Exception thrown while writing optimal tests: " + e.getMessage(), e);
 			}
-	}
+		}
 
-	public ElementManager<String, CoverageInformation> getCoverage() {
-		return combinedCoverage;
-	}
+		StringBuilder sb = new StringBuilder("combinedCoverage ");
+		sb.append("inv=").append(totInvocation);
+		sb.append(";").append("time=").append(time);
+		if(currentGeneration != null) sb.append(";").append("gen=").append(currentGeneration);
 
-	public Map<String, Set<TestCoverage>> getOptimal() {
-		return optimal;
+		for (Entry<String, Set<TestCoverage>> e : optimal.entrySet()) {
+			int tot = 0;
+			for(Test t : e.getValue())
+				tot += t.getTest().length;
+
+			sb.append(";").append(e.getKey()).append("-cov").append("=").append(combinedCoverage.get(e.getKey()).getQuality());
+			sb.append(";").append(e.getKey()).append("-tests").append("=").append(e.getValue().size());
+			sb.append(";").append(e.getKey()).append("-length").append("=").append(tot);
+		}
+		log.finer(sb.toString());
 	}
 }

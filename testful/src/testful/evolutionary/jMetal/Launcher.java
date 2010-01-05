@@ -6,10 +6,8 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.logging.FileHandler;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jmetal.base.Solution;
@@ -19,7 +17,6 @@ import jmetal.base.operator.localSearch.LocalSearch;
 import jmetal.base.operator.selection.BinaryTournament2;
 import jmetal.base.operator.selection.Selection;
 import jmetal.util.JMException;
-import testful.IUpdate;
 import testful.TestFul;
 import testful.TestfulException;
 import testful.IUpdate.Callback;
@@ -37,59 +34,41 @@ import testful.random.RandomTest;
 import testful.random.RandomTestSplit;
 import testful.regression.JUnitTestGenerator;
 import testful.runner.RunnerPool;
-import testful.utils.TestfulLogger;
 import testful.utils.Utils;
 
 public class Launcher {
+	private static Logger logger = Logger.getLogger("testful.evolutionary");
 
-	public static void main(String[] args) throws TestfulException, SecurityException, IOException, InterruptedException {
-		testful.TestFul.printHeader("Testful-nsgaII");
+	public static void main(String[] args) throws TestfulException, InterruptedException {
+		ConfigEvolutionary config = new ConfigEvolutionary();
+		TestFul.parseCommandLine(config, args, Launcher.class, "Evolutionary test generator");
 
-		IConfigEvolutionary config = new ConfigEvolutionary();
-		TestFul.parseCommandLine(config, args, Launcher.class);
+		if(!config.isQuiet())
+			testful.TestFul.printHeader("Evolutionary test generator");
 
-		if(config.isVerbose()) {
-			String baseDir = TestfulLogger.singleton.getBaseDir();
+		TestFul.setupLogging(config);
 
-			// Logger object and file to store log messages
-			Logger logger_ = jmetal.base.Configuration.logger_;
-			logger_.addHandler(new FileHandler(baseDir + File.separator + "NSGAII_main.log"));
-		}
+		logger.config(TestFul.getProperties(config));
 
-		if(config.isQuiet()) {
-			run(config, new IUpdate.Callback() {
-				@Override
-				public void update(long start, long current, long end, Map<String, Float> coverage) {
-				}
-			});
-		} else {
-			run(config, new IUpdate.Callback() {
-
-				@Override
-				public void update(long start, long current, long end, Map<String, Float> coverage) {
-
-					StringBuilder sb = new StringBuilder();
-
-					sb.append("Start: ").append(new Date(start)).append(" ").append(((current - start) / 1000) / 60).append(" minutes ").append(((current - start) / 1000) % 60).append(" seconds ago\n");
-					sb.append("Now  : ").append(new Date()).append("\n");
-					sb.append("End  : ").append(new Date(end)).append(" ").append(((end - current) / 1000) / 60).append(" minutes ").append(((end - current) / 1000) % 60).append(" seconds").append("\n");
-
-					if(!coverage.isEmpty()) {
-						sb.append("Coverage:\n");
-						for(Entry<String, Float> cov : coverage.entrySet())
-							sb.append("  ").append(cov.getKey()).append(": ").append(cov.getValue()).append("\n");
-					}
-
-					System.out.println(sb.toString());
-				}
-			});
-		}
+		run(config);
 
 		System.exit(0);
 	}
 
-	public static void run(IConfigEvolutionary config, Callback callBack) throws TestfulException, InterruptedException {
+	public static void run(IConfigEvolutionary config, Callback ... callBacks) throws TestfulException, InterruptedException {
 		RunnerPool.getRunnerPool().config(config);
+
+		if(config.getLog() != null && config.getLogLevel().getLoggingLevel().intValue() > Level.FINE.intValue()) {
+			try {
+				final String logFile = config.getLog().getAbsolutePath() + File.separator + "NSGAII_main.log";
+				jmetal.base.Configuration.logger_.addHandler(new FileHandler(logFile));
+
+				logger.info("Logging NSGAII to " + logFile);
+			} catch (IOException e) {
+				logger.warning("Cannot enable logging for NSGAII: " + e.getMessage());
+			}
+		}
+
 
 		JMProblem problem;
 		try {
@@ -107,7 +86,7 @@ public class Launcher {
 			try {
 				problem.addReserve(genSmartPopulation(config, problem));
 			} catch (Exception e) {
-				System.err.println("Cannot create the initial population: " + e.getMessage());
+				logger.log(Level.WARNING, "Cannot create the initial population: " + e.getMessage(), e);
 			}
 		}
 
@@ -134,7 +113,8 @@ public class Launcher {
 			algorithm.setLocalSearchPeriod(config.getLocalSearchPeriod());
 		}
 
-		algorithm.register(callBack);
+		for (Callback callBack : callBacks)
+			algorithm.register(callBack);
 
 		/* Execute the Algorithm */
 		SolutionSet<Operation> population;
@@ -197,14 +177,12 @@ public class Launcher {
 	 * @throws FileNotFoundException
 	 */
 	private static TestSuite genSmartPopulation(IConfigEvolutionary config, JMProblem problem) throws TestfulException, RemoteException, ClassNotFoundException, FileNotFoundException{
-		System.out.println("Generating smart population");
+		logger.info("Generating smart population");
 
 		AnalysisWhiteBox whiteAnalysis = AnalysisWhiteBox.read(config.getDirInstrumented(), config.getCut());
 		TrackerDatum[] data = Utils.readData(whiteAnalysis);
 
-		RandomTest rt = new RandomTestSplit(config.isCache(), problem.getFinder() , problem.getCluster(), problem.getRefFactory(), data);
-
-		rt.startNotificationThread(false);
+		RandomTest rt = new RandomTestSplit(config.isCache(), null, problem.getFinder() , problem.getCluster(), problem.getRefFactory(), data);
 
 		rt.test(30000);
 
