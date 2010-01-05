@@ -39,5 +39,12 @@ public class RandomTestSimple extends RandomTest {
 		} catch(InterruptedException e) {
 			System.err.println("Interrupted: " + e);
 		}
+
+		try {
+			while(getRunningJobs() > 0)
+				Thread.sleep(1000);
+		} catch(InterruptedException e) {}
+
+		keepRunning = false;
 	}
 }

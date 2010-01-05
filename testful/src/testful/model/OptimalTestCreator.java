@@ -101,8 +101,8 @@ public class OptimalTestCreator {
 		return(innovative || !toRemove.isEmpty());
 	}
 
-	public List<Test> get() {
-		List<Test> ret = new ArrayList<Test>();
+	public List<TestCoverage> get() {
+		List<TestCoverage> ret = new ArrayList<TestCoverage>();
 
 		for(Entry<String, Set<TestCoverage>> entry : optimal.entrySet())
 			for(TestCoverage t : entry.getValue())

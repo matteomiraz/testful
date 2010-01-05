@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
+import jmetal.util.PseudoRandom;
 import testful.TestfulException;
 import testful.coverage.CoverageInformation;
 import testful.coverage.RunnerCaching;
@@ -42,8 +43,8 @@ public class TestfulProblem implements Serializable {
 
 	private IConfigEvolutionary config;
 
-	private TestCluster cluster;
-	private ReferenceFactory refFactory;
+	private final TestCluster cluster;
+	private final ReferenceFactory refFactory;
 
 	private final AnalysisWhiteBox whiteAnalysis;
 
@@ -119,10 +120,6 @@ public class TestfulProblem implements Serializable {
 		return numObjs;
 	}
 
-	public RunnerCaching getRunnerCaching() {
-		return runnerCaching;
-	}
-
 	public AnalysisWhiteBox getWhiteAnalysis() {
 		return whiteAnalysis;
 	}
@@ -136,6 +133,9 @@ public class TestfulProblem implements Serializable {
 		combinedWriter.write(num, invTot.get(), optimal.getCoverage(), optimal.getOptimal());
 		for(Tracker tracker : trackers)
 			tracker.write();
+
+		if(runnerCaching.isEnabled())
+			System.out.println(runnerCaching.toString());
 	}
 
 	public int getGenerationNumber() {
@@ -256,8 +256,46 @@ public class TestfulProblem implements Serializable {
 		return ret;
 	}
 
-
 	public Test createTest(List<Operation> ops) {
 		return new Test(cluster, refFactory, ops.toArray(new Operation[ops.size()]));
 	}
+
+	private final TestSuite reserve = new TestSuite();
+
+	/**
+	 * Add tests to the reserve
+	 * @param tests the tests to add
+	 */
+	public void addReserve(TestSuite tests){
+		reserve.add(tests);
+	}
+
+	/**
+	 * Add a test to the reserve
+	 * @param test the test to add
+	 */
+	public void addReserve(TestCoverage test){
+		reserve.add(test);
+	}
+
+	public List<Operation> generateTest() {
+		final int size = 10;
+		List<Operation> ret;
+
+		Operation[] ops = reserve.getBestTest();
+		if (ops!=null) {
+			ops = Operation.adapt(ops, cluster, refFactory);
+			ret = new ArrayList<Operation>(ops.length);
+			for (Operation o : ops) ret.add(o);
+			return ret;
+		}
+
+		ret = new ArrayList<Operation>(size);
+
+		for (int i = 0; i < size; i++)
+			ret.add(Operation.randomlyGenerate(cluster, refFactory, PseudoRandom.getMersenneTwisterFast()));
+
+		return ret;
+	}
+
 }

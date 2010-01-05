@@ -87,11 +87,6 @@ public class Launcher {
 
 		rt.test(config.getTime() * 1000);
 
-		try {
-			while(rt.getRunningJobs() > 0)
-				Thread.sleep(1000);
-		} catch(InterruptedException e) {}
-
 		ElementManager<String, CoverageInformation> coverage = rt.getExecutionInformation();
 		if(!config.isNoStats()) for(CoverageInformation info : coverage)
 			System.out.println(info.getName() + ": " + info.getQuality() + "\n" + info);
@@ -107,6 +102,6 @@ public class Launcher {
 				System.err.println("Canno write to file: " + e.getMessage());
 			}
 		}
-		rt.stopNotificationThreads(); //Stop threads instead of stoping the entire system
+
 	}
 }

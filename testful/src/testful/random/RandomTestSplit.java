@@ -49,5 +49,12 @@ public class RandomTestSplit extends RandomTest {
 		}
 
 		simplifier.flush();
+
+		try {
+			while(getRunningJobs() > 0)
+				Thread.sleep(1000);
+		} catch(InterruptedException e) {}
+
+		keepRunning = false;
 	}
 }

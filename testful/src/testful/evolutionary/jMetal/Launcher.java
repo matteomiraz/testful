@@ -3,7 +3,6 @@ package testful.evolutionary.jMetal;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,23 +23,21 @@ import testful.IUpdate;
 import testful.TestFul;
 import testful.TestfulException;
 import testful.IUpdate.Callback;
-import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
 import testful.coverage.whiteBox.AnalysisWhiteBox;
 import testful.evolutionary.ConfigEvolutionary;
 import testful.evolutionary.IConfigEvolutionary;
 import testful.model.Operation;
 import testful.model.OptimalTestCreator;
-import testful.model.ReferenceFactory;
 import testful.model.Test;
-import testful.model.TestCluster;
 import testful.model.TestCoverage;
 import testful.model.TestSplitter;
-import testful.model.TestsCollection;
+import testful.model.TestSuite;
 import testful.random.RandomTest;
 import testful.random.RandomTestSplit;
 import testful.regression.JUnitTestGenerator;
-import testful.utils.ElementManager;
+import testful.runner.IRunner;
+import testful.runner.RunnerPool;
 import testful.utils.TestfulLogger;
 import testful.utils.Utils;
 
@@ -107,7 +104,7 @@ public class Launcher {
 
 		if(config.isSmartInitialPopulation()) {
 			try {
-				problem.setInitPopulation(genSmartPopulation(config, problem));
+				problem.addReserve(genSmartPopulation(config, problem));
 			} catch (Exception e) {
 				System.err.println("Cannot create the initial population: " + e.getMessage());
 			}
@@ -131,7 +128,7 @@ public class Launcher {
 		algorithm.setSelection(selection);
 
 		if(config.getLocalSearchPeriod() > 0) {
-			LocalSearch<Operation> localSearch = new LocalSearchBranch(problem.getProblem());
+			LocalSearch<Operation> localSearch = problem.getLocalSearch();
 			algorithm.setImprovement(localSearch);
 			algorithm.setLocalSearchPeriod(config.getLocalSearchPeriod());
 		}
@@ -162,8 +159,10 @@ public class Launcher {
 			optimal.update(tc);
 
 		/* write them to disk as JUnit */
+		IRunner jUnitRunner = RunnerPool.createExecutor("jUnit", config);
+
 		int i = 0;
-		JUnitTestGenerator gen = new JUnitTestGenerator(config, problem.getProblem().getRunnerCaching(), false, config.getDirGeneratedTests());
+		JUnitTestGenerator gen = new JUnitTestGenerator(config, jUnitRunner, false, config.getDirGeneratedTests());
 		for(Test t : optimal.get()) {
 			gen.read(File.separator + "Ful_" + getClassName(config.getCut()) + "_" + i++, t);
 		}
@@ -198,42 +197,20 @@ public class Launcher {
 	 * @throws ClassNotFoundException
 	 * @throws FileNotFoundException
 	 */
-	private static TestsCollection genSmartPopulation(IConfigEvolutionary config, JMProblem problem) throws TestfulException, RemoteException, ClassNotFoundException, FileNotFoundException{
+	private static TestSuite genSmartPopulation(IConfigEvolutionary config, JMProblem problem) throws TestfulException, RemoteException, ClassNotFoundException, FileNotFoundException{
 		System.out.println("Generating smart population");
-
-		TestCluster tc = problem.getProblem().getCluster();
-
-		ReferenceFactory refFactory = new ReferenceFactory(tc, config.getNumVarCut(), config.getNumVar());
 
 		AnalysisWhiteBox whiteAnalysis = AnalysisWhiteBox.read(config.getDirInstrumented(), config.getCut());
 		TrackerDatum[] data = Utils.readData(whiteAnalysis);
 
-		RandomTest rt = new RandomTestSplit(problem.getProblem().getRunnerCaching(), config.isCache(), problem.getProblem().getFinder() , tc, refFactory, data);
+		IRunner rtRunner = RunnerPool.createExecutor("randomTest", config);
 
-		rt.setKeepTests(true); //set whether to save tests or not
+		RandomTest rt = new RandomTestSplit(rtRunner, config.isCache(), problem.getFinder() , problem.getCluster(), problem.getRefFactory(), data);
 
 		rt.startNotificationThread(false);
 
 		rt.test(30000);
 
-		try {
-			while(rt.getRunningJobs() > 0)
-				Thread.sleep(1000);
-		} catch(InterruptedException e) {}
-
-		ElementManager<String, CoverageInformation> coverage = rt.getExecutionInformation();
-
-		for(CoverageInformation info : coverage) {
-			PrintWriter writer = TestfulLogger.singleton.getWriter("coverage-" + info.getKey() + ".txt");
-			writer.println(info.getName() + ": " + info.getQuality());
-			writer.println();
-			writer.println(info);
-			writer.close();
-		}
-
-		rt.stopNotificationThreads(); //Stop threads instead of stoping the entire system
-		problem.getProblem().getCluster().clearCache(); //Leave it as you found it
-		//throw results in case I'm being used by another program
 		return rt.getResults();
 	} //genSmartPopulation
 } // NSGAII_main

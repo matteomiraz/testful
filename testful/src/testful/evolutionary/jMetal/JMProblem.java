@@ -1,6 +1,5 @@
 package testful.evolutionary.jMetal;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -10,16 +9,19 @@ import java.util.concurrent.Future;
 
 import jmetal.base.Problem;
 import jmetal.base.Solution;
+import jmetal.base.operator.localSearch.LocalSearch;
 import jmetal.util.JMException;
-import jmetal.util.PseudoRandom;
 import testful.TestfulException;
 import testful.coverage.CoverageInformation;
 import testful.evolutionary.IConfigEvolutionary;
 import testful.model.Operation;
+import testful.model.ReferenceFactory;
 import testful.model.Test;
+import testful.model.TestCluster;
 import testful.model.TestCoverage;
+import testful.model.TestSuite;
 import testful.model.TestfulProblem;
-import testful.model.TestsCollection;
+import testful.runner.ClassFinder;
 import testful.utils.ElementManager;
 
 public class JMProblem extends Problem<Operation> {
@@ -106,55 +108,50 @@ public class JMProblem extends Problem<Operation> {
 	}
 
 
-	private TestsCollection initialPopulation;
+	/**
+	 * Add tests to the reserve
+	 * @param tests the tests to add
+	 */
+	public void addReserve(TestSuite tests){
+		problem.addReserve(tests);
+	}
 
 	/**
-	 * Sets the initial population.
-	 * @author Tudor
-	 * @param iPopulation the Initial population to use
+	 * Add a test to the reserve
+	 * @param test the test to add
 	 */
-	public void setInitPopulation(TestsCollection iPopulation){
-		initialPopulation = iPopulation;
+	public void addReserve(TestCoverage test){
+		problem.addReserve(test);
 	}
 
 	@Override
 	public List<Operation> generateNewDecisionVariable() {
-		final int size = 10;
-		List<Operation> ret;
-		if (initialPopulation!=null){ //in case initial population was set
-
-			Operation[] ops = initialPopulation.giveBestTest();
-			if (ops!=null){ //container might be empty
-				//Transform array in ArrayList
-				ret = new ArrayList<Operation>(ops.length+1);
-				for (int i=0; i<ops.length;i++){
-					//usando l'indice, spero di non cambiare l'ordine delle operazioni
-					ret.add(i, ops[i].adapt(problem.getCluster(), problem.getRefFactory()));
-				}
-				return ret; //and return it
-			}
-		} //in case all TestContainer stuff isn't there... work will proceed as usual
-		ret = new ArrayList<Operation>(size);
-
-		for (int i = 0; i < size; i++)
-			ret.add(Operation.randomlyGenerate(problem.getCluster(), problem.getRefFactory(), PseudoRandom.getMersenneTwisterFast()));
-
-		return ret;
-	}
-
-	TestfulProblem getProblem() {
-		return problem;
+		return problem.generateTest();
 	}
 
 	@Override
 	public void setCurrentGeneration(int currentGeneration) {
 		super.setCurrentGeneration(currentGeneration);
 		problem.doneGeneration(currentGeneration);
-		if(problem.getRunnerCaching().isEnabled()) System.out.println(problem.getRunnerCaching().toString());
 	}
 
 	public Collection<TestCoverage> evaluate(Collection<Test> tests) throws InterruptedException {
 		return problem.evaluate(tests);
 	}
 
+	public LocalSearch<Operation> getLocalSearch() {
+		return new LocalSearchBranch(problem);
+	}
+
+	public TestCluster getCluster() {
+		return problem.getCluster();
+	}
+
+	public ReferenceFactory getRefFactory() {
+		return problem.getRefFactory();
+	}
+
+	public ClassFinder getFinder() {
+		return problem.getFinder();
+	}
 }
