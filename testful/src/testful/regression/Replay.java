@@ -9,7 +9,6 @@ import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import testful.ConfigProject;
-import testful.ConfigRunner;
 import testful.IConfigProject;
 import testful.TestFul;
 import testful.model.Operation;
@@ -45,6 +44,7 @@ public class Replay extends TestReader {
 
 		Config config = new Config();
 		TestFul.parseCommandLine(config, args, Replay.class);
+		RunnerPool.getRunnerPool().startLocalWorkers();
 
 		Replay replay = new Replay(config, config.exitOnBug);
 		replay.read(config.arguments);
@@ -56,7 +56,8 @@ public class Replay extends TestReader {
 	public Replay(IConfigProject config, boolean exitOnBug) {
 		this.exitOnBug = exitOnBug;
 
-		executor = RunnerPool.createExecutor("Replay", new ConfigRunner());
+		executor = RunnerPool.getRunnerPool();
+
 		try {
 			finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
 		} catch(RemoteException e) {

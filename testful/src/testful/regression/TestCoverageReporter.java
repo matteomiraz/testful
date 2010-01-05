@@ -11,7 +11,6 @@ import java.util.zip.GZIPOutputStream;
 import org.kohsuke.args4j.Argument;
 
 import testful.ConfigProject;
-import testful.ConfigRunner;
 import testful.IConfigProject;
 import testful.TestFul;
 import testful.coverage.CoverageExecutionManager;
@@ -49,7 +48,7 @@ public class TestCoverageReporter extends TestReader {
 		try {
 			this.config = config;
 
-			exec = RunnerPool.createExecutor("TestCoverageReporter", new ConfigRunner());
+			exec = RunnerPool.getRunnerPool();
 			finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
 
 		} catch(RemoteException e) {
@@ -63,6 +62,7 @@ public class TestCoverageReporter extends TestReader {
 
 		Config config = new Config();
 		TestFul.parseCommandLine(config, args, TestCoverageReporter.class);
+		RunnerPool.getRunnerPool().startLocalWorkers();
 
 		TestCoverageReporter coverage = new TestCoverageReporter(config);
 		coverage.read(config.arguments);

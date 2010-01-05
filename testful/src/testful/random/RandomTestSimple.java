@@ -9,7 +9,6 @@ import testful.model.ReferenceFactory;
 import testful.model.Test;
 import testful.model.TestCluster;
 import testful.runner.ClassFinder;
-import testful.runner.IRunner;
 import testful.utils.ElementManager;
 import testful.utils.SimpleEntry;
 
@@ -17,8 +16,8 @@ public class RandomTestSimple extends RandomTest {
 
 	private final int TEST_SIZE = 500;
 
-	public RandomTestSimple(IRunner exec, boolean enableCache, ClassFinder finder, TestCluster cluster, ReferenceFactory refFactory, TrackerDatum ... data) {
-		super(exec, enableCache, finder, cluster, refFactory, data);
+	public RandomTestSimple(boolean enableCache, ClassFinder finder, TestCluster cluster, ReferenceFactory refFactory, TrackerDatum ... data) {
+		super(enableCache, finder, cluster, refFactory, data);
 	}
 
 	@Override

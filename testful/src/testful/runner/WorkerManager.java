@@ -6,9 +6,12 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,10 +31,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	/** cache size: number of jobs to keep in local cache */
 	private static final int CACHE_SIZE = 50;
 
-	public static void createLocalWorkers(ITestRepository executor) {
-		WorkerManager wm = new WorkerManager(-1, 0);
-		wm.addTestRepository(executor);
-	}
+	private final Set<String> testRepositories = Collections.synchronizedSet(new HashSet<String>());
 
 	private volatile boolean running = true;
 
@@ -46,7 +46,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	private final CachingMap<String, Queue<TestfulClassLoader>> classLoaders;
 
 	private AtomicLong executedJobs = new AtomicLong();
-	
+
 	private AtomicLong receivedBytes = new AtomicLong();
 	private AtomicLong sentBytes = new AtomicLong();
 
@@ -70,13 +70,17 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	}
 
 	@Override
-	public void addTestRepository(final ITestRepository rep) {
+	public void addTestRepository(final ITestRepository rep) throws RemoteException {
+		final String name = rep.getName();
+
+		if(!testRepositories.add(name)) return;
+
 		Thread t = new Thread(new Runnable() {
 
 			@Override
 			public void run() {
 				try {
-					String msg = "Added " + rep.getName();
+					String msg = "Added " + name;
 					logger.info(msg);
 					System.out.println(msg);
 
@@ -122,7 +126,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	public String getName() throws RemoteException {
 		return "runner-" + TestfulLogger.singleton.runId;
 	}
-	
+
 	public void stop() {
 		System.out.println("Stopping all jobs");
 
@@ -175,7 +179,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 		}
 
 		TestfulClassLoader ret = null;
-		if(ctx.isRecycleClassLoader()) 
+		if(ctx.isRecycleClassLoader())
 			synchronized(classLoaders) {
 				Cacheable<Queue<TestfulClassLoader>> q = classLoaders.get(key);
 				if(q != null) ret = q.getElement().poll();
@@ -266,13 +270,13 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 		long free = Runtime.getRuntime().freeMemory();
 		long total = Runtime.getRuntime().totalMemory();
 		long used = total-free;
-		
+
 		sb.append("\n  mem: ")
-			.append(used/(1024*1024)).append("/")
-			.append(max/(1024*1024)).append(" Mb");
-		
+		.append(used/(1024*1024)).append("/")
+		.append(max/(1024*1024)).append(" Mb");
+
 		sb.append("; net: ").append(String.format("%.2f", receivedBytes.get()/(1024*1024.0))).append(" Mb in")
-			.append(", ").append(String.format("%.2f", sentBytes.get()/(1024*1024.0))).append(" Mb out");
+		.append(", ").append(String.format("%.2f", sentBytes.get()/(1024*1024.0))).append(" Mb out");
 
 		return sb.toString();
 	}

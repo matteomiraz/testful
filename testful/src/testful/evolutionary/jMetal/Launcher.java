@@ -36,7 +36,6 @@ import testful.model.TestSuite;
 import testful.random.RandomTest;
 import testful.random.RandomTestSplit;
 import testful.regression.JUnitTestGenerator;
-import testful.runner.IRunner;
 import testful.runner.RunnerPool;
 import testful.utils.TestfulLogger;
 import testful.utils.Utils;
@@ -90,6 +89,8 @@ public class Launcher {
 	}
 
 	public static void run(IConfigEvolutionary config, Callback callBack) throws TestfulException, InterruptedException {
+		RunnerPool.getRunnerPool().config(config);
+
 		JMProblem problem;
 		try {
 			problem = new JMProblem(config);
@@ -159,10 +160,8 @@ public class Launcher {
 			optimal.update(tc);
 
 		/* write them to disk as JUnit */
-		IRunner jUnitRunner = RunnerPool.createExecutor("jUnit", config);
-
 		int i = 0;
-		JUnitTestGenerator gen = new JUnitTestGenerator(config, jUnitRunner, false, config.getDirGeneratedTests());
+		JUnitTestGenerator gen = new JUnitTestGenerator(config, false, config.getDirGeneratedTests(), true);
 		for(Test t : optimal.get()) {
 			gen.read(File.separator + "Ful_" + getClassName(config.getCut()) + "_" + i++, t);
 		}
@@ -203,9 +202,7 @@ public class Launcher {
 		AnalysisWhiteBox whiteAnalysis = AnalysisWhiteBox.read(config.getDirInstrumented(), config.getCut());
 		TrackerDatum[] data = Utils.readData(whiteAnalysis);
 
-		IRunner rtRunner = RunnerPool.createExecutor("randomTest", config);
-
-		RandomTest rt = new RandomTestSplit(rtRunner, config.isCache(), problem.getFinder() , problem.getCluster(), problem.getRefFactory(), data);
+		RandomTest rt = new RandomTestSplit(config.isCache(), problem.getFinder() , problem.getCluster(), problem.getRefFactory(), data);
 
 		rt.startNotificationThread(false);
 

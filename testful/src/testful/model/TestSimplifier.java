@@ -9,6 +9,7 @@ import testful.coverage.TrackerDatum;
 import testful.runner.ClassFinder;
 import testful.runner.Context;
 import testful.runner.IRunner;
+import testful.runner.RunnerPool;
 
 /**
  * Simplify a test, by
@@ -56,8 +57,8 @@ public class TestSimplifier {
 		this.data = data;
 	}
 
-	public TestSimplifier(IRunner executor, ClassFinder finder, TrackerDatum ... data) {
-		this.executor = executor;
+	public TestSimplifier(ClassFinder finder, TrackerDatum ... data) {
+		executor = RunnerPool.getRunnerPool();
 		this.finder = finder;
 		this.data = data;
 	}

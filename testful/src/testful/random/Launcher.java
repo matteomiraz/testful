@@ -15,7 +15,6 @@ import testful.model.TestCluster;
 import testful.runner.ClassFinder;
 import testful.runner.ClassFinderCaching;
 import testful.runner.ClassFinderImpl;
-import testful.runner.IRunner;
 import testful.runner.RunnerPool;
 import testful.runner.TestfulClassLoader;
 import testful.utils.ElementManager;
@@ -46,6 +45,7 @@ public class Launcher {
 	}
 
 	public static void run(IConfigRandom config) throws TestfulException {
+		RunnerPool.getRunnerPool().config(config);
 
 		ClassFinder finder;
 		TestCluster tc;
@@ -65,8 +65,6 @@ public class Launcher {
 
 		ReferenceFactory refFactory = new ReferenceFactory(tc, config.getNumVarCut(), config.getNumVar());
 
-		IRunner exec = RunnerPool.createExecutor("randomTesting", config);
-
 		AnalysisWhiteBox whiteAnalysis = AnalysisWhiteBox.read(config.getDirInstrumented(), config.getCut());
 		TrackerDatum[] data = Utils.readData(whiteAnalysis);
 
@@ -74,10 +72,10 @@ public class Launcher {
 
 		switch(config.getRandomType()) {
 		case SIMPLE:
-			rt = new RandomTestSimple(exec, config.isCache(), finder, tc, refFactory, data);
+			rt = new RandomTestSimple(config.isCache(), finder, tc, refFactory, data);
 			break;
 		case SPLIT:
-			rt = new RandomTestSplit(exec, config.isCache(), finder, tc, refFactory, data);
+			rt = new RandomTestSplit(config.isCache(), finder, tc, refFactory, data);
 			break;
 		}
 

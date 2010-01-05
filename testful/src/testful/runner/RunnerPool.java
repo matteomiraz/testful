@@ -14,7 +14,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
@@ -23,27 +22,40 @@ import testful.IConfigRunner;
 import testful.utils.Cloner;
 import testful.utils.ElementManager;
 import testful.utils.ElementWithKey;
-import testful.utils.TestfulLogger;
 
 public class RunnerPool implements IRunner, ITestRepository {
 
 	/** maximum number of jobs that the executor pool allows to queue */
 	private static final int MAX_BUFFER = 25;
 
-	public static final String RMI_NAME = "pool";
+	private static RunnerPool singleton;
+	public static RunnerPool getRunnerPool() {
+		if(singleton == null)
+			singleton = new RunnerPool();
+
+		return singleton;
+	}
 
 	private static Logger logger = Logger.getLogger("testful.executor.worker");
 
-	/**
-	 * Create a test executor
-	 * 
-	 * @param noLocal if true do not allow a local evaluation of tests
-	 * @param bufferSize the size of the buffer ( if <=0, the buffer has no
-	 *          limits)
-	 * @return the test executor
-	 */
-	private static IRunner createExecutor(String moduleName, boolean noLocal, int bufferSize) {
-		RunnerPool executor = new RunnerPool(moduleName, bufferSize);
+	private boolean localWorkersStarted = false;
+
+	/** manager for futures; it is safe in a multi-threaded environment */
+	private final ElementManager<String, TestfulFuture<?>> futures;
+	/** tests in queue */
+	private final BlockingQueue<Context<?, ?>> tests;
+
+	/** tests being evaluated */
+	private final ConcurrentHashMap<String, Context<?, ?>> testsEval;
+
+	private final String name;
+
+	private RunnerPool() {
+		tests = new ArrayBlockingQueue<Context<?, ?>>(MAX_BUFFER);
+		name = "testful-" + System.currentTimeMillis();
+
+		futures = new ElementManager<String, TestfulFuture<?>>(new ConcurrentHashMap<String, TestfulFuture<?>>());
+		testsEval = new ConcurrentHashMap<String, Context<?, ?>>();
 
 		logger.info("Created Runner Pool ");
 
@@ -66,7 +78,7 @@ public class RunnerPool implements IRunner, ITestRepository {
 
 		Remote remote = null;
 		if(registry != null) try {
-			remote = UnicastRemoteObject.exportObject(executor, 0);
+			remote = UnicastRemoteObject.exportObject(this, 0);
 		} catch(RemoteException e) {
 			String msg = "Distributed evaluation disabled: " + e;
 			logger.warning(msg);
@@ -74,37 +86,43 @@ public class RunnerPool implements IRunner, ITestRepository {
 			remote = null;
 		}
 
-		if(moduleName != null) {
-			try {
-				String remoteName = RMI_NAME + "-" + moduleName +  "-" + TestfulLogger.singleton.runId;
-				registry.bind(remoteName, remote);
-				String msg = "Registered executorPool at " + remoteName;
-				logger.info(msg);
-				System.out.println(msg);
+		try {
+			registry.bind(name, remote);
+			String msg = "Registered executorPool at " + name;
+			logger.info(msg);
+			System.out.println(msg);
 
-			} catch(Exception e) {
-				String msg = "Remote evaluation disabled: " + e;
-				logger.warning(msg);
-				System.err.println(msg);
+		} catch(Exception e) {
+			String msg = "Remote evaluation disabled: " + e;
+			logger.warning(msg);
+			System.err.println(msg);
 
-				registry = null;
-			}
+			registry = null;
 		}
 
-		if(!noLocal || registry == null || remote == null) WorkerManager.createLocalWorkers(executor);
-
-		return executor;
+		if(registry == null || remote == null) startLocalWorkers();
 	}
 
-	private static IRunner executor;
-	public static IRunner createExecutor(String moduleName, IConfigRunner config) {
-		if(executor == null)
-			executor = createExecutor(moduleName, !config.isLocalEvaluation(), MAX_BUFFER);
+	public void config(IConfigRunner config) {
+		if(config.isLocalEvaluation()) startLocalWorkers();
 
-		for (String remote : config.getRemote())
-			executor.addRemoteWorker(remote);
+		if(config.getRemote() != null) {
+			for (String remote : config.getRemote()) {
+				addRemoteWorker(remote);
+			}
+		}
+	}
 
-		return executor;
+	public void startLocalWorkers() {
+		if (!localWorkersStarted) {
+			try {
+				WorkerManager wm = new WorkerManager(-1, 0);
+				wm.addTestRepository(this);
+				localWorkersStarted = true;
+			} catch (RemoteException e) {
+				// never happens: all it's done locally!
+			}
+		}
 	}
 
 	@Override
@@ -129,6 +147,61 @@ public class RunnerPool implements IRunner, ITestRepository {
 			logger.warning(msg);
 		}
 		return false;
+	}
+
+	@Override
+	public String getName() throws RemoteException {
+		return name;
+	}
+
+	@Override
+	public <T extends Serializable> Future<T> execute(Context<T, ? extends ExecutionManager<T>> ctx) {
+		TestfulFuture<T> ret = new TestfulFuture<T>(ctx.id);
+		futures.put(ret);
+
+		try {
+			tests.put(ctx);
+		} catch(InterruptedException e) {
+			// this should not happens
+			e.printStackTrace();
+		}
+
+		return ret;
+	}
+
+	@Override
+	public Context<?, ?> getTest() throws RemoteException {
+		try {
+
+			Context<?, ?> ret = tests.take();
+			testsEval.put(ret.id, ret);
+
+			return ret;
+
+		} catch(InterruptedException e) {
+			throw new RemoteException("Cannot take the test", e);
+		}
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public void putResult(String key, byte[] result) {
+
+		testsEval.remove(key);
+		TestfulFuture<Serializable> future = (TestfulFuture<Serializable>) futures.remove(key);
+
+		if(future == null) System.err.println("ERROR: " + key + " future does not exist!");
+		else future.setResult(Cloner.deserialize(result, true));
+	}
+
+	@Override
+	public void putException(String key, byte[] exception) throws RemoteException {
+
+		testsEval.remove(key);
+		TestfulFuture<?> future = futures.remove(key);
+
+		if(future == null) System.err.println("ERROR: " + key + " future does not exist!");
+		else future.setException((Exception) Cloner.deserialize(exception, true));
 	}
 
 	private static class TestfulFuture<T extends Serializable> implements Future<T>, ElementWithKey<String> {
@@ -212,80 +285,5 @@ public class RunnerPool implements IRunner, ITestRepository {
 		public TestfulFuture<T> clone() throws CloneNotSupportedException {
 			throw new CloneNotSupportedException("Clone not supported in TestfulFuture");
 		}
-	}
-
-	/** manager for futures; it is safe in a multi-threaded environment */
-	private final ElementManager<String, TestfulFuture<?>> futures;
-	/** tests in queue */
-	private final BlockingQueue<Context<?, ?>> tests;
-
-	/** tests being evaluated */
-	private final ConcurrentHashMap<String, Context<?, ?>> testsEval;
-
-	private final String name;
-
-	private RunnerPool(String name, int bufferSize) {
-		if(bufferSize > 0) tests = new ArrayBlockingQueue<Context<?, ?>>(bufferSize);
-		else tests = new LinkedBlockingQueue<Context<?, ?>>();
-
-		futures = new ElementManager<String, TestfulFuture<?>>(new ConcurrentHashMap<String, TestfulFuture<?>>());
-		testsEval = new ConcurrentHashMap<String, Context<?, ?>>();
-
-		this.name = name;
-	}
-
-	@Override
-	public String getName() throws RemoteException {
-		return name;
-	}
-
-	@Override
-	public <T extends Serializable> Future<T> execute(Context<T, ? extends ExecutionManager<T>> ctx) {
-		TestfulFuture<T> ret = new TestfulFuture<T>(ctx.id);
-		futures.put(ret);
-
-		try {
-			tests.put(ctx);
-		} catch(InterruptedException e) {
-			// this should not happens
-			e.printStackTrace();
-		}
-
-		return ret;
-	}
-
-	@Override
-	public Context<?, ?> getTest() throws RemoteException {
-		try {
-
-			Context<?, ?> ret = tests.take();
-			testsEval.put(ret.id, ret);
-
-			return ret;
-
-		} catch(InterruptedException e) {
-			throw new RemoteException("Cannot take the test", e);
-		}
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void putResult(String key, byte[] result) {
-
-		testsEval.remove(key);
-		TestfulFuture<Serializable> future = (TestfulFuture<Serializable>) futures.remove(key);
-
-		if(future == null) System.err.println("ERROR: " + key + " future does not exist!");
-		else future.setResult(Cloner.deserialize(result, true));
-	}
-
-	@Override
-	public void putException(String key, byte[] exception) throws RemoteException {
-
-		testsEval.remove(key);
-		TestfulFuture<?> future = futures.remove(key);
-
-		if(future == null) System.err.println("ERROR: " + key + " future does not exist!");
-		else future.setException((Exception) Cloner.deserialize(exception, true));
 	}
 }

@@ -34,7 +34,6 @@ import ec.util.MersenneTwisterFast;
 public abstract class GenericTestCase  extends TestCase {
 
 	protected final static IConfigProject config;
-	protected final static IConfigRunner configRunner = new ConfigRunner();
 
 	static {
 		ConfigProject tmp = new ConfigProject();
@@ -138,7 +137,10 @@ public abstract class GenericTestCase  extends TestCase {
 
 	private static IRunner exec;
 	protected static IRunner getExec() {
-		if(exec == null) exec = RunnerPool.createExecutor("test", configRunner);
+		if(exec == null) {
+			RunnerPool.getRunnerPool().startLocalWorkers();
+			exec = RunnerPool.getRunnerPool();
+		}
 		return exec;
 	}
 

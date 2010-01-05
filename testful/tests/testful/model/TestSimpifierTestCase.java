@@ -5,8 +5,6 @@ import java.util.List;
 
 import testful.ConfigCut;
 import testful.GenericTestCase;
-import testful.runner.IRunner;
-import testful.runner.RunnerPool;
 import testful.runner.TestfulClassLoader;
 
 /**
@@ -17,9 +15,7 @@ public class TestSimpifierTestCase extends AutoTestCase {
 
 	@Override
 	protected List<Test> perform(Test test) throws Exception {
-		IRunner exec = RunnerPool.createExecutor("test", configRunner);
-
-		TestSimplifier s = new TestSimplifier(exec, getFinder());
+		TestSimplifier s = new TestSimplifier(getFinder());
 
 		List<Test> res = new ArrayList<Test>(1);
 		res.add(s.analyze(test));

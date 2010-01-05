@@ -26,8 +26,6 @@ import testful.coverage.whiteBox.CoverageConditions;
 import testful.evolutionary.IConfigEvolutionary;
 import testful.runner.ClassFinderCaching;
 import testful.runner.ClassFinderImpl;
-import testful.runner.IRunner;
-import testful.runner.RunnerPool;
 import testful.runner.TestfulClassLoader;
 import testful.utils.ElementManager;
 import testful.utils.TestfulLogger;
@@ -67,10 +65,8 @@ public class TestfulProblem implements Serializable {
 	};
 
 	public TestfulProblem(IConfigEvolutionary config) throws TestfulException {
-		IRunner runner = RunnerPool.createExecutor("TestFul", config);
-
 		this.config = config;
-		runnerCaching = new RunnerCaching(runner, config.isCache());
+		runnerCaching = new RunnerCaching(config.isCache());
 
 		try {
 			finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));

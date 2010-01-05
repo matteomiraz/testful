@@ -106,10 +106,10 @@
 	<target name="create_jars" depends="create_instrumenter_jar,create_runner_jar,create_testful_jar,create_randomTest_jar" description="Creater executable jars">
 	</target>
 
-	<!-- ================================= 
-          target: compile              
-         ================================= -->
-	<target name="compile" depends="" description="Compile classes">
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: unpack_libraries                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="unpack_libraries">
 		<mkdir dir="${build}"/>
 
 		<unjar dest="${build}" overwrite="false">
@@ -120,7 +120,12 @@
 				<exclude name="*src*.jar"/>
 			</fileset>
 		</unjar>
+    </target>
 
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: really_compile                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="really_compile">
 		<javac srcdir="src" destdir="${build}" optimize="true" debug="true" source="6" target="6" >
 			<classpath>
 				<fileset file="lib/*.jar"/>
@@ -133,6 +138,13 @@
 			</fileset>
 			<mapper type="glob" from="*.class" to="*.clazz"/>
 		</copy>
+    </target>
+
+	
+	<!-- ================================= 
+          target: compile              
+         ================================= -->
+	<target name="compile" depends="unpack_libraries,really_compile" description="Compile classes">
 	</target>
 
 	<!-- ================================= 

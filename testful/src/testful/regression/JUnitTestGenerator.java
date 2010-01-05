@@ -11,7 +11,6 @@ import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import testful.ConfigProject;
-import testful.ConfigRunner;
 import testful.IConfigProject;
 import testful.TestFul;
 import testful.coverage.CoverageInformation;
@@ -30,7 +29,6 @@ import testful.model.TestReader;
 import testful.model.TestSimplifier;
 import testful.model.OperationStatus.Status;
 import testful.runner.ClassFinderImpl;
-import testful.runner.IRunner;
 import testful.runner.RunnerPool;
 
 public class JUnitTestGenerator extends TestReader {
@@ -79,12 +77,9 @@ public class JUnitTestGenerator extends TestReader {
 
 		Config config = new Config();
 		TestFul.parseCommandLine(config, args, JUnitTestGenerator.class);
+		RunnerPool.getRunnerPool().startLocalWorkers();
 
-		IRunner executor = null;
-		if(config.isExecute())
-			executor = RunnerPool.createExecutor("JUnitGenerator", new ConfigRunner());
-
-		JUnitTestGenerator gen = new JUnitTestGenerator(config, executor, config.isContracts(), config.getDirGeneratedTests());
+		JUnitTestGenerator gen = new JUnitTestGenerator(config, config.isContracts(), config.getDirGeneratedTests(), config.isExecute());
 
 		gen.read(config.getTests());
 		gen.writeSuite("", "AllTests");
@@ -92,12 +87,12 @@ public class JUnitTestGenerator extends TestReader {
 		System.exit(0);
 	}
 
-	public JUnitTestGenerator(IConfigProject config, IRunner executor, boolean contracts, File destDir) {
+	public JUnitTestGenerator(IConfigProject config, boolean contracts, File destDir, boolean execute) {
 		this.contracts = contracts;
 		this.destDir = destDir;
 
-		if(executor != null) {
-			simplifier = new TestSimplifier(executor, new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
+		if(execute) {
+			simplifier = new TestSimplifier(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
 		} else {
 			simplifier = null;
 		}

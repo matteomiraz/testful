@@ -1,6 +1,5 @@
 package testful;
 
-
 public class ConfigCut extends ConfigProject implements IConfigCut.Args4j, IConfigProject.Args4j {
 
 	/** the class under test */

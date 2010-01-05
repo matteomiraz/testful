@@ -23,6 +23,7 @@ import testful.coverage.TrackerDatum;
 import testful.model.MethodInformation.ParameterInformation;
 import testful.runner.ClassFinder;
 import testful.runner.IRunner;
+import testful.runner.RunnerPool;
 import testful.utils.ElementManager;
 
 /**
@@ -106,7 +107,9 @@ public class TestSplitter {
 		return true;
 	}
 
-	public static Test splitAndMinimize(Test orig, ClassFinder finder, IRunner exec, TrackerDatum ... data) {
+	public static Test splitAndMinimize(Test orig, ClassFinder finder, TrackerDatum ... data) {
+
+		IRunner exec = RunnerPool.getRunnerPool();
 
 		List<Test> res = split(true,orig);
 

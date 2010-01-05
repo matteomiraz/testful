@@ -22,7 +22,6 @@ import testful.model.TestCluster;
 import testful.model.TestCoverage;
 import testful.model.TestSuite;
 import testful.runner.ClassFinder;
-import testful.runner.IRunner;
 import testful.utils.ElementManager;
 import testful.utils.TestfulLogger;
 import testful.utils.TestfulLogger.CombinedCoverageWriter;
@@ -50,12 +49,12 @@ public abstract class RandomTest {
 
 	protected volatile boolean keepRunning = true;
 
-	public RandomTest(IRunner runner, boolean enableCache, ClassFinder finder, TestCluster cluster, ReferenceFactory refFactory, TrackerDatum ... data) {
+	public RandomTest(boolean enableCache, ClassFinder finder, TestCluster cluster, ReferenceFactory refFactory, TrackerDatum ... data) {
 		long seed = System.currentTimeMillis();
 		System.out.println("MersenneTwisterFast: seed=" + seed);
 		random = new MersenneTwisterFast(seed);
 
-		this.runner = new RunnerCaching(runner, enableCache);
+		runner = new RunnerCaching(enableCache);
 
 		this.cluster = cluster;
 		this.refFactory = refFactory;

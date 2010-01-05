@@ -11,7 +11,6 @@ import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import testful.ConfigProject;
-import testful.ConfigRunner;
 import testful.IConfigProject;
 import testful.TestFul;
 import testful.model.Test;
@@ -21,7 +20,6 @@ import testful.model.TestSplitter;
 import testful.runner.ClassFinder;
 import testful.runner.ClassFinderCaching;
 import testful.runner.ClassFinderImpl;
-import testful.runner.IRunner;
 import testful.runner.RunnerPool;
 
 public class TestReducer extends TestReader {
@@ -44,6 +42,7 @@ public class TestReducer extends TestReader {
 
 		Config config = new Config();
 		TestFul.parseCommandLine(config, args, TestReducer.class);
+		RunnerPool.getRunnerPool().startLocalWorkers();
 
 		TestReducer reducer = new TestReducer(config, config.simplify, config.split);
 		reducer.read(config.arguments);
@@ -60,9 +59,8 @@ public class TestReducer extends TestReader {
 		if(simplify) {
 			TestSimplifier simplifier = null;
 			try {
-				IRunner executor = RunnerPool.createExecutor("TestReducer", new ConfigRunner());
 				ClassFinder finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirContracts(), config.getDirCompiled()));
-				simplifier = new TestSimplifier(executor, finder);
+				simplifier = new TestSimplifier(finder);
 			} catch(RemoteException e) {
 				// never happens
 			}

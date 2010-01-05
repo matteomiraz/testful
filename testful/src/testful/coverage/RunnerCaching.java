@@ -34,6 +34,7 @@ import testful.runner.ClassFinder;
 import testful.runner.Context;
 import testful.runner.ExecutionManager;
 import testful.runner.IRunner;
+import testful.runner.RunnerPool;
 import testful.utils.Cloner;
 import testful.utils.ElementManager;
 import testful.utils.TestfulLogger;
@@ -66,8 +67,8 @@ public class RunnerCaching implements IRunner{
 	/** key: hex(hash)-len  value: uniqueId */
 	private final Map<String, Set<String>> diskEntries;
 
-	public RunnerCaching(IRunner runner, boolean enableCache) {
-		this.runner = runner;
+	public RunnerCaching(boolean enableCache) {
+		runner = RunnerPool.getRunnerPool();
 		enabled = enableCache;
 
 		evaluating = new HashMap<TestWithData, Future<ElementManager<String,CoverageInformation>>>();

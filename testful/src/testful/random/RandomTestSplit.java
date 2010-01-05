@@ -11,7 +11,6 @@ import testful.model.TestCluster;
 import testful.model.TestSplitter;
 import testful.model.TestSplitter.Listener;
 import testful.runner.ClassFinder;
-import testful.runner.IRunner;
 import testful.utils.ElementManager;
 import testful.utils.SimpleEntry;
 
@@ -19,8 +18,8 @@ public class RandomTestSplit extends RandomTest {
 
 	private final TestSplitter simplifier;
 
-	public RandomTestSplit(IRunner exec, boolean enableCache, ClassFinder finder, TestCluster cluster, ReferenceFactory refFactory, TrackerDatum ... data) {
-		super(exec, enableCache, finder, cluster, refFactory, data);
+	public RandomTestSplit(boolean enableCache, ClassFinder finder, TestCluster cluster, ReferenceFactory refFactory, TrackerDatum ... data) {
+		super(enableCache, finder, cluster, refFactory, data);
 
 		simplifier = new TestSplitter(true, cluster, refFactory);
 	}

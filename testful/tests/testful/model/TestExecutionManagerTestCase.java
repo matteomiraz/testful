@@ -6,8 +6,6 @@ import java.util.concurrent.Future;
 
 import testful.SimpleDummyTestCase;
 import testful.runner.Context;
-import testful.runner.IRunner;
-import testful.runner.RunnerPool;
 
 /**
  * @author matteo
@@ -26,13 +24,11 @@ public class TestExecutionManagerTestCase extends SimpleDummyTestCase {
 	}
 
 	private Operation[] execute(Test test) throws RemoteException, InterruptedException, ExecutionException {
-		IRunner exec = RunnerPool.createExecutor("test", configRunner);
-
 		OperationPrimitiveResult.insert(test.getTest());
 		OperationStatus.insert(test.getTest());
 		Context<Operation[], TestExecutionManager> ctx = TestExecutionManager.getContext(getFinder(), test);
 		ctx.setStopOnBug(false);
-		Future<Operation[]> result = exec.execute(ctx);
+		Future<Operation[]> result = getExec().execute(ctx);
 
 		return result.get();
 	}
