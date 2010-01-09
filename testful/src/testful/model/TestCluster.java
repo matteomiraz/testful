@@ -7,6 +7,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -18,7 +19,7 @@ import java.util.logging.Logger;
 import javax.xml.bind.JAXBException;
 
 import testful.IConfigCut;
-import testful.IConfigProject;
+import testful.TestfulException;
 import testful.model.xml.Parser;
 import testful.model.xml.XmlAux;
 import testful.model.xml.XmlClass;
@@ -168,24 +169,111 @@ public class TestCluster implements Serializable {
 		}
 	}
 
-	public Collection<XmlClass> readXmlClasses(IConfigProject config) {
-		if(xml != null) {
-			xml = new HashMap<String, XmlClass>();
-			for(Clazz c : all) {
-				try {
-					XmlClass xmlClass = Parser.singleton.parse(config, c.getClassName());
-					xml.put(c.getClassName(), xmlClass);
-				} catch(JAXBException e) {
-					logger.log(Level.WARNING, "Cannot parse XML descriptor of class " + c.getClassName() + ": " + e.getMessage(), e);
-				}
+	private void addClazz(Set<Clazz> todo, Clazz clazz, IConfigCut config) throws ClassNotFoundException {
+		todo.add(clazz);
+
+		Class<?> javaClass = clazz.toJavaClass();
+
+		if(xml == null) xml = new HashMap<String, XmlClass>();
+
+		if(!xml.containsKey(clazz.getClassName())) {
+			try {
+				XmlClass xmlClass = Parser.singleton.parse(config, clazz.getClassName());
+				xml.put(clazz.getClassName(), xmlClass);
+			} catch(JAXBException e) {
+				logger.log(Level.WARNING, "Cannot parse XML descriptor of class " + clazz.getClassName() + ": " + e.getMessage());
 			}
 		}
 
-		return xml.values();
+		// Inserting in the test cluster all input parameters of constructors of CUT
+		for(Constructor<?> cns : javaClass.getConstructors())
+			if(Modifier.isPublic(cns.getModifiers()))
+				for(Class<?> param : cns.getParameterTypes())
+					todo.add(getRegistry().getClazz(param));
+
+		// Inserting in the test cluster all input parameters of methods of CUT
+		for(Method meth : javaClass.getMethods())
+			if(!Methodz.toSkip(meth))
+				for(Class<?> param : meth.getParameterTypes())
+					todo.add(getRegistry().getClazz(param));
 	}
 
-	public Collection<XmlClass> getXmlClasses() {
-		return xml.values();
+	/**
+	 * Checks if it is possible to obtain objects
+	 * (using constructors, constants, or values returned by methods)
+	 * for each class it contains.<br/>
+	 * If it is not the case, the method throws an exception,
+	 * listing all the missing classes.
+	 *
+	 * @throws MissingClassException if some class is missing
+	 */
+	public void isValid() throws MissingClassException {
+		Set<Clazz> missing = new HashSet<Clazz>();
+		for (Clazz c : cluster)
+			missing.add(c);
+
+		for (Clazz c : cluster) {
+			if(c.getConstructors().length > 0)
+				for (Clazz assignable : c.getAssignableTo())
+					missing.remove(assignable);
+
+			if(missing.isEmpty()) return;
+
+			for (Methodz m : c.getMethods()) {
+				Clazz ret = m.getReturnType();
+				if(ret != null)
+					for (Clazz assignable : ret.getAssignableTo())
+						missing.remove(assignable);
+			}
+
+			if(missing.isEmpty()) return;
+
+			for (StaticValue sv : c.getConstants())
+				for (Clazz assignable : sv.getType().getAssignableTo())
+					missing.remove(assignable);
+
+			if(missing.isEmpty()) return;
+
+		}
+
+		// just in case...
+		if(missing.isEmpty()) return;
+
+		throw new MissingClassException(missing, cut);
+
+	}
+
+	public static class MissingClassException extends TestfulException {
+		private static final long serialVersionUID = -7271283808569139038L;
+
+		/** Contains the missing classes */
+		public final Set<String> missing;
+		/** if true, it is critical */
+		public final boolean fatal;
+
+		public MissingClassException(Set<Clazz> missing, Clazz cut) {
+			super("Some classes are missing");
+
+			Set<String> tmp = new HashSet<String>();
+			for (Clazz c : missing) tmp.add(c.getClassName());
+			this.missing = Collections.unmodifiableSet(tmp);
+
+			fatal = calculateFatal(missing, cut);
+		}
+
+		private static boolean calculateFatal(Set<Clazz> missing, Clazz cut) {
+			if(missing.contains(cut)) return true;
+
+			for (Constructorz cns : cut.getConstructors())
+				for (Clazz p : cns.getParameterTypes())
+					if(missing.contains(p)) return true;
+
+			for (Methodz m : cut.getMethods())
+				for (Clazz p : m.getParameterTypes())
+					if(missing.contains(p)) return true;
+
+			return false;
+		}
 	}
 
 	public Collection<String> getClassesToInstrument() {
@@ -197,32 +285,6 @@ public class TestCluster implements Serializable {
 		}
 
 		return ret;
-	}
-
-	private void addClazz(Set<Clazz> todo, Clazz clazz, IConfigCut config) throws ClassNotFoundException {
-		todo.add(clazz);
-
-		Class<?> javaClass = clazz.toJavaClass();
-
-		if(xml == null) xml = new HashMap<String, XmlClass>();
-
-		if(!xml.containsKey(clazz.getClassName()))
-			try {
-				XmlClass xmlClass = Parser.singleton.parse(config, clazz.getClassName());
-				xml.put(clazz.getClassName(), xmlClass);
-			} catch(JAXBException e) {
-				logger.log(Level.WARNING, "Cannot parse XML descriptor of class " + clazz.getClassName() + ": " + e.getMessage(), e);
-			}
-
-			// Inserting in the test cluster all input parameters of constructors of CUT
-			for(Constructor<?> cns : javaClass.getConstructors())
-				for(Class<?> param : cns.getParameterTypes())
-					todo.add(getRegistry().getClazz(param));
-
-			// Inserting in the test cluster all input parameters of methods of CUT
-			for(Method meth : javaClass.getMethods())
-				if(!Methodz.toSkip(meth)) for(Class<?> param : meth.getParameterTypes())
-					todo.add(getRegistry().getClazz(param));
 	}
 
 	/**
