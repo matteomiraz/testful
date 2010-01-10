@@ -426,12 +426,12 @@ public class JUnitTestGenerator extends TestReader {
 								if(target != null) {
 									final String cast;
 									if(target.getClazz() instanceof PrimitiveClazz) {
-										cast = ((PrimitiveClazz) target.getClazz()).getCast() + " ";
+										cast = "(" + ((PrimitiveClazz) target.getClazz()).getReferenceClazz().getClassName() + ")";
 									} else {
 										cast = "(" + target.getClazz().getClassName() + ")";
 									}
 
-									out.println("\t\t" + target.toString() + " = " + cast + " tmp");
+									out.println("\t\t" + target.toString() + " = " + cast + " tmp;");
 								}
 
 								// check the result (tmp's value)
@@ -439,35 +439,35 @@ public class JUnitTestGenerator extends TestReader {
 									switch(((PrimitiveClazz) retType).getType()) {
 									case BooleanClass:
 									case BooleanType:
-										out.println("\t\tassertEquals((boolean)" + AssignPrimitive.getValueString(result.getValue()) + ", (java.lang.Boolean) tmp);");
+										out.println("\t\tassertEquals((boolean) " + AssignPrimitive.getValueString(result.getValue()) + ", (boolean) (java.lang.Boolean) tmp);");
 										break;
 									case ByteClass:
 									case ByteType:
-										out.println("\t\tassertEquals((byte)" + AssignPrimitive.getValueString(result.getValue()) + ", (java.lang.Byte) tmp);");
+										out.println("\t\tassertEquals((byte)" + AssignPrimitive.getValueString(result.getValue()) + ", (byte) (java.lang.Byte) tmp);");
 										break;
 									case CharacterClass:
 									case CharacterType:
-										out.println("\t\tassertEquals((char)" + AssignPrimitive.getValueString(result.getValue()) + ", (java.lang.Character) tmp);");
+										out.println("\t\tassertEquals((char)" + AssignPrimitive.getValueString(result.getValue()) + ", (char) (java.lang.Character) tmp);");
 										break;
 									case ShortClass:
 									case ShortType:
-										out.println("\t\tassertEquals((short)" + AssignPrimitive.getValueString(result.getValue()) + ", (java.lang.Short) tmp);");
+										out.println("\t\tassertEquals((short)" + AssignPrimitive.getValueString(result.getValue()) + ", (short) (java.lang.Short) tmp);");
 										break;
 									case IntegerClass:
 									case IntegerType:
-										out.println("\t\tassertEquals((int)" + AssignPrimitive.getValueString(result.getValue()) + ", (java.lang.Integer) tmp);");
+										out.println("\t\tassertEquals((int)" + AssignPrimitive.getValueString(result.getValue()) + ", (int) (java.lang.Integer) tmp);");
 										break;
 									case LongClass:
 									case LongType:
-										out.println("\t\tassertEquals((long)" + AssignPrimitive.getValueString(result.getValue()) + ", (java.lang.Long) tmp);");
+										out.println("\t\tassertEquals((long)" + AssignPrimitive.getValueString(result.getValue()) + ", (long) (java.lang.Long) tmp);");
 										break;
 									case FloatClass:
 									case FloatType:
-										out.println("\t\tassertEquals((float)" + AssignPrimitive.getValueString(result.getValue()) + ", (java.lang.Float) tmp, 0.001f);");
+										out.println("\t\tassertEquals((float)" + AssignPrimitive.getValueString(result.getValue()) + ", (float) (java.lang.Float) tmp, 0.001f);");
 										break;
 									case DoubleClass:
 									case DoubleType:
-										out.println("\t\tassertEquals((double)" + AssignPrimitive.getValueString(result.getValue()) + ", (java.lang.Double) tmp, 0.001f);");
+										out.println("\t\tassertEquals((double)" + AssignPrimitive.getValueString(result.getValue()) + ", (double) (java.lang.Double) tmp, 0.001);");
 										break;
 									}
 								} else if(retType.getClassName().equals(String.class.getCanonicalName())) {
