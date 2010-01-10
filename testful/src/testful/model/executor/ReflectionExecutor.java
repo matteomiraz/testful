@@ -166,9 +166,6 @@ public class ReflectionExecutor implements Executor {
 	}
 
 	private void set(Operation op, Reference objRef, Object value) {
-		OperationPrimitiveResult opPrimResult = (OperationPrimitiveResult) op.getInfo(OperationPrimitiveResult.KEY);
-		if(opPrimResult != null) opPrimResult.setValue(value);
-
 		try {
 			repository[objRef.getId()] = value;
 		} catch(Throwable e) {
@@ -358,6 +355,9 @@ public class ReflectionExecutor implements Executor {
 		if(opStatus != null && opStatus.getStatus() != Status.EXCEPTIONAL) opStatus.setSuccessful();
 
 		if(targetPos != null) set(op, targetPos, newObject);
+
+		OperationPrimitiveResult opPrimResult = (OperationPrimitiveResult) op.getInfo(OperationPrimitiveResult.KEY);
+		if(opPrimResult != null) opPrimResult.setValue(newObject);
 
 		return true;
 	}

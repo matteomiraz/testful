@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,10 +23,6 @@ import testful.coverage.whiteBox.AnalysisWhiteBox;
 import testful.evolutionary.ConfigEvolutionary;
 import testful.evolutionary.IConfigEvolutionary;
 import testful.model.Operation;
-import testful.model.OptimalTestCreator;
-import testful.model.Test;
-import testful.model.TestCoverage;
-import testful.model.TestSplitter;
 import testful.model.TestSuite;
 import testful.random.RandomTest;
 import testful.random.RandomTestSplit;
@@ -39,7 +33,7 @@ import testful.utils.Utils;
 public class Launcher {
 	private static Logger logger = Logger.getLogger("testful.evolutionary");
 
-	public static void main(String[] args) throws TestfulException, InterruptedException {
+	public static void main(String[] args) throws TestfulException {
 		ConfigEvolutionary config = new ConfigEvolutionary();
 		TestFul.parseCommandLine(config, args, Launcher.class, "Evolutionary test generator");
 
@@ -55,7 +49,7 @@ public class Launcher {
 		System.exit(0);
 	}
 
-	public static void run(IConfigEvolutionary config, Callback ... callBacks) throws TestfulException, InterruptedException {
+	public static void run(IConfigEvolutionary config, Callback ... callBacks) throws TestfulException {
 		RunnerPool.getRunnerPool().config(config);
 
 		if(config.getLog() != null && config.getLogLevel().getLoggingLevel().intValue() > Level.FINE.intValue()) {
@@ -126,46 +120,13 @@ public class Launcher {
 
 		/* convert tests to jUnit */
 
-		/* split tests into smaller parts */
-		Collection<Test> parts = new ArrayList<Test>();
+		JUnitTestGenerator gen = new JUnitTestGenerator(config, config.getDirGeneratedTests(), config.isReload(), true);
 		for(Solution<Operation> t : population)
-			parts.addAll(TestSplitter.split(true, problem.getTest(t)));
+			gen.read("", problem.getTest(t));
 
-		/* evaluate small tests */
-		Collection<TestCoverage> testCoverage = problem.evaluate(parts);
+		gen.writeSuite();
 
-		/* select best small tests */
-		OptimalTestCreator optimal = new OptimalTestCreator();
-		for (TestCoverage tc : testCoverage)
-			optimal.update(tc);
-
-		/* write them to disk as JUnit */
-		int i = 0;
-		JUnitTestGenerator gen = new JUnitTestGenerator(config, false, config.getDirGeneratedTests(), true);
-		for(Test t : optimal.get()) {
-			gen.read(File.separator + "Ful_" + getClassName(config.getCut()) + "_" + i++, t);
-		}
-
-		gen.writeSuite(getPackageName(config.getCut()), "AllTests_" + getClassName(config.getCut()));
 	}//main
-
-	private static String getPackageName(String className) {
-		StringBuilder pkgBuilder =  new StringBuilder();
-		String[] parts = className.split("\\.");
-
-		for(int i = 0; i < parts.length-1; i++) {
-			if(i > 0) pkgBuilder.append('.');
-			pkgBuilder.append(parts[i]);
-		}
-		return pkgBuilder.toString();
-	}
-
-	private static String getClassName(String className) {
-		if(!className.contains(".")) return className;
-
-		String[] parts = className.split("\\.");
-		return parts[parts.length - 1];
-	}
 
 	/**
 	 * This function uses random.Launcher to generate a smarter initial population

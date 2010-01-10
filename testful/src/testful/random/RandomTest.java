@@ -47,8 +47,11 @@ public abstract class RandomTest {
 
 	protected volatile boolean keepRunning = true;
 
+	protected final File logDirectory;
+
 	public RandomTest(boolean enableCache, File logDirectory, ClassFinder finder, TestCluster cluster, ReferenceFactory refFactory, TrackerDatum ... data) {
-		optimal = new OptimalTestCreator(logDirectory, logger);
+		this.logDirectory = logDirectory;
+		optimal = new OptimalTestCreator();
 
 		long seed = System.currentTimeMillis();
 		logger.config("MersenneTwisterFast: seed=" + seed);
@@ -123,7 +126,7 @@ public abstract class RandomTest {
 
 					long now = System.currentTimeMillis();
 
-					optimal.write(null, numCall, (now - start));
+					optimal.write(null, numCall, (now - start), logDirectory, logger);
 
 					runner.updateCacheScore();
 

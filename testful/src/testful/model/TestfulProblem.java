@@ -93,7 +93,7 @@ public class TestfulProblem implements Serializable {
 		(config.isBrd() ? 1 : 0) + (config.isBrn() ? 1 : 0);
 
 		if(logger.isLoggable(Level.FINER))
-			optimal = new OptimalTestCreator(config.getLog(), logger);
+			optimal = new OptimalTestCreator();
 		else
 			optimal = null;
 
@@ -129,7 +129,7 @@ public class TestfulProblem implements Serializable {
 		runnerCaching.updateCacheScore();
 
 		if(optimal != null)
-			optimal.write(num, invTot.get(), time);
+			optimal.write(num, invTot.get(), time, config.getLog(), logger);
 
 		if (trackers != null) {
 			for (Tracker tracker : trackers)

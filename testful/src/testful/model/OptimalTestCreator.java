@@ -23,10 +23,6 @@ import testful.utils.ElementManager;
 
 public class OptimalTestCreator {
 
-	private final File baseDir;
-
-	private final Logger log;
-
 	/**
 	 * stores the combined coverage obtained so far.
 	 * Key: coverage criteria;
@@ -42,13 +38,6 @@ public class OptimalTestCreator {
 	private final Map<String, Set<TestCoverage>> optimal;
 
 	public OptimalTestCreator() {
-		this(null, null);
-	}
-
-	public OptimalTestCreator(File baseDir, Logger log) {
-		this.log = log;
-		this.baseDir = baseDir;
-
 		combinedCoverage = new ElementManager<String, CoverageInformation>();
 		optimal = new HashMap<String, Set<TestCoverage>>();
 	}
@@ -135,7 +124,7 @@ public class OptimalTestCreator {
 		return optimal;
 	}
 
-	public void write(Integer currentGeneration, long totInvocation, long time) {
+	public void write(Integer currentGeneration, long totInvocation, long time, File baseDir, Logger log) {
 		if(baseDir == null) return;
 
 		for(Entry<String, Set<TestCoverage>> entry : optimal.entrySet()) {

@@ -3,6 +3,7 @@ package testful.coverage;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -92,7 +93,6 @@ public class RunnerCaching implements IRunner{
 		List<Test> parts = TestSplitter.split(false, test);
 		stop = System.nanoTime();
 		timeSplit += (stop-start);
-
 
 		CachingFuture ret = new CachingFuture();
 		for(Test part: parts) {
@@ -413,9 +413,12 @@ public class RunnerCaching implements IRunner{
 		}
 
 		public void updateScore() {
-			Iterator<Value> iter = map.values().iterator();
-			while(iter.hasNext())
-				iter.next().updateScore();
+			try {
+				Iterator<Value> iter = map.values().iterator();
+				while(iter.hasNext())
+					iter.next().updateScore();
+			} catch (ConcurrentModificationException e) {
+			}
 		}
 
 		@Override
