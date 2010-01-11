@@ -1,50 +1,36 @@
 package testful;
 
+import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Calendar;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
+import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
-import testful.utils.TestfulLogger;
-
 public class TestFul {
+
+	public static final long runId = System.currentTimeMillis();
 
 	public static final boolean DEBUG = false;
 
-	public static void printHeader(String module) {
-		System.out.println("Testful" + (module == null ? "" : (" - " + module)));
-		System.out.println("Copyright 2009 - Matteo Miraz (miraz@elet.polimi.it)");
-		System.out.println();
-		System.out.println();
-
-		String logFileName = TestfulLogger.singleton.getFile(module + ".xml").getAbsolutePath();
-		System.out.println("Logging to " + logFileName);
-		manageLogger(logFileName);
-	}
-
-	public static void manageLogger(String fileName) {
-		// disable the console handler
-		Logger.getLogger("testful").setUseParentHandlers(false);
-
-		try {
-			Handler fh = new FileHandler(fileName);
-			fh.setLevel(Level.INFO);
-			Logger.getLogger("testful").addHandler(fh);
-		} catch(Exception e) {
-			System.err.println("Cannot log: " + e);
-		}
-	}
-
-	public static void parseCommandLine(Object config, String[] args, Class<?> launcher) {
+	public static void parseCommandLine(Object config, String[] args, Class<?> launcher, String name) {
 
 		CmdLineParser parser = new CmdLineParser(config);
 		try {
 			// parse the arguments.
 			parser.parseArgument(args);
 		} catch(CmdLineException e) {
+			testful.TestFul.printHeader(name);
 
 			System.err.println(e.getMessage());
 
@@ -61,5 +47,129 @@ public class TestFul {
 		}
 	}
 
+	public static void printHeader(String module) {
+		System.out.println("Testful" + (module == null ? "" : (" - " + module)));
+		System.out.println("Copyright 2010 - Matteo Miraz (miraz@elet.polimi.it)");
+		System.out.println();
+		System.out.println();
+	}
+
+	private static final Formatter consoleFormatter = new Formatter() {
+		private final Calendar cal = Calendar.getInstance();
+
+		@Override
+		public String format(LogRecord record) {
+			cal.setTimeInMillis(record.getMillis());
+
+			StringBuilder sb = new StringBuilder();
+
+			sb.append(String.format("%2d:%02d:%02d ",
+					cal.get(Calendar.HOUR_OF_DAY),
+					cal.get(Calendar.MINUTE),
+					cal.get(Calendar.SECOND)));
+
+			if(record.getLevel().intValue() >= Level.WARNING.intValue())
+				sb.append(record.getLevel().getLocalizedName()).append(" ");
+
+			sb.append(record.getMessage());
+			sb.append("\n");
+
+			return sb.toString();
+		}
+	};
+
+	private static final Formatter fileFormatter = new Formatter() {
+
+		@Override
+		public String format(LogRecord record) {
+			StringBuilder sb = new StringBuilder("# ");
+
+			sb.append(record.getMillis()).append(" ");
+			sb.append(record.getLevel().getName()).append(" ");
+			sb.append(record.getLoggerName()).append(" ");
+
+			sb.append(record.getMessage());
+			sb.append("\n");
+
+			if (record.getThrown() != null) {
+				try {
+					StringWriter sw = new StringWriter();
+					PrintWriter pw = new PrintWriter(sw);
+					record.getThrown().printStackTrace(pw);
+					pw.close();
+					sb.append(sw.toString());
+				} catch (Exception ex) {
+				}
+			}
+
+			return sb.toString();
+		}
+	};
+
+	public static void setupLogging(IConfigProject config ) {
+		setupLogging(config.getLog(), config.getLogLevel().getLoggingLevel(), config.isQuiet());
+	}
+
+	public static void setupLogging(File logDir, Level loggingLevel, boolean quiet) {
+		Logger logger = Logger.getLogger("testful");
+		logger.setUseParentHandlers(false);
+		logger.setLevel(loggingLevel);
+
+		if(!quiet) {
+			ConsoleHandler ch = new ConsoleHandler();
+			ch.setFormatter(consoleFormatter);
+			ch.setLevel(Level.INFO);
+			logger.addHandler(ch);
+		}
+
+		if(logDir != null) {
+			try {
+				logDir.mkdirs();
+
+				final String logFile = logDir.getAbsolutePath() + File.separator + "testful.log";
+				Handler fh = new FileHandler(logFile);
+				fh.setLevel(Level.ALL);
+				fh.setFormatter(fileFormatter);
+				logger.addHandler(fh);
+
+				if(!quiet) System.out.println("Logging to " + logFile);
+			} catch(Exception e) {
+				System.err.println("Cannot log: " + e);
+			}
+
+		}
+	}
+
+	public static String getProperties(Object o) {
+		StringBuilder sb = new StringBuilder();
+
+		for (Method m : o.getClass().getMethods()) {
+			final String name = m.getName();
+			if(!name.startsWith("get") || name.equals("getClass")) continue;
+			if(m.getParameterTypes().length > 0) continue;
+			if(!Modifier.isPublic(m.getModifiers())) continue;
+
+			try {
+				sb.append(name.substring(3) + " = " + m.invoke(o) + "\n");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+		}
+
+		return sb.toString();
+	}
+
+	public static File createFileWithBackup(File baseDir, String fileName) {
+		baseDir.mkdirs();
+
+		File cur = new File(baseDir, fileName);
+		File old = new File(baseDir, fileName + ".bak");
+
+		if(old.exists()) old.delete();
+		if(cur.exists()) cur.renameTo(old);
+
+		return cur;
+	}
 
 }

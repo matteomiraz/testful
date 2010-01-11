@@ -9,24 +9,20 @@ import testful.coverage.TrackerDatum;
 import testful.runner.ClassFinder;
 import testful.runner.Context;
 import testful.runner.IRunner;
+import testful.runner.RunnerPool;
 
 /**
- * Simplify a test, by
- * <ul>
- * <li>removing operations with false preconditions (this reduces the contract
- * coverage)</li>
- * <li>removing dependencies through primitive fields.<br>
+ * Simplify a test, by removing operations with false preconditions (this reduces the contract
+ * coverage).<br>
  * For example,
  * <ol>
- * <li>integer_1 = 10;
- * <li>integer_0 = Math.abs(integer_1);
- * <li>foo(integer_0);
+ * <li>integer_0 = -10;</li>
+ * <li>integer_0 = noNegativeParameters(integer_0); //<b>FALSE precondition</b></li>
+ * <li>foo(integer_0);</li>
  * </ol>
  * becomes
  * <ol>
- * <li>integer_1 = 10;</li>
- * <li>integer_0 = Math.abs(integer_1);</li>
- * <li>integer_0 = 10;</li>
+ * <li>integer_0 = -10;</li>
  * <li>foo(integer_0);</li>
  * </ul>
  * </li>
@@ -56,8 +52,8 @@ public class TestSimplifier {
 		this.data = data;
 	}
 
-	public TestSimplifier(IRunner executor, ClassFinder finder, TrackerDatum ... data) {
-		this.executor = executor;
+	public TestSimplifier(ClassFinder finder, TrackerDatum ... data) {
+		executor = RunnerPool.getRunnerPool();
 		this.finder = finder;
 		this.data = data;
 	}
@@ -114,26 +110,15 @@ public class TestSimplifier {
 					} else if(op instanceof Invoke) {
 						Reference target = ((Invoke) op).getTarget();
 						if(target != null) ops.add(new AssignConstant(target, null));
-					} else System.err.println("Unexpected operation: " + op.getClass().getCanonicalName());
+					} else Logger.getLogger("testful.model").warning("Unexpected operation: " + op.getClass().getCanonicalName());
 					break;
 				case SUCCESSFUL:
-					manageOperation(ops, op);
+					ops.add(op);
 				}
-			} else manageOperation(ops, op);
+			} else ops.add(op);
 		}
 
 		if(test instanceof TestCoverage) return new TestCoverage(test.getCluster(), test.getReferenceFactory(), ops.toArray(new Operation[ops.size()]), ((TestCoverage) test).getCoverage());
 		else return new Test(test.getCluster(), test.getReferenceFactory(), ops.toArray(new Operation[ops.size()]));
-	}
-
-	private void manageOperation(List<Operation> ops, Operation op) {
-		ops.add(op);
-
-		Reference target = null;
-		if(op instanceof CreateObject) target = ((CreateObject) op).getTarget();
-		else if(op instanceof Invoke) target = ((Invoke) op).getTarget();
-
-		OperationPrimitiveResult result = (OperationPrimitiveResult) op.getInfo(OperationPrimitiveResult.KEY);
-		if(target != null && result != null && result.isSet()) ops.add(new AssignPrimitive(target, result.getValue()));
 	}
 }

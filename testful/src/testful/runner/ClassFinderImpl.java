@@ -6,6 +6,7 @@ import java.net.URL;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.UUID;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.utils.ByteReader;
@@ -30,7 +31,7 @@ public class ClassFinderImpl implements ClassFinder {
 		try {
 			UnicastRemoteObject.exportObject(this, 0);
 		} catch(Exception e) {
-			System.err.println("Unable to use the classloader " + toString() + " in a remote context: " + e);
+			logger.warning("Unable to use the classloader " + toString() + " in a remote context: " + e);
 		}
 	}
 
@@ -45,7 +46,7 @@ public class ClassFinderImpl implements ClassFinder {
 				try {
 					byte[] ret = ByteReader.readBytes(w);
 					if(ret != null) {
-						logger.info("(" + key + ") serving class " + name + " from " + w);
+						logger.finer("(" + key + ") serving class " + name + " from " + w);
 						return ret;
 					}
 				} catch(IOException e) {
@@ -62,11 +63,11 @@ public class ClassFinderImpl implements ClassFinder {
 				try {
 					byte[] ret = ByteReader.readBytes(resource.openStream());
 					if(ret != null) {
-						logger.info("(" + key + ") serving class " + name + " from " + resource);
+						logger.finer("(" + key + ") serving class " + name + " from " + resource);
 						return ret;
 					}
 				} catch(IOException e) {
-					logger.warning("(" + key + ") " + "cannot load class " + name + " from " + resource + ": " + e.getMessage());
+					logger.log(Level.WARNING, "(" + key + ") " + "cannot load class " + name + " from " + resource + ": " + e.getMessage(), e);
 				}
 			}
 		}

@@ -1,5 +1,6 @@
 package testful.runner;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.rmi.AlreadyBoundException;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.kohsuke.args4j.Argument;
@@ -20,6 +22,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import testful.TestFul;
+import testful.IConfigProject.LogLevel;
 
 public class Launcher {
 
@@ -40,6 +43,18 @@ public class Launcher {
 	@Option(required = false, name = "-nonInteractive", usage = "Starts a non-interactive executor")
 	private boolean nonInteractive;
 
+	/** if not null, enables the logging in the specified directory */
+	@Option(required = false, name = "-log", usage = "Enables logging in the specified directory")
+	private File log;
+
+	/** the logging level */
+	@Option(required = false, name = "-logLevel", usage = "Sets the logging level")
+	private LogLevel logLevel = LogLevel.INFO;
+
+	/** disable all the output to the console */
+	@Option(required = false, name = "-quiet", usage = "Do not print anything to the console")
+	private boolean quiet;
+
 	@Argument
 	private List<String> arguments = new ArrayList<String>();
 
@@ -48,18 +63,22 @@ public class Launcher {
 	public static void main(String[] args) throws RemoteException {
 		TestFul.printHeader("Worker");
 
-		final Launcher opt = new Launcher();
-		opt.parseArgs(args);
+		final Launcher config = new Launcher();
+		config.parseArgs(args);
 
-		if(opt.cpu < 0) {
-			System.out.println("Starting without CPUs: acting as a test repository.");
-			opt.cpu = 0;
-		} else if(opt.cpu == 0) opt.cpu = -1;
+		TestFul.setupLogging(config.log, config.logLevel.getLoggingLevel(), config.quiet);
 
-		final WorkerManager wm = new WorkerManager(opt.cpu, opt.bufferSize);
+		logger.config(TestFul.getProperties(config));
 
-		if(opt.register) {
-			System.out.println("Registering workerManager");
+		if(config.cpu < 0) {
+			logger.info("Starting without CPUs: acting as a test repository.");
+			config.cpu = 0;
+		} else if(config.cpu == 0) config.cpu = -1;
+
+		final WorkerManager wm = new WorkerManager(config.cpu, config.bufferSize);
+
+		if(config.register) {
+			logger.info("Registering workerManager");
 
 			Registry r;
 			try {
@@ -76,32 +95,30 @@ public class Launcher {
 					InetAddress localHost = InetAddress.getLocalHost();
 					msg = "Registered worker at " + "//" + localHost.getHostAddress() + "/" + RMI_NAME + " - " + "//" + localHost.getCanonicalHostName() + "/" + RMI_NAME;
 				} catch(UnknownHostException e) {
-					System.err.println("Cannot retrieve the host name: " + e);
 					msg = "Registered worker at " + RMI_NAME;
 				}
 
 				logger.info(msg);
-				System.out.println(msg);
 
 			} catch(AlreadyBoundException e1) {
-				System.err.println("There is already a worker registered here!");
+				logger.log(Level.SEVERE, "There is already a worker registered here!", e1);
 				System.exit(1);
 			}
 		}
 
-		for(String arg : opt.arguments) {
+		for(String arg : config.arguments) {
 			arg = arg.trim();
 			connect(wm, arg);
 		}
 
-		if(opt.stop > 0) {
-			final int stop = opt.stop;
+		if(config.stop > 0) {
+			final int stop = config.stop;
 			Thread stopper = new Thread(new Runnable() {
 
 				@Override
 				public void run() {
 					try {
-						System.out.println("WorkerManager will quit in " + stop + " minutes");
+						logger.info("WorkerManager will quit in " + stop + " minutes");
 						TimeUnit.SECONDS.sleep(stop * 60);
 					} catch(InterruptedException e) {
 					}
@@ -113,7 +130,7 @@ public class Launcher {
 			stopper.start();
 		}
 
-		if(!opt.nonInteractive) {
+		if(!config.nonInteractive) {
 			Scanner s = new Scanner(System.in);
 			while(true) {
 				System.out.println("\n" + wm.toString());
@@ -122,8 +139,10 @@ public class Launcher {
 
 				if(line.length() <= 0) {
 					// do nothing
-				} else if(line.equalsIgnoreCase("exit")) wm.stop();
-				else if(line.endsWith("/")) try {
+				} else if(line.equalsIgnoreCase("exit")) {
+					wm.stop();
+					System.exit(0);
+				} else if(line.endsWith("/")) try {
 					String[] list = Naming.list(line);
 					System.out.println("Found " + list.length + " services bound to " + line);
 					for(String name : list)
@@ -131,26 +150,26 @@ public class Launcher {
 					System.out.println("---");
 
 				} catch(Exception e) {
-					System.out.println("Error: " + e.getMessage());
+					logger.log(Level.WARNING, e.getMessage(), e);
 				}
 				else connect(wm, line);
 			}
 		} else try {
 			while(true) {
 				TimeUnit.SECONDS.sleep(60);
-				System.out.println("\n" + wm.toString());
+				logger.info(wm.toString());
 			}
 		} catch(InterruptedException e) {
 		}
 	}
 
 	private static void connect(WorkerManager wm, String rmiName) {
-		System.out.print("\nConnecting to " + rmiName);
+		logger.info("Connecting to " + rmiName);
 		try {
 			wm.addTestRepository(rmiName);
-			System.out.println(" done.");
+			logger.info("Connected to " + rmiName);
 		} catch(Exception e) {
-			System.out.println("  error: " + e);
+			logger.log(Level.WARNING, "Cannot connect to " + rmiName, e);
 		}
 	}
 

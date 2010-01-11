@@ -2,8 +2,11 @@ package testful.model;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Logger;
 
 public final class PrimitiveClazz extends Clazz {
+
+	private static final Logger logger = Logger.getLogger("testful.model");
 
 	private static final long serialVersionUID = -2125532247454284282L;
 
@@ -36,55 +39,55 @@ public final class PrimitiveClazz extends Clazz {
 			if(Short.class == c) return ShortClass;
 			if(Short.TYPE == c) return ShortType;
 
-			System.err.println("ERROREE!!!");
+			logger.warning("Cannot find the primitive type of " + c.getCanonicalName());
 			return null;
 		}
 
 		public Class<?> toClass() {
 			switch(this) {
-				case BooleanClass:
-					return Boolean.class;
-				case BooleanType:
-					return Boolean.TYPE;
+			case BooleanClass:
+				return Boolean.class;
+			case BooleanType:
+				return Boolean.TYPE;
 
-				case ByteClass:
-					return Byte.class;
-				case ByteType:
-					return Byte.TYPE;
+			case ByteClass:
+				return Byte.class;
+			case ByteType:
+				return Byte.TYPE;
 
-				case CharacterClass:
-					return Character.class;
-				case CharacterType:
-					return Character.TYPE;
+			case CharacterClass:
+				return Character.class;
+			case CharacterType:
+				return Character.TYPE;
 
-				case DoubleClass:
-					return Double.class;
-				case DoubleType:
-					return Double.TYPE;
+			case DoubleClass:
+				return Double.class;
+			case DoubleType:
+				return Double.TYPE;
 
-				case FloatClass:
-					return Float.class;
-				case FloatType:
-					return Float.TYPE;
+			case FloatClass:
+				return Float.class;
+			case FloatType:
+				return Float.TYPE;
 
-				case IntegerClass:
-					return Integer.class;
-				case IntegerType:
-					return Integer.TYPE;
+			case IntegerClass:
+				return Integer.class;
+			case IntegerType:
+				return Integer.TYPE;
 
-				case LongClass:
-					return Long.class;
-				case LongType:
-					return Long.TYPE;
+			case LongClass:
+				return Long.class;
+			case LongType:
+				return Long.TYPE;
 
-				case ShortClass:
-					return Short.class;
-				case ShortType:
-					return Short.TYPE;
+			case ShortClass:
+				return Short.class;
+			case ShortType:
+				return Short.TYPE;
 
-				default:
-					System.err.println("ERROREE!!!");
-					return null;
+			default:
+				logger.warning("Primitive type not known: " + this);
+				return null;
 			}
 		}
 
@@ -95,49 +98,49 @@ public final class PrimitiveClazz extends Clazz {
 
 		PrimTypes other() {
 			switch(this) {
-				case BooleanClass:
-					return BooleanType;
-				case BooleanType:
-					return BooleanClass;
+			case BooleanClass:
+				return BooleanType;
+			case BooleanType:
+				return BooleanClass;
 
-				case ByteClass:
-					return ByteType;
-				case ByteType:
-					return ByteClass;
+			case ByteClass:
+				return ByteType;
+			case ByteType:
+				return ByteClass;
 
-				case CharacterClass:
-					return CharacterType;
-				case CharacterType:
-					return CharacterClass;
+			case CharacterClass:
+				return CharacterType;
+			case CharacterType:
+				return CharacterClass;
 
-				case DoubleClass:
-					return DoubleType;
-				case DoubleType:
-					return DoubleClass;
+			case DoubleClass:
+				return DoubleType;
+			case DoubleType:
+				return DoubleClass;
 
-				case FloatClass:
-					return FloatType;
-				case FloatType:
-					return FloatClass;
+			case FloatClass:
+				return FloatType;
+			case FloatType:
+				return FloatClass;
 
-				case IntegerClass:
-					return IntegerType;
-				case IntegerType:
-					return IntegerClass;
+			case IntegerClass:
+				return IntegerType;
+			case IntegerType:
+				return IntegerClass;
 
-				case LongClass:
-					return LongType;
-				case LongType:
-					return LongClass;
+			case LongClass:
+				return LongType;
+			case LongType:
+				return LongClass;
 
-				case ShortClass:
-					return ShortType;
-				case ShortType:
-					return ShortClass;
+			case ShortClass:
+				return ShortType;
+			case ShortType:
+				return ShortClass;
 
-				default:
-					System.err.println("ERROREE!!!");
-					return null;
+			default:
+				logger.warning("Primitive type not known: " + this);
+				return null;
 			}
 		}
 	};
@@ -190,7 +193,7 @@ public final class PrimitiveClazz extends Clazz {
 	public boolean isAbstract() {
 		return false;
 	}
-	
+
 	@Override
 	public Class<?> toJavaClass() {
 		return realType.toClass();
@@ -314,24 +317,24 @@ public final class PrimitiveClazz extends Clazz {
 		if(object instanceof Number) {
 			Number num = (Number) object;
 			switch(realType) {
-				case ByteClass:
-				case ByteType:
-					return num.byteValue();
-				case ShortClass:
-				case ShortType:
-					return num.shortValue();
-				case IntegerClass:
-				case IntegerType:
-					return num.intValue();
-				case LongClass:
-				case LongType:
-					return num.longValue();
-				case FloatClass:
-				case FloatType:
-					return num.floatValue();
-				case DoubleClass:
-				case DoubleType:
-					return num.doubleValue();
+			case ByteClass:
+			case ByteType:
+				return num.byteValue();
+			case ShortClass:
+			case ShortType:
+				return num.shortValue();
+			case IntegerClass:
+			case IntegerType:
+				return num.intValue();
+			case LongClass:
+			case LongType:
+				return num.longValue();
+			case FloatClass:
+			case FloatType:
+				return num.floatValue();
+			case DoubleClass:
+			case DoubleType:
+				return num.doubleValue();
 			}
 		}
 
@@ -339,7 +342,7 @@ public final class PrimitiveClazz extends Clazz {
 
 		if(object instanceof Boolean) return ((Boolean) object).booleanValue();
 
-		System.err.println("ERR: cannot perform the conversion for type: " + object.getClass().getCanonicalName());
+		logger.warning("Cannot perform the conversion for type: " + object.getClass().getCanonicalName());
 		return null;
 	}
 

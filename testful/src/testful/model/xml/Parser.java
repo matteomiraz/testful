@@ -8,6 +8,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -26,6 +28,8 @@ import testful.model.xml.XmlMethod.Kind;
 
 public class Parser {
 
+	private static final Logger logger = Logger.getLogger("testful.model.xml");
+
 	/** Should I create the behavior element? */
 	private static final boolean ADD_EMPTY_ELEMENTS = false;
 
@@ -37,8 +41,7 @@ public class Parser {
 		try {
 			tmp = new Parser();
 		} catch(JAXBException e) {
-			System.err.println("FATAL ERROR: " + e);
-			e.printStackTrace();
+			logger.log(Level.SEVERE, "Problem creating the XML parser: " + e.getMessage(), e);
 		}
 		singleton = tmp;
 	}
@@ -69,13 +72,13 @@ public class Parser {
 			out = new FileOutputStream(new File(config.getDirSource(), xml.getName().replace('.', File.separatorChar) + ".xml"));
 			marshaller.marshal(xml, out);
 		} catch(IOException e) {
-			System.err.println("Cannot write to file: " + e);
+			logger.log(Level.WARNING, "Cannot write to file: " + e.getMessage(), e);
 		} finally {
 			if(out != null) {
 				try {
 					out.close();
 				} catch(IOException e) {
-					System.err.println("Cannot close the xml file: " + e);
+					logger.log(Level.WARNING, "Cannot close the file: " + e.getMessage(), e);
 				}
 			}
 		}
@@ -106,7 +109,7 @@ public class Parser {
 
 		for(Method meth : c.getMethods()) {
 			if(Methodz.toSkip(meth)) {
-				System.out.println("Skipping " + meth.getName());
+				logger.fine("Skipping " + meth.getName());
 				continue;
 			}
 
@@ -136,7 +139,9 @@ public class Parser {
 	public static void main(String[] args) throws JAXBException, IOException {
 		IConfigCut config = new ConfigCut();
 
-		TestFul.parseCommandLine(config, args, Parser.class);
+		TestFul.parseCommandLine(config, args, Parser.class, "XML Creator");
+
+		testful.TestFul.setupLogging(config);
 
 		final URLClassLoader loader = new URLClassLoader(new URL[] { config.getDirCompiled().toURI().toURL() });
 
@@ -145,7 +150,7 @@ public class Parser {
 			XmlClass xmlClass = singleton.createClassModel(clazz);
 			singleton.encode(xmlClass, config);
 		} catch(ClassNotFoundException e) {
-			System.err.println("Class not found: " + e);
+			logger.log(Level.SEVERE, "Class not found: " + e.getMessage(), e);
 		}
 	}
 
@@ -156,10 +161,12 @@ public class Parser {
 			if(ve.getSeverity() == ValidationEvent.FATAL_ERROR || ve.getSeverity() == ValidationEvent.ERROR) {
 				ValidationEventLocator locator = ve.getLocator();
 				//Print message from valdation event
-				System.out.println("Invalid booking document: " + locator.getURL());
-				System.out.println("Error: " + ve.getMessage());
-				//Output line and column number
-				System.out.println("Error at column " + locator.getColumnNumber() + ", line " + locator.getLineNumber());
+
+				logger.warning(
+						"Invalid xml document: " + locator.getURL() + "\n" +
+						"Error: " + ve.getMessage() + "\n" +
+						"Error at column " + locator.getColumnNumber() + ", line " + locator.getLineNumber()
+				);
 			}
 			return true;
 		}

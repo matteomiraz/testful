@@ -3,6 +3,7 @@ package testful.mutation.combiner;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Logger;
 
 import testful.coverage.CoverageInformation;
 import testful.model.Test;
@@ -10,6 +11,7 @@ import testful.model.TestCoverage;
 import testful.model.TestReader;
 
 public class Launcher {
+	private static Logger logger = Logger.getLogger("testful.evolutionary");
 
 	public static void main(String[] args) {
 		Combiner c = new Combiner();
@@ -55,5 +57,9 @@ public class Launcher {
 			}
 		}
 
+		@Override
+		protected Logger getLogger() {
+			return logger;
+		}
 	}
 }

@@ -3,6 +3,7 @@ package testful.runner;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Map.Entry;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.utils.CachingMap;
@@ -29,10 +30,10 @@ public class ClassFinderCaching implements ClassFinder {
 		try {
 			UnicastRemoteObject.exportObject(this, 0);
 		} catch(Exception e) {
-			System.err.println("Unable to use the classloader " + toString() + " in a remote context: " + e);
+			logger.log(Level.WARNING, "Unable to use the classloader " + toString() + " in a remote context: " + e.getMessage(), e);
 		}
 
-		logger.fine("Created classFinder with key: " + key);
+		logger.finest("Created classFinder with key: " + key);
 	}
 
 	@Override
@@ -44,17 +45,17 @@ public class ClassFinderCaching implements ClassFinder {
 
 		CachingMap.Cacheable<byte[]> tmp = cache.get(name);
 		if(tmp != null) {
-			logger.fine("(" + key + ") serving cached class " + name);
+			logger.finest("(" + key + ") serving cached class " + name);
 			return tmp.getElement();
 		}
 
 		try {
 			byte[] buff = finder.getClass(name);
 			cache.put(name, new Cacheable<byte[]>(buff));
-			logger.fine("(" + key + ") serving retrieved class " + name);
+			logger.finer("(" + key + ") serving retrieved class " + name);
 			return buff;
 		} catch(RemoteException e) {
-			logger.warning("(" + key + ") cannot retrieve class " + name);
+			logger.log(Level.WARNING, "(" + key + ") cannot retrieve class " + name, e);
 			throw new ClassNotFoundException("Cannot retrieve the class " + name, e);
 		}
 	}

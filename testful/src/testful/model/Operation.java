@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import jmetal.base.Variable;
 import testful.utils.ElementManager;
@@ -60,8 +62,8 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 		}
 	}
 
-	protected static final transient Set<Reference> emptyRefsSet = new HashSet<Reference>(); 
-	
+	protected static final transient Set<Reference> emptyRefsSet = new HashSet<Reference>();
+
 	private transient Set<Reference> defs = null;
 	protected abstract Set<Reference> calculateDefs();
 	public Set<Reference> getDefs() {
@@ -75,10 +77,10 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 			for(Reference u : getDefs())
 				defsBitset.set(u.getId());
 		}
-		
+
 		return defsBitset;
 	}
-	
+
 	private transient Set<Reference> uses = null;
 	protected abstract Set<Reference> calculateUses();
 	public Set<Reference> getUses() {
@@ -92,10 +94,10 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 			for(Reference u : getUses())
 				usesBitset.set(u.getId());
 		}
-		
+
 		return usesBitset;
 	}
-	
+
 	/**
 	 * Determine if this operation can be swapped with the other operation
 	 * (possible only if they are independent)
@@ -103,15 +105,15 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 	 * @return true if the two operations can be swapped safely
 	 */
 	public boolean swappable(Operation other) {
-		if(this instanceof ResetRepository || other instanceof ResetRepository) 
+		if(this instanceof ResetRepository || other instanceof ResetRepository)
 			return false;
-		
+
 		Set<Reference> use1 = getUses();
 		Set<Reference> def1 = getDefs();
-		
+
 		Set<Reference> use2 = other.getUses();
 		Set<Reference> def2 = other.getDefs();
-		
+
 		for(Reference d : def1) {
 			if(use2.contains(d)) return false;
 			if(def2.contains(d)) return false;
@@ -119,7 +121,7 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 
 		for(Reference d : def2) {
 			if(use1.contains(d)) return false;
-			// useless 
+			// useless
 			// if(def1.contains(d)) return false;
 		}
 
@@ -130,17 +132,17 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 	 * Determine if there is a def-use
 	 * @param defs the set of defs
 	 * @param uses the set of uses
-	 * @return true if exists a def which sets a reference, 
+	 * @return true if exists a def which sets a reference,
 	 * 							and exists a use which reads the same reference
 	 */
 	public static boolean existDefUse(Set<Reference> defs, Set<Reference> uses) {
-		for(Reference d : defs) 
-			if(uses.contains(d)) 
+		for(Reference d : defs)
+			if(uses.contains(d))
 				return true;
-		
+
 		return false;
 	}
-	
+
 	// generation probabilities
 	public static float WORK_ON_CUT = .28f;
 	public static float SELECT_SUBCLASS = .35f;
@@ -153,7 +155,7 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 	public static float LIMITED_VALUES = .40f;
 
 	private static final AtomicLong idGenerator = new AtomicLong();
-	
+
 	public static Operation randomlyGenerate(TestCluster cluster, ReferenceFactory refFactory, MersenneTwisterFast random) {
 		while(true) {
 			Operation op = null;
@@ -169,8 +171,7 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 				} else op = Invoke.generate(c, cluster, refFactory, random);
 				if(op != null) return op;
 			} catch(Throwable e) {
-				System.err.println("EXC randomly generage: " + e);
-				e.printStackTrace();
+				Logger.getLogger("testful.model").log(Level.WARNING, "Cannot create a random element: " + e.getMessage(), e);
 			}
 		}
 	}
@@ -188,4 +189,11 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 	 * @return the new operation
 	 */
 	public abstract Operation adapt(TestCluster cluster, ReferenceFactory refFactory);
+
+	public static Operation[] adapt(Operation[] ops, TestCluster cluster, ReferenceFactory refFactory) {
+		Operation[] ret = new Operation[ops.length];
+		for (int i = 0; i < ops.length; i++)
+			ret[i] = ops[i].adapt(cluster, refFactory);
+		return ret;
+	}
 }

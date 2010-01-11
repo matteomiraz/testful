@@ -2,8 +2,11 @@ package testful.coverage;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import soot.PackManager;
 import soot.Scene;
@@ -28,6 +31,8 @@ import testful.utils.SootMain;
  */
 public class Launcher {
 
+	private static final Logger logger = Logger.getLogger("testful.coverage.instrumenter");
+
 	private static final boolean preWriter     = false;
 	private static final boolean instrumenter  = true;
 	private static final boolean postWriter    = false;
@@ -37,10 +42,14 @@ public class Launcher {
 
 		IConfigCut config  = new ConfigCut();
 
-		TestFul.parseCommandLine(config, args, Launcher.class);
+		TestFul.parseCommandLine(config, args, Launcher.class, "Instrumenter");
 
 		try {
-			testful.TestFul.printHeader("Instrumenter");
+
+			if(!config.isQuiet())
+				testful.TestFul.printHeader("Instrumenter");
+
+			testful.TestFul.setupLogging(config);
 
 			String[] SOOT_CONF = new String[] { "-validate", "--keep-line-number", "--xml-attributes", "-f", "c", "-output-dir", config.getDirInstrumented().getAbsolutePath() };
 
@@ -52,8 +61,7 @@ public class Launcher {
 			String bootClassPath = System.getProperty("sun.boot.class.path");
 			if(bootClassPath != null) sootClassPath.add(bootClassPath); // vaild for sun and ibm jvm
 			else {
-				System.err.println("Unknown Java Vendor: " + System.getProperty("java.vm.vendor"));
-				System.getProperties().list(System.out);
+				logger.severe("Unknown Java Vendor: " + System.getProperty("java.vm.vendor"));
 				System.exit(1);
 			}
 
@@ -62,7 +70,7 @@ public class Launcher {
 			TestCluster tc = new TestCluster(tcl, config);
 
 			Collection<String> toInstrument = tc.getClassesToInstrument();
-			System.out.println("Instrumenting: " + toInstrument);
+			logger.info("Instrumenting: " + toInstrument);
 
 			String params[] = new String[SOOT_CONF.length + 2 + toInstrument.size()];
 
@@ -82,6 +90,8 @@ public class Launcher {
 			for(String s : toInstrument)
 				params[i++] = s;
 
+			logger.config("Launching SOOT with command line parameters:\n" + Arrays.toString(params));
+
 			SootMain.singleton.processCmdLine(params);
 
 			if(instrumenter) {
@@ -97,12 +107,12 @@ public class Launcher {
 				String newPhase = "jtp.preWriter";
 				PackManager.v().getPack("jtp").add(new Transform(newPhase, JimpleWriter.singleton));
 				last = newPhase;
-				System.out.println("Enabled phase: " + last);
+				logger.fine("Enabled phase: " + last);
 			}
 
 			if(instrumenter) {
 				String newPhase = "jtp.coverageInstrumenter";
-				System.out.println("Enabled phase: " + newPhase);
+				logger.fine("Enabled phase: " + newPhase);
 				if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, Instrumenter.singleton));
 				else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, Instrumenter.singleton), last);
 				last = newPhase;
@@ -110,7 +120,7 @@ public class Launcher {
 
 			if(postWriter) {
 				String newPhase = "jtp.postWriter";
-				System.out.println("Enabled phase: " + newPhase);
+				logger.fine("Enabled phase: " + newPhase);
 				if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(JimpleWriter.singleton)));
 				else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, ActiveBodyTransformer.v(JimpleWriter.singleton)), last);
 				last = newPhase;
@@ -118,13 +128,11 @@ public class Launcher {
 
 			if(nopEliminator) {
 				String newPhase = "jtp.nopEliminator";
-				System.out.println("Enabled phase: " + newPhase);
+				logger.fine("Enabled phase: " + newPhase);
 				if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(NopEliminator.v())));
 				else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, ActiveBodyTransformer.v(NopEliminator.v())), last);
 				last = newPhase;
 			}
-
-			System.out.println();
 
 			SootMain.singleton.run();
 
@@ -132,12 +140,11 @@ public class Launcher {
 				Instrumenter.singleton.done(config.getDirInstrumented(), config.getCut());
 
 
-			System.out.println("Done");
+			logger.info("Done");
 			System.exit(0);
 
 		} catch (Exception e) {
-			System.err.println("Error: " + e.getMessage());
-			e.printStackTrace();
+			logger.log(Level.SEVERE, "Error: " + e.getMessage(), e);
 			System.exit(1);
 		}
 	}
