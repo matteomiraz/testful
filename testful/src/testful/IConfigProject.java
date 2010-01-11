@@ -1,6 +1,7 @@
 package testful;
 
 import java.io.File;
+import java.util.logging.Level;
 
 import org.kohsuke.args4j.Option;
 
@@ -35,6 +36,48 @@ public interface IConfigProject {
 	 * @return the directory containing instrumented binaries
 	 */
 	public File getDirInstrumented();
+
+	/**
+	 * Returns the directory in which all logging activities must be performed.
+	 * If the return value is null, it means that the logging is disabled.
+	 * @return the logging directory (or null if the logging is disabled)
+	 */
+	public File getLog();
+
+	/**
+	 * Do not print anything to the console
+	 * @return true if the tool is running in a quiet mode
+	 */
+	public boolean isQuiet();
+
+	public static enum LogLevel {
+		SEVERE,
+		WARNING,
+		INFO,
+		CONFIG,
+		FINE,
+		FINER,
+		FINEST;
+
+		public Level getLoggingLevel() {
+			switch(this) {
+			case SEVERE: return Level.SEVERE;
+			case WARNING: return Level.WARNING;
+			case INFO: return Level.INFO;
+			case CONFIG: return Level.CONFIG;
+			case FINE: return Level.FINE;
+			case FINER: return Level.FINER;
+			case FINEST: return Level.FINEST;
+			}
+			return Level.OFF;
+		}
+	}
+
+	/**
+	 * Returns the logging level
+	 * @return the logging level
+	 */
+	public LogLevel getLogLevel();
 
 	/**
 	 * Stores the configuration of the project being tested.
@@ -85,5 +128,30 @@ public interface IConfigProject {
 		 */
 		@Option(required = false, name = "-dirInstrumented", usage = "Specify the directory with instrumented files (default: instrumented)")
 		public void setDirInstrumented(File dirInstrumented);
+
+		/**
+		 * Enables the logging and sets the output directory.
+		 * It can be both a path relative to the base directory (e.g., "bar" or "../foo/bar")
+		 * or an absolute path (e.g., $HOME/workspace/foo/bar")
+		 * @param log the logging directory.
+		 */
+		@Option(required = false, name = "-log", usage = "Enables logging in the specified directory")
+		public void setLog(File log);
+
+		/**
+		 * Sets the logging level
+		 * @param logLevel the logging directory.
+		 */
+		@Option(required = false, name = "-logLevel", usage = "Sets the logging level")
+		public void setLogLevel(LogLevel logLevel);
+
+		/**
+		 * Disable all the output to the console
+		 * @param quiet disable all the output to the console
+		 */
+		@Option(required = false, name = "-quiet", usage = "Do not print anything to the console")
+		public void setQuiet(boolean quiet);
+
+
 	}
 }

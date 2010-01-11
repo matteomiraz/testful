@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import soot.Body;
 import soot.BodyTransformer;
@@ -26,6 +27,8 @@ import soot.util.Chain;
 import testful.utils.Skip;
 
 public class Instrumenter extends BodyTransformer {
+
+	private static final Logger logger = Logger.getLogger("testful.coverage.instrumenter");
 
 	static final Instrumenter singleton;
 
@@ -74,7 +77,7 @@ public class Instrumenter extends BodyTransformer {
 		final String methodName = method.getName();
 
 		if(method.hasTag(Skip.NAME)) {
-			System.err.println("Skipping " + method.getName());
+			logger.fine("Skipping " + method.getName());
 			return;
 		}
 
@@ -94,7 +97,7 @@ public class Instrumenter extends BodyTransformer {
 		boolean classWithContracts = sClass.implementsInterface(org.jmlspecs.jmlrac.runtime.JMLCheckable.class.getCanonicalName());
 		boolean contractMethod = classWithContracts && !methodName.startsWith("internal$");
 
-		System.out.println("Instrumenting " + sClass.getName() + "." + methodName + " (" + (contractMethod ? "contract" : "implementation") + ")");
+		logger.info("Instrumenting " + sClass.getName() + "." + methodName + " (" + (contractMethod ? "contract" : "implementation") + ")");
 
 		/** stores the start of an operation (i.e. nopPre) */
 		final Map<Unit, Unit> start = new HashMap<Unit, Unit>();

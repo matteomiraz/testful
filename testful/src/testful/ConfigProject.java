@@ -24,6 +24,15 @@ public class ConfigProject implements IConfigProject.Args4j {
 	/** directory with classes instrumented */
 	private File dirInstrumented;
 
+	/** if not null, enables the logging in the specified directory */
+	private File log;
+
+	/** the logging level */
+	private LogLevel logLevel = LogLevel.INFO;
+
+	/** disable all the output to the console */
+	private boolean quiet;
+
 	public ConfigProject() {
 		dirBase = new File(".");
 
@@ -126,5 +135,42 @@ public class ConfigProject implements IConfigProject.Args4j {
 	@Override
 	public void setDirInstrumented(File dirInstrumented) {
 		this.dirInstrumented = dirInstrumented;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see testful.IConfigProject#getLog()
+	 */
+	@Override
+	public File getLog() {
+		if(log == null) return null;
+
+		if(!log.isAbsolute()) log = new File(getDirBase(), log.getPath()).getAbsoluteFile();
+		return log;
+	}
+
+	@Override
+	public void setLog(File log) {
+		this.log = log;
+	}
+
+	@Override
+	public void setQuiet(boolean quiet) {
+		this.quiet = quiet;
+	}
+
+	@Override
+	public boolean isQuiet() {
+		return quiet;
+	}
+
+	@Override
+	public void setLogLevel(LogLevel logLevel) {
+		this.logLevel = logLevel;
+	}
+
+	@Override
+	public LogLevel getLogLevel() {
+		return logLevel;
 	}
 }

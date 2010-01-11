@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import soot.ArrayType;
 import soot.Body;
@@ -74,6 +76,8 @@ import testful.utils.Skip;
 import testful.utils.SootUtils;
 
 public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
+
+	private static final Logger logger = Logger.getLogger("testful.coverage.instrumenter.white");
 
 	private static SootClass objectClass;
 	private static RefType objectType;
@@ -147,7 +151,9 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 	}
 
 	public static final WhiteInstrumenter singleton = new WhiteInstrumenter();
-	private WhiteInstrumenter() { }
+	private WhiteInstrumenter() {
+		logger.config("Bug instrumenter loaded");
+	}
 
 	private Analyzer analyzer;
 
@@ -163,6 +169,8 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 	
 	@Override
 	public void init(Chain<Unit> newUnits, Body newBody, Body oldBody, boolean classWithContracts, boolean contractMethod) {
+		logger.finer(" processing " + newBody.getMethod().getName());
+
 		// generate tracking locals
 		trackingLocals = new HashMap<Local, Local>();
 		for(Local l : newBody.getLocals())
@@ -336,7 +344,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 				writer.println(c.getDot());
 				writer.close();
 			} catch(FileNotFoundException e) {
-				System.err.println("Cannot create the class diagram: " + e);
+				logger.log(Level.WARNING, "Cannot create the class diagram: " + e.getMessage(), e);
 			}
 
 			sa.write(baseDir, cutName);
@@ -479,7 +487,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 			else if(op instanceof ThrowStmt)
 				process(newUnits, (ThrowStmt) op);
 			else
-				System.err.println("WARNING: cannot analyze " + op + " (" + op.getClass().getCanonicalName() + ")");
+				logger.warning("cannot analyze " + op + " (" + op.getClass().getCanonicalName() + ")");
 		}
 
 		public void process(Chain<Unit> newUnits, AssignStmt u) {
@@ -516,7 +524,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 			DataUse use2 = null;
 
 			if(!(u.getCondition() instanceof ConditionExpr)) {
-				System.err.println("Unknown condition: " + u.getCondition() + " (" + u.getCondition().getClass().getCanonicalName() + ")");
+				logger.warning("Unknown condition: " + u.getCondition() + " (" + u.getCondition().getClass().getCanonicalName() + ")");
 				current = null;
 				return;
 			}
@@ -611,8 +619,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance3.makeRef(), localTmpDouble1, localTmpDouble2)));
 
-				} else System.err.println("Unknown operand type: " + type + " (" + type.getClass().getCanonicalName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getCanonicalName() + ")");
-
+				} else logger.warning("Unknown operand type: " + type + " (" + type.getClass().getCanonicalName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getCanonicalName() + ")");
 
 				newUnits.add(Jimple.v().newGotoStmt(after));
 
@@ -664,7 +671,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance3.makeRef(), localTmpDouble1, localTmpDouble2)));
 
-				} else System.err.println("Unknown operand type: " + type + " (" + type.getClass().getCanonicalName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getCanonicalName() + ")");
+				} else logger.warning("Unknown operand type: " + type + " (" + type.getClass().getCanonicalName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getCanonicalName() + ")");
 
 				newUnits.add(Jimple.v().newGotoStmt(after));
 			}
@@ -896,7 +903,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 
 		public void finalCheck() {
 			for(Unit w : deadCode)
-				System.err.println("ERROR: block starting from " + w + " seems dead!");
+				logger.warning("ERROR: block starting from " + w + " seems dead!");
 		}
 
 		private Data get(Local l, boolean param) {

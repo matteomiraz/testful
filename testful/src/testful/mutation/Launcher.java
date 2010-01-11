@@ -10,6 +10,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
 
 import soot.PackManager;
@@ -33,17 +35,22 @@ import testful.utils.SootMain;
 
 public class Launcher {
 
-	public static void main(String[] args) throws Exception {
-		testful.TestFul.printHeader("Mutation testing");
+	private static Logger logger = Logger.getLogger("testful.mutation");
 
+	public static void main(String[] args) throws Exception {
 		ConfigMutation config = new ConfigMutation();
-		TestFul.parseCommandLine(config, args, Launcher.class);
+		TestFul.parseCommandLine(config, args, Launcher.class, "Mutation testing");
+
+		TestFul.setupLogging(config);
+
+		if(!config.isQuiet())
+			testful.TestFul.printHeader("Mutation testing");
 
 		generate(config);
 
 		run(config);
 
-		System.out.println("\n\nDone\n");
+		logger.info("\n\nDone\n");
 		System.exit(0);
 	}
 
@@ -67,8 +74,7 @@ public class Launcher {
 		String bootClassPath = System.getProperty("sun.boot.class.path");
 		if(bootClassPath != null) sootClassPath.add(bootClassPath); // vaild for sun and ibm jvm
 		else {
-			System.err.println("Unknown Java Vendor: " + System.getProperty("java.vm.vendor"));
-			System.getProperties().list(System.out);
+			logger.severe("Unknown Java Vendor: " + System.getProperty("java.vm.vendor"));
 			System.exit(1);
 		}
 
@@ -103,12 +109,12 @@ public class Launcher {
 			String newPhase = "jtp.preWriter";
 			PackManager.v().getPack("jtp").add(new Transform(newPhase, JimpleWriter.singleton));
 			last = newPhase;
-			System.out.println("Enabled phase: " + last);
+			logger.info("Enabled phase: " + last);
 		}
 
 		if(mutator) {
 			String newPhase = "jtp.mutator";
-			System.out.println("Enabled phase: " + newPhase);
+			logger.info("Enabled phase: " + newPhase);
 			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, new MutatorFunctions(config)));
 			else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, new MutatorFunctions(config)), last);
 			last = newPhase;
@@ -116,7 +122,7 @@ public class Launcher {
 
 		if(bugFinder) {
 			String newPhase = "jtp.bugFinder";
-			System.out.println("Enabled phase: " + newPhase);
+			logger.info("Enabled phase: " + newPhase);
 			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(BugFinder.singleton)));
 			else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, ActiveBodyTransformer.v(BugFinder.singleton)), last);
 			last = newPhase;
@@ -124,7 +130,7 @@ public class Launcher {
 
 		if(stopper) {
 			String newPhase = "jtp.stopper";
-			System.out.println("Enabled phase: " + newPhase);
+			logger.info("Enabled phase: " + newPhase);
 			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(ExecutionStopper.singleton)));
 			else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, ActiveBodyTransformer.v(ExecutionStopper.singleton)), last);
 			last = newPhase;
@@ -132,7 +138,7 @@ public class Launcher {
 
 		if(postWriter) {
 			String newPhase = "jtp.postWriter";
-			System.out.println("Enabled phase: " + newPhase);
+			logger.info("Enabled phase: " + newPhase);
 			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(JimpleWriter.singleton)));
 			else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, ActiveBodyTransformer.v(JimpleWriter.singleton)), last);
 			last = newPhase;
@@ -140,20 +146,18 @@ public class Launcher {
 
 		if(nopEliminator) {
 			String newPhase = "jtp.nopEliminator";
-			System.out.println("Enabled phase: " + newPhase);
+			logger.info("Enabled phase: " + newPhase);
 			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(NopEliminator.v())));
 			else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, ActiveBodyTransformer.v(NopEliminator.v())), last);
 			last = newPhase;
 		}
-
-		System.out.println();
 
 		SootMain.singleton.run();
 
 		try {
 			ConfigHandler.singleton.done(config.getDirOutput());
 		} catch(IOException e) {
-			System.err.println("Cannot write config: " + e);
+			logger.warning("Cannot write config: " + e);
 		}
 
 		for(String className : config.getGenMutant()) {
@@ -162,14 +166,14 @@ public class Launcher {
 				ConfigHandler.singleton.writeStats(statFile);
 				statFile.close();
 			} catch(IOException e) {
-				System.err.println("Cannot write stats: " + e);
+				logger.warning("Cannot write stats: " + e);
 			}
 		}
 	}
 
 	public static void run(ConfigMutation config) {
 		try {
-			IRunner exec = RunnerPool.createExecutor("mutation", config);
+			IRunner exec = RunnerPool.getRunnerPool();
 
 			ClassFinder finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirOutput()));
 
@@ -177,7 +181,7 @@ public class Launcher {
 			mutationRunner.read(config.getArguments());
 			mutationRunner.join();
 		} catch(Exception e) {
-			System.err.println("Error while running tests: " + e);
+			logger.warning("Error while running tests: " + e);
 		}
 	}
 
@@ -220,9 +224,9 @@ public class Launcher {
 							MutJob job = submitted.take();
 							MutationCoverage info = job.future.get();
 
-							if(info == null) System.out.println("Warning: " + job.fileName + " is not suitable for mutation testing: the test reveals an error in the class!");
+							if(info == null) logger.warning(job.fileName + " is not suitable for mutation testing: the test reveals an error in the class!");
 							else {
-								System.out.println(job.fileName + ":\t" + info.toString());
+								logger.info(job.fileName + ":\t" + info.toString());
 
 								ElementManager<String, CoverageInformation> coverage = new ElementManager<String, CoverageInformation>();
 								coverage.put(info);
@@ -234,11 +238,9 @@ public class Launcher {
 							}
 						} catch(InterruptedException e) {
 						} catch(ExecutionException e) {
-							System.out.println("Error during the execution: " + e);
-							e.printStackTrace();
+							logger.log(Level.WARNING, "Error during the execution: " + e.getMessage(), e);
 						} catch(IOException e) {
-							System.out.println("Error while saving the result: " + e);
-							e.printStackTrace();
+							logger.log(Level.WARNING, "Error while saving the result: " + e.getMessage(), e);
 						}
 				}
 
@@ -253,9 +255,9 @@ public class Launcher {
 				if(reload) ctx.setRecycleClassLoader(false);
 				MutJob mutJob = new MutJob(fileName, test, exec.execute(ctx));
 				submitted.put(mutJob);
-				System.out.println("submitted: " + fileName);
+				logger.info("submitted: " + fileName);
 			} catch(InterruptedException e) {
-				System.err.println("Cannot submit the job: " + e);
+				logger.log(Level.WARNING, "Cannot submit the job: " + e.getMessage(), e);
 			}
 		}
 
@@ -264,8 +266,13 @@ public class Launcher {
 				done = true;
 				futureWaiter.join();
 			} catch(InterruptedException e) {
-				System.err.println("Interrotto! " + e.getMessage());
+				logger.log(Level.WARNING, "Interrupted: " + e.getMessage(), e);
 			}
+		}
+
+		@Override
+		protected Logger getLogger() {
+			return logger;
 		}
 	}
 }

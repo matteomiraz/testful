@@ -6,13 +6,12 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import testful.model.MethodInformation.ParameterInformation;
-
 import ec.util.MersenneTwisterFast;
 
 public class CreateObject extends Operation {
 
 	private static final long serialVersionUID = -7495725315460017277L;
-	
+
 	private final Reference ref;
 	private final Constructorz constructor;
 	private final Reference[] params;
@@ -43,7 +42,7 @@ public class CreateObject extends Operation {
 		final Clazz[] assignableTo = c.getAssignableTo();
 		if(assignableTo.length > 0) ref = refFactory.getReference(assignableTo[random.nextInt(assignableTo.length)], random);
 		else ref = refFactory.getReference(c, random);
-		
+
 		return new CreateObject(ref, constructor, params);
 	}
 
@@ -68,9 +67,12 @@ public class CreateObject extends Operation {
 			pars.append(p);
 		}
 
+		if(ref == null)
+			return "new " + constructor.getClazz().getClassName() + "(" + (pars != null ? pars.toString() : "") + ")";
+
 		if(ref.getClazz() instanceof PrimitiveClazz)
 			return ref + " = " + ((PrimitiveClazz) ref.getClazz()).getCast() + " new " + constructor.getClazz().getClassName() + "(" + (pars != null ? pars.toString() : "") + ")";
-		else 
+		else
 			return ref + " = new " + constructor.getClazz().getClassName() + "(" + (pars != null ? pars.toString() : "") + ")";
 	}
 
@@ -91,32 +93,32 @@ public class CreateObject extends Operation {
 		if(!(obj instanceof CreateObject)) return false;
 
 		CreateObject other = (CreateObject) obj;
-		return ref == null ? other.ref == null : ref.equals(other.ref) 
-					&& constructor.equals(other.constructor) && Arrays.equals(params, other.params);
+		return ref == null ? other.ref == null : ref.equals(other.ref)
+				&& constructor.equals(other.constructor) && Arrays.equals(params, other.params);
 	}
-	
+
 	@Override
 	protected Set<Reference> calculateDefs() {
 		Set<Reference> defs = new HashSet<Reference>();
 
-		if(getTarget() != null) 
+		if(getTarget() != null)
 			defs.add(getTarget());
-		
+
 		ParameterInformation[] pInfo = getConstructor().getMethodInformation().getParameters();
 		for(int i = 0; i < pInfo.length; i++)
 			if(pInfo[i].isCaptured() || pInfo[i].isCapturedByReturn() || pInfo[i].isMutated())
 				defs.add(getParams()[i]);
-		
+
 		return defs;
 	}
-	
+
 	@Override
 	protected Set<Reference> calculateUses() {
 		Set<Reference> uses = new HashSet<Reference>();
 
-		for(Reference u : this.getParams())
+		for(Reference u : getParams())
 			uses.add(u);
-		
+
 		return uses;
 	}
 }

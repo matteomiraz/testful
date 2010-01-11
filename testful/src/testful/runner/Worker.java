@@ -20,7 +20,7 @@ public class Worker extends Thread {
 
 	@Override
 	public void run() {
-		logger.info("Created worker " + getName());
+		logger.fine("Created worker " + getName());
 
 		try {
 			while(true) {
@@ -35,7 +35,7 @@ public class Worker extends Thread {
 				}
 
 				try {
-					logger.fine("Evaluating " + ctx.id);
+					logger.finer("Evaluating " + ctx.id);
 					ExecutionManager<?> execManager = ctx.getExecManager(cl);
 					Serializable result = execManager.execute(ctx.stopOnBug);
 					workerManager.putResult(ctx, result, cl);

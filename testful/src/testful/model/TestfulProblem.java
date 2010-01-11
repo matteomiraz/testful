@@ -1,6 +1,5 @@
 package testful.model;
 
-import java.io.FileNotFoundException;
 import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -12,7 +11,10 @@ import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import jmetal.util.PseudoRandom;
 import testful.TestfulException;
 import testful.coverage.CoverageInformation;
 import testful.coverage.RunnerCaching;
@@ -26,16 +28,14 @@ import testful.coverage.whiteBox.CoverageDataFlow;
 import testful.evolutionary.IConfigEvolutionary;
 import testful.runner.ClassFinderCaching;
 import testful.runner.ClassFinderImpl;
-import testful.runner.IRunner;
-import testful.runner.RunnerPool;
 import testful.runner.TestfulClassLoader;
+import testful.utils.CoverageWriter;
 import testful.utils.ElementManager;
-import testful.utils.TestfulLogger;
 import testful.utils.Utils;
-import testful.utils.TestfulLogger.CombinedCoverageWriter;
-import testful.utils.TestfulLogger.CoverageWriter;
 
 public class TestfulProblem implements Serializable {
+
+	private static final Logger logger = Logger.getLogger("testful.evolutionary");
 
 	private static final long serialVersionUID = 6895567012306544198L;
 
@@ -43,8 +43,8 @@ public class TestfulProblem implements Serializable {
 
 	private IConfigEvolutionary config;
 
-	private TestCluster cluster;
-	private ReferenceFactory refFactory;
+	private final TestCluster cluster;
+	private final ReferenceFactory refFactory;
 
 	private final AnalysisWhiteBox whiteAnalysis;
 
@@ -57,20 +57,18 @@ public class TestfulProblem implements Serializable {
 
 	private int generationNumber;
 
-	private static CoverageWriter coverageWriter;
-	private static CombinedCoverageWriter combinedWriter;
-	private static OptimalTestCreator optimal = new OptimalTestCreator();
-	private static Tracker[] trackers = new Tracker[] {
-		//		new Tracker(BehaviorCoverage.KEY),
-		//		new Tracker(BranchCoverage.KEY + "d"),
-		//		new Tracker(DefUseCoverage.KEY + "d")
-	};
+	private final CoverageWriter coverageWriter;
+	private final OptimalTestCreator optimal;
+	private final Tracker[] trackers = null;
+	// new Tracker[] {
+	//		new Tracker(BehaviorCoverage.KEY),
+	//		new Tracker(BranchCoverage.KEY + "d"),
+	//		new Tracker(DefUseCoverage.KEY + "d")
+	// };
 
 	public TestfulProblem(IConfigEvolutionary config) throws TestfulException {
-		IRunner runner = RunnerPool.createExecutor("TestFul", config);
-
 		this.config = config;
-		runnerCaching = new RunnerCaching(runner, config.isCache());
+		runnerCaching = new RunnerCaching(config.isCache());
 
 		try {
 			finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
@@ -80,6 +78,8 @@ public class TestfulProblem implements Serializable {
 
 			whiteAnalysis = AnalysisWhiteBox.read(config.getDirInstrumented(), config.getCut());
 			data = Utils.readData(whiteAnalysis);
+
+			refFactory = new ReferenceFactory(cluster, config.getNumVarCut(), config.getNumVar());
 
 		} catch(ClassNotFoundException e) {
 			throw new TestfulException("Class not found: " + e.toString());
@@ -94,15 +94,15 @@ public class TestfulProblem implements Serializable {
 		(config.isBrd() ? 1 : 0) + (config.isBrn() ? 1 : 0) +
 		(config.isDefUse() ? 1 : 0);
 
-		refFactory = new ReferenceFactory(cluster, config.getNumVarCut(), config.getNumVar());
+		if(logger.isLoggable(Level.FINER))
+			optimal = new OptimalTestCreator();
+		else
+			optimal = null;
 
-		try {
-			coverageWriter = TestfulLogger.singleton.getCoverageWriter("coverage.csv");
-			combinedWriter = TestfulLogger.singleton.getCombinedCoverageWriter("combined.csv");
-		} catch(FileNotFoundException e) {
-			e.printStackTrace();
-			throw new TestfulException("Cannot write stats to files!");
-		}
+		if(logger.isLoggable(Level.FINE))
+			coverageWriter = new CoverageWriter("testful.evolutionary.coverage");
+		else
+			coverageWriter = null;
 	}
 
 	public TestCluster getCluster() {
@@ -113,27 +113,33 @@ public class TestfulProblem implements Serializable {
 		return refFactory;
 	}
 
-	public int getNumObjs() {
-		return numObjs;
+	public ClassFinderCaching getFinder() {
+		return finder;
 	}
 
-	public RunnerCaching getRunnerCaching() {
-		return runnerCaching;
+	public int getNumObjs() {
+		return numObjs;
 	}
 
 	public AnalysisWhiteBox getWhiteAnalysis() {
 		return whiteAnalysis;
 	}
 
-	public void doneGeneration(int num) {
+	public void doneGeneration(int num, long time) {
 		generationNumber = num;
 
 		runnerCaching.updateCacheScore();
 
-		optimal.write();
-		combinedWriter.write(num, invTot.get(), optimal.getCoverage(), optimal.getOptimal());
-		for(Tracker tracker : trackers)
-			tracker.write();
+		if(optimal != null)
+			optimal.write(num, invTot.get(), time, config.getLog(), logger);
+
+		if (trackers != null) {
+			for (Tracker tracker : trackers)
+				tracker.write();
+		}
+
+		if(runnerCaching.isEnabled())
+			logger.fine(runnerCaching.toString());
 	}
 
 	public int getGenerationNumber() {
@@ -209,12 +215,24 @@ public class TestfulProblem implements Serializable {
 				}
 			}
 
-			coverageWriter.write(gen, ops.size(), infos);
-			TestCoverage testCoverage = new TestCoverage(cluster, refFactory, ops.toArray(new Operation[ops.size()]), infos);
-			optimal.update(testCoverage);
-			for(Tracker tracker : trackers)
-				tracker.update(testCoverage);
-		} else System.err.println("null infos");
+			if(coverageWriter != null)
+				coverageWriter.write(gen, ops.size(), infos);
+
+			if(optimal != null || trackers != null) {
+				TestCoverage testCoverage = new TestCoverage(cluster, refFactory, ops.toArray(new Operation[ops.size()]), infos);
+
+				if(optimal != null)
+					optimal.update(testCoverage);
+
+				if(trackers != null)
+					for(Tracker tracker : trackers)
+						tracker.update(testCoverage);
+
+			}
+
+		} else {
+			logger.warning("Cannot retrieve test's coverage information");
+		}
 
 		return ret;
 	}
@@ -256,15 +274,53 @@ public class TestfulProblem implements Serializable {
 			try {
 				ret.add(new TestCoverage(f.getKey(), f.getValue().get()));
 			} catch (ExecutionException e) {
-				System.err.println("Error valuating test: " + e);
+				logger.log(Level.WARNING, "Error valuating test: " + e.getMessage(), e);
 			}
 		}
 
 		return ret;
 	}
 
-
 	public Test createTest(List<Operation> ops) {
 		return new Test(cluster, refFactory, ops.toArray(new Operation[ops.size()]));
 	}
+
+	private final TestSuite reserve = new TestSuite();
+
+	/**
+	 * Add tests to the reserve
+	 * @param tests the tests to add
+	 */
+	public void addReserve(TestSuite tests){
+		reserve.add(tests);
+	}
+
+	/**
+	 * Add a test to the reserve
+	 * @param test the test to add
+	 */
+	public void addReserve(TestCoverage test){
+		reserve.add(test);
+	}
+
+	public List<Operation> generateTest() {
+		final int size = 10;
+		List<Operation> ret;
+
+		Operation[] ops = reserve.getBestTest();
+		if (ops!=null) {
+			ops = Operation.adapt(ops, cluster, refFactory);
+			ret = new ArrayList<Operation>(ops.length);
+			for (Operation o : ops) ret.add(o);
+			return ret;
+		}
+
+		ret = new ArrayList<Operation>(size);
+
+		for (int i = 0; i < size; i++)
+			ret.add(Operation.randomlyGenerate(cluster, refFactory, PseudoRandom.getMersenneTwisterFast()));
+
+		return ret;
+	}
+
 }

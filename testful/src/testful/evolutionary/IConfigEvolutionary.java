@@ -12,8 +12,5 @@ public interface IConfigEvolutionary extends IConfigGeneration, IConfigRunner, I
 
 	public FitnessInheritance getFitnessInheritance();
 
-	public boolean isQuiet();
-
-	public boolean isVerbose();
-
+	public boolean isSmartInitialPopulation();
 }

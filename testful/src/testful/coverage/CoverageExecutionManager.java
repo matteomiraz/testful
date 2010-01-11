@@ -1,5 +1,7 @@
 package testful.coverage;
 
+import java.util.logging.Logger;
+
 import testful.TestfulException;
 import testful.model.Test;
 import testful.runner.ClassFinder;
@@ -9,6 +11,8 @@ import testful.runner.Executor;
 import testful.utils.ElementManager;
 
 public class CoverageExecutionManager extends ExecutionManager<ElementManager<String, CoverageInformation>> {
+
+	private static final Logger logger = Logger.getLogger("testful.coverage");
 
 	public static Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> getContext(ClassFinder finder, Test test, TrackerDatum ... data) {
 		Executor executor = new testful.model.executor.ReflectionExecutor(test);
@@ -25,7 +29,7 @@ public class CoverageExecutionManager extends ExecutionManager<ElementManager<St
 	protected ElementManager<String, CoverageInformation> getResult() {
 		// if this class has been loaded using the test's classloader, retrieve the result using a simple method call
 		if(Tracker.class.getClassLoader() != classLoader) {
-			System.err.println("ERROR: the execution manager must be loaded with the cut's class loader");
+			logger.severe("the execution manager must be loaded with the cut's class loader");
 			return null;
 		}
 

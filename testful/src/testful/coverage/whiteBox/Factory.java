@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import soot.ArrayType;
 import soot.BooleanType;
@@ -18,6 +20,8 @@ import soot.SootField;
 import soot.Type;
 
 public class Factory {
+
+	private static final Logger logger = Logger.getLogger("testful.coverage.instrumenter.whitebox");
 
 	public static final Factory singleton = new Factory();
 
@@ -56,7 +60,7 @@ public class Factory {
 		if(type instanceof CharType)
 			return Data.getPrimitiveData(field, Data.Type.Character, isParam);
 
-		if(type instanceof PrimType) 
+		if(type instanceof PrimType)
 			return Data.getPrimitiveData(field, Data.Type.Number, isParam);
 
 		if(type instanceof RefType) {
@@ -65,17 +69,17 @@ public class Factory {
 
 			return Data.getReferenceData(field, isParam);
 		}
-		
+
 		// ((ArrayType) type).toString()
-		if(type instanceof ArrayType) 
+		if(type instanceof ArrayType)
 			return Data.getArrayData(field, isParam);
 
 		if(type instanceof NullType)
 			return Data.getReferenceData(field, isParam);
 
-		final String msg = "Unknown type: " + type + " (" + type.getClass().getCanonicalName() + ")";
-		System.err.println(msg);
-		throw new NullPointerException(msg);
+		final NullPointerException exc = new NullPointerException("Unknown type: " + type + " (" + type.getClass().getCanonicalName() + ")");
+		logger.log(Level.WARNING, exc.getMessage(), exc);
+		throw exc;
 	}
 
 	public Data get(SootField field) {

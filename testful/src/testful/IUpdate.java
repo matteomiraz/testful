@@ -1,6 +1,5 @@
 package testful;
 
-import java.util.Map;
 
 /**
  * Classes implementing this interface are able to provide updates.
@@ -21,7 +20,7 @@ public interface IUpdate {
 	 * @param c the callback that was handling the updates
 	 */
 	public void unregister(Callback c);
-	
+
 	/**
 	 * Classes implementing this interface can receive updates
 	 * @author matteo
@@ -34,9 +33,8 @@ public interface IUpdate {
 		 * @param start the starting (in millisecond)
 		 * @param current the current (in millisecond)
 		 * @param end the end (in millisecond)
-		 * @param coverage the coverage achieved so far
 		 */
-		public void update(long start, long current, long end, Map<String, Float> coverage);
-		
+		public void update(long start, long current, long end);
+
 	}
 }

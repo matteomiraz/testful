@@ -12,14 +12,13 @@ public class Utils {
 
 	public static TrackerDatum[] readData(AnalysisWhiteBox whiteAnalysis) {
 		List<TrackerDatum> ret = new LinkedList<TrackerDatum>();
-		
+
 		if(whiteAnalysis != null) {
 			WhiteBoxData whiteData = whiteAnalysis.getData();
 			if(whiteData  != null)
 				ret.add(whiteData);
 		}
-		
+
 		return ret.toArray(new TrackerDatum[ret.size()]);
 	}
-
 }

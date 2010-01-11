@@ -5,6 +5,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import testful.TestFul;
+
 public class CachingMap<K, E> extends LinkedHashMap<K, CachingMap.Cacheable<E>> {
 
 	private static final long serialVersionUID = 3895919054962929993L;
@@ -60,8 +62,8 @@ public class CachingMap<K, E> extends LinkedHashMap<K, CachingMap.Cacheable<E>> 
 	@Override
 	public CachingMap.Cacheable<E> put(K key, CachingMap.Cacheable<E> value) {
 		if(key == null) {
-			System.err.println("WARN: CachingMap.put(key = null, value)");
-			return value;
+			if(TestFul.DEBUG) throw new NullPointerException("Cannot insert an element with null key in the CachingMap");
+			else  return value;
 		}
 
 		value.setCreationTimestamp(System.currentTimeMillis());
@@ -69,11 +71,12 @@ public class CachingMap<K, E> extends LinkedHashMap<K, CachingMap.Cacheable<E>> 
 	}
 
 	@Override
+	@SuppressWarnings("unused")
 	public void putAll(Map<? extends K, ? extends CachingMap.Cacheable<E>> m) {
 		long now = System.currentTimeMillis();
 
 		for(Entry<? extends K, ? extends Cacheable<E>> e : m.entrySet()) {
-			if(e.getKey() == null) System.err.println("WARN: CachingMap.putAll() : an entry has a null key!");
+			if(TestFul.DEBUG && e.getKey() == null) throw new NullPointerException("Cannot insert an element with null key in the CachingMap");
 			e.getValue().setCreationTimestamp(now);
 		}
 
@@ -83,7 +86,7 @@ public class CachingMap<K, E> extends LinkedHashMap<K, CachingMap.Cacheable<E>> 
 	@Override
 	public CachingMap.Cacheable<E> get(Object key) {
 		if(key == null) {
-			System.err.println("WARN: CachingMap.get(key = null)");
+			if(TestFul.DEBUG) throw new NullPointerException("Cannot look for an element providing a null key with the CachingMap");
 			return null;
 		}
 
@@ -128,14 +131,14 @@ public class CachingMap<K, E> extends LinkedHashMap<K, CachingMap.Cacheable<E>> 
 				valueIterator.remove();
 			}
 		}
-		
+
 		return removedSomething;
 	}
 
 	public int getMaxCapacity() {
 		return maxElems;
 	}
-	
+
 	@Override
 	public String toString() {
 		return Integer.toString(size());

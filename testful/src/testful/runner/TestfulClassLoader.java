@@ -6,15 +6,13 @@ import java.util.Set;
 
 import testful.utils.ElementWithKey;
 
-/**
- * @testful.classloader System class loader
+/** 
+ * Testful's class loader.
  * @author matteo
- *
  */
 public class TestfulClassLoader extends ClassLoader implements ElementWithKey<String> {
 
 	private static final ClassLoader superClassLoader = TestfulClassLoader.class.getClassLoader();
-
 	/** for these classes, use always the system classloader */
 	private static final String[] SYSTEM_CLASSES = {
 		"testful.coverage.TrackerDatum"

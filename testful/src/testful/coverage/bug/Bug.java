@@ -2,6 +2,7 @@ package testful.coverage.bug;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.logging.Logger;
 
 import testful.model.FaultyExecutionException;
 
@@ -24,7 +25,10 @@ public class Bug implements Serializable {
 
 		if(stackTrace.length == 0) {
 			cause.fillInStackTrace(); // this seems to force the (sun) JVM to fill stack traces (in subsequent throws)!
-			System.err.println("Empty StackTrace: using " + base);
+
+			final Logger logger = Logger.getLogger("testful.coverage.bug");
+			logger.warning("Empty StackTrace: using " + base);
+
 			return new StackTraceElement[] { base };
 		}
 
