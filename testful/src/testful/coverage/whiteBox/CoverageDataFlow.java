@@ -19,11 +19,11 @@ public class CoverageDataFlow implements CoverageInformation {
 			this.def = def;
 			this.use = use;
 		}
-		
+
 		public DataAccess getDef() {
 			return def;
 		}
-		
+
 		public DataAccess getUse() {
 			return use;
 		}
@@ -44,28 +44,28 @@ public class CoverageDataFlow implements CoverageInformation {
 
 			if(!(obj instanceof DefUse)) return false;
 			DefUse other = (DefUse) obj;
-			
+
 			if(def == null) {
 				if(other.def != null) return false;
 			} else if(!def.equals(other.def)) return false;
 			if(use == null) {
 				if(other.use != null) return false;
 			} else if(!use.equals(other.use)) return false;
-			
+
 			return true;
 		}
-		
+
 		@Override
 		public String toString() {
 			return def + "-"+ use;
 		}
 	}
-	
+
 	public static String KEY = "du";
 	public static String NAME = "Def-Use Pairs";
 
 	private final Set<DefUse> duPairs;
-	
+
 	public CoverageDataFlow(Set<DefUse> duPairs) {
 		this.duPairs = new LinkedHashSet<DefUse>(duPairs);
 	}
@@ -74,7 +74,10 @@ public class CoverageDataFlow implements CoverageInformation {
 	public boolean contains(CoverageInformation other) {
 		if(other instanceof CoverageDataFlow) {
 			final CoverageDataFlow coverageDataFlow = (CoverageDataFlow) other;
-			return duPairs.containsAll(coverageDataFlow.duPairs);
+
+			if(!duPairs.containsAll(coverageDataFlow.duPairs)) return false;
+
+			return true;
 		}
 		return false;
 	}
@@ -103,7 +106,7 @@ public class CoverageDataFlow implements CoverageInformation {
 	public void merge(CoverageInformation other) {
 		if(other instanceof CoverageDataFlow) {
 			CoverageDataFlow coverageDataFlow = (CoverageDataFlow) other;
-			
+
 			duPairs.addAll(coverageDataFlow.duPairs);
 		}
 	}
@@ -112,14 +115,14 @@ public class CoverageDataFlow implements CoverageInformation {
 	public CoverageDataFlow clone() {
 		return new CoverageDataFlow(duPairs);
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		
+
 		for(DefUse du : duPairs)
 			sb.append(du).append("\n");
-		
+
 		return sb.toString();
 	}
 

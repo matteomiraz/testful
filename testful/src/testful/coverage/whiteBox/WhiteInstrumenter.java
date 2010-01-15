@@ -32,6 +32,7 @@ import soot.Local;
 import soot.LongType;
 import soot.Modifier;
 import soot.PatchingChain;
+import soot.PrimType;
 import soot.RefLikeType;
 import soot.RefType;
 import soot.Scene;
@@ -85,7 +86,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 	private static SootClass runtimeExceptionClass;
 	private static SootClass defExposerClass;
 	private static SootClass dataAccess;
-	
+
 	private static final SootClass trackerClass;
 	private static SootMethod trackerSingleton;
 
@@ -106,18 +107,21 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 	private static final SootMethod trackCall;
 	/** SootMethod representation of TrackerWhiteBox.trackReturn(int) */
 	private static final SootMethod trackReturn;
-	
+
 	/** SootMethod representation of TrackerWhiteBox.getDataAccess(int, boolean) */
 	private static final SootMethod getDataAccess;
-	
+
 	/** SootMethod representation of TrackerWhiteBox.manageDefUse(DataAccess, int, boolean) */
 	private static final SootMethod manageDefUse;
+
+	/** SootMethod representation of TrackerWhiteBox.manageDefExposition(Object) */
+	private static final SootMethod manageDefExposition;
 
 	static {
 		Scene.v().loadClassAndSupport(Object.class.getCanonicalName());
 		objectClass  = Scene.v().getSootClass(Object.class.getCanonicalName());
 		objectType = objectClass.getType();
-		
+
 		Scene.v().loadClassAndSupport(Exception.class.getCanonicalName());
 		exceptionClass = Scene.v().getSootClass(Exception.class.getCanonicalName());
 		Scene.v().loadClassAndSupport(RuntimeException.class.getCanonicalName());
@@ -128,7 +132,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 
 		Scene.v().loadClassAndSupport(DataAccess.class.getCanonicalName());
 		dataAccess = Scene.v().getSootClass(DataAccess.class.getCanonicalName());
-		
+
 		final String TRACKER = TrackerWhiteBox.class.getCanonicalName();
 		Scene.v().loadClassAndSupport(TRACKER);
 		trackerClass = Scene.v().getSootClass(TRACKER);
@@ -144,10 +148,10 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 
 		trackCall = trackerClass.getMethodByName("trackCall");
 		trackReturn = trackerClass.getMethodByName("trackReturn");
-		
+
 		getDataAccess = trackerClass.getMethodByName("getDataAccess");
 		manageDefUse = trackerClass.getMethodByName("manageDefUse");
-		
+		manageDefExposition = trackerClass.getMethodByName("manageDefExposition");
 	}
 
 	public static final WhiteInstrumenter singleton = new WhiteInstrumenter();
@@ -166,7 +170,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 
 	/** key: original variable; value: tracking variable */
 	private Map<Local, Local> trackingLocals;
-	
+
 	@Override
 	public void init(Chain<Unit> newUnits, Body newBody, Body oldBody, boolean classWithContracts, boolean contractMethod) {
 		logger.finer(" processing " + newBody.getMethod().getName());
@@ -174,10 +178,10 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 		// generate tracking locals
 		trackingLocals = new HashMap<Local, Local>();
 		for(Local l : newBody.getLocals())
-			if((newBody.getMethod().isStatic() || newBody.getThisLocal() != l) && 
-					!l.getName().equals("__throwable_exc__")) 
+			if((newBody.getMethod().isStatic() || newBody.getThisLocal() != l) &&
+					!l.getName().equals("__throwable_exc__"))
 				trackingLocals.put(l, Jimple.v().newLocal(getTracker(l.getName()), dataAccess.getType()));
-		
+
 		for(Local l : trackingLocals.values())
 			newBody.getLocals().add(l);
 
@@ -216,32 +220,32 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 	@Override
 	public void preprocess(SootClass sClass) {
 		// def-use preprocessing: adding tracking fields and __testful_get_defs__ method
-		
+
 		if(sClass.implementsInterface(DefExposer.class.getCanonicalName())) return;
-		
+
 		sClass.addInterface(defExposerClass);
-		
+
 		// generate GET_FIELDS
 		{
 			SootMethod getFields = new SootMethod(DefExposer.GET_FIELDS, Arrays.asList(new Type[] {}), ArrayType.v(objectType, 1), Modifier.PUBLIC );
 			sClass.addMethod(getFields);
 			getFields.addTag(Skip.s);
-			
+
 			JimpleBody body = Jimple.v().newBody(getFields);
 			PatchingChain<Unit> units = body.getUnits();
 			getFields.setActiveBody(body);
-	
-			Local _this = Jimple.v().newLocal("_this", sClass.getType()); 
+
+			Local _this = Jimple.v().newLocal("_this", sClass.getType());
 			body.getLocals().add(_this);
-	
+
 			Local ret = Jimple.v().newLocal("ret", ArrayType.v(objectType, 1));
 			body.getLocals().add(ret);
-	
+
 			Local tmp = Jimple.v().newLocal("tmp", objectType);
 			body.getLocals().add(tmp);
-	
+
 			units.add(Jimple.v().newIdentityStmt(_this, new ThisRef(sClass.getType())));
-			
+
 			List<SootField> fields = new ArrayList<SootField>();
 			for(SootField f : sClass.getFields())
 				if(SootUtils.isReference(f.getType()))
@@ -254,41 +258,41 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 				units.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newInstanceFieldRef(_this, f.makeRef())));
 				units.add(Jimple.v().newAssignStmt(Jimple.v().newArrayRef(ret, IntConstant.v(i++)), tmp));
 			}
-			
+
 			units.add(Jimple.v().newReturnStmt(ret));
 		}
 
-		
-		// generate GET_DEFS
+
+		// generate GET_DEFS & add def-tracker fields in the class
 		{
 			SootMethod getDefs = new SootMethod(DefExposer.GET_DEFS, Arrays.asList(new Type[] {}), ArrayType.v(dataAccess.getType(), 1), Modifier.PUBLIC );
 			sClass.addMethod(getDefs);
 			getDefs.addTag(Skip.s);
-			
+
 			JimpleBody body = Jimple.v().newBody(getDefs);
 			PatchingChain<Unit> units = body.getUnits();
 			getDefs.setActiveBody(body);
-	
-			Local _this = Jimple.v().newLocal("_this", sClass.getType()); 
+
+			Local _this = Jimple.v().newLocal("_this", sClass.getType());
 			body.getLocals().add(_this);
-	
+
 			Local ret = Jimple.v().newLocal("ret", ArrayType.v(dataAccess.getType(), 1));
 			body.getLocals().add(ret);
-	
+
 			Local tmp = Jimple.v().newLocal("tmp", dataAccess.getType());
 			body.getLocals().add(tmp);
-	
+
 			units.add(Jimple.v().newIdentityStmt(_this, new ThisRef(sClass.getType())));
-	
+
 			List<SootField> fields = new ArrayList<SootField>();
 			for(SootField f : sClass.getFields())
 				fields.add(f);
 
 			units.add(Jimple.v().newAssignStmt(ret, Jimple.v().newNewArrayExpr(dataAccess.getType(), IntConstant.v(fields.size()))));
-			
+
 			int i = 0;
 			for(SootField f : fields) {
-				
+
 				int modifiers = f.getModifiers();
 				if(Modifier.isFinal(modifiers)) modifiers -= Modifier.FINAL;
 
@@ -440,20 +444,29 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 
 			if(methodStatic) localThis = null;
 			else localThis = newBody.getThisLocal();
-			
+
 			newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, trackCall.makeRef(), Arrays.asList(new Value[] { IntConstant.v(start.getId()) }))));
-			
+
+			//TODO: NON FUNZIONA!
+			// track this definitions (if it is not a constructor)
+			if(localThis != null && !SootMethod.constructorName.equals(newBody.getMethod().getName()))
+				newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, manageDefExposition.makeRef(), localThis)));
+
 			int nParams = method.getParameterCount();
 			for(int i = 0; i < nParams; i++) {
 				final Local p = newBody.getParameterLocal(i);
 				manageDefs(new DataDef(start, get(p, true), null));
 				addTracking(newUnits, p);
+
+				// track parameter's definitions (if it is not a prim type)
+				if(!(p.getType() instanceof PrimType))
+					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, manageDefExposition.makeRef(), p)));
 			}
 		}
 
 		private void addTracking(Chain<Unit> newUnits, final Local p) {
 			newUnits.add(Jimple.v().newAssignStmt(
-					trackingLocals.get(p), 
+					trackingLocals.get(p),
 					Jimple.v().newVirtualInvokeExpr(localTracker, getDataAccess.makeRef(), IntConstant.v(0), IntConstant.v(1))));
 		}
 
@@ -1033,24 +1046,24 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 		}
 
 		private void handleUse(Chain<Unit> newUnits, Value v, final DataUse dataUse) {
-			
+
 			if(v instanceof Local) {
-				
+
 				newUnits.add(Jimple.v().newAssignStmt(
-						localDataAccessU, 
+						localDataAccessU,
 						Jimple.v().newVirtualInvokeExpr(
-								localTracker, 
-								getDataAccess.makeRef(), 
-								IntConstant.v(dataUse.getId()), 
+								localTracker,
+								getDataAccess.makeRef(),
+								IntConstant.v(dataUse.getId()),
 								IntConstant.v(0))));
 
 				newUnits.add(Jimple.v().newInvokeStmt(
 						Jimple.v().newVirtualInvokeExpr(
-								localTracker, 
-								manageDefUse.makeRef(), 
-								trackingLocals.get(v), 
+								localTracker,
+								manageDefUse.makeRef(),
+								trackingLocals.get(v),
 								localDataAccessU)));
-				
+
 			} else if(v instanceof InstanceFieldRef) {
 				InstanceFieldRef fr = (InstanceFieldRef) v;
 				SootField field = fr.getField();
@@ -1059,23 +1072,23 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 				newUnits.add(Jimple.v().newAssignStmt(
 						localDataAccessD,
 						Jimple.v().newInstanceFieldRef(fr.getBase(), tracker.makeRef())
-						));
+				));
 
 				newUnits.add(Jimple.v().newAssignStmt(
-						localDataAccessU, 
+						localDataAccessU,
 						Jimple.v().newVirtualInvokeExpr(
-								localTracker, 
-								getDataAccess.makeRef(), 
-								IntConstant.v(dataUse.getId()), 
+								localTracker,
+								getDataAccess.makeRef(),
+								IntConstant.v(dataUse.getId()),
 								IntConstant.v(1))));
 
 				newUnits.add(Jimple.v().newInvokeStmt(
 						Jimple.v().newVirtualInvokeExpr(
-								localTracker, 
-								manageDefUse.makeRef(), 
-								localDataAccessD, 
+								localTracker,
+								manageDefUse.makeRef(),
+								localDataAccessD,
 								localDataAccessU)));
-				
+
 			} else if (v instanceof StaticFieldRef) {
 				StaticFieldRef fr = (StaticFieldRef) v;
 				SootField field = fr.getField();
@@ -1084,73 +1097,73 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 				newUnits.add(Jimple.v().newAssignStmt(
 						localDataAccessD,
 						Jimple.v().newStaticFieldRef(tracker.makeRef())
-						));
+				));
 
 				newUnits.add(Jimple.v().newAssignStmt(
-						localDataAccessU, 
+						localDataAccessU,
 						Jimple.v().newVirtualInvokeExpr(
-								localTracker, 
-								getDataAccess.makeRef(), 
-								IntConstant.v(dataUse.getId()), 
+								localTracker,
+								getDataAccess.makeRef(),
+								IntConstant.v(dataUse.getId()),
 								IntConstant.v(1))));
 
 				newUnits.add(Jimple.v().newInvokeStmt(
 						Jimple.v().newVirtualInvokeExpr(
-								localTracker, 
-								manageDefUse.makeRef(), 
-								localDataAccessD, 
+								localTracker,
+								manageDefUse.makeRef(),
+								localDataAccessD,
 								localDataAccessU)));
 			}
 		}
 
 		private void handleDef(Chain<Unit> newUnits, Value v, final DataDef dataDef) {
-			
+
 			if(v instanceof Local) {
-				
+
 				newUnits.add(Jimple.v().newAssignStmt(
-						trackingLocals.get(v), 
+						trackingLocals.get(v),
 						Jimple.v().newVirtualInvokeExpr(
-								localTracker, 
-								getDataAccess.makeRef(), 
-								IntConstant.v(dataDef.getId()), 
+								localTracker,
+								getDataAccess.makeRef(),
+								IntConstant.v(dataDef.getId()),
 								IntConstant.v(0))));
-				
+
 			} else if(v instanceof InstanceFieldRef) {
 				InstanceFieldRef fr = (InstanceFieldRef) v;
 				SootField field = fr.getField();
 				SootField tracker = field.getDeclaringClass().getFieldByName(getTracker(field.getName()));
 
 				newUnits.add(Jimple.v().newAssignStmt(
-						localDataAccessD, 
+						localDataAccessD,
 						Jimple.v().newVirtualInvokeExpr(
-								localTracker, 
-								getDataAccess.makeRef(), 
-								IntConstant.v(dataDef.getId()), 
+								localTracker,
+								getDataAccess.makeRef(),
+								IntConstant.v(dataDef.getId()),
 								IntConstant.v(1))));
 
 				newUnits.add(Jimple.v().newAssignStmt(
 						Jimple.v().newInstanceFieldRef(fr.getBase(), tracker.makeRef()),
 						localDataAccessD
-						));
+				));
 
-				
+
 			} else if (v instanceof StaticFieldRef) {
 				StaticFieldRef fr = (StaticFieldRef) v;
 				SootField field = fr.getField();
 				SootField tracker = field.getDeclaringClass().getFieldByName(getTracker(field.getName()));
 
 				newUnits.add(Jimple.v().newAssignStmt(
-						localDataAccessD, 
+						localDataAccessD,
 						Jimple.v().newVirtualInvokeExpr(
-								localTracker, 
-								getDataAccess.makeRef(), 
-								IntConstant.v(dataDef.getId()), 
+								localTracker,
+								getDataAccess.makeRef(),
+								IntConstant.v(dataDef.getId()),
 								IntConstant.v(1))));
 
 				newUnits.add(Jimple.v().newAssignStmt(
 						Jimple.v().newStaticFieldRef(tracker.makeRef()),
 						localDataAccessD
-						));
+				));
 			}
 		}
 
