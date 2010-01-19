@@ -20,6 +20,9 @@ import jmetal.util.JMException;
 import jmetal.util.PseudoRandom;
 import jmetal.util.Ranking;
 import testful.IUpdate;
+import testful.utils.Time;
+import testful.utils.TimeCPU;
+import testful.utils.TimeWall;
 
 /**
  * This class implements the NSGA-II algorithm.
@@ -81,9 +84,13 @@ implements IUpdate {
 		this.localSearchPeriod = localSearchPeriod;
 	}
 
-
 	public int getLocalSearchPeriod() {
 		return localSearchPeriod;
+	}
+
+	private boolean useCpuTime = false;
+	public void setUseCpuTime(boolean useCpuTime) {
+		this.useCpuTime = useCpuTime;
 	}
 
 	/**
@@ -94,8 +101,6 @@ implements IUpdate {
 	 */
 	@Override
 	public SolutionSet<V> execute() throws JMException {
-		long startTime = System.currentTimeMillis();
-
 		SolutionSet<V> population;
 		SolutionSet<V> union;
 
@@ -108,7 +113,19 @@ implements IUpdate {
 		int evaluations = 0;
 
 		int currentGeneration = 0;
-		problem_.setCurrentGeneration(currentGeneration++, System.currentTimeMillis() - startTime);
+		problem_.setCurrentGeneration(currentGeneration++, 0);
+
+		// TODO: usare anche wall clock!
+		Time time;
+		if(useCpuTime) {
+			try {
+				time = new TimeCPU();
+			} catch (Exception e) {
+				time = new TimeWall();
+			}
+		} else {
+			time = new TimeWall();
+		}
 
 		// Create the initial solutionSet
 		for (int i = 0; i < populationSize; i++)
@@ -119,11 +136,12 @@ implements IUpdate {
 		for(Solution<V> solution : population)
 			problem_.evaluateConstraints(solution);
 
-		problem_.setCurrentGeneration(currentGeneration++, System.currentTimeMillis() - startTime);
+		long currentTime = time.getCurrentMs();
+		problem_.setCurrentGeneration(currentGeneration++, currentTime);
 
 		// Generations ...
-		while ((System.currentTimeMillis() - startTime) < maxTime) {
-			update(startTime, System.currentTimeMillis(), startTime+maxTime);
+		while (currentTime < maxTime) {
+			update(0, currentTime, maxTime);
 
 			// perform the improvement
 			if(improvement != null && currentGeneration % localSearchPeriod == 0) {
@@ -142,11 +160,10 @@ implements IUpdate {
 				}
 			}
 
-			final long current = System.currentTimeMillis() - startTime;
-			final long remaining = (maxTime - current) / 1000;
+			final long remaining = (maxTime - currentTime) / 1000;
 
 			logger.info(String.format("(%5.2f%%) Evaluating generation %d - %d:%02d to go",
-					(100.0 * current) / maxTime,
+					(100.0 * currentTime) / maxTime,
 					currentGeneration,
 					remaining / 60,
 					remaining % 60));
@@ -259,7 +276,8 @@ implements IUpdate {
 				remain = 0;
 			} // if
 
-			problem_.setCurrentGeneration(currentGeneration++, System.currentTimeMillis() - startTime);
+			currentTime = time.getCurrentMs();
+			problem_.setCurrentGeneration(currentGeneration++, currentTime);
 
 		} // while
 

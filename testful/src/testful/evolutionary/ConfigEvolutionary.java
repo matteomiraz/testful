@@ -31,7 +31,10 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	private FitnessInheritance fitnessInheritance = FitnessInheritance.UNIFORM;
 
 	@Option(required = false, name = "-smartAncestors", usage = "Use an enhanced initial population")
-	private boolean smartInitialPopulation;
+	private int smartInitialPopulation = -1;
+
+	@Option(required = false, name = "-useCpuTime", usage = "Use CPU time instead of wall-clock time")
+	private boolean useCpuTime;
 
 	@Override
 	public int getLocalSearchPeriod() {
@@ -89,7 +92,7 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	}
 
 	@Override
-	public boolean isSmartInitialPopulation() {
+	public int getSmartInitialPopulation() {
 		return smartInitialPopulation;
 	}
 
@@ -146,6 +149,11 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	@Override
 	public boolean isReload() {
 		return configGenerator.isReload();
+	}
+
+	@Override
+	public boolean isUseCpuTime() {
+		return useCpuTime;
 	}
 
 	@Override
@@ -263,7 +271,7 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 		configGenerator.setMaxTestLen(maxTestLen);
 	}
 
-	public void setSmartInitialPopulation(boolean smartInitialPopulation) {
+	public void setSmartInitialPopulation(int smartInitialPopulation) {
 		this.smartInitialPopulation = smartInitialPopulation;
 	}
 
