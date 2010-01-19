@@ -63,7 +63,6 @@ public class Launcher {
 			}
 		}
 
-
 		JMProblem problem;
 		try {
 			problem = new JMProblem(config);
@@ -75,13 +74,12 @@ public class Launcher {
 		algorithm.setPopulationSize(config.getPopSize());
 		algorithm.setMaxEvaluations(config.getTime() * 1000);
 		algorithm.setInherit(config.getFitnessInheritance());
+		algorithm.setUseCpuTime(config.isUseCpuTime());
 
-		if(config.isSmartInitialPopulation()) {
-			try {
-				problem.addReserve(genSmartPopulation(config, problem));
-			} catch (Exception e) {
-				logger.log(Level.WARNING, "Cannot create the initial population: " + e.getMessage(), e);
-			}
+		try {
+			problem.addReserve(genSmartPopulation(config, problem));
+		} catch (Exception e) {
+			logger.log(Level.WARNING, "Cannot create the initial population: " + e.getMessage(), e);
 		}
 
 		// Mutation and Crossover for Real codification
@@ -138,6 +136,10 @@ public class Launcher {
 	 * @throws FileNotFoundException
 	 */
 	private static TestSuite genSmartPopulation(IConfigEvolutionary config, JMProblem problem) throws TestfulException, RemoteException, ClassNotFoundException, FileNotFoundException{
+		int smartTime = config.getSmartInitialPopulation();
+
+		if(smartTime <= 0) return null;
+
 		logger.info("Generating smart population");
 
 		AnalysisWhiteBox whiteAnalysis = AnalysisWhiteBox.read(config.getDirInstrumented(), config.getCut());
@@ -145,7 +147,7 @@ public class Launcher {
 
 		RandomTest rt = new RandomTestSplit(config.isCache(), null, problem.getFinder() , problem.getCluster(), problem.getRefFactory(), data);
 
-		rt.test(30000);
+		rt.test(smartTime * 1000);
 
 		return rt.getResults();
 	} //genSmartPopulation
