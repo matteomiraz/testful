@@ -209,10 +209,10 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 		localTmpDouble2 = Jimple.v().newLocal("__testful_white_tmp_double_2__", DoubleType.v());
 		newBody.getLocals().add(localTmpDouble2);
 
-		localDataAccessD = Jimple.v().newLocal("__testful_white_data_access_1__", dataAccess.getType());
+		localDataAccessD = Jimple.v().newLocal("__testful_white_data_access_d__", dataAccess.getType());
 		newBody.getLocals().add(localDataAccessD);
 
-		localDataAccessU = Jimple.v().newLocal("__testful_white_data_access_2__", dataAccess.getType());
+		localDataAccessU = Jimple.v().newLocal("__testful_white_data_access_u__", dataAccess.getType());
 		newBody.getLocals().add(localDataAccessU);
 
 		analyzer = new Analyzer(newUnits, clazz, newBody, contractMethod, newBody.getTraps(), oldBody.getTraps());
@@ -1316,13 +1316,22 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 				SootField field = fr.getField();
 				SootField tracker = field.getDeclaringClass().getFieldByName(getTracker(field.getName()));
 
+				if(!(dataDef instanceof Local)) {
+					newUnits.add(Jimple.v().newAssignStmt(localDataAccessD, dataDef));
+					dataDef = localDataAccessD;
+				}
 				newUnits.add(Jimple.v().newAssignStmt(Jimple.v().newInstanceFieldRef(fr.getBase(), tracker.makeRef()), dataDef));
+
 
 			} else if(def instanceof StaticFieldRef) {
 				StaticFieldRef fr = (StaticFieldRef) def;
 				SootField field = fr.getField();
 				SootField tracker = field.getDeclaringClass().getFieldByName(getTracker(field.getName()));
 
+				if(!(dataDef instanceof Local)) {
+					newUnits.add(Jimple.v().newAssignStmt(localDataAccessD, dataDef));
+					dataDef = localDataAccessD;
+				}
 				newUnits.add(Jimple.v().newAssignStmt(Jimple.v().newStaticFieldRef(tracker.makeRef()), dataDef));
 
 			} else if(def instanceof ArrayRef) {
