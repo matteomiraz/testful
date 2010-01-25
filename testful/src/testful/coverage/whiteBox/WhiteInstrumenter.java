@@ -61,6 +61,8 @@ import soot.jimple.Jimple;
 import soot.jimple.JimpleBody;
 import soot.jimple.LongConstant;
 import soot.jimple.LookupSwitchStmt;
+import soot.jimple.NewArrayExpr;
+import soot.jimple.NewMultiArrayExpr;
 import soot.jimple.NullConstant;
 import soot.jimple.RetStmt;
 import soot.jimple.ReturnStmt;
@@ -71,12 +73,15 @@ import soot.jimple.Stmt;
 import soot.jimple.TableSwitchStmt;
 import soot.jimple.ThisRef;
 import soot.jimple.ThrowStmt;
+import soot.jimple.internal.JimpleLocal;
 import soot.util.Chain;
 import testful.coverage.Instrumenter;
 import testful.utils.Skip;
 import testful.utils.SootUtils;
 
 public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
+
+	private static final boolean DEFUSE_EXPOSITION = true;
 
 	private static final Logger logger = Logger.getLogger("testful.coverage.instrumenter.white");
 
@@ -117,6 +122,15 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 	/** SootMethod representation of TrackerWhiteBox.manageDefExposition(Object) */
 	private static final SootMethod manageDefExposition;
 
+	/** SootMethod representation of TrackerWhiteBox.newArrayDef(int len, int id) */
+	private static final SootMethod newArrayDef;
+
+	/** SootMethod representation of TrackerWhiteBox.newMultiArrayDef(int[] len, int id) */
+	private static final SootMethod newMultiArrayDef;
+
+	/** SootMethod representation of TrackerWhiteBox.arrayAssignmentDef(Object a, int id) */
+	private static final SootMethod arrayAssignmentDef;
+
 	static {
 		Scene.v().loadClassAndSupport(Object.class.getCanonicalName());
 		objectClass  = Scene.v().getSootClass(Object.class.getCanonicalName());
@@ -152,6 +166,10 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 		getDataAccess = trackerClass.getMethodByName("getDataAccess");
 		manageDefUse = trackerClass.getMethodByName("manageDefUse");
 		manageDefExposition = trackerClass.getMethodByName("manageDefExposition");
+
+		newArrayDef = trackerClass.getMethodByName("newArrayDef");
+		newMultiArrayDef = trackerClass.getMethodByName("newMultiArrayDef");
+		arrayAssignmentDef = trackerClass.getMethodByName("arrayAssignmentDef");
 	}
 
 	public static final WhiteInstrumenter singleton = new WhiteInstrumenter();
@@ -168,22 +186,9 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 	private Local localDataAccessD;
 	private Local localDataAccessU;
 
-	/** key: original variable; value: tracking variable */
-	private Map<Local, Local> trackingLocals;
-
 	@Override
 	public void init(Chain<Unit> newUnits, Body newBody, Body oldBody, boolean classWithContracts, boolean contractMethod) {
 		logger.finer(" processing " + newBody.getMethod().getName());
-
-		// generate tracking locals
-		trackingLocals = new HashMap<Local, Local>();
-		for(Local l : newBody.getLocals())
-			if((newBody.getMethod().isStatic() || newBody.getThisLocal() != l) &&
-					!l.getName().equals("__throwable_exc__"))
-				trackingLocals.put(l, Jimple.v().newLocal(getTracker(l.getName()), dataAccess.getType()));
-
-		for(Local l : trackingLocals.values())
-			newBody.getLocals().add(l);
 
 		// some useful constants
 		final SootMethod method = newBody.getMethod();
@@ -211,10 +216,6 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 		newBody.getLocals().add(localDataAccessU);
 
 		analyzer = new Analyzer(newUnits, clazz, newBody, contractMethod, newBody.getTraps(), oldBody.getTraps());
-
-		//TBD: gli array!!!!
-
-		//TODO: configurazioni ( defs e nulls)
 	}
 
 	@Override
@@ -265,7 +266,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 
 		// generate GET_DEFS & add def-tracker fields in the class
 		{
-			SootMethod getDefs = new SootMethod(DefExposer.GET_DEFS, Arrays.asList(new Type[] {}), ArrayType.v(dataAccess.getType(), 1), Modifier.PUBLIC );
+			SootMethod getDefs = new SootMethod(DefExposer.GET_DEFS, Arrays.asList(new Type[] {}), ArrayType.v(objectType, 1), Modifier.PUBLIC );
 			sClass.addMethod(getDefs);
 			getDefs.addTag(Skip.s);
 
@@ -276,10 +277,10 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 			Local _this = Jimple.v().newLocal("_this", sClass.getType());
 			body.getLocals().add(_this);
 
-			Local ret = Jimple.v().newLocal("ret", ArrayType.v(dataAccess.getType(), 1));
+			Local ret = Jimple.v().newLocal("ret", ArrayType.v(objectType, 1));
 			body.getLocals().add(ret);
 
-			Local tmp = Jimple.v().newLocal("tmp", dataAccess.getType());
+			Local tmp = Jimple.v().newLocal("tmp", objectType);
 			body.getLocals().add(tmp);
 
 			units.add(Jimple.v().newIdentityStmt(_this, new ThisRef(sClass.getType())));
@@ -288,7 +289,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 			for(SootField f : sClass.getFields())
 				fields.add(f);
 
-			units.add(Jimple.v().newAssignStmt(ret, Jimple.v().newNewArrayExpr(dataAccess.getType(), IntConstant.v(fields.size()))));
+			units.add(Jimple.v().newAssignStmt(ret, Jimple.v().newNewArrayExpr(objectType, IntConstant.v(fields.size()))));
 
 			int i = 0;
 			for(SootField f : fields) {
@@ -296,7 +297,12 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 				int modifiers = f.getModifiers();
 				if(Modifier.isFinal(modifiers)) modifiers -= Modifier.FINAL;
 
-				SootField trackField = new SootField(getTracker(f.getName()), dataAccess.getType(), modifiers);
+				SootField trackField;
+				if(f.getType() instanceof ArrayType) {
+					trackField = new SootField(getTracker(f.getName()), ArrayType.v(dataAccess.getType(), ((ArrayType) f.getType()).numDimensions), modifiers);
+				} else {
+					trackField = new SootField(getTracker(f.getName()), dataAccess.getType(), modifiers);
+				}
 				sClass.addField(trackField);
 
 				if(Modifier.isStatic(modifiers)) {
@@ -407,16 +413,80 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 		/** traps active when analyzing the current operation */
 		private final Deque<Trap> activeTraps;
 
+		private final Chain<Local> locals;
+
 		/** traps for the current block (unchecked excpetions) */
 		private final Set<Trap> uncheckedExceptionHandlers;
 
+		/** key: original variable; value: tracking variable */
+		private Map<Local, Local> trackingLocals = new HashMap<Local, Local>();
+
+		private Local getTrackingLocal(Local local) {
+			Local tracker = trackingLocals.get(local);
+
+			if(tracker == null) {
+				if(local.getType() instanceof ArrayType)
+					tracker = Jimple.v().newLocal(getTracker(local.getName()), ArrayType.v(dataAccess.getType(), ((ArrayType)local.getType()).numDimensions));
+				else
+					tracker = Jimple.v().newLocal(getTracker(local.getName()), dataAccess.getType());
+
+				trackingLocals.put(local, tracker);
+				locals.add(tracker);
+			}
+
+			return tracker;
+		}
+
+		/**
+		 * if the method uses arrays with n dimensions (e.g. int[][][] => n = 3),
+		 * this fields has n places: at each position i (0 <= i < n) it stores an array with i+1 dimensions:
+		 * <ol>
+		 * <li> arrayTmpTrackers[0] = DataAccess[]</li>
+		 * <li> arrayTmpTrackers[1] = DataAccess[][]</li>
+		 * <li> arrayTmpTrackers[2] = DataAccess[][][]</li>
+		 * </ol>
+		 */
+		private final Local[] arrayTmpTrackers1;
+
+		private Local getArrayTmpTracker(int n) {
+
+			if(arrayTmpTrackers1[n-1] == null) {
+				arrayTmpTrackers1[n-1] = new JimpleLocal(getTracker("array_" + n), ArrayType.v(dataAccess.getType(), n));
+				locals.add(arrayTmpTrackers1[n-1]);
+			}
+
+			return arrayTmpTrackers1[n-1];
+		}
+
+		/** It is an array of integers */
+		private Local arrInt;
+		private Local getArrayIntegers() {
+			if(arrInt == null) {
+				arrInt = Jimple.v().newLocal("___testful__whiteBox_int_array__", ArrayType.v(IntType.v(), 1));
+				locals.add(arrInt);
+			}
+
+			return arrInt;
+		}
+
+		/** It is an array of integers */
+		private Local tmpObject;
+		private Local getTmpObject() {
+			if(tmpObject == null) {
+				tmpObject = Jimple.v().newLocal("___testful__whiteBox_tmp_Object__", objectType);
+				locals.add(tmpObject);
+			}
+
+			return tmpObject;
+		}
+
 		public Analyzer(Chain<Unit> newUnits, BlockClass clazz, Body newBody, boolean contract, Collection<Trap> newTraps, Collection<Trap> oldTraps) {
 			final SootMethod method = newBody.getMethod();
-			newBody.getTraps();
 			final String methodName = method.getName();
 			final boolean methodStatic = method.isStatic();
 			final boolean methodPublic = method.isPublic();
 			final boolean methodPrivate = method.isPrivate();
+			locals = newBody.getLocals();
 
 			factory = Factory.singleton;
 			localRepository = new HashMap<Local, Data>();
@@ -442,32 +512,52 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 				EdgeDirect.create(end, clazz);
 			}
 
+			//calculate max dimensions of arrays: consider local variables (also includes fields, parameters)
+			int maxDim = 0;
+			for(Local p : newBody.getLocals()) {
+				if(p.getType() instanceof ArrayType) {
+					int dim = ((ArrayType)p.getType()).numDimensions;
+					if(dim > maxDim) maxDim = dim;
+				}
+			}
+			// create array temporary dataAccess
+			arrayTmpTrackers1 = new Local[maxDim];
+
 			if(methodStatic) localThis = null;
 			else localThis = newBody.getThisLocal();
 
 			newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, trackCall.makeRef(), Arrays.asList(new Value[] { IntConstant.v(start.getId()) }))));
 
-			//TODO: NON FUNZIONA!
 			// track this definitions (if it is not a constructor)
-			if(localThis != null && !SootMethod.constructorName.equals(newBody.getMethod().getName()))
+			if(DEFUSE_EXPOSITION && localThis != null && !SootMethod.constructorName.equals(newBody.getMethod().getName()))
 				newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, manageDefExposition.makeRef(), localThis)));
 
+			//Track parameters
 			int nParams = method.getParameterCount();
 			for(int i = 0; i < nParams; i++) {
 				final Local p = newBody.getParameterLocal(i);
-				manageDefs(new DataDef(start, get(p, true), null));
-				addTracking(newUnits, p);
+				DataDef def = new DataDef(start, get(p, true), null);
+				manageDefs(def);
+				Type type = p.getType();
+				if(type instanceof ArrayType) {
+
+					Local tmpObj = getTmpObject();
+					Local tr = getTrackingLocal(p);
+
+					newUnits.add(Jimple.v().newAssignStmt(tmpObj, Jimple.v().newCastExpr(p, objectType)));
+					newUnits.add(Jimple.v().newAssignStmt(tmpObj, Jimple.v().newVirtualInvokeExpr(localTracker, arrayAssignmentDef.makeRef(), Arrays.asList(tmpObj, IntConstant.v(def.getId())))));
+					newUnits.add(Jimple.v().newAssignStmt(tr, Jimple.v().newCastExpr(tmpObj, tr.getType())));
+
+				} else {
+					newUnits.add(Jimple.v().newAssignStmt(
+							getTrackingLocal(p),
+							Jimple.v().newVirtualInvokeExpr(localTracker, getDataAccess.makeRef(), IntConstant.v(def.getId()), IntConstant.v(0))));
+				}
 
 				// track parameter's definitions (if it is not a prim type)
-				if(!(p.getType() instanceof PrimType))
+				if(DEFUSE_EXPOSITION && !(type instanceof PrimType || type instanceof ArrayType))
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, manageDefExposition.makeRef(), p)));
 			}
-		}
-
-		private void addTracking(Chain<Unit> newUnits, final Local p) {
-			newUnits.add(Jimple.v().newAssignStmt(
-					trackingLocals.get(p),
-					Jimple.v().newVirtualInvokeExpr(localTracker, getDataAccess.makeRef(), IntConstant.v(0), IntConstant.v(1))));
 		}
 
 		public void exceptional(Chain<Unit> newUnits, Local exc) {
@@ -504,6 +594,9 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 		}
 
 		public void process(Chain<Unit> newUnits, AssignStmt u) {
+			if(u.getLeftOp().getType() instanceof ArrayType && u.getRightOp() instanceof InvokeExpr)
+				return;
+
 			Value leftOp = u.getLeftOp();
 			Data data = get(leftOp);
 
@@ -516,7 +609,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 
 				final DataDef def = new DataDef(current, data, value);
 				manageDefs(def);
-				handleDef(newUnits, leftOp, def);
+				handleDef(newUnits, leftOp, def.getId(), u.getRightOp());
 			}
 		}
 
@@ -529,7 +622,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 			// this method is invoked to store an exception (first statement in catch blocks)
 			final DataDef def = new DataDef(current, get(u.getLeftOp()), null);
 			manageDefs(def);
-			handleDef(newUnits, u.getLeftOp(), def);
+			handleDef(newUnits, u.getLeftOp(), def.getId(), u.getRightOp());
 		}
 
 		public void process(Chain<Unit> newUnits, IfStmt u) {
@@ -1047,6 +1140,9 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 
 		private void handleUse(Chain<Unit> newUnits, Value v, final DataUse dataUse) {
 
+			if(v.getType() instanceof ArrayType) return;
+
+
 			if(v instanceof Local) {
 
 				newUnits.add(Jimple.v().newAssignStmt(
@@ -1061,116 +1157,212 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 						Jimple.v().newVirtualInvokeExpr(
 								localTracker,
 								manageDefUse.makeRef(),
-								trackingLocals.get(v),
+								getTrackingLocal((Local)v),
 								localDataAccessU)));
 
 			} else if(v instanceof InstanceFieldRef) {
-				InstanceFieldRef fr = (InstanceFieldRef) v;
-				SootField field = fr.getField();
-				SootField tracker = field.getDeclaringClass().getFieldByName(getTracker(field.getName()));
 
-				newUnits.add(Jimple.v().newAssignStmt(
-						localDataAccessD,
-						Jimple.v().newInstanceFieldRef(fr.getBase(), tracker.makeRef())
-				));
+				try {
+					InstanceFieldRef fr = (InstanceFieldRef) v;
+					SootField field = fr.getField();
+					SootField tracker = field.getDeclaringClass().getFieldByName(getTracker(field.getName()));
 
-				newUnits.add(Jimple.v().newAssignStmt(
-						localDataAccessU,
-						Jimple.v().newVirtualInvokeExpr(
-								localTracker,
-								getDataAccess.makeRef(),
-								IntConstant.v(dataUse.getId()),
-								IntConstant.v(1))));
+					newUnits.add(Jimple.v().newAssignStmt(
+							localDataAccessD,
+							Jimple.v().newInstanceFieldRef(fr.getBase(), tracker.makeRef())
+					));
 
-				newUnits.add(Jimple.v().newInvokeStmt(
-						Jimple.v().newVirtualInvokeExpr(
-								localTracker,
-								manageDefUse.makeRef(),
-								localDataAccessD,
-								localDataAccessU)));
+					newUnits.add(Jimple.v().newAssignStmt(
+							localDataAccessU,
+							Jimple.v().newVirtualInvokeExpr(
+									localTracker,
+									getDataAccess.makeRef(),
+									IntConstant.v(dataUse.getId()),
+									IntConstant.v(1))));
+
+					newUnits.add(Jimple.v().newInvokeStmt(
+							Jimple.v().newVirtualInvokeExpr(
+									localTracker,
+									manageDefUse.makeRef(),
+									localDataAccessD,
+									localDataAccessU)));
+
+				} catch (RuntimeException e) {
+					logger.log(Level.WARNING, "Tracking field not found: " + e.getMessage(), e);
+				}
 
 			} else if (v instanceof StaticFieldRef) {
-				StaticFieldRef fr = (StaticFieldRef) v;
-				SootField field = fr.getField();
-				SootField tracker = field.getDeclaringClass().getFieldByName(getTracker(field.getName()));
 
-				newUnits.add(Jimple.v().newAssignStmt(
-						localDataAccessD,
-						Jimple.v().newStaticFieldRef(tracker.makeRef())
-				));
+				try {
+					StaticFieldRef fr = (StaticFieldRef) v;
+					SootField field = fr.getField();
+					SootField tracker = field.getDeclaringClass().getFieldByName(getTracker(field.getName()));
 
-				newUnits.add(Jimple.v().newAssignStmt(
-						localDataAccessU,
-						Jimple.v().newVirtualInvokeExpr(
-								localTracker,
-								getDataAccess.makeRef(),
-								IntConstant.v(dataUse.getId()),
-								IntConstant.v(1))));
+					newUnits.add(Jimple.v().newAssignStmt(
+							localDataAccessD,
+							Jimple.v().newStaticFieldRef(tracker.makeRef())
+					));
 
-				newUnits.add(Jimple.v().newInvokeStmt(
-						Jimple.v().newVirtualInvokeExpr(
-								localTracker,
-								manageDefUse.makeRef(),
-								localDataAccessD,
-								localDataAccessU)));
+					newUnits.add(Jimple.v().newAssignStmt(
+							localDataAccessU,
+							Jimple.v().newVirtualInvokeExpr(
+									localTracker,
+									getDataAccess.makeRef(),
+									IntConstant.v(dataUse.getId()),
+									IntConstant.v(1))));
+
+					newUnits.add(Jimple.v().newInvokeStmt(
+							Jimple.v().newVirtualInvokeExpr(
+									localTracker,
+									manageDefUse.makeRef(),
+									localDataAccessD,
+									localDataAccessU)));
+				} catch (RuntimeException e) {
+					logger.log(Level.WARNING, "Tracking field not found: " + e.getMessage(), e);
+				}
+
 			}
 		}
 
-		private void handleDef(Chain<Unit> newUnits, Value v, final DataDef dataDef) {
+		/**
+		 * Track the definition
+		 * @param newUnits the unit chain being built
+		 * @param def the Value being defined
+		 * @param defId the definition id
+		 * @param right the value being assigned (for arrays)
+		 */
+		private void handleDef(Chain<Unit> newUnits, Value def, int defId, Value right) {
+			Value dataDef;
 
-			if(v instanceof Local) {
+			// calculate the definition ID
+			if(def.getType() instanceof ArrayType) {
+				ArrayType type = (ArrayType) def.getType();
 
-				newUnits.add(Jimple.v().newAssignStmt(
-						trackingLocals.get(v),
-						Jimple.v().newVirtualInvokeExpr(
-								localTracker,
-								getDataAccess.makeRef(),
-								IntConstant.v(dataDef.getId()),
-								IntConstant.v(0))));
+				if(right instanceof Local) {
+					dataDef = getTrackingLocal((Local)right);
+				} else if(right instanceof InstanceFieldRef) {
+					InstanceFieldRef fr = (InstanceFieldRef) right;
+					SootField field = fr.getField();
+					SootField tracker = field.getDeclaringClass().getFieldByName(getTracker(field.getName()));
 
-			} else if(v instanceof InstanceFieldRef) {
-				InstanceFieldRef fr = (InstanceFieldRef) v;
-				SootField field = fr.getField();
-				SootField tracker = field.getDeclaringClass().getFieldByName(getTracker(field.getName()));
+					dataDef =  getArrayTmpTracker(type.numDimensions);
+					newUnits.add(Jimple.v().newAssignStmt(dataDef, Jimple.v().newInstanceFieldRef(fr.getBase(), tracker.makeRef())));
 
-				newUnits.add(Jimple.v().newAssignStmt(
-						localDataAccessD,
-						Jimple.v().newVirtualInvokeExpr(
-								localTracker,
-								getDataAccess.makeRef(),
-								IntConstant.v(dataDef.getId()),
-								IntConstant.v(1))));
+				} else if(right instanceof StaticFieldRef) {
+					StaticFieldRef fr = (StaticFieldRef) right;
+					SootField field = fr.getField();
+					SootField tracker = field.getDeclaringClass().getFieldByName(getTracker(field.getName()));
 
-				newUnits.add(Jimple.v().newAssignStmt(
-						Jimple.v().newInstanceFieldRef(fr.getBase(), tracker.makeRef()),
-						localDataAccessD
-				));
+					dataDef = getArrayTmpTracker(type.numDimensions);
+					newUnits.add(Jimple.v().newAssignStmt(dataDef, Jimple.v().newStaticFieldRef(tracker.makeRef())));
 
+				} else if(right instanceof ArrayRef) {
+					ArrayRef arrayRef = (ArrayRef) right;
+					Value base = arrayRef.getBase();
+					Value index = arrayRef.getIndex();
 
-			} else if (v instanceof StaticFieldRef) {
-				StaticFieldRef fr = (StaticFieldRef) v;
-				SootField field = fr.getField();
-				SootField tracker = field.getDeclaringClass().getFieldByName(getTracker(field.getName()));
+					dataDef = getArrayTmpTracker(type.numDimensions);
+					newUnits.add(Jimple.v().newAssignStmt(dataDef, Jimple.v().newArrayRef(getTrackingLocal((Local) base), index)));
+				} else if(right instanceof NewArrayExpr) {
 
-				newUnits.add(Jimple.v().newAssignStmt(
-						localDataAccessD,
-						Jimple.v().newVirtualInvokeExpr(
-								localTracker,
-								getDataAccess.makeRef(),
-								IntConstant.v(dataDef.getId()),
-								IntConstant.v(1))));
+					NewArrayExpr newArray = (NewArrayExpr) right;
+					dataDef = getArrayTmpTracker(type.numDimensions);
 
-				newUnits.add(Jimple.v().newAssignStmt(
-						Jimple.v().newStaticFieldRef(tracker.makeRef()),
-						localDataAccessD
-				));
+					if(type.numDimensions == 1) {
+						newUnits.add(Jimple.v().newAssignStmt(dataDef, Jimple.v().newVirtualInvokeExpr(localTracker, newArrayDef.makeRef(),
+								Arrays.asList(newArray.getSize(), IntConstant.v(defId)))));
+					} else {
+						Local arrInt = getArrayIntegers();
+						Local tmpObject = getTmpObject();
+
+						newUnits.add(Jimple.v().newAssignStmt(arrInt, Jimple.v().newNewArrayExpr(IntType.v(), IntConstant.v(type.numDimensions))));
+						newUnits.add(Jimple.v().newAssignStmt(Jimple.v().newArrayRef(arrInt, IntConstant.v(0)), newArray.getSize()));
+						newUnits.add(Jimple.v().newAssignStmt(tmpObject, Jimple.v().newVirtualInvokeExpr(localTracker, newMultiArrayDef.makeRef(), Arrays.asList(arrInt, IntConstant.v(defId)))));
+						newUnits.add(Jimple.v().newAssignStmt(dataDef, Jimple.v().newCastExpr(tmpObject, dataDef.getType())));
+					}
+				} else if(right instanceof NewMultiArrayExpr) {
+
+					NewMultiArrayExpr newMultiArray = (NewMultiArrayExpr) right;
+					dataDef =  getArrayTmpTracker(type.numDimensions);
+
+					Local arrInt = getArrayIntegers();
+					Local tmpObject = getTmpObject();
+
+					newUnits.add(Jimple.v().newAssignStmt(arrInt, Jimple.v().newNewArrayExpr(IntType.v(), IntConstant.v(type.numDimensions))));
+					for(int i = 0; i < newMultiArray.getSizeCount(); i++)
+						newUnits.add(Jimple.v().newAssignStmt(Jimple.v().newArrayRef(arrInt, IntConstant.v(i)), newMultiArray.getSize(i)));
+
+					newUnits.add(Jimple.v().newAssignStmt(tmpObject,Jimple.v().newVirtualInvokeExpr(localTracker, newMultiArrayDef.makeRef(), Arrays.asList(arrInt, IntConstant.v(defId)))));
+					newUnits.add(Jimple.v().newAssignStmt(dataDef, Jimple.v().newCastExpr(tmpObject, dataDef.getType())));
+
+				} else {
+					logger.warning("Unable to handle array definition: " + def + " - " + def.getClass().getCanonicalName());
+
+					return;
+				}
+			} else if(def instanceof Local) {
+				dataDef =  Jimple.v().newVirtualInvokeExpr(localTracker, getDataAccess.makeRef(), IntConstant.v(defId), IntConstant.v(0));
+			} else if(def instanceof InstanceFieldRef || def instanceof StaticFieldRef) {
+				dataDef =  Jimple.v().newVirtualInvokeExpr(localTracker, getDataAccess.makeRef(), IntConstant.v(defId), IntConstant.v(1));
+			} else if(def instanceof ArrayRef) {
+				dataDef = localDataAccessD;
+				newUnits.add(Jimple.v().newAssignStmt(localDataAccessD, Jimple.v().newVirtualInvokeExpr(localTracker, getDataAccess.makeRef(), IntConstant.v(defId), IntConstant.v((((ArrayRef)def).getBase() instanceof FieldRef)? 1 : 0))));
+			} else {
+				logger.warning("Unable to handle: " + def + " - " + def.getClass().getCanonicalName());
+				return;
 			}
+
+			// put the dataDef in the right place
+			if(def instanceof Local) {
+				newUnits.add(Jimple.v().newAssignStmt(getTrackingLocal((Local) def), dataDef));
+
+			} else if(def instanceof InstanceFieldRef) {
+				InstanceFieldRef fr = (InstanceFieldRef) def;
+				SootField field = fr.getField();
+				SootField tracker = field.getDeclaringClass().getFieldByName(getTracker(field.getName()));
+
+				newUnits.add(Jimple.v().newAssignStmt(Jimple.v().newInstanceFieldRef(fr.getBase(), tracker.makeRef()), dataDef));
+
+			} else if(def instanceof StaticFieldRef) {
+				StaticFieldRef fr = (StaticFieldRef) def;
+				SootField field = fr.getField();
+				SootField tracker = field.getDeclaringClass().getFieldByName(getTracker(field.getName()));
+
+				newUnits.add(Jimple.v().newAssignStmt(Jimple.v().newStaticFieldRef(tracker.makeRef()), dataDef));
+
+			} else if(def instanceof ArrayRef) {
+				ArrayRef arrayRef = (ArrayRef) def;
+				Value base = arrayRef.getBase();
+				Value index = arrayRef.getIndex();
+
+				newUnits.add(Jimple.v().newAssignStmt(Jimple.v().newArrayRef(getTrackingLocal((Local) base), index), dataDef));
+			}
+
 		}
 
 		public void processPostExc(Chain<Unit> newUnits, Stmt stmt) {
 		}
 
 		public void processPost(Chain<Unit> newUnits, Stmt stmt) {
+			if(stmt instanceof AssignStmt) {
+				AssignStmt u = (AssignStmt) stmt;
+				if(u.getLeftOp().getType() instanceof ArrayType && u.getRightOp() instanceof InvokeExpr) {
+					Local leftOp = (Local) u.getLeftOp();
+					Data data = get(leftOp);
+
+					final DataDef def = new DataDef(current, data, null);
+					manageDefs(def);
+
+					Local tmpObj = getTmpObject();
+					Local tr = getTrackingLocal(leftOp);
+
+					newUnits.add(Jimple.v().newAssignStmt(tmpObj, Jimple.v().newCastExpr(leftOp, objectType)));
+					newUnits.add(Jimple.v().newAssignStmt(tmpObj, Jimple.v().newVirtualInvokeExpr(localTracker, arrayAssignmentDef.makeRef(), Arrays.asList(tmpObj, IntConstant.v(def.getId())))));
+					newUnits.add(Jimple.v().newAssignStmt(tr, Jimple.v().newCastExpr(tmpObj, tr.getType())));
+
+				}
+			}
+
 			if(stmt.containsInvokeExpr()) {
 				toLink = new EdgeDirect(current);
 				current = null;

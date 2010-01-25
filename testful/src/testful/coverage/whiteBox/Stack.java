@@ -1,8 +1,11 @@
 package testful.coverage.whiteBox;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
-public final class Stack {
+public final class Stack implements Serializable {
+	private static final long serialVersionUID = 4163032478310472158L;
+
 	final Integer[] stack;
 	private final int hash;
 	public Stack(Integer[] s) {

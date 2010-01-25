@@ -1,5 +1,6 @@
 package testful.coverage.whiteBox;
 
+import java.lang.reflect.Array;
 import java.util.BitSet;
 import java.util.Deque;
 import java.util.HashMap;
@@ -201,10 +202,6 @@ public class TrackerWhiteBox extends Tracker {
 	}
 
 	// ------------------------ Def exposition --------------------------------
-
-
-	//TODO: far chiamare questo metodo ad ogni invocazione
-
 	private Map<Stack, Set<DataAccess>> defExpo;
 
 	private static final Integer VALUE = 1;
@@ -231,13 +228,23 @@ public class TrackerWhiteBox extends Tracker {
 
 			if (processed.put(d, VALUE) == null) {
 
-				for (DataAccess da : d.__testful_get_defs__())
-					if (da != null)
-						def.add(da);
+				addAll(def, d.__testful_get_defs__());
 
 				for (Object f : d.__testful_get_fields__())
 					getDefExposers(f, todo);
 
+			}
+		}
+	}
+
+	private void addAll(Set<DataAccess> def, Object[] objects) {
+		if(objects == null) return;
+
+		for (Object o : objects) {
+			if(o != null) {
+				if(o instanceof DataAccess) def.add((DataAccess) o);
+				else if(o.getClass().isArray()) addAll(def, (Object[]) o);
+				else System.err.println("DefExposer: unknown element: " + o + " - " + o.getClass().getCanonicalName());
 			}
 		}
 	}
@@ -311,4 +318,98 @@ public class TrackerWhiteBox extends Tracker {
 			todo.add((DefExposer) o);
 
 	}
+
+	// ------------------------ Def-Array handling --------------------------------
+	/**
+	 * creates an array of DataAccess, all with the same defId.<br>
+	 * Use this method when a new array (1 dimension) is created
+	 * @param len the length of the array being created
+	 * @param id the id of the definition
+	 * @return the array containing the definitions (its length is len)
+	 */
+	public DataAccess[] newArrayDef(int len, int id) {
+		DataAccess[] ret = new DataAccess[len];
+
+		//DataAccess is an immutable object... I can share it!
+		DataAccess d = getDataAccess(id, true);
+		for(int i = 0; i < len; i++)
+			ret[i] = d;
+
+		return ret;
+	}
+
+	/**
+	 * Creates an multi-array of DataAccess, all with the same defId.<br>
+	 * Use this method when a new multi-array (> 1 dimension) is created
+	 * @param len the length of the various dimensions of the array being created
+	 * @param id the id of the definition
+	 * @return the array containing the definitions (its lengths are those reported in len)
+	 */
+	public Object newMultiArrayDef(int[] len, int id) {
+		Object ret = Array.newInstance(DataAccess.class, len);
+
+		DataAccess d = getDataAccess(id, true);
+		_newMultiArrayDef((Object[]) ret, id, len.length, d);
+
+		return ret;
+	}
+
+	private void _newMultiArrayDef(Object[] defs, int id, int dims, DataAccess d) {
+		if(dims > 1) {
+			for (int i = 0; i < defs.length; i++)
+				_newMultiArrayDef((Object[]) defs[i], id, dims-1, d);
+		} else {
+			for (int i = 0; i < defs.length; i++)
+				defs[i] = d;
+		}
+
+
+	}
+
+	/**
+	 * creates the definitions array for a given array with an arbirary number of dimensions.<br/>
+	 * Use this method when an array is returned from a method invocation (e.g. list.toArray()).
+	 * @param o the array created
+	 * @param id the definition id
+	 * @return the n-ary array of definitions. It has the same number of dimensions and the same length of the given array.
+	 */
+	public Object arrayAssignmentDef(Object o, int id) {
+		if(o == null) return null;
+
+		// calculate num of dimensions
+		int dim = 0;
+		for(Class<?> c = o.getClass(); c.isArray(); c = c.getComponentType()) dim++;
+
+		// create DataAccess array types
+		Class<?>[] dataAccessArrayTypes = new Class[dim];
+		dataAccessArrayTypes[0] = DataAccess.class;
+		for(int i = 1; i < dim; i++)
+			dataAccessArrayTypes[i] = Array.newInstance(dataAccessArrayTypes[i-1], 0).getClass();
+
+		DataAccess d = getDataAccess(id, true);
+
+		return _arrayAssignmentDef(o, dim, id, dataAccessArrayTypes, d);
+	}
+
+	private Object _arrayAssignmentDef(Object o, int dim, int id, Class<?>[] dataAccessArrayTypes, DataAccess d) {
+
+		if(o == null) return null;
+
+		if(dim == 1) {
+			DataAccess[] ret = new DataAccess[Array.getLength(o)];
+			for (int i = 0; i < ret.length; i++) ret[i] = d;
+			return ret;
+		}
+
+		Object[] ret = (Object[]) Array.newInstance(dataAccessArrayTypes[dim-1], Array.getLength(o));
+		for (int i = 0; i < ret.length; i++) {
+			Object e = Array.get(o, i);
+			if(e != null) {
+				ret[i] = _arrayAssignmentDef(e, dim-1, id, dataAccessArrayTypes, d);
+			}
+		}
+
+		return ret;
+	}
+
 }
