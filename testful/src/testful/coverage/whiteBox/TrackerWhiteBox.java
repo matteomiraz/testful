@@ -192,8 +192,8 @@ public class TrackerWhiteBox extends Tracker {
 	}
 
 	// ------------------------ Def-Use coverage --------------------------------
-	public DataAccess getDataAccess(int id, boolean useContext) {
-		return new DataAccess(id, useContext?getStack():null);
+	public DataAccess getDataAccess(int id) {
+		return new DataAccess(id, getStack());
 	}
 
 	private Set<DefUse> defUse;
@@ -331,7 +331,7 @@ public class TrackerWhiteBox extends Tracker {
 		DataAccess[] ret = new DataAccess[len];
 
 		//DataAccess is an immutable object... I can share it!
-		DataAccess d = getDataAccess(id, true);
+		DataAccess d = getDataAccess(id);
 		for(int i = 0; i < len; i++)
 			ret[i] = d;
 
@@ -348,7 +348,7 @@ public class TrackerWhiteBox extends Tracker {
 	public Object newMultiArrayDef(int[] len, int id) {
 		Object ret = Array.newInstance(DataAccess.class, len);
 
-		DataAccess d = getDataAccess(id, true);
+		DataAccess d = getDataAccess(id);
 		_newMultiArrayDef((Object[]) ret, id, len.length, d);
 
 		return ret;
@@ -386,7 +386,7 @@ public class TrackerWhiteBox extends Tracker {
 		for(int i = 1; i < dim; i++)
 			dataAccessArrayTypes[i] = Array.newInstance(dataAccessArrayTypes[i-1], 0).getClass();
 
-		DataAccess d = getDataAccess(id, true);
+		DataAccess d = getDataAccess(id);
 
 		return _arrayAssignmentDef(o, dim, id, dataAccessArrayTypes, d);
 	}

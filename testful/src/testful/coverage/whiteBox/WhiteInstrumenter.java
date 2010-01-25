@@ -551,7 +551,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 				} else {
 					newUnits.add(Jimple.v().newAssignStmt(
 							getTrackingLocal(p),
-							Jimple.v().newVirtualInvokeExpr(localTracker, getDataAccess.makeRef(), IntConstant.v(def.getId()), IntConstant.v(0))));
+							Jimple.v().newVirtualInvokeExpr(localTracker, getDataAccess.makeRef(), IntConstant.v(def.getId()))));
 				}
 
 				// track parameter's definitions (if it is not a prim type)
@@ -1150,8 +1150,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 						Jimple.v().newVirtualInvokeExpr(
 								localTracker,
 								getDataAccess.makeRef(),
-								IntConstant.v(dataUse.getId()),
-								IntConstant.v(0))));
+								IntConstant.v(dataUse.getId()))));
 
 				newUnits.add(Jimple.v().newInvokeStmt(
 						Jimple.v().newVirtualInvokeExpr(
@@ -1177,8 +1176,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 							Jimple.v().newVirtualInvokeExpr(
 									localTracker,
 									getDataAccess.makeRef(),
-									IntConstant.v(dataUse.getId()),
-									IntConstant.v(1))));
+									IntConstant.v(dataUse.getId()))));
 
 					newUnits.add(Jimple.v().newInvokeStmt(
 							Jimple.v().newVirtualInvokeExpr(
@@ -1208,8 +1206,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 							Jimple.v().newVirtualInvokeExpr(
 									localTracker,
 									getDataAccess.makeRef(),
-									IntConstant.v(dataUse.getId()),
-									IntConstant.v(1))));
+									IntConstant.v(dataUse.getId()))));
 
 					newUnits.add(Jimple.v().newInvokeStmt(
 							Jimple.v().newVirtualInvokeExpr(
@@ -1300,13 +1297,11 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 
 					return;
 				}
-			} else if(def instanceof Local) {
-				dataDef =  Jimple.v().newVirtualInvokeExpr(localTracker, getDataAccess.makeRef(), IntConstant.v(defId), IntConstant.v(0));
-			} else if(def instanceof InstanceFieldRef || def instanceof StaticFieldRef) {
-				dataDef =  Jimple.v().newVirtualInvokeExpr(localTracker, getDataAccess.makeRef(), IntConstant.v(defId), IntConstant.v(1));
+			} else if(def instanceof Local || def instanceof InstanceFieldRef || def instanceof StaticFieldRef) {
+				dataDef =  Jimple.v().newVirtualInvokeExpr(localTracker, getDataAccess.makeRef(), IntConstant.v(defId));
 			} else if(def instanceof ArrayRef) {
 				dataDef = localDataAccessD;
-				newUnits.add(Jimple.v().newAssignStmt(localDataAccessD, Jimple.v().newVirtualInvokeExpr(localTracker, getDataAccess.makeRef(), IntConstant.v(defId), IntConstant.v((((ArrayRef)def).getBase() instanceof FieldRef)? 1 : 0))));
+				newUnits.add(Jimple.v().newAssignStmt(localDataAccessD, Jimple.v().newVirtualInvokeExpr(localTracker, getDataAccess.makeRef(), IntConstant.v(defId))));
 			} else {
 				logger.warning("Unable to handle: " + def + " - " + def.getClass().getCanonicalName());
 				return;
