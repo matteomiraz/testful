@@ -51,7 +51,8 @@ public class Launcher {
 
 			testful.TestFul.setupLogging(config);
 
-			String[] SOOT_CONF = new String[] { "-validate", "--keep-line-number", "--xml-attributes", "-f", "c", "-output-dir", config.getDirInstrumented().getAbsolutePath() };
+			String[] SOOT_CONF = new String[] { "--keep-line-number", "--xml-attributes", "-f", "c", "-output-dir", config.getDirInstrumented().getAbsolutePath() };
+			//			String[] SOOT_CONF = new String[] { "-validate", "--keep-line-number", "--xml-attributes", "-f", "c", "-output-dir", config.getDirInstrumented().getAbsolutePath() };
 
 			List<String> sootClassPath = new ArrayList<String>();
 			sootClassPath.add(config.getDirContracts().getAbsolutePath());

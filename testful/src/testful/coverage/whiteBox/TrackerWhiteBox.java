@@ -11,6 +11,8 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import testful.coverage.CoverageInformation;
 import testful.coverage.Tracker;
@@ -19,6 +21,8 @@ import testful.utils.ElementManager;
 
 @SuppressWarnings("unused") // for the SAFE option
 public class TrackerWhiteBox extends Tracker {
+
+	private static final Logger logger = Logger.getLogger("testful.coverage.whiteBox");
 
 	private final static boolean SAFE = false;
 
@@ -174,17 +178,17 @@ public class TrackerWhiteBox extends Tracker {
 				Integer LAST = stack.removeLast();
 
 				if(SAFE && !LAST.equals(ID))
-					System.err.println("WARN: called method is not the last on the stack!");
+					logger.fine("WARN: called method is not the last on the stack!");
 			} else {
 				callNum.put(ID, num-1);
 			}
 		} else {
-			System.err.println("WARN: no call for " + id);
+			logger.fine("WARN: no call for " + id);
 		}
 	}
 
 	private Stack stackCache;
-	private Stack getStack() {
+	public Stack getStack() {
 		if(stackCache == null)
 			stackCache = new Stack(stack.toArray(new Integer[stack.size()]));
 
@@ -206,34 +210,38 @@ public class TrackerWhiteBox extends Tracker {
 
 	private static final Integer VALUE = 1;
 	public void manageDefExposition(Object obj) {
-		if(!checkDefExposer(obj))
-			return;
+		try {
+			if(!checkDefExposer(obj))
+				return;
 
-		final Stack stack = getStack();
+			final Stack stack = getStack();
 
-		Set<DataAccess> def = defExpo.get(stack);
-		if(def == null) {
-			def = new LinkedHashSet<DataAccess>();
-			defExpo.put(stack, def);
-		}
-
-
-		final Queue<DefExposer> todo = new LinkedList<DefExposer>();
-		final IdentityHashMap<DefExposer, Integer> processed = new IdentityHashMap<DefExposer, Integer>();
-
-		getDefExposers(obj, todo);
-
-		while (!todo.isEmpty()) {
-			DefExposer d = todo.poll();
-
-			if (processed.put(d, VALUE) == null) {
-
-				addAll(def, d.__testful_get_defs__());
-
-				for (Object f : d.__testful_get_fields__())
-					getDefExposers(f, todo);
-
+			Set<DataAccess> def = defExpo.get(stack);
+			if(def == null) {
+				def = new LinkedHashSet<DataAccess>();
+				defExpo.put(stack, def);
 			}
+
+
+			final Queue<DefExposer> todo = new LinkedList<DefExposer>();
+			final IdentityHashMap<DefExposer, Integer> processed = new IdentityHashMap<DefExposer, Integer>();
+
+			getDefExposers(obj, todo);
+
+			while (!todo.isEmpty()) {
+				DefExposer d = todo.poll();
+
+				if (processed.put(d, VALUE) == null) {
+
+					addAll(def, d.__testful_get_defs__());
+
+					for (Object f : d.__testful_get_fields__())
+						getDefExposers(f, todo);
+
+				}
+			}
+		} catch (Throwable e) {
+			logger.log(Level.FINE, "Error in manageDefExposition: " + e, e);
 		}
 	}
 
@@ -244,7 +252,7 @@ public class TrackerWhiteBox extends Tracker {
 			if(o != null) {
 				if(o instanceof DataAccess) def.add((DataAccess) o);
 				else if(o.getClass().isArray()) addAll(def, (Object[]) o);
-				else System.err.println("DefExposer: unknown element: " + o + " - " + o.getClass().getCanonicalName());
+				else logger.fine("DefExposer: unknown element: " + o + " - " + o.getClass().getCanonicalName());
 			}
 		}
 	}
@@ -290,6 +298,8 @@ public class TrackerWhiteBox extends Tracker {
 
 
 	private static boolean checkDefExposer(Object o) {
+		if(o == null) return false;
+
 		Class<?> c = o.getClass();
 
 		if(c.isArray())
