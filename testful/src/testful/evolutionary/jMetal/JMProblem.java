@@ -118,7 +118,8 @@ public class JMProblem extends Problem<Operation> {
 	 * @param tests the tests to add
 	 */
 	public void addReserve(TestSuite tests){
-		problem.addReserve(tests);
+		if(tests != null)
+			problem.addReserve(tests);
 	}
 
 	/**

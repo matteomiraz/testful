@@ -12,5 +12,8 @@ public interface IConfigEvolutionary extends IConfigGeneration, IConfigRunner, I
 
 	public FitnessInheritance getFitnessInheritance();
 
-	public boolean isSmartInitialPopulation();
+	public int getSmartInitialPopulation();
+
+	public boolean isUseCpuTime();
+
 }

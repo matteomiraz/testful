@@ -1,7 +1,5 @@
 package testful.coverage.bug;
 
-
-import java.io.File;
 import java.util.logging.Logger;
 
 import soot.Body;
@@ -17,7 +15,8 @@ import soot.jimple.NullConstant;
 import soot.jimple.Stmt;
 import soot.tagkit.StringTag;
 import soot.util.Chain;
-import testful.coverage.Instrumenter.UnifiedInstrumentator;
+import testful.IConfigProject;
+import testful.utils.Instrumenter.UnifiedInstrumentator;
 
 /**
  * Instruments each method, in the following way:<br>
@@ -120,6 +119,6 @@ public class BugInstrumenter implements UnifiedInstrumentator {
 	}
 
 	@Override
-	public void done(File baseDir, String cutName) {
+	public void done(IConfigProject config, String cutName) {
 	}
 }
