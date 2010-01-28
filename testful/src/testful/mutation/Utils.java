@@ -1,12 +1,14 @@
 package testful.mutation;
 
 import org.jmlspecs.jmlrac.runtime.JMLAssertionError;
+import org.jmlspecs.jmlrac.runtime.JMLEntryPreconditionError;
+import org.jmlspecs.jmlrac.runtime.JMLInternalPreconditionError;
 import org.jmlspecs.jmlrac.runtime.JMLInvariantError;
 import org.jmlspecs.jmlrac.runtime.JMLPostconditionError;
-import org.jmlspecs.jmlrac.runtime.JMLPreconditionError;
 
 import testful.model.ExceptionRaisedException;
 import testful.model.FaultyExecutionException;
+import testful.model.InternalPreConditionViolationException;
 import testful.model.InvariantViolationException;
 import testful.model.PostConditionViolationException;
 
@@ -19,7 +21,7 @@ public class Utils {
 	static final String CUR_MUTATION_SUFFIX = "__";
 
 	public static final String CONFIG_CLASS = "testful.mutation.Config";
-	
+
 	public static final String EXECUTED_MUTANTS = "__executed_mutants__";
 
 	public static String getCurField(String className) {
@@ -38,7 +40,7 @@ public class Utils {
 		return className.replace('_', '.').replaceAll("\\.\\.", "_");
 	}
 
-	
+
 	/**
 	 * ABS ZPush: if value is zero, throws a postconditionViolation Exception
 	 * (i.e., the mutant is killed)
@@ -85,13 +87,14 @@ public class Utils {
 		if(exc instanceof FaultyExecutionException) throw (FaultyExecutionException) exc;
 
 		// it's a precondition violation: throwing the exception
-		if(exc instanceof JMLPreconditionError) throw (JMLPreconditionError) exc;
+		if(exc instanceof JMLEntryPreconditionError) throw (JMLEntryPreconditionError) exc;
 
 		// it's a user-defined exception in a class with contracts: it's ok!
 		if(hasContracts && !(exc instanceof JMLAssertionError)) throw exc;
 
 		FaultyExecutionException fault;
-		if(exc instanceof JMLPostconditionError) fault = new PostConditionViolationException(exc.getMessage(), exc);
+		if(exc instanceof JMLInternalPreconditionError) fault = new InternalPreConditionViolationException(exc.getMessage(), exc);
+		else if(exc instanceof JMLPostconditionError) fault = new PostConditionViolationException(exc.getMessage(), exc);
 		else if(exc instanceof JMLInvariantError) fault = new InvariantViolationException(exc.getMessage(), exc);
 		else if(exc instanceof JMLAssertionError) fault = new ExceptionRaisedException(exc.getMessage(), exc);
 		else fault = new ExceptionRaisedException(exc);

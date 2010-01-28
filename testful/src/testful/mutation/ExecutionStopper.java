@@ -1,15 +1,11 @@
 package testful.mutation;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import soot.Body;
-import soot.BodyTransformer;
 import soot.BooleanType;
 import soot.Local;
-import soot.PatchingChain;
 import soot.RefType;
 import soot.Scene;
 import soot.SootClass;
@@ -23,8 +19,11 @@ import soot.jimple.IntConstant;
 import soot.jimple.InvokeStmt;
 import soot.jimple.Jimple;
 import soot.jimple.NopStmt;
-import soot.jimple.StaticFieldRef;
+import soot.jimple.Stmt;
+import soot.util.Chain;
+import testful.IConfigProject;
 import testful.utils.Skip;
+import testful.utils.Instrumenter.UnifiedInstrumentator;
 
 /**
  * Instruments the class, forcing the termination of the execution when a flag
@@ -32,84 +31,77 @@ import testful.utils.Skip;
  * 
  * @author matteo
  */
-public class ExecutionStopper extends BodyTransformer {
+public class ExecutionStopper implements UnifiedInstrumentator {
 
 	public static final ExecutionStopper singleton = new ExecutionStopper();
 
-	private final RefType stoppedExceptionType;
-	private final SootMethodRef stoppedExceptionInit;
-	private final SootClass stoppedException;
-	private final SootField stopField;
+	private static final SootField stopField;
+	private static final RefType stoppedExceptionType;
+	private static final SootMethodRef stoppedExceptionInit;
 
-	private ExecutionStopper() {
+	static {
 		Scene.v().loadClassAndSupport(TestStoppedException.class.getCanonicalName());
-		stoppedException = Scene.v().getSootClass(TestStoppedException.class.getCanonicalName());
+		SootClass stoppedException = Scene.v().getSootClass(TestStoppedException.class.getCanonicalName());
 		stopField = stoppedException.getFieldByName(TestStoppedException.STOP_NAME);
 		stoppedExceptionType = stoppedException.getType();
 		stoppedExceptionInit = stoppedException.getMethodByName(SootMethod.constructorName).makeRef();
 	}
 
+	private List<Unit> previous;
+
+	private Local exc;
+	private Local tmp;
+
 	@Override
-	@SuppressWarnings("rawtypes")
-	protected void internalTransform(Body body, String phaseName, Map options) {
-		SootClass sClass = body.getMethod().getDeclaringClass();
+	public void preprocess(SootClass sClass) { }
 
-		// checking if the class has (JML) contracts
-		boolean contract;
-		if(sClass.implementsInterface(org.jmlspecs.jmlrac.runtime.JMLCheckable.class.getCanonicalName())) if(body.getMethod().getName().startsWith("internal$")) contract = false;
-		else contract = true;
-		else contract = false;
-
-		if(contract) {
-			System.out.println("Skipping " + sClass.getName() + "::" + body.getMethod().getName() + " (" + (contract ? "contract" : "implementation") + ")");
+	@Override
+	public void init(Chain<Unit> newUnits, Body newBody, Body oldBody, boolean classWithContracts, boolean contractMethod) {
+		if(classWithContracts) {
+			previous = null;
 			return;
 		}
 
-		System.out.println("Running execution stopper on " + sClass.getName() + "::" + body.getMethod().getName());
+		previous = new ArrayList<Unit>();
 
-		Local exc = Jimple.v().newLocal("__stopper_exc__", stoppedExceptionType);
-		body.getLocals().add(exc);
-		Local tmp = Jimple.v().newLocal("__stopper_stop__", BooleanType.v());
-		body.getLocals().add(tmp);
+		exc = Jimple.v().newLocal("__stopper_exc__", stoppedExceptionType);
+		newBody.getLocals().add(exc);
+		tmp = Jimple.v().newLocal("__stopper_stop__", BooleanType.v());
+		newBody.getLocals().add(tmp);
+	}
 
-		StaticFieldRef stopExecution = Jimple.v().newStaticFieldRef(stopField.makeRef());
+	@Override
+	public void processPre(Chain<Unit> newUnits, Stmt op) {
+		if(previous == null) return;
 
-		List<Unit> previous = new ArrayList<Unit>();
-		Iterator<Unit> iter = body.getUnits().snapshotIterator();
-		while(iter.hasNext()) {
-			Unit unit = iter.next();
-			previous.add(unit);
+		if(op.hasTag(Skip.NAME)) return;
 
-			if(unit.hasTag(Skip.NAME)) continue;
+		previous.add(op);
 
-			if(unit instanceof InvokeStmt) {
-				insert(body.getUnits(), unit, exc, tmp, stopExecution);
-				continue;
-			}
+		Unit target = null;
+		if(op instanceof GotoStmt) target = ((GotoStmt) op).getTarget();
+		else if(op instanceof IfStmt) target = ((IfStmt) op).getTarget();
 
-			Unit target = null;
-			if(unit instanceof GotoStmt) target = ((GotoStmt) unit).getTarget();
-			else if(unit instanceof IfStmt) target = ((IfStmt) unit).getTarget();
-
-			if(target == null || !previous.contains(target)) continue;
-			insert(body.getUnits(), unit, exc, tmp, stopExecution);
+		if((op instanceof InvokeStmt) || (target != null && previous.contains(target))) {
+			NopStmt nop = Jimple.v().newNopStmt();
+			newUnits.insertBefore(Jimple.v().newAssignStmt(tmp, Jimple.v().newStaticFieldRef(stopField.makeRef())), op);
+			newUnits.insertBefore(Jimple.v().newIfStmt(Jimple.v().newEqExpr(tmp, IntConstant.v(0)), nop), op);
+			newUnits.insertBefore(Jimple.v().newAssignStmt(exc, Jimple.v().newNewExpr(stoppedExceptionType)), op);
+			newUnits.insertBefore(Jimple.v().newInvokeStmt(Jimple.v().newSpecialInvokeExpr(exc, stoppedExceptionInit)), op);
+			newUnits.insertBefore(Jimple.v().newThrowStmt(exc), op);
+			newUnits.insertBefore(nop, op);
 		}
 	}
 
-	private void insert(PatchingChain<Unit> patchingChain, Unit unit, Local exc, Local tmp, StaticFieldRef stopExecution) {
-		List<Unit> toInsert = new ArrayList<Unit>();
+	@Override
+	public void processPost(Chain<Unit> newUnits, Stmt op) { }
 
-		NopStmt nop = Jimple.v().newNopStmt();
-		toInsert.add(Jimple.v().newAssignStmt(tmp, stopExecution));
-		toInsert.add(Jimple.v().newIfStmt(Jimple.v().newEqExpr(tmp, IntConstant.v(0)), nop));
-		toInsert.add(Jimple.v().newAssignStmt(exc, Jimple.v().newNewExpr(stoppedExceptionType)));
-		toInsert.add(Jimple.v().newInvokeStmt(Jimple.v().newSpecialInvokeExpr(exc, stoppedExceptionInit)));
-		toInsert.add(Jimple.v().newThrowStmt(exc));
-		toInsert.add(nop);
+	@Override
+	public void processPostExc(Chain<Unit> newUnits, Stmt op, Local exception) { }
 
-		for(int i = 0; i < toInsert.size(); i++)
-			patchingChain.insertBefore(toInsert.get(i), unit);
+	@Override
+	public void exceptional(Chain<Unit> newUnits, Local exc) { }
 
-		//patchingChain.insertBefore(toInsert, unit);
-	}
+	@Override
+	public void done(IConfigProject config, String cutName) { }
 }

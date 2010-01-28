@@ -52,7 +52,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	private AtomicLong sentBytes = new AtomicLong();
 
 	public WorkerManager(int cpu, int buffer) {
-		logger.fine("Starting: Worker Manager (" + TestFul.runId + ")");
+		logger.info("Starting: Worker Manager (" + TestFul.runId + ")");
 
 		if(buffer <= 0) buffer = CACHE_SIZE;
 		tests = new ArrayBlockingQueue<Context<?, ?>>(buffer);

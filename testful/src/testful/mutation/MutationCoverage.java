@@ -22,7 +22,7 @@ public class MutationCoverage implements CoverageInformation {
 	public String getName() {
 		return NAME;
 	}
-	
+
 	private final Map<String, MutationCoverageSingle> covs = new HashMap<String, MutationCoverageSingle>();
 
 	public void add(String name, MutationCoverageSingle cov) {
@@ -33,7 +33,7 @@ public class MutationCoverage implements CoverageInformation {
 		}
 		add.merge(cov);
 	}
-	
+
 	@Override
 	public CoverageInformation createEmpty() {
 		return new MutationCoverage();
@@ -44,7 +44,7 @@ public class MutationCoverage implements CoverageInformation {
 		float qTot = 0;
 		for(MutationCoverageSingle cov : covs.values())
 			qTot += cov.getQuality();
-		
+
 		return qTot / covs.size();
 	}
 
@@ -52,8 +52,8 @@ public class MutationCoverage implements CoverageInformation {
 	public boolean contains(CoverageInformation info) {
 		if(info instanceof MutationCoverage) {
 			MutationCoverage other = (MutationCoverage) info;
-			
-			if(this.covs.size() > other.covs.size()) {
+
+			if(covs.size() > other.covs.size()) {
 				for(Entry<String, MutationCoverageSingle> e : covs.entrySet()) {
 					MutationCoverageSingle otherSingle = other.covs.get(e.getKey());
 					if(otherSingle != null && !e.getValue().contains(otherSingle))
@@ -73,24 +73,24 @@ public class MutationCoverage implements CoverageInformation {
 				add(e.getKey(), e.getValue());
 		}
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 
 		for(Entry<String, MutationCoverageSingle> e : covs.entrySet())
-			sb.append(e.getKey()).append(": ").append(e.getValue()).append("\n");
-		
+			sb.append(e.getKey()).append(": ").append(e.getValue());
+
 		return sb.toString();
 	}
-	
+
 	@Override
 	public MutationCoverage clone() {
 		MutationCoverage ret = new MutationCoverage();
-		
-		for(Entry<String, MutationCoverageSingle> e : this.covs.entrySet())
+
+		for(Entry<String, MutationCoverageSingle> e : covs.entrySet())
 			ret.covs.put(e.getKey(), e.getValue().clone());
-		
+
 		return ret;
 	}
 }
