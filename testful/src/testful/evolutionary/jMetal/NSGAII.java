@@ -115,15 +115,17 @@ implements IUpdate {
 		int currentGeneration = 0;
 		problem_.setCurrentGeneration(currentGeneration++, 0);
 
-		// TODO: usare anche wall clock!
 		Time time;
 		if(useCpuTime) {
 			try {
 				time = new TimeCPU();
+				logger.config("Using CPU time");
 			} catch (Exception e) {
 				time = new TimeWall();
+				logger.config("Using Wall Clock");
 			}
 		} else {
+			logger.config("Using Wall Clock");
 			time = new TimeWall();
 		}
 
@@ -210,7 +212,6 @@ implements IUpdate {
 				final int n = offspringPopulation.size();
 				final int f = fronteer.size();
 
-				//TBD: try with fixed probabilities
 				final float k = 0.5f;
 				final float pf = k * INHERIT_PROBABILITY * n / (n + f*(k - 1.0f));
 				final float po = (pf / k) >= 1 ? 1 : pf / k;

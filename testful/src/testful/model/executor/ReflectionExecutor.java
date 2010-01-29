@@ -22,10 +22,11 @@ import testful.model.InvariantViolationException;
 import testful.model.Invoke;
 import testful.model.Methodz;
 import testful.model.Operation;
-import testful.model.OperationPrimitiveResult;
+import testful.model.OperationResult;
 import testful.model.OperationStatus;
 import testful.model.PrimitiveClazz;
 import testful.model.Reference;
+import testful.model.ReferenceFactory;
 import testful.model.ResetRepository;
 import testful.model.StaticValue;
 import testful.model.Test;
@@ -54,6 +55,9 @@ public class ReflectionExecutor implements Executor {
 	/** Test cluster */
 	private final TestCluster cluster;
 
+	/** The reference factory */
+	private final ReferenceFactory referenceFactory;
+
 	/** the list of operations to perform */
 	private final Operation[] test;
 
@@ -65,7 +69,8 @@ public class ReflectionExecutor implements Executor {
 
 	public ReflectionExecutor(Test test) {
 		cluster = test.getCluster();
-		repositoryType = test.getReferenceFactory().getReferences();
+		referenceFactory = test.getReferenceFactory();
+		repositoryType = referenceFactory.getReferences();
 		this.test = test.getTest();
 	}
 
@@ -80,6 +85,10 @@ public class ReflectionExecutor implements Executor {
 
 	public TestCluster getCluster() {
 		return cluster;
+	}
+
+	public ReferenceFactory getReferenceFactory() {
+		return referenceFactory;
 	}
 
 	@Override
@@ -262,6 +271,9 @@ public class ReflectionExecutor implements Executor {
 		// save results
 		if(targetPos != null) set(op, targetPos, newObject);
 
+		OperationResult opResult = (OperationResult) op.getInfo(OperationResult.KEY);
+		if(opResult != null) opResult.setValue(null, newObject, cluster);
+
 		return true;
 	}
 
@@ -356,8 +368,8 @@ public class ReflectionExecutor implements Executor {
 
 		if(targetPos != null) set(op, targetPos, newObject);
 
-		OperationPrimitiveResult opPrimResult = (OperationPrimitiveResult) op.getInfo(OperationPrimitiveResult.KEY);
-		if(opPrimResult != null) opPrimResult.setValue(newObject);
+		OperationResult opResult = (OperationResult) op.getInfo(OperationResult.KEY);
+		if(opResult != null) opResult.setValue(baseObject, newObject, cluster);
 
 		return true;
 	}

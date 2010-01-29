@@ -26,10 +26,11 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 		infos.put(info);
 	}
 
-	public void removeInfo(String key) {
-		if(infos == null || key == null) return;
-		infos.remove(key);
+	public OperationInformation removeInfo(String key) {
+		if(infos == null || key == null) return null;
+		OperationInformation ret = infos.remove(key);
 		if(infos.isEmpty()) infos = null;
+		return ret;
 	}
 
 	public OperationInformation getInfo(String key) {

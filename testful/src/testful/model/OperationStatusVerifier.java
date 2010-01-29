@@ -29,7 +29,8 @@ public class OperationStatusVerifier extends OperationStatus {
 		if(status != Status.EXCEPTIONAL) throw new OperationVerifierException(status, Status.EXCEPTIONAL);
 
 		Throwable thisExc = this.exc;
-		if(!thisExc.getClass().equals(exc.getClass()) || !thisExc.getMessage().equals(exc.getMessage())) throw new OperationVerifierException(thisExc, exc);
+		if(!thisExc.getClass().equals(exc.getClass()) || !thisExc.getMessage().equals(exc.getMessage()))
+			throw new OperationVerifierException(thisExc, exc);
 	}
 
 	@Override
@@ -41,7 +42,7 @@ public class OperationStatusVerifier extends OperationStatus {
 		Test.ensureNoDuplicateOps(ops);
 
 		for(Operation op : ops) {
-			OperationStatus res = (OperationStatus) op.getInfo(OperationStatus.KEY);
+			OperationStatus res = (OperationStatus) op.removeInfo(OperationStatus.KEY);
 			if(res != null) op.addInfo(new OperationStatusVerifier(res));
 		}
 	}

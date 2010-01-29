@@ -32,6 +32,7 @@ import soot.ValueBox;
 import soot.VoidType;
 import soot.jimple.AddExpr;
 import soot.jimple.AndExpr;
+import soot.jimple.ArrayRef;
 import soot.jimple.AssignStmt;
 import soot.jimple.BinopExpr;
 import soot.jimple.CastExpr;
@@ -56,6 +57,7 @@ import soot.jimple.LookupSwitchStmt;
 import soot.jimple.LtExpr;
 import soot.jimple.MulExpr;
 import soot.jimple.NeExpr;
+import soot.jimple.NewArrayExpr;
 import soot.jimple.NewExpr;
 import soot.jimple.NopStmt;
 import soot.jimple.NullConstant;
@@ -261,7 +263,7 @@ public class MutatorFunctions implements UnifiedInstrumentator {
 			if(configMutation.isRor()) ror(sClass, method, ifStmt, mutations, newUnits, lCurrentMutation, nop);
 		}
 
-		if(configMutation.isUoi()) uoi(sClass, method, stmt, mutations, newUnits, lCurrentMutation, tempLocals, nop);
+		if(configMutation.isUoi()) uoi(sClass, method, stmt, mutations, newUnits, lCurrentMutation, nop);
 
 		if(configMutation.isTrack()) track(mutations, newUnits, lCurrentMutation, liveMutants);
 
@@ -459,9 +461,13 @@ public class MutatorFunctions implements UnifiedInstrumentator {
 			return;
 		}
 
+
+		Local tmp = tempLocals.get(assign.getLeftOp().getType());
+		// tmp is not null: abs is applied only on primitive numbers!
+
 		// if (MutantConfig.CUR_#className# != mutationNumberABS) goto @nop1
-		// calculate #va# as before
-		// #var# = Math.abs(#var#)
+		// calculate tmp as #var# was calculatedbefore
+		// #var# = Math.abs(tmp)
 		// goto @after
 		// @nop1
 		{
@@ -469,16 +475,17 @@ public class MutatorFunctions implements UnifiedInstrumentator {
 			int mutationNumber = ConfigHandler.singleton.getMutationNumber(sClass, meth, "ABS");
 			mutations.add(mutationNumber);
 			newUnits.add(Jimple.v().newIfStmt(Jimple.v().newNeExpr(tmpLocal, IntConstant.v(mutationNumber)), nop));
-			newUnits.add((AssignStmt) assign.clone());
-			if(((Local) assign.getLeftOp()).getType() instanceof IntegerType) newUnits.add(Jimple.v().newAssignStmt(assign.getLeftOp(),
-					Jimple.v().newStaticInvokeExpr(mathAbsInt.makeRef(), assign.getLeftOp())));
-			else if(((Local) assign.getLeftOp()).getType() instanceof LongType) newUnits.add(Jimple.v().newAssignStmt(assign.getLeftOp(),
-					Jimple.v().newStaticInvokeExpr(mathAbsLong.makeRef(), assign.getLeftOp())));
-			else if(((Local) assign.getLeftOp()).getType() instanceof FloatType) newUnits.add(Jimple.v().newAssignStmt(assign.getLeftOp(),
-					Jimple.v().newStaticInvokeExpr(mathAbsFloat.makeRef(), assign.getLeftOp())));
-			else if(((Local) assign.getLeftOp()).getType() instanceof DoubleType) newUnits.add(Jimple.v().newAssignStmt(assign.getLeftOp(),
-					Jimple.v().newStaticInvokeExpr(mathAbsDouble.makeRef(), assign.getLeftOp())));
+			AssignStmt cloned = (AssignStmt) assign.clone();
+			cloned.setLeftOp(tmp);
+			newUnits.add(cloned);
+			if(assign.getLeftOp().getType() instanceof IntegerType) newUnits.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newStaticInvokeExpr(mathAbsInt.makeRef(), tmp)));
+			else if(assign.getLeftOp().getType() instanceof LongType) newUnits.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newStaticInvokeExpr(mathAbsLong.makeRef(), tmp)));
+			else if(assign.getLeftOp().getType() instanceof FloatType) newUnits.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newStaticInvokeExpr(mathAbsFloat.makeRef(), tmp)));
+			else if(assign.getLeftOp().getType() instanceof DoubleType) newUnits.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newStaticInvokeExpr(mathAbsDouble.makeRef(), tmp)));
 			else System.err.println("ABS (ABS) errror: unknown type " + ((Local) assign.getLeftOp()).getType().getClass().getCanonicalName());
+			cloned = (AssignStmt) assign.clone();
+			cloned.setRightOp(tmp);
+			newUnits.add(cloned);
 
 			newUnits.add(Jimple.v().newGotoStmt(after));
 			newUnits.add(nop);
@@ -493,18 +500,19 @@ public class MutatorFunctions implements UnifiedInstrumentator {
 			int mutationNumber = ConfigHandler.singleton.getMutationNumber(sClass, meth, "ABS");
 			mutations.add(mutationNumber);
 			newUnits.add(Jimple.v().newIfStmt(Jimple.v().newNeExpr(tmpLocal, IntConstant.v(mutationNumber)), nop));
-			newUnits.add((AssignStmt) assign.clone());
-			if(((Local) assign.getLeftOp()).getType() instanceof IntegerType) newUnits.add(Jimple.v().newAssignStmt(assign.getLeftOp(),
-					Jimple.v().newStaticInvokeExpr(mathAbsInt.makeRef(), assign.getLeftOp())));
-			else if(((Local) assign.getLeftOp()).getType() instanceof LongType) newUnits.add(Jimple.v().newAssignStmt(assign.getLeftOp(),
-					Jimple.v().newStaticInvokeExpr(mathAbsLong.makeRef(), assign.getLeftOp())));
-			else if(((Local) assign.getLeftOp()).getType() instanceof FloatType) newUnits.add(Jimple.v().newAssignStmt(assign.getLeftOp(),
-					Jimple.v().newStaticInvokeExpr(mathAbsFloat.makeRef(), assign.getLeftOp())));
-			else if(((Local) assign.getLeftOp()).getType() instanceof DoubleType) newUnits.add(Jimple.v().newAssignStmt(assign.getLeftOp(),
-					Jimple.v().newStaticInvokeExpr(mathAbsDouble.makeRef(), assign.getLeftOp())));
+			AssignStmt cloned = (AssignStmt) assign.clone();
+			cloned.setLeftOp(tmp);
+			newUnits.add(cloned);
+			if(assign.getLeftOp().getType() instanceof IntegerType) newUnits.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newStaticInvokeExpr(mathAbsInt.makeRef(), tmp)));
+			else if(assign.getLeftOp().getType() instanceof LongType) newUnits.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newStaticInvokeExpr(mathAbsLong.makeRef(), tmp)));
+			else if(assign.getLeftOp().getType() instanceof FloatType) newUnits.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newStaticInvokeExpr(mathAbsFloat.makeRef(), tmp)));
+			else if(assign.getLeftOp().getType() instanceof DoubleType) newUnits.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newStaticInvokeExpr(mathAbsDouble.makeRef(), tmp)));
 			else System.err.println("ABS (NABS) errror: unknown type " + ((Local) assign.getLeftOp()).getType().getClass().getCanonicalName());
+			newUnits.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newNegExpr(tmp)));
+			cloned = (AssignStmt) assign.clone();
+			cloned.setRightOp(tmp);
+			newUnits.add(cloned);
 
-			newUnits.add(Jimple.v().newAssignStmt(assign.getLeftOp(), Jimple.v().newNegExpr(assign.getLeftOp())));
 			newUnits.add(Jimple.v().newGotoStmt(after));
 			newUnits.add(nop);
 			nop.addTag(new StringTag("end of ABS (nabs)"));
@@ -518,12 +526,17 @@ public class MutatorFunctions implements UnifiedInstrumentator {
 			int mutationNumber = ConfigHandler.singleton.getMutationNumber(sClass, meth, "ABS");
 			mutations.add(mutationNumber);
 			newUnits.add(Jimple.v().newIfStmt(Jimple.v().newNeExpr(tmpLocal, IntConstant.v(mutationNumber)), nop));
-			newUnits.add((AssignStmt) assign.clone());
-			if(((Local) assign.getLeftOp()).getType() instanceof IntegerType) newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newStaticInvokeExpr(absZpushInt.makeRef(), assign.getLeftOp())));
-			else if(((Local) assign.getLeftOp()).getType() instanceof LongType) newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newStaticInvokeExpr(absZpushLong.makeRef(), assign.getLeftOp())));
-			else if(((Local) assign.getLeftOp()).getType() instanceof FloatType) newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newStaticInvokeExpr(absZpushFloat.makeRef(), assign.getLeftOp())));
-			else if(((Local) assign.getLeftOp()).getType() instanceof DoubleType) newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newStaticInvokeExpr(absZpushDouble.makeRef(), assign.getLeftOp())));
+			AssignStmt cloned = (AssignStmt) assign.clone();
+			cloned.setLeftOp(tmp);
+			newUnits.add(cloned);
+			if(assign.getLeftOp().getType() instanceof IntegerType) newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newStaticInvokeExpr(absZpushInt.makeRef(), tmp)));
+			else if(assign.getLeftOp().getType() instanceof LongType) newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newStaticInvokeExpr(absZpushLong.makeRef(), tmp)));
+			else if(assign.getLeftOp().getType() instanceof FloatType) newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newStaticInvokeExpr(absZpushFloat.makeRef(), tmp)));
+			else if(assign.getLeftOp().getType() instanceof DoubleType) newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newStaticInvokeExpr(absZpushDouble.makeRef(), tmp)));
 			else System.err.println("ABS (ZPUSH) errror: unknown type " + ((Local) assign.getLeftOp()).getType().getClass().getCanonicalName());
+			cloned = (AssignStmt) assign.clone();
+			cloned.setRightOp(tmp);
+			newUnits.add(cloned);
 
 			newUnits.add(Jimple.v().newGotoStmt(after));
 			newUnits.add(nop);
@@ -837,38 +850,36 @@ public class MutatorFunctions implements UnifiedInstrumentator {
 		}
 	}
 
-	private void uoi(SootClass sClass, SootMethod meth, Unit oldUnit, Set<Integer> mutations, Chain<Unit> newUnits, Local tmpLocal, Map<Type, Local> tempLocals, Unit after) {
+	private void uoi(SootClass sClass, SootMethod meth, Unit oldUnit, Set<Integer> mutations, Chain<Unit> newUnits, Local tmpLocal, Unit after) {
 		// cloning, so it is possible to modify it directly!
 		Unit unit = (Unit) oldUnit.clone();
 
 		// extracts the value
-		if(unit instanceof AssignStmt) uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, tempLocals, after, ((AssignStmt) unit).getRightOpBox(), ((AssignStmt) unit).getLeftOp().getType());
-		else if(unit instanceof IfStmt) uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, tempLocals, after, ((IfStmt) unit).getConditionBox(), BooleanType.v());
-		else if(unit instanceof InvokeStmt) uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, tempLocals, after, ((InvokeStmt) unit).getInvokeExprBox(), VoidType.v());
-		else if(unit instanceof LookupSwitchStmt) uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, tempLocals, after, ((LookupSwitchStmt) unit).getKeyBox(), ((LookupSwitchStmt) unit).getKey()
-				.getType());
-		else if(unit instanceof TableSwitchStmt) uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, tempLocals, after, ((TableSwitchStmt) unit).getKeyBox(), ((TableSwitchStmt) unit).getKey()
-				.getType());
-		else if(unit instanceof ReturnStmt) uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, tempLocals, null, ((ReturnStmt) unit).getOpBox(), meth.getReturnType());
+		if(unit instanceof AssignStmt) uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, after, ((AssignStmt) unit).getRightOpBox(), ((AssignStmt) unit).getLeftOp().getType());
+		else if(unit instanceof IfStmt) uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, after, ((IfStmt) unit).getConditionBox(), BooleanType.v());
+		else if(unit instanceof InvokeStmt) uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, after, ((InvokeStmt) unit).getInvokeExprBox(), VoidType.v());
+		else if(unit instanceof LookupSwitchStmt) uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, after, ((LookupSwitchStmt) unit).getKeyBox(), ((LookupSwitchStmt) unit).getKey().getType());
+		else if(unit instanceof TableSwitchStmt) uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, after, ((TableSwitchStmt) unit).getKeyBox(), ((TableSwitchStmt) unit).getKey().getType());
+		else if(unit instanceof ReturnStmt) uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, null, ((ReturnStmt) unit).getOpBox(), meth.getReturnType());
 		else return;
 	}
 
-	private void uoi(SootClass sClass, SootMethod meth, Unit unit, Set<Integer> mutations, Chain<Unit> newUnits, Local tmpLocal, Map<Type, Local> tempLocals, Unit after, ValueBox valueBox, Type valueType) {
+	private void uoi(SootClass sClass, SootMethod meth, Unit unit, Set<Integer> mutations, Chain<Unit> newUnits, Local tmpLocal, Unit after, ValueBox valueBox, Type valueType) {
 		Value value = valueBox.getValue();
 
-		if(value instanceof UnopExpr) uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, tempLocals, after, ((UnopExpr) value).getOpBox(), valueType);
-		else if(value instanceof CastExpr) uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, tempLocals, after, ((CastExpr) value).getOpBox(), ((CastExpr) value).getOp().getType());
+		if(value instanceof UnopExpr) uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, after, ((UnopExpr) value).getOpBox(), valueType);
+		else if(value instanceof CastExpr) uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, after, ((CastExpr) value).getOpBox(), ((CastExpr) value).getOp().getType());
 		else if(value instanceof ConditionExpr) {
-			uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, tempLocals, after, ((ConditionExpr) value).getOp1Box(), ((ConditionExpr) value).getOp1().getType());
-			uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, tempLocals, after, ((ConditionExpr) value).getOp2Box(), ((ConditionExpr) value).getOp2().getType());
+			uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, after, ((ConditionExpr) value).getOp1Box(), ((ConditionExpr) value).getOp1().getType());
+			uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, after, ((ConditionExpr) value).getOp2Box(), ((ConditionExpr) value).getOp2().getType());
 		} else if(value instanceof BinopExpr) {
-			uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, tempLocals, after, ((BinopExpr) value).getOp1Box(), valueType);
-			uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, tempLocals, after, ((BinopExpr) value).getOp2Box(), valueType);
+			uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, after, ((BinopExpr) value).getOp1Box(), valueType);
+			uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, after, ((BinopExpr) value).getOp2Box(), valueType);
 		} else if(value instanceof InvokeExpr) {
 			InvokeExpr invokeExpr = (InvokeExpr) value;
 			SootMethod invokedMethod = invokeExpr.getMethod();
 			for(int i = 0; i < invokeExpr.getArgCount(); i++)
-				uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, tempLocals, after, invokeExpr.getArgBox(i), invokedMethod.getParameterType(i));
+				uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, after, invokeExpr.getArgBox(i), invokedMethod.getParameterType(i));
 		} else if(value instanceof NumericConstant) {
 			NumericConstant constant = (NumericConstant) value;
 
@@ -884,27 +895,30 @@ public class MutatorFunctions implements UnifiedInstrumentator {
 				newUnits.add(nop);
 				nop.addTag(new StringTag("end of UOI"));
 			}
-		} else if(value instanceof Local) generateUOIMutants(sClass, meth, unit, mutations, newUnits, tmpLocal, tempLocals, after, valueBox);
+		} else if(value instanceof Local)
+			generateUOIMutants(sClass, meth, unit, mutations, newUnits, tmpLocal, after, valueBox);
 		else if(value instanceof ConcreteRef) {
 
-			final Local tmp;
-			if(valueType instanceof BooleanType) tmp = tempLocals.get(BooleanType.v());
-			else if(valueType instanceof ByteType) tmp = tempLocals.get(ByteType.v());
-			else if(valueType instanceof IntegerType) tmp = tempLocals.get(IntType.v());
-			else if(valueType instanceof LongType) tmp = tempLocals.get(LongType.v());
-			else if(valueType instanceof FloatType) tmp = tempLocals.get(FloatType.v());
-			else if(valueType instanceof DoubleType) tmp = tempLocals.get(DoubleType.v());
-			else return;
+			if(value instanceof ArrayRef)
+				uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, after, ((ArrayRef) value).getIndexBox(), ((ArrayRef) value).getIndex().getType());
+
+			final Local tmp = tempLocals.get(valueType);
+			if(tmp == null) return;
 
 			NopStmt nop = Jimple.v().newNopStmt();
 			newUnits.add(nop);
-			nop.addTag(new StringTag("preparing field access (UOI mutation)"));
+			nop.addTag(new StringTag("preparing ref access (UOI mutation)"));
 			newUnits.add(Jimple.v().newAssignStmt(tmp, (Value) value.clone()));
 			valueBox.setValue(tmp);
 
-			generateUOIMutants(sClass, meth, unit, mutations, newUnits, tmpLocal, tempLocals, after, valueBox);
+			generateUOIMutants(sClass, meth, unit, mutations, newUnits, tmpLocal, after, valueBox);
 
 			valueBox.setValue(value);
+		} else if(value instanceof NewArrayExpr) {
+
+			NewArrayExpr newArrayExpr = (NewArrayExpr) value;
+			uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, after, newArrayExpr.getSizeBox(), newArrayExpr.getSize().getType());
+
 		} else if(!(value instanceof StringConstant || value instanceof NewExpr || value instanceof NullConstant || value instanceof InstanceOfExpr)) {
 			System.err.println("unexpected value: " + value + " (" + value.getClass().getCanonicalName() + ") in unit: " + unit);
 		}
@@ -912,7 +926,7 @@ public class MutatorFunctions implements UnifiedInstrumentator {
 		valueBox.setValue(value);
 	}
 
-	private void generateUOIMutants(SootClass sClass, SootMethod meth, Unit unit, Set<Integer> mutations, Chain<Unit> newUnits, Local tmpLocal, Map<Type, Local> tempLocals, Unit after, ValueBox valueBox) {
+	private void generateUOIMutants(SootClass sClass, SootMethod meth, Unit unit, Set<Integer> mutations, Chain<Unit> newUnits, Local tmpLocal, Unit after, ValueBox valueBox) {
 		Value value = valueBox.getValue();
 		Type valueType = value.getType();
 
@@ -1048,22 +1062,34 @@ public class MutatorFunctions implements UnifiedInstrumentator {
 
 		if(constant instanceof IntConstant) {
 			IntConstant intConst = (IntConstant) constant;
-			return new NumericConstant[] { IntConstant.v(-1 * intConst.value), IntConstant.v(intConst.value + 1), IntConstant.v(intConst.value - 1), IntConstant.v(0), };
+			if(intConst.value == 0)
+				return new NumericConstant[] { IntConstant.v(-1 * intConst.value), IntConstant.v(intConst.value + 1), IntConstant.v(intConst.value - 1)};
+			else
+				return new NumericConstant[] { IntConstant.v(-1 * intConst.value), IntConstant.v(intConst.value + 1), IntConstant.v(intConst.value - 1), IntConstant.v(0)};
 		}
 
 		if(constant instanceof LongConstant) {
 			LongConstant longConst = (LongConstant) constant;
-			return new NumericConstant[] { LongConstant.v(-1 * longConst.value), LongConstant.v(longConst.value + 1), LongConstant.v(longConst.value - 1), LongConstant.v(0) };
+			if(longConst.value == 0)
+				return new NumericConstant[] { LongConstant.v(-1 * longConst.value), LongConstant.v(longConst.value + 1), LongConstant.v(longConst.value - 1)};
+			else
+				return new NumericConstant[] { LongConstant.v(-1 * longConst.value), LongConstant.v(longConst.value + 1), LongConstant.v(longConst.value - 1), LongConstant.v(0) };
 		}
 
 		if(constant instanceof FloatConstant) {
 			FloatConstant floatConst = (FloatConstant) constant;
-			return new NumericConstant[] { FloatConstant.v(-1 * floatConst.value), FloatConstant.v(floatConst.value + 1), FloatConstant.v(floatConst.value - 1), FloatConstant.v(0) };
+			if(floatConst.value == 0)
+				return new NumericConstant[] { FloatConstant.v(-1 * floatConst.value), FloatConstant.v(floatConst.value + 1), FloatConstant.v(floatConst.value - 1), FloatConstant.v(Float.MIN_NORMAL) };
+			else
+				return new NumericConstant[] { FloatConstant.v(-1 * floatConst.value), FloatConstant.v(floatConst.value + 1), FloatConstant.v(floatConst.value - 1), FloatConstant.v(0) };
 		}
 
 		if(constant instanceof DoubleConstant) {
 			DoubleConstant doubleConst = (DoubleConstant) constant;
-			return new NumericConstant[] { DoubleConstant.v(-1 * doubleConst.value), DoubleConstant.v(doubleConst.value + 1), DoubleConstant.v(doubleConst.value - 1), DoubleConstant.v(0) };
+			if(doubleConst.value == 0)
+				return new NumericConstant[] { DoubleConstant.v(-1 * doubleConst.value), DoubleConstant.v(doubleConst.value + 1), DoubleConstant.v(doubleConst.value - 1), DoubleConstant.v(Double.MIN_NORMAL) };
+			else
+				return new NumericConstant[] { DoubleConstant.v(-1 * doubleConst.value), DoubleConstant.v(doubleConst.value + 1), DoubleConstant.v(doubleConst.value - 1), DoubleConstant.v(0) };
 		}
 
 		System.err.println("unknown type of constant: " + constant + " (" + constant.getClass().getCanonicalName() + ")");

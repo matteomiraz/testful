@@ -19,7 +19,7 @@ import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
 import testful.coverage.whiteBox.AnalysisWhiteBox;
-import testful.model.OperationPrimitiveResult;
+import testful.model.OperationResult;
 import testful.model.OperationStatus;
 import testful.model.Test;
 import testful.model.TestCoverage;
@@ -79,7 +79,7 @@ public class TestCoverageReporter extends TestReader {
 	protected void read(String fileName, Test test) {
 		try {
 			OperationStatus.remove(test);
-			OperationPrimitiveResult.remove(test);
+			OperationResult.remove(test);
 
 			TrackerDatum[] data= Utils.readData(AnalysisWhiteBox.read(config.getDirInstrumented(), test.getCluster().getCut().getClassName()));
 

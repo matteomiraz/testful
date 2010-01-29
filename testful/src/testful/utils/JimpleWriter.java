@@ -5,7 +5,6 @@ import java.util.Map;
 import soot.Body;
 import soot.BodyTransformer;
 import soot.Local;
-import soot.SootField;
 import soot.SootMethod;
 import soot.Trap;
 import soot.Unit;
@@ -34,13 +33,7 @@ public class JimpleWriter extends BodyTransformer {
 		final SootMethod method = body.getMethod();
 
 		System.out.println();
-		System.out.println("Class: " + method.getDeclaringClass().getName());
-		for(SootField f : method.getDeclaringClass().getFields()) {
-			if(f.isFinal() && !f.isStatic()) System.out.println(" final " + f.getName());
-		}
-
-		System.out.println();
-		System.out.println("Method: " + method.getBytecodeSignature());
+		System.out.println(method.getDeclaringClass().getName() + " :: " + method.getBytecodeSignature());
 
 		System.out.println("--- locals ---");
 		for(Local l : body.getLocals())
@@ -72,7 +65,7 @@ public class JimpleWriter extends BodyTransformer {
 				for(int v = 0; v < sw.getTargetCount(); v++)
 					System.out.println("      case " + sw.getLookupValue(v) + ": goto " + findIndex(units, sw.getTarget(v)));
 				System.out.println("      default: goto " + findIndex(units, sw.getDefaultTarget()));
-			} else System.out.println(units[i].toString() + " " + units[i].getClass().getCanonicalName());
+			} else System.out.println(units[i].toString());
 
 			if(units[i].hasTag("StringTag")) {
 				String info = ((StringTag) units[i].getTag("StringTag")).getInfo();

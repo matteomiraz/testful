@@ -16,7 +16,6 @@ import soot.Unit;
 import soot.jimple.GotoStmt;
 import soot.jimple.IfStmt;
 import soot.jimple.IntConstant;
-import soot.jimple.InvokeStmt;
 import soot.jimple.Jimple;
 import soot.jimple.NopStmt;
 import soot.jimple.Stmt;
@@ -82,14 +81,14 @@ public class ExecutionStopper implements UnifiedInstrumentator {
 		if(op instanceof GotoStmt) target = ((GotoStmt) op).getTarget();
 		else if(op instanceof IfStmt) target = ((IfStmt) op).getTarget();
 
-		if((op instanceof InvokeStmt) || (target != null && previous.contains(target))) {
+		if(op.containsInvokeExpr() || (target != null && previous.contains(target))) {
 			NopStmt nop = Jimple.v().newNopStmt();
-			newUnits.insertBefore(Jimple.v().newAssignStmt(tmp, Jimple.v().newStaticFieldRef(stopField.makeRef())), op);
-			newUnits.insertBefore(Jimple.v().newIfStmt(Jimple.v().newEqExpr(tmp, IntConstant.v(0)), nop), op);
-			newUnits.insertBefore(Jimple.v().newAssignStmt(exc, Jimple.v().newNewExpr(stoppedExceptionType)), op);
-			newUnits.insertBefore(Jimple.v().newInvokeStmt(Jimple.v().newSpecialInvokeExpr(exc, stoppedExceptionInit)), op);
-			newUnits.insertBefore(Jimple.v().newThrowStmt(exc), op);
-			newUnits.insertBefore(nop, op);
+			newUnits.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newStaticFieldRef(stopField.makeRef())));
+			newUnits.add(Jimple.v().newIfStmt(Jimple.v().newEqExpr(tmp, IntConstant.v(0)), nop));
+			newUnits.add(Jimple.v().newAssignStmt(exc, Jimple.v().newNewExpr(stoppedExceptionType)));
+			newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newSpecialInvokeExpr(exc, stoppedExceptionInit)));
+			newUnits.add(Jimple.v().newThrowStmt(exc));
+			newUnits.add(nop);
 		}
 	}
 

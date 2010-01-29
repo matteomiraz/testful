@@ -146,10 +146,6 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		newBody.getLocals().add(localTmpDouble2);
 
 		analyzer = new Analyzer(newUnits, clazz, newBody, contractMethod, newBody.getTraps(), oldBody.getTraps());
-
-		//TBD: gli array!!!!
-
-		//TODO: configurazioni ( defs e nulls)
 	}
 
 	@Override

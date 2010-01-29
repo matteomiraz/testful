@@ -53,9 +53,9 @@ public class Launcher {
 		ConfigHandler.track = config.isTrack();
 
 		Instrumenter.run(config, config.getGenMutant(), "mutant",
+				ExecutionStopper.singleton,
 				new MutatorFunctions(config),
-				BugFinder.singleton,
-				ExecutionStopper.singleton
+				BugFinder.singleton
 		);
 	}
 
@@ -65,7 +65,7 @@ public class Launcher {
 		try {
 			IRunner exec = RunnerPool.getRunnerPool();
 
-			ClassFinder finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented()));
+			ClassFinder finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
 
 			MutationRunner mutationRunner = new MutationRunner(exec, finder, config.isReload());
 			mutationRunner.read(config.getArguments());
