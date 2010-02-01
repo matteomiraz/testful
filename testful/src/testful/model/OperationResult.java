@@ -83,9 +83,7 @@ public class OperationResult extends OperationInformation {
 								if(res instanceof Serializable)
 									observers.put(m.getName(), (Serializable) res);
 							} catch (Throwable e) {
-								if(e.getCause() instanceof FaultyExecutionException) throw (FaultyExecutionException) e.getCause();
-
-								Logger.getLogger("testful.model").log(Level.WARNING, "OperationResult: error while inspecting " + o + " (" + type + ") via " + m.getName() + ": " + e, e);
+								Logger.getLogger("testful.model").log(Level.FINEST, "OperationResult: error while inspecting " + o + " (" + type + ") via " + m.getName() + ": " + e, e);
 							}
 						}
 					}

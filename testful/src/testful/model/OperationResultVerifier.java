@@ -1,7 +1,10 @@
 package testful.model;
 
+import java.util.logging.Logger;
+
 
 public class OperationResultVerifier extends OperationResult {
+	private static Logger logger = Logger.getLogger("testful.executor.OperationResultVerifier");
 	private static final long serialVersionUID = -1087900671239338703L;
 
 	public OperationResultVerifier(OperationResult op) {
@@ -12,12 +15,16 @@ public class OperationResultVerifier extends OperationResult {
 	@Override
 	public void setValue(Object object, Object result, TestCluster cluster) throws FaultyExecutionException {
 		Value newObject = new Value(object, cluster);
-		if(!newObject.equals(this.object))
+		if(!newObject.equals(this.object)) {
+			logger.finer("Failing tests: expected" + this.object + ", got: " + newObject);
 			throw new OperationResultVerifierException(this.object, newObject);
+		}
 
 		Value newResult = new Value(result, cluster);
-		if(!newResult.equals(this.result))
+		if(!newResult.equals(this.result)) {
+			logger.finer("Failing tests: expected" + this.result + ", got: " + newResult);
 			throw new OperationResultVerifierException(this.result, newResult);
+		}
 	}
 
 	public static void insertOperationResultVerifier(Operation[] ops) {

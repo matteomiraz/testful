@@ -128,6 +128,8 @@ public class ReflectionExecutor implements Executor {
 				for(int i = 0; i < repository.length; i++)
 					repository[i] = null;
 
+				logger.log(Level.FINER, "Fault: " + e, e);
+
 				if(stopOnBug) break;
 			}
 		}

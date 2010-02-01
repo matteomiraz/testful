@@ -86,20 +86,28 @@ public class Utils {
 		// nested call..
 		if(exc instanceof FaultyExecutionException) throw (FaultyExecutionException) exc;
 
-		// it's a precondition violation: throwing the exception
-		if(exc instanceof JMLEntryPreconditionError) throw (JMLEntryPreconditionError) exc;
+		if(hasContracts) {
 
-		// it's a user-defined exception in a class with contracts: it's ok!
-		if(hasContracts && !(exc instanceof JMLAssertionError)) throw exc;
+			// it's a precondition violation: throwing the exception
+			if(exc instanceof JMLEntryPreconditionError) throw (JMLEntryPreconditionError) exc;
 
-		FaultyExecutionException fault;
-		if(exc instanceof JMLInternalPreconditionError) fault = new InternalPreConditionViolationException(exc.getMessage(), exc);
-		else if(exc instanceof JMLPostconditionError) fault = new PostConditionViolationException(exc.getMessage(), exc);
-		else if(exc instanceof JMLInvariantError) fault = new InvariantViolationException(exc.getMessage(), exc);
-		else if(exc instanceof JMLAssertionError) fault = new ExceptionRaisedException(exc.getMessage(), exc);
-		else fault = new ExceptionRaisedException(exc);
+			// it's a user-defined exception in a class with contracts: it's ok!
+			if(!(exc instanceof JMLAssertionError)) throw exc;
 
-		throw fault;
+			FaultyExecutionException fault;
+			if(exc instanceof JMLInternalPreconditionError) fault = new InternalPreConditionViolationException(exc.getMessage(), exc);
+			else if(exc instanceof JMLPostconditionError) fault = new PostConditionViolationException(exc.getMessage(), exc);
+			else if(exc instanceof JMLInvariantError) fault = new InvariantViolationException(exc.getMessage(), exc);
+			else if(exc instanceof JMLAssertionError) fault = new ExceptionRaisedException(exc.getMessage(), exc);
+			else fault = new ExceptionRaisedException(exc);
+
+			throw fault;
+		} else {
+
+			if(exc instanceof NullPointerException) throw new ExceptionRaisedException(exc);
+
+			throw exc;
+		}
 	}
 
 }

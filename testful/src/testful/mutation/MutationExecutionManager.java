@@ -4,6 +4,8 @@ import java.lang.reflect.Field;
 import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import testful.TestfulException;
 import testful.coverage.TrackerDatum;
@@ -29,6 +31,8 @@ import testful.utils.Cloner;
  *
  */
 public class MutationExecutionManager extends ExecutionManager<MutationCoverage> {
+
+	private static Logger logger = Logger.getLogger("testful.mutation");
 
 	public static Context<MutationCoverage, MutationExecutionManager> getContext(ClassFinder finder, Test test, TrackerDatum ... data) {
 		Executor executor = new ReflectionExecutor(test);
@@ -90,6 +94,7 @@ public class MutationExecutionManager extends ExecutionManager<MutationCoverage>
 	protected void reallyExecute(boolean stopOnBug)  {
 
 		for(String className : classes) {
+			logger.fine("Applying mutation analysis on " + className);
 			MutationCoverageSingle singleCov = executeMutantsOnSingleClass(stopOnBug, className);
 
 			if(singleCov != null)
@@ -112,17 +117,20 @@ public class MutationExecutionManager extends ExecutionManager<MutationCoverage>
 			mutationField.set(null, 0);
 			TestStoppedException.stop = false;
 			super.reallyExecute(stopOnBug);
+			logger.fine("Run test (" + test.length + ") on the original class " + className + ": " + executionTime);
 
 			if(executionTime >= 0) {
 				// re-run the test, tracking operation status
 				OperationStatus.insert(test);
 				OperationResult.insert(test);
 				super.reallyExecute(stopOnBug);
+				logger.fine("Tracked operation status on " + className);
 
 				// re-run the test, verifying operation status
 				OperationStatusVerifier.insertOperationStatusVerifier(test);
 				OperationResultVerifier.insertOperationResultVerifier(test);
 				super.reallyExecute(stopOnBug);
+				logger.fine("Verified operation status on " + className);
 			}
 
 			if(executionTime < 0) // the class contains some errors, revealed by the test
@@ -136,8 +144,8 @@ public class MutationExecutionManager extends ExecutionManager<MutationCoverage>
 			mutationField.set(null, -1);
 			TestStoppedException.stop = false;
 			super.reallyExecute(stopOnBug);
-
 			final BitSet executedMutants = (BitSet) executedMutantsField.get(null);
+			logger.fine("Got live mutants on " + className + ": " + executedMutants.cardinality() + "/" + maxMutations);
 
 			BitSet notExecutedMutants = new BitSet();
 			if(executedMutants == null) notExecutedMutants.set(1, maxMutations + 1);
@@ -148,25 +156,38 @@ public class MutationExecutionManager extends ExecutionManager<MutationCoverage>
 
 			coverage = new MutationCoverageSingle(notExecutedMutants);
 			final long maxExecutionTime = 10 * (25 + originalExecutionTime) + 250;
+			logger.fine("Set maximum execution time to " + maxExecutionTime + " (" + originalExecutionTime + ")");
 
 			for(int mutation = executedMutants.nextSetBit(0); mutation >= 0; mutation = executedMutants.nextSetBit(mutation + 1)) {
+				try {
+					TestfulClassLoader loader = classLoader;
+					if(!recycleClassLoader) loader = loader.getNew();
+					trackerData[0] = new MutationExecutionData(className, mutation, maxExecutionTime);
+					ExecutionManager<Long> em = new Context<Long, MutationExecutionManagerSingle>(MutationExecutionManagerSingle.class, null, newExecutorSerGz, Cloner.serialize(trackerData, true)).getExecManager(loader);
 
-				TestfulClassLoader loader = classLoader;
-				if(!recycleClassLoader) loader = loader.getNew();
-				trackerData[0] = new MutationExecutionData(className, mutation, maxExecutionTime);
-				ExecutionManager<Long> em = new Context<Long, MutationExecutionManagerSingle>(MutationExecutionManagerSingle.class, null, newExecutorSerGz, Cloner.serialize(trackerData, true)).getExecManager(loader);
+					long executionTime = em.execute(stopOnBug);
+					if(executionTime < 0) {
+						if(executionTime != MutationExecutionManagerSingle.ERROR_EXECUTION) {
+							coverage.setKilled(mutation);
+							logger.fine("Killed mutant " + mutation);
+						} else {
+							logger.fine("Error while executing mutant " + mutation);
+						}
+					} else {
+						coverage.setAlive(mutation, executionTime);
+						logger.fine("Alive mutant " + mutation);
+					}
 
-				long executionTime = em.execute(stopOnBug);
-				if(executionTime < 0) {
-					if(executionTime != MutationExecutionManagerSingle.ERROR_EXECUTION) coverage.setKilled(mutation);
-				} else coverage.setAlive(mutation, executionTime);
+				} catch(Exception e) {
+					logger.log(Level.WARNING, "Error executing mutant " + mutation + ": " + e.getMessage(), e);
+				}
+
 			}
 
 			return coverage;
 
 		} catch(Exception e) {
-			System.err.println("Error executing the mutant: " + e);
-			e.printStackTrace();
+			logger.log(Level.WARNING, "Error executing the mutant: " + e.getMessage(), e);
 			return null;
 		}
 	}

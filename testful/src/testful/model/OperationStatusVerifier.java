@@ -1,6 +1,9 @@
 package testful.model;
 
+import java.util.logging.Logger;
+
 public class OperationStatusVerifier extends OperationStatus {
+	private static Logger logger = Logger.getLogger("testful.executor.OperationStatusVerifier");
 
 	private static final long serialVersionUID = 3967964654671014414L;
 
@@ -11,26 +14,49 @@ public class OperationStatusVerifier extends OperationStatus {
 
 	@Override
 	public void setPreconditionError() throws OperationVerifierException {
-		if(status != Status.PRECONDITION_ERROR) throw new OperationVerifierException(status, Status.PRECONDITION_ERROR);
+		if(status != Status.PRECONDITION_ERROR) {
+			logger.finer("Failing tests: expected" + status + ", got: " + Status.PRECONDITION_ERROR);
+			throw new OperationVerifierException(status, Status.PRECONDITION_ERROR);
+		}
 	}
 
 	@Override
 	public void setPostconditionError() {
-		if(status != Status.POSTCONDITION_ERROR) throw new OperationVerifierException(status, Status.POSTCONDITION_ERROR);
+		if(status != Status.POSTCONDITION_ERROR) {
+			logger.finer("Failing tests: expected" + status + ", got: " + Status.POSTCONDITION_ERROR);
+			throw new OperationVerifierException(status, Status.POSTCONDITION_ERROR);
+		}
 	}
 
 	@Override
 	public void setSuccessful() {
-		if(status != Status.SUCCESSFUL) throw new OperationVerifierException(status, Status.SUCCESSFUL);
+		if(status != Status.SUCCESSFUL) {
+			logger.finer("Failing tests: expected" + status + ", got: " + Status.SUCCESSFUL);
+			throw new OperationVerifierException(status, Status.SUCCESSFUL);
+		}
 	}
 
 	@Override
 	public void setExceptional(Throwable exc) {
-		if(status != Status.EXCEPTIONAL) throw new OperationVerifierException(status, Status.EXCEPTIONAL);
+		if(status != Status.EXCEPTIONAL) {
+			logger.finer("Failing tests: expected" + status + ", got: " + Status.EXCEPTIONAL);
+			throw new OperationVerifierException(status, Status.EXCEPTIONAL);
+		}
 
-		Throwable thisExc = this.exc;
-		if(!thisExc.getClass().equals(exc.getClass()) || !thisExc.getMessage().equals(exc.getMessage()))
-			throw new OperationVerifierException(thisExc, exc);
+		if(this.exc == null && exc == null) return;
+
+		if(this.exc == null || exc == null) {
+			logger.finer("Failing tests: expected exception " + this.exc + ", got: " + exc);
+			throw new OperationVerifierException(this.exc, exc);
+		}
+
+		if(!this.exc.getClass().equals(exc.getClass()) ||
+				(this.exc.getMessage() == null && exc.getMessage() != null) ||
+				(this.exc.getMessage() != null && !this.exc.getMessage().equals(exc.getMessage()))) {
+			logger.finer("Failing tests: expected exception " + this.exc.getClass().getCanonicalName() + " (" + this.exc.getMessage() + ")"
+					+ " got: " + exc.getClass().getCanonicalName() + " (" + exc.getMessage() + ")");
+			throw new OperationVerifierException(this.exc, exc);
+		}
 	}
 
 	@Override
