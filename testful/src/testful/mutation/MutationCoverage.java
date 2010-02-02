@@ -48,6 +48,14 @@ public class MutationCoverage implements CoverageInformation {
 		return qTot / covs.size();
 	}
 
+	public int getKilled() {
+		int killed = 0;
+		for(MutationCoverageSingle cov : covs.values())
+			killed += cov.getKilledNum();
+
+		return killed;
+	}
+
 	@Override
 	public boolean contains(CoverageInformation info) {
 		if(info instanceof MutationCoverage) {

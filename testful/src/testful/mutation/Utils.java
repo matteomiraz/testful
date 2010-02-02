@@ -74,7 +74,7 @@ public class Utils {
 	}
 
 	/**
-	 * Converts the exception into a testful exception
+	 * Converts the exception into a testful exception.
 	 * 
 	 * @param exc the exception thrown
 	 * @param hasContracts true if the class has contracts
@@ -83,31 +83,21 @@ public class Utils {
 	 */
 	public static void processException(Throwable exc, boolean hasContracts) throws Throwable {
 
+		if(!hasContracts) return;
+
 		// nested call..
 		if(exc instanceof FaultyExecutionException) throw (FaultyExecutionException) exc;
 
-		if(hasContracts) {
+		Throwable fault;
+		if(!(exc instanceof JMLAssertionError)) fault = exc; // it's a user-defined exception in a class with contracts: it's ok!
+		else if(exc instanceof JMLEntryPreconditionError) fault = exc; // it's a precondition violation: throwing the exception
+		else  if(exc instanceof JMLInternalPreconditionError) fault = new InternalPreConditionViolationException(exc.getMessage(), exc);
+		else if(exc instanceof JMLPostconditionError) fault = new PostConditionViolationException(exc.getMessage(), exc);
+		else if(exc instanceof JMLInvariantError) fault = new InvariantViolationException(exc.getMessage(), exc);
+		else if(exc instanceof JMLAssertionError) fault = new ExceptionRaisedException(exc.getMessage(), exc);
+		else fault = new ExceptionRaisedException(exc);
 
-			// it's a precondition violation: throwing the exception
-			if(exc instanceof JMLEntryPreconditionError) throw (JMLEntryPreconditionError) exc;
-
-			// it's a user-defined exception in a class with contracts: it's ok!
-			if(!(exc instanceof JMLAssertionError)) throw exc;
-
-			FaultyExecutionException fault;
-			if(exc instanceof JMLInternalPreconditionError) fault = new InternalPreConditionViolationException(exc.getMessage(), exc);
-			else if(exc instanceof JMLPostconditionError) fault = new PostConditionViolationException(exc.getMessage(), exc);
-			else if(exc instanceof JMLInvariantError) fault = new InvariantViolationException(exc.getMessage(), exc);
-			else if(exc instanceof JMLAssertionError) fault = new ExceptionRaisedException(exc.getMessage(), exc);
-			else fault = new ExceptionRaisedException(exc);
-
-			throw fault;
-		} else {
-
-			if(exc instanceof NullPointerException) throw new ExceptionRaisedException(exc);
-
-			throw exc;
-		}
+		throw fault;
 	}
 
 }

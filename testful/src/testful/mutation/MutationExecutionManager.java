@@ -11,6 +11,7 @@ import testful.TestfulException;
 import testful.coverage.TrackerDatum;
 import testful.model.Operation;
 import testful.model.OperationResult;
+import testful.model.OperationResultPruner;
 import testful.model.OperationResultVerifier;
 import testful.model.OperationStatus;
 import testful.model.OperationStatusVerifier;
@@ -119,12 +120,16 @@ public class MutationExecutionManager extends ExecutionManager<MutationCoverage>
 			super.reallyExecute(stopOnBug);
 			logger.fine("Run test (" + test.length + ") on the original class " + className + ": " + executionTime);
 
-			if(executionTime >= 0) {
+			if(faults == 0) {
 				// re-run the test, tracking operation status
 				OperationStatus.insert(test);
 				OperationResult.insert(test);
 				super.reallyExecute(stopOnBug);
 				logger.fine("Tracked operation status on " + className);
+
+				OperationResultPruner.insertOperationResultPruner(test);
+				super.reallyExecute(stopOnBug);
+				logger.fine("Pruned operation status on " + className);
 
 				// re-run the test, verifying operation status
 				OperationStatusVerifier.insertOperationStatusVerifier(test);
@@ -133,10 +138,11 @@ public class MutationExecutionManager extends ExecutionManager<MutationCoverage>
 				logger.fine("Verified operation status on " + className);
 			}
 
-			if(executionTime < 0) // the class contains some errors, revealed by the test
+			if(faults > 0) {
+				// the class contains some errors, revealed by the test
+				logger.warning("The test reveals some errors in the class " + className + ": skipping mutation analysis!");
 				return null;
-
-			final byte[] newExecutorSerGz = Cloner.serializeWithCache(new ReflectionExecutor(new Test(reflectionExecutor.getCluster(), reflectionExecutor.getReferenceFactory(), test)), true);
+			}
 
 			final long originalExecutionTime = executionTime;
 
@@ -155,7 +161,7 @@ public class MutationExecutionManager extends ExecutionManager<MutationCoverage>
 			}
 
 			coverage = new MutationCoverageSingle(notExecutedMutants);
-			final long maxExecutionTime = 10 * (25 + originalExecutionTime) + 250;
+			final long maxExecutionTime = 5 * (originalExecutionTime) + 500;
 			logger.fine("Set maximum execution time to " + maxExecutionTime + " (" + originalExecutionTime + ")");
 
 			for(int mutation = executedMutants.nextSetBit(0); mutation >= 0; mutation = executedMutants.nextSetBit(mutation + 1)) {
@@ -163,7 +169,8 @@ public class MutationExecutionManager extends ExecutionManager<MutationCoverage>
 					TestfulClassLoader loader = classLoader;
 					if(!recycleClassLoader) loader = loader.getNew();
 					trackerData[0] = new MutationExecutionData(className, mutation, maxExecutionTime);
-					ExecutionManager<Long> em = new Context<Long, MutationExecutionManagerSingle>(MutationExecutionManagerSingle.class, null, newExecutorSerGz, Cloner.serialize(trackerData, true)).getExecManager(loader);
+
+					MutationExecutionManagerSingle em = new MutationExecutionManagerSingle(executor, trackerData);
 
 					long executionTime = em.execute(stopOnBug);
 					if(executionTime < 0) {

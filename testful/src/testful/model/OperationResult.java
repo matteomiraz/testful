@@ -1,13 +1,18 @@
 package testful.model;
 
 import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.TestFul;
+import testful.utils.Cloner;
 
 public class OperationResult extends OperationInformation {
 
@@ -70,20 +75,23 @@ public class OperationResult extends OperationInformation {
 			} else {
 				isNull = false;
 				type = o.getClass().getCanonicalName();
-				if(o instanceof Serializable) object = (Serializable) o;
-				else object = null;
+				object = saveObject(o);
 
 				observers = new HashMap<String, Serializable>();
 				Clazz clazz = cluster.getClass(o.getClass());
 				if(clazz != null) {
 					for (Methodz m : clazz.getMethods()) {
 						if(m.getParameterTypes().length == 0 && !m.getMethodInformation().isMutator()) {
+							Method method = m.toMethod();
+
 							try {
-								Object res = m.toMethod().invoke(o);
-								if(res instanceof Serializable)
-									observers.put(m.getName(), (Serializable) res);
+								Object res = method.invoke(o);
+								Serializable res1 = saveObject(res);
+								if(res1 != null)
+									observers.put(m.getName(), res1);
+
 							} catch (Throwable e) {
-								Logger.getLogger("testful.model").log(Level.FINEST, "OperationResult: error while inspecting " + o + " (" + type + ") via " + m.getName() + ": " + e, e);
+								Logger.getLogger("testful.model").log(Level.FINEST, "OperationResult: error while inspecting " + m.getName() + " (" + type + "): " + e, e);
 							}
 						}
 					}
@@ -91,11 +99,119 @@ public class OperationResult extends OperationInformation {
 			}
 		}
 
+		private Value(boolean isNull, String type, Serializable object, Map<String, Serializable> observers) {
+			this.isNull = isNull;
+			this.type = type;
+			this.object = object;
+			this.observers = observers;
+		}
+
+		private static Serializable saveObject(Object o) {
+			if(o == null) return null;
+
+			Class<?> c = o.getClass();
+			if(c == Boolean.TYPE || c == Boolean.class ||
+					c == Byte.TYPE || c == Byte.class ||
+					c == Character.TYPE || c == Character.class || c == String.class ||
+					c == Short.TYPE || c == Short.class ||
+					c == Integer.TYPE || c == Integer.class ||
+					c == Long.TYPE || c == Long.class ||
+					c == Float.TYPE || c == Float.class ||
+					c == Double.TYPE || c == Double.class)
+				return (Serializable) o;
+
+			while(c.isArray()) c = c.getComponentType();
+
+			if(c == Boolean.TYPE || c == Boolean.class ||
+					c == Byte.TYPE || c == Byte.class ||
+					c == Character.TYPE || c == Character.class || c == String.class ||
+					c == Short.TYPE || c == Short.class ||
+					c == Integer.TYPE || c == Integer.class ||
+					c == Long.TYPE || c == Long.class ||
+					c == Float.TYPE || c == Float.class ||
+					c == Double.TYPE || c == Double.class)
+				return new ArrayObject((Serializable) o);
+
+			return null;
+		}
+
+		public static class ArrayObject implements Serializable {
+			private static final long serialVersionUID = 8139913445774263584L;
+
+			final byte[] serialized;
+			final int hash;
+
+			public ArrayObject(Serializable o) {
+				serialized = Cloner.serialize(o, false);
+				hash = Arrays.hashCode(serialized);
+			}
+
+			public Serializable getObject() {
+				return Cloner.deserialize(serialized, false);
+			}
+
+			@Override
+			public int hashCode() {
+				return hash;
+			}
+
+			@Override
+			public boolean equals(Object obj) {
+				if(this == obj) return true;
+				if(obj == null) return false;
+
+				if(!(obj instanceof ArrayObject)) return false;
+				ArrayObject other = (ArrayObject) obj;
+
+				if (hash != other.hash) return false;
+				if (!Arrays.equals(serialized, other.serialized)) return false;
+
+				return true;
+			}
+
+			@Override
+			public String toString() {
+				return "{Array}";
+			}
+		}
+
+		public Value prune(Value other) {
+			if(equals(other)) return this;
+
+			if(isNull != other.isNull) {
+				Logger.getLogger("testful.model").warning("OperationResult: problem during object pruning");
+				return this;
+			}
+
+			String newType = type;
+			if (type != null && !type.equals(other.type)) newType = null;
+
+			Serializable newObject = object;
+			if (object != null && !object.equals(other.object)) newObject = null;
+
+			Set<String> ignoredObservers = new HashSet<String>();
+			ignoredObservers.addAll(observers.keySet());
+			ignoredObservers.addAll(other.observers.keySet());
+
+			Map<String, Serializable> newObservers = new HashMap<String, Serializable>();
+			for (Entry<String, Serializable> e : observers.entrySet()) {
+				if(other.observers.containsKey(e.getKey()) &&
+						other.observers.get(e.getKey()).equals(e.getValue())) {
+					newObservers.put(e.getKey(), e.getValue());
+					ignoredObservers.remove(e.getKey());
+				}
+			}
+
+
+			return new Value(isNull, newType, newObject, newObservers);
+		}
+
 		public boolean isNull() {
 			return isNull;
 		}
 
 		public Serializable getObject() {
+			if(object instanceof ArrayObject) return ((ArrayObject) object).getObject();
 			return object;
 		}
 
@@ -103,8 +219,14 @@ public class OperationResult extends OperationInformation {
 			return type;
 		}
 
-		public Map<String, Serializable> getObservers() {
-			return observers;
+		public Set<String> getObservers() {
+			return observers.keySet();
+		}
+
+		public Serializable getObserver(String key) {
+			Serializable ret = observers.get(key);
+			if(ret instanceof ArrayObject) return ((ArrayObject) ret).getObject();
+			return ret;
 		}
 
 		@Override
@@ -112,7 +234,7 @@ public class OperationResult extends OperationInformation {
 			if(isNull) return "null";
 
 			StringBuilder sb = new StringBuilder();
-			sb.append("type:").append(type);
+			if(type != null) sb.append("type:").append(type);
 			if(object != null) sb.append(" object:").append(object);
 			for (Entry<String, Serializable> o : observers.entrySet())
 				sb.append(" obj.").append(o.getKey()).append(":").append(o.getValue());
@@ -135,18 +257,74 @@ public class OperationResult extends OperationInformation {
 			if (this == obj) return true;
 			if (obj == null) return false;
 
-			if (!(obj instanceof Value)) return false;
+			if (!(obj instanceof Value))
+				return false;
 			Value other = (Value) obj;
 
 			if (isNull != other.isNull) return false;
-			if (object != null && !object.equals(other.object)) return false;
-			if (observers != null && !observers.equals(other.observers)) return false;
 			if (type != null && !type.equals(other.type)) return false;
+			if (object != null && !object.equals(other.object)) return false;
+
+			if (observers != null) {
+				if(!observers.equals(other.observers)) return false;
+			}
 
 			return true;
 		}
 
+		public void check(Value other) {
+			if(other == null) throw new OperationResultVerifierException("", this, other);
 
 
+			if (isNull != other.isNull) throw new OperationResultVerifierException("NULL", isNull, other.isNull);
+			if (type != null && !type.equals(other.type)) throw new OperationResultVerifierException("type", type, other.type);
+			if (object != null && !object.equals(other.object)) throw new OperationResultVerifierException("object", object, other.object);
+
+			if (observers != null) {
+				if(other.observers == null) throw new OperationResultVerifierException("no observers");
+				for (Entry<String, Serializable> e : observers.entrySet()) {
+					Serializable o = other.observers.get(e.getKey());
+					if(o != null && e.getValue() != null && !e.getValue().equals(o))
+						throw new OperationResultVerifierException("observer " + e.getKey(), e.getValue(), o);
+				}
+			}
+
+
+		}
 	}
+
+	public static class OperationResultVerifierException extends FaultyExecutionException {
+		private static final long serialVersionUID = -9113533247815125403L;
+
+		private final Serializable expected;
+		private final Serializable actual;
+		private final String method;
+
+		public OperationResultVerifierException(String msg) {
+			super("Operation result verifier: " + msg, null);
+			method = null;
+			expected = null;
+			actual = null;
+		}
+
+		public OperationResultVerifierException(String method, Serializable expected, Serializable actual) {
+			super("Operation result verifier: " + method + " expected: " + expected + " actual: " + actual, null);
+			this.method = method;
+			this.expected = expected;
+			this.actual = actual;
+		}
+
+		public Serializable getExpected() {
+			return expected;
+		}
+
+		public Serializable getActual() {
+			return actual;
+		}
+
+		public String getMethod() {
+			return method;
+		}
+	}
+
 }

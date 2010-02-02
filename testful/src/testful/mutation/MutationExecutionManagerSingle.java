@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 
 import testful.TestfulException;
 import testful.coverage.Tracker;
+import testful.coverage.TrackerDatum;
 import testful.runner.ExecutionManager;
 import testful.runner.Executor;
 
@@ -18,6 +19,10 @@ public class MutationExecutionManagerSingle extends ExecutionManager<Long> {
 
 	public MutationExecutionManagerSingle(byte[] executorSerGz, byte[] trackerDataSerGz, boolean recycleClassLoader) throws TestfulException {
 		super(executorSerGz, trackerDataSerGz, recycleClassLoader);
+	}
+
+	public MutationExecutionManagerSingle(Executor executor, TrackerDatum[] data) throws TestfulException {
+		super(executor, data);
 	}
 
 	@Override
