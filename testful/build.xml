@@ -270,7 +270,7 @@
           target: create_mutation_jar              
          ================================= -->
 	<target name="create_mutation_jar" depends="compile" description="Crete runnable jar for mutation testing">
-		<jar destfile="${base}/mutation.jar" filesetmanifest="mergewithoutmain">
+		<jar destfile="${artefacts}/mutation.jar" filesetmanifest="mergewithoutmain">
 			<manifest>
 				<attribute name="Built-By" value="${user.name}" />
 				<attribute name="Main-Class" value="testful.mutation.Launcher" />
