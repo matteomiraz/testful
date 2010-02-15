@@ -28,7 +28,7 @@ import testful.model.Clazz;
 import testful.model.CreateObject;
 import testful.model.Invoke;
 import testful.model.Operation;
-import testful.model.OperationPrimitiveResult;
+import testful.model.OperationResult;
 import testful.model.OperationStatus;
 import testful.model.OptimalTestCreator;
 import testful.model.PrimitiveClazz;
@@ -351,7 +351,7 @@ public class JUnitTestGenerator extends TestReader {
 		private void writeTest(Test test, PrintWriter out, int testNumber) {
 			final Operation[] operationStatus;
 			try {
-				OperationPrimitiveResult.insert(test.getTest());
+				OperationResult.insert(test.getTest());
 				OperationStatus.insert(test.getTest());
 				Context<Operation[], TestExecutionManager> ctx = TestExecutionManager.getContext(finder, test, data);
 				ctx.setStopOnBug(false);
@@ -414,8 +414,8 @@ public class JUnitTestGenerator extends TestReader {
 					case SUCCESSFUL:
 						if(op instanceof Invoke) {
 
-							OperationPrimitiveResult result = (OperationPrimitiveResult) op.getInfo(OperationPrimitiveResult.KEY);
-							if(result != null && result.isSet()) {
+							OperationResult result = (OperationResult) op.getInfo(OperationResult.KEY);
+							if(result != null) {
 								Reference target = ((Invoke) op).getTarget();;
 								Clazz retType = ((Invoke)op).getMethod().getReturnType();
 
@@ -434,46 +434,48 @@ public class JUnitTestGenerator extends TestReader {
 									out.println("\t\t" + target.toString() + " = " + cast + " tmp;");
 								}
 
+								//TODO: insert more asserts
+
 								// check the result (tmp's value)
 								if(retType instanceof PrimitiveClazz) {
 									switch(((PrimitiveClazz) retType).getType()) {
 									case BooleanClass:
 									case BooleanType:
-										out.println("\t\tassertEquals((boolean) " + AssignPrimitive.getValueString(result.getValue()) + ", (boolean) (java.lang.Boolean) tmp);");
+										out.println("\t\tassertEquals((boolean) " + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (boolean) (java.lang.Boolean) tmp);");
 										break;
 									case ByteClass:
 									case ByteType:
-										out.println("\t\tassertEquals((byte)" + AssignPrimitive.getValueString(result.getValue()) + ", (byte) (java.lang.Byte) tmp);");
+										out.println("\t\tassertEquals((byte)" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (byte) (java.lang.Byte) tmp);");
 										break;
 									case CharacterClass:
 									case CharacterType:
-										out.println("\t\tassertEquals((char)" + AssignPrimitive.getValueString(result.getValue()) + ", (char) (java.lang.Character) tmp);");
+										out.println("\t\tassertEquals((char)" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (char) (java.lang.Character) tmp);");
 										break;
 									case ShortClass:
 									case ShortType:
-										out.println("\t\tassertEquals((short)" + AssignPrimitive.getValueString(result.getValue()) + ", (short) (java.lang.Short) tmp);");
+										out.println("\t\tassertEquals((short)" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (short) (java.lang.Short) tmp);");
 										break;
 									case IntegerClass:
 									case IntegerType:
-										out.println("\t\tassertEquals((int)" + AssignPrimitive.getValueString(result.getValue()) + ", (int) (java.lang.Integer) tmp);");
+										out.println("\t\tassertEquals((int)" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (int) (java.lang.Integer) tmp);");
 										break;
 									case LongClass:
 									case LongType:
-										out.println("\t\tassertEquals((long)" + AssignPrimitive.getValueString(result.getValue()) + ", (long) (java.lang.Long) tmp);");
+										out.println("\t\tassertEquals((long)" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (long) (java.lang.Long) tmp);");
 										break;
 									case FloatClass:
 									case FloatType:
-										out.println("\t\tassertEquals((float)" + AssignPrimitive.getValueString(result.getValue()) + ", (float) (java.lang.Float) tmp, 0.001f);");
+										out.println("\t\tassertEquals((float)" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (float) (java.lang.Float) tmp, 0.001f);");
 										break;
 									case DoubleClass:
 									case DoubleType:
-										out.println("\t\tassertEquals((double)" + AssignPrimitive.getValueString(result.getValue()) + ", (double) (java.lang.Double) tmp, 0.001);");
+										out.println("\t\tassertEquals((double)" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (double) (java.lang.Double) tmp, 0.001);");
 										break;
 									}
 								} else if(retType.getClassName().equals(String.class.getCanonicalName())) {
-									out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(result.getValue()) + ", (java.lang.String) tmp);");
+									out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (java.lang.String) tmp);");
 								} else {
-									logger.warning("Unusable return status: " + retType.getClass().getCanonicalName() + "(" + retType.getClassName() + ")");
+									logger.warning("Unusable return status: " + retType.getClassName());
 								}
 
 								out.println();

@@ -75,11 +75,12 @@ import soot.jimple.ThisRef;
 import soot.jimple.ThrowStmt;
 import soot.jimple.internal.JimpleLocal;
 import soot.util.Chain;
-import testful.coverage.Instrumenter;
+import testful.IConfigProject;
 import testful.utils.Skip;
 import testful.utils.SootUtils;
+import testful.utils.Instrumenter.UnifiedInstrumentator;
 
-public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
+public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 	private static final boolean DEFUSE_EXPOSITION = true;
 
@@ -342,7 +343,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 	}
 
 	@Override
-	public void done(File baseDir, String cutName) {
+	public void done(IConfigProject config, String cutName) {
 		AnalysisWhiteBox sa = new AnalysisWhiteBox();
 
 		for(BlockClass c : Factory.singleton.getClasses())
@@ -350,14 +351,14 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 				c.performDataFlowAnalysis();
 				sa.addClass(c);
 
-				PrintWriter writer = new PrintWriter(new File(baseDir, c.getName().replace('.', File.separatorChar) + ".dot"));
+				PrintWriter writer = new PrintWriter(new File(config.getDirInstrumented(), c.getName().replace('.', File.separatorChar) + ".dot"));
 				writer.println(c.getDot());
 				writer.close();
 			} catch(FileNotFoundException e) {
 				logger.log(Level.WARNING, "Cannot create the class diagram: " + e.getMessage(), e);
 			}
 
-			sa.write(baseDir, cutName);
+			sa.write(config.getDirInstrumented(), cutName);
 	}
 
 	class Analyzer {
@@ -366,7 +367,6 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 
 		/** the local that stores this */
 		private final Local localThis;
-
 
 		/** the begin of the current method */
 		private final BlockFunctionEntry start;

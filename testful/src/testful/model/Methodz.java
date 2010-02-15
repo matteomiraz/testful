@@ -18,15 +18,15 @@ import testful.model.xml.XmlParameter;
 public class Methodz implements Serializable {
 
 	private static final long serialVersionUID = -6044812551106557800L;
-	
+
 	private final Clazz clazz;
 	private final String name;
 	private final Clazz[] params;
 	private final Clazz returnType;
 	private final boolean isStatic;
-	
+
 	private final String fullMethodName;
-	
+
 	private transient Method method = null;
 
 	private final MethodInformation info;
@@ -77,10 +77,12 @@ public class Methodz implements Serializable {
 	}
 
 	public Method toMethod() {
-		if(method == null) try {
-			method = clazz.toJavaClass().getMethod(name, Clazz.convert(params));
-		} catch(Exception e) {
-			return null; // never happens
+		if(method == null) {
+			try {
+				method = clazz.toJavaClass().getMethod(name, Clazz.convert(params));
+			} catch(Exception e) {
+				return null; // never happens
+			}
 		}
 		return method;
 	}
@@ -151,7 +153,7 @@ public class Methodz implements Serializable {
 
 	/**
 	 * Check if the method is an interesting one or not.<br>
-	 * The method is skipped if 
+	 * The method is skipped if
 	 * <ul>
 	 *  <li>it is not public</li>
 	 * 	<li>it is a bridge or a synthetic method</li>
@@ -175,7 +177,7 @@ public class Methodz implements Serializable {
 		if(meth.getReturnType().isArray()) return true;
 		for(Class<?> param : meth.getParameterTypes())
 			if(param.isArray()) return true;
-		
+
 		Class<?> declaringClass = meth.getDeclaringClass();
 
 		// skip java-related methods

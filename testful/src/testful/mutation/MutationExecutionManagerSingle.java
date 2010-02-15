@@ -1,10 +1,12 @@
 package testful.mutation;
 
 import java.lang.reflect.Field;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.TestfulException;
 import testful.coverage.Tracker;
+import testful.coverage.TrackerDatum;
 import testful.runner.ExecutionManager;
 import testful.runner.Executor;
 
@@ -19,6 +21,10 @@ public class MutationExecutionManagerSingle extends ExecutionManager<Long> {
 		super(executorSerGz, trackerDataSerGz, recycleClassLoader);
 	}
 
+	public MutationExecutionManagerSingle(Executor executor, TrackerDatum[] data) throws TestfulException {
+		super(executor, data);
+	}
+
 	@Override
 	protected Long getResult() {
 		return executionTime;
@@ -26,7 +32,7 @@ public class MutationExecutionManagerSingle extends ExecutionManager<Long> {
 
 	@Override
 	protected void warmUp() { }
-	
+
 	@Override
 	protected void setup() throws ClassNotFoundException { }
 
@@ -34,9 +40,10 @@ public class MutationExecutionManagerSingle extends ExecutionManager<Long> {
 	protected void reallyExecute(boolean stopOnBug)  {
 		try {
 			Class<?> config = classLoader.loadClass(Utils.CONFIG_CLASS);
-			
+
 			MutationExecutionData datum = (MutationExecutionData) Tracker.getDatum(MutationExecutionData.KEY);
 			if(datum == null) {
+				logger.finer("MutationExecution Data not found");
 				executionTime = ERROR_EXECUTION;
 				return;
 			}
@@ -49,7 +56,7 @@ public class MutationExecutionManagerSingle extends ExecutionManager<Long> {
 			tthread.start();
 			executionTime = tthread.getResult(datum.maxExecutionTime);
 		} catch(Exception e) {
-			logger.warning(e.getMessage());
+			logger.log(Level.WARNING, "Error while executing mutant: " + e.getMessage(), e);
 			executionTime = ERROR_EXECUTION;
 		}
 	}
@@ -76,6 +83,7 @@ public class MutationExecutionManagerSingle extends ExecutionManager<Long> {
 
 			if(isAlive()) {
 				try {
+					logger.finer("Killing executor thread");
 					interrupt();
 					TestStoppedException.stop = true;
 				} catch(Exception e) {
@@ -112,7 +120,8 @@ public class MutationExecutionManagerSingle extends ExecutionManager<Long> {
 
 				if(nFaults == 0) executionTime = (stop - start);
 				else executionTime = FAULTY_EXECUTION;
-			} catch(ClassNotFoundException e) {
+			} catch(Throwable e) {
+				logger.log(Level.FINER, "Error while executing mutant: " + e.getMessage(), e);
 				executionTime = ERROR_EXECUTION;
 			}
 		}

@@ -319,6 +319,18 @@ public class TestCluster implements Serializable {
 		return ret;
 	}
 
+	public Clazz getClass(Class<?> clazz) {
+		for (Clazz c : cluster) {
+			try {
+				if(c.toJavaClass() == clazz)
+					return c;
+			} catch (ClassNotFoundException e) {
+			}
+		}
+
+		return null;
+	}
+
 	public ClassRegistry getRegistry() {
 		if(registry == null) // if loaded from a serialized version, fill the registry!
 			try {

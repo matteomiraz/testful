@@ -24,7 +24,7 @@ public class TestExecutionManagerTestCase extends SimpleDummyTestCase {
 	}
 
 	private Operation[] execute(Test test) throws RemoteException, InterruptedException, ExecutionException {
-		OperationPrimitiveResult.insert(test.getTest());
+		OperationResult.insert(test.getTest());
 		OperationStatus.insert(test.getTest());
 		Context<Operation[], TestExecutionManager> ctx = TestExecutionManager.getContext(getFinder(), test);
 		ctx.setStopOnBug(false);

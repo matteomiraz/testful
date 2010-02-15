@@ -99,12 +99,9 @@ public class ConfigHandler {
 		return map.get(sClass).getNextId(meth, type);
 	}
 
-	public void manage(String className) {
-		Scene.v().loadClassAndSupport(className);
-		SootClass sClass = Scene.v().getSootClass(className);
-
+	public void manage(SootClass sClass) {
 		if(map.containsKey(sClass)) {
-			System.err.println("Error: duplicated class " + className);
+			System.err.println("Error: duplicated class " + sClass.getName());
 			System.exit(1);
 		}
 

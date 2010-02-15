@@ -62,7 +62,7 @@ public class TestSimplifier {
 		Operation[] testOperations = null;
 		if(executor != null) {
 
-			OperationPrimitiveResult.insert(test.getTest());
+			OperationResult.insert(test.getTest());
 			OperationStatus.insert(test.getTest());
 			Context<Operation[], TestExecutionManager> ctx = TestExecutionManager.getContext(finder, test, data);
 			ctx.setStopOnBug(false);
