@@ -23,17 +23,28 @@ public class OptimalTestCase extends SimpleDummyTestCase {
 		assertEquals(0, opt.get().size());
 
 		opt.update(tc1);
-
-		StringBuilder msg = new StringBuilder();
-		for (Test t : opt.get())
-			printTest(msg, "", t, null);
-		System.out.println(msg.toString());
+		//		{
+		//			StringBuilder msg = new StringBuilder();
+		//			for (TestCoverage t : opt.get())
+		//				printTest(msg, "", t, t.getCoverage());
+		//			System.out.println(msg.toString());
+		//		}
 
 		assertEquals(1, opt.get().size());
 		assertEquals(tc1, opt.get().get(0));
 
 		opt.update(tc2);
-		assertEquals(1, opt.get().size());
+		//		{
+		//			StringBuilder msg = new StringBuilder();
+		//			for (TestCoverage t : opt.get())
+		//				printTest(msg, "", t, t.getCoverage());
+		//			System.out.println(msg.toString());
+		//		}
+
+		// three coverage criteria => three tests
+		assertEquals(3, opt.get().size());
 		assertEquals(tc2, opt.get().get(0));
+		assertEquals(tc2, opt.get().get(1));
+		assertEquals(tc2, opt.get().get(2));
 	}
 }

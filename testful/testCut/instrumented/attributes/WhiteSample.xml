@@ -1,3 +1,13 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <attributes>
+<attribute>
+<srcPos sline="0" eline="0" spos="0" epos="0"/>
+<jmpPos sline="0" eline="0" spos="0" epos="0"/>
+<text info="testful.utils.Skip@7d0d4ade" aType="SKIP"/>
+</attribute>
+<attribute>
+<srcPos sline="0" eline="0" spos="0" epos="0"/>
+<jmpPos sline="0" eline="0" spos="0" epos="0"/>
+<text info="testful.utils.Skip@7d0d4ade" aType="SKIP"/>
+</attribute>
 </attributes>

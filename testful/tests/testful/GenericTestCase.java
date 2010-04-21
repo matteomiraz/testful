@@ -1,6 +1,7 @@
 package testful;
 
 import java.io.File;
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -9,6 +10,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import junit.framework.TestCase;
+import testful.IConfigProject.LogLevel;
 import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TestSizeInformation;
@@ -25,6 +27,7 @@ import testful.runner.IRunner;
 import testful.runner.RunnerPool;
 import testful.runner.TestfulClassLoader;
 import testful.utils.ElementManager;
+import testful.utils.FileUtils;
 import ec.util.MersenneTwisterFast;
 
 /**
@@ -38,6 +41,16 @@ public abstract class GenericTestCase  extends TestCase {
 	static {
 		ConfigProject tmp = new ConfigProject();
 		tmp.setDirBase(new File("testCut"));
+
+		try {
+			File tmpDir = FileUtils.createTempDir("testful-", "-test");
+			tmp.setLogLevel(LogLevel.FINEST);
+			tmp.setLog(tmpDir);
+			TestFul.setupLogging(tmp);
+		} catch (IOException e) {
+			System.err.println("WARNING: " + e);
+		}
+
 		config = tmp;
 	}
 
@@ -128,7 +141,7 @@ public abstract class GenericTestCase  extends TestCase {
 			msg.append("\nCoverage:\n");
 			for(CoverageInformation cov : covs)
 				if(!(cov instanceof TestSizeInformation))
-					msg.append("  ").append(cov.getKey()).append(" ").append(cov.getQuality()).append("\n");
+					msg.append("  ").append(cov.getKey()).append(" ").append(cov.getQuality()).append("\n--raw-begin--\n").append(cov.toString()).append("\n--raw-end--\n");
 			msg.append("---------");
 		}
 

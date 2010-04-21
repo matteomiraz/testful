@@ -257,8 +257,13 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 			int i = 0;
 			for(SootField f : fields) {
-				units.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newInstanceFieldRef(_this, f.makeRef())));
-				units.add(Jimple.v().newAssignStmt(Jimple.v().newArrayRef(ret, IntConstant.v(i++)), tmp));
+				if(f.isStatic()) {
+					units.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newStaticFieldRef(f.makeRef())));
+					units.add(Jimple.v().newAssignStmt(Jimple.v().newArrayRef(ret, IntConstant.v(i++)), tmp));
+				} else {
+					units.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newInstanceFieldRef(_this, f.makeRef())));
+					units.add(Jimple.v().newAssignStmt(Jimple.v().newArrayRef(ret, IntConstant.v(i++)), tmp));
+				}
 			}
 
 			units.add(Jimple.v().newReturnStmt(ret));
