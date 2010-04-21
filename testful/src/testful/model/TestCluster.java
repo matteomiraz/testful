@@ -144,7 +144,6 @@ public class TestCluster implements Serializable {
 					if(aux.getName() != null)
 						toDo.add(getRegistry().getClazz(this.classLoader.loadClass(aux.getName())));
 			}
-
 		}
 
 		PrimitiveClazz.refine(clusterBuilder);
@@ -185,17 +184,28 @@ public class TestCluster implements Serializable {
 			}
 		}
 
-		// Inserting in the test cluster all input parameters of constructors of CUT
+		// Consider public fields
+		for(Field f : javaClass.getFields())
+			if(Modifier.isPublic(f.getModifiers()))
+				todo.add(getRegistry().getClazz(f.getType()));
+
+		// Consider constructors
 		for(Constructor<?> cns : javaClass.getConstructors())
 			if(Modifier.isPublic(cns.getModifiers()))
 				for(Class<?> param : cns.getParameterTypes())
 					todo.add(getRegistry().getClazz(param));
 
-		// Inserting in the test cluster all input parameters of methods of CUT
+		// Consider methods
 		for(Method meth : javaClass.getMethods())
-			if(!Methodz.toSkip(meth))
+			if(!Methodz.toSkip(meth)) {
+
+				// add the return type to the test cluster
+				todo.add(getRegistry().getClazz(meth.getReturnType()));
+
+				// add input parameters to the test cluster
 				for(Class<?> param : meth.getParameterTypes())
 					todo.add(getRegistry().getClazz(param));
+			}
 	}
 
 	/**
@@ -213,7 +223,7 @@ public class TestCluster implements Serializable {
 			missing.add(c);
 
 		for (Clazz c : cluster) {
-			if(c.getConstructors().length > 0)
+			if(!c.isAbstract())
 				for (Clazz assignable : c.getAssignableTo())
 					missing.remove(assignable);
 
@@ -233,14 +243,12 @@ public class TestCluster implements Serializable {
 					missing.remove(assignable);
 
 			if(missing.isEmpty()) return;
-
 		}
 
 		// just in case...
 		if(missing.isEmpty()) return;
 
 		throw new MissingClassException(missing, cut);
-
 	}
 
 	public static class MissingClassException extends TestfulException {
@@ -252,7 +260,7 @@ public class TestCluster implements Serializable {
 		public final boolean fatal;
 
 		public MissingClassException(Set<Clazz> missing, Clazz cut) {
-			super("Some classes are missing");
+			super("Some classes are missing:" + missing);
 
 			Set<String> tmp = new HashSet<String>();
 			for (Clazz c : missing) tmp.add(c.getClassName());
