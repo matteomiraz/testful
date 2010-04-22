@@ -17,6 +17,8 @@ public class ConfigFitness implements IConfigFitness, IConfigFitness.Args4j {
 
 	private boolean length = true;
 
+	private boolean defUse = true;
+
 	@Override
 	public void setToMinimize(boolean toMinimize) {
 		this.toMinimize = toMinimize;
@@ -59,6 +61,11 @@ public class ConfigFitness implements IConfigFitness, IConfigFitness.Args4j {
 	@Override
 	public boolean isBug() {
 		return bug;
+	}
+
+	@Override
+	public boolean isDefUse() {
+		return defUse;
 	}
 
 	/* (non-Javadoc)
@@ -136,6 +143,13 @@ public class ConfigFitness implements IConfigFitness, IConfigFitness.Args4j {
 	public void setDisableBranchContract(boolean disable) {
 		if(disable) {
 			brn = false;
+		}
+	}
+
+	@Override
+	public void setDisableDefUse(boolean disable) {
+		if(disable) {
+			defUse = false;
 		}
 	}
 

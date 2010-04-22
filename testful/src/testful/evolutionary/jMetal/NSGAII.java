@@ -182,14 +182,6 @@ implements IUpdate {
 				}
 			}
 
-			final long remaining = (maxTime - currentTime) / 1000;
-
-			logger.info(String.format("(%5.2f%%) Evaluating generation %d - %d:%02d to go",
-					(100.0 * currentTime) / maxTime,
-					currentGeneration,
-					remaining / 60,
-					remaining % 60));
-
 			SolutionSet<V> offspringPopulation = new SolutionSet<V>(populationSize);
 
 			// Create the offSpring solutionSet
@@ -271,6 +263,14 @@ implements IUpdate {
 
 			// Obtain the next front
 			front = ranking.getSubfront(0);
+
+			final long remaining = (maxTime - currentTime) / 1000;
+			logger.info(String.format("(%5.2f%%) Evaluated generation %d - %d:%02d to go - fronteer: %5.2f%%",
+					(100.0 * currentTime) / maxTime,
+					currentGeneration,
+					remaining / 60,
+					remaining % 60,
+					(100.0*front.size()) / populationSize));
 
 			while ((remain > 0) && (remain >= front.size())) {
 				//Assign crowding distance to individuals

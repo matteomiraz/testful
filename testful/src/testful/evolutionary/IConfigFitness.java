@@ -16,6 +16,8 @@ public interface IConfigFitness {
 
 	public boolean isBug();
 
+	public boolean isDefUse();
+
 	public boolean isLength();
 
 	public boolean isToMinimize();
@@ -24,6 +26,10 @@ public interface IConfigFitness {
 
 		@Option(required = false, name = "-disableBasicBlock", usage = "Removes the basic block coverage from the multi-objective fitness (shortcut for -disableBranchCode and -disableBranchContract)")
 		public void setDisableBasicBlock(boolean disable);
+
+		@Option(required = false, name = "-disableDefUse", usage = "Removes the def-use pairs coverage from the multi-objective fitness.")
+		public void setDisableDefUse(boolean disable);
+
 
 		@Option(required = false, name = "-disableBasicBlockCode", usage = "Removes the basic block coverage on the code from the multi-objective fitness")
 		public void setDisableBasicBlockCode(boolean disable);

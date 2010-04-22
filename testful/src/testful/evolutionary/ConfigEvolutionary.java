@@ -90,6 +90,11 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	}
 
 	@Override
+	public boolean isDefUse() {
+		return configFitness.isDefUse();
+	}
+
+	@Override
 	public boolean isLength() {
 		return configFitness.isLength();
 	}
@@ -132,6 +137,11 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	@Override
 	public void setDisableBranchContract(boolean disable) {
 		configFitness.setDisableBranchContract(disable);
+	}
+
+	@Override
+	public void setDisableDefUse(boolean disable) {
+		configFitness.setDisableDefUse(disable);
 	}
 
 	@Override

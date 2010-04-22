@@ -12,10 +12,16 @@ public class SimpleDummyTestCase extends GenericTestCase {
 	protected TestCluster cluster;
 	protected ReferenceFactory refFactory;
 
+	/** dummy.Simple instance */
 	protected Reference c0, c1, c2, c3;
+
+	/** int instance */
 	protected Reference i0, i1, i2, i3;
 
+
 	protected Constructorz cns;
+
+	protected Constructorz i_cns;
 
 	protected Methodz mInc;
 	protected Methodz mDec;
@@ -54,6 +60,13 @@ public class SimpleDummyTestCase extends GenericTestCase {
 		c3 = refFactory.getReferences(cut)[3];
 
 		cns = cut.getConstructors()[0];
+
+		for (Constructorz tmp : iClazz.getConstructors()) {
+			if(tmp.getParameterTypes().length == 1) {
+				if(tmp.getParameterTypes()[0].getClassName().equals("int"))
+					i_cns = tmp;
+			}
+		}
 
 		mInc = null;
 		mDec = null;

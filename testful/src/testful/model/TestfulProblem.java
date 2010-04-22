@@ -24,6 +24,7 @@ import testful.coverage.bug.BugCoverage;
 import testful.coverage.whiteBox.AnalysisWhiteBox;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
 import testful.coverage.whiteBox.CoverageConditions;
+import testful.coverage.whiteBox.CoverageDataFlow;
 import testful.evolutionary.IConfigEvolutionary;
 import testful.runner.ClassFinderCaching;
 import testful.runner.ClassFinderImpl;
@@ -90,7 +91,8 @@ public class TestfulProblem implements Serializable {
 		numObjs = (config.isLength() ? 1 : 0) +
 		(config.isBug() ? 1 : 0) +
 		(config.isBbd() ? 1 : 0) + (config.isBbn() ? 1 : 0) +
-		(config.isBrd() ? 1 : 0) + (config.isBrn() ? 1 : 0);
+		(config.isBrd() ? 1 : 0) + (config.isBrn() ? 1 : 0) +
+		(config.isDefUse() ? 1 : 0);
 
 		if(logger.isLoggable(Level.FINER))
 			optimal = new OptimalTestCreator();
@@ -189,6 +191,15 @@ public class TestfulProblem implements Serializable {
 
 			if(config.isBrn()) {
 				CoverageInformation cov = infos.get(CoverageConditions.KEY_CONTRACT);
+				if(cov != null) {
+					covTot += cov.getQuality();
+					ret[i] = config.isToMinimize() ? -1 * cov.getQuality() : cov.getQuality();
+				}
+				i++;
+			}
+
+			if(config.isDefUse()) {
+				CoverageInformation cov = infos.get(CoverageDataFlow.KEY);
 				if(cov != null) {
 					covTot += cov.getQuality();
 					ret[i] = config.isToMinimize() ? -1 * cov.getQuality() : cov.getQuality();

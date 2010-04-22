@@ -119,7 +119,7 @@ public class Launcher {
 
 		/* convert tests to jUnit */
 
-		JUnitTestGenerator gen = new JUnitTestGenerator(config, config.getDirGeneratedTests(), config.isReload(), true);
+		JUnitTestGenerator gen = new JUnitTestGenerator(config, config.getDirGeneratedTests(), config.isReload(), false);
 		for(Solution<Operation> t : population)
 			gen.read("", problem.getTest(t));
 

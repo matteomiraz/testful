@@ -49,7 +49,7 @@ public class OptimalTestCreator {
 	 * @return true if the test is "innovative" (achieves higher coverage
 	 *         criteria), false otherwise.
 	 */
-	public boolean update(TestCoverage test) {
+	public synchronized boolean update(TestCoverage test) {
 		boolean innovative = false;
 
 		for(CoverageInformation coverage : test.getCoverage()) {
@@ -106,7 +106,7 @@ public class OptimalTestCreator {
 		return(innovative || !toRemove.isEmpty());
 	}
 
-	public List<TestCoverage> get() {
+	public synchronized List<TestCoverage> get() {
 		List<TestCoverage> ret = new ArrayList<TestCoverage>();
 
 		for(Entry<String, Set<TestCoverage>> entry : optimal.entrySet())
@@ -116,15 +116,15 @@ public class OptimalTestCreator {
 		return ret;
 	}
 
-	public ElementManager<String, CoverageInformation> getCoverage() {
+	public synchronized ElementManager<String, CoverageInformation> getCoverage() {
 		return combinedCoverage;
 	}
 
-	public Map<String, Set<TestCoverage>> getOptimal() {
+	public synchronized Map<String, Set<TestCoverage>> getOptimal() {
 		return optimal;
 	}
 
-	public void write(Integer currentGeneration, long totInvocation, long time, File baseDir, Logger log) {
+	public synchronized void write(Integer currentGeneration, long totInvocation, long time, File baseDir, Logger log) {
 		if(baseDir == null) return;
 
 		for(Entry<String, Set<TestCoverage>> entry : optimal.entrySet()) {

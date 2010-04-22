@@ -27,6 +27,12 @@ import testful.utils.ElementWithKey;
 
 public class RunnerPool implements IRunner, ITestRepository {
 
+	/** Number of threads to start:
+	 * if &lt; 0, start one thread for each core;
+	 * if equals to 0, do not start any thread;
+	 * if greater than 0, start exactly n threads */
+	private static final int NCPU = -1;
+
 	/** maximum number of jobs that the executor pool allows to queue */
 	private static final int MAX_BUFFER = 25;
 
@@ -110,7 +116,7 @@ public class RunnerPool implements IRunner, ITestRepository {
 	public void startLocalWorkers() {
 		if (!localWorkersStarted) {
 			try {
-				WorkerManager wm = new WorkerManager(-1, 0); 
+				WorkerManager wm = new WorkerManager(NCPU, 0);
 				wm.addTestRepository(this);
 				localWorkersStarted = true;
 			} catch (RemoteException e) {
