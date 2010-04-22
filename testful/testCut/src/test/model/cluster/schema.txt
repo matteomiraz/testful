@@ -1,0 +1,46 @@
+Legend:
+ I -> Interface
+ A -> Abstract Class
+ C -> Class (implementing I or A)
+
+CUT:
+01) [OK] void m(C)
+02) [KO] void meth(I)
+03) [OK] void meth(I), C in desc(I)
+04) [KO] void meth(A)
+05) [OK] void meth(A), C in desc(A)
+
+10) [OK] void m1(I); I m2();
+11) [OK] void m1(I); C m2();
+12) [OK] void m1(A); A m2();
+13) [OK] void m1(A); C m2();
+14) [OK] void m1(I); field I;
+15) [OK] void m1(I); field C;
+16) [OK] void m1(A); field A;
+17) [OK] void m1(A); field C;
+18) [KO] I m1(I);
+19) [OK] I m1(I); C in descr(I)
+20) [KO] A m1(A);
+21) [OK] A m1(A); C in descr(A)
+
+22) [KO] void Cut(I); I m2();
+23) [OK] void Cut(I); I m2(); C in desr(I)
+24) [OK] void Cut(I); static I m2();
+25) [OK] void Cut(I); C m2(); 
+26) [KO] void Cut(A); A m2();
+27) [OK] void Cut(A); A m2(); C in descr(A)
+28) [OK] void Cut(A); static A m2();
+29) [OK] void Cut(A); C m2();
+
+30) [KO] void Cut(I); field I;
+31) [OK] void Cut(I); field I; C in descr(I)
+32) [OK] void Cut(I); static field I;
+33) [OK] void Cut(I); field C;
+
+34) [KO] void Cut(A); field A;
+35) [OK] void Cut(A); field A; C in descr(A)
+36) [OK] void Cut(A); static field A;
+37) [OK] void Cut(A); field C;
+
+
+

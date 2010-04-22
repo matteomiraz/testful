@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:class xmlns:ns2="http://home.dei.polimi.it/miraz/testful" instrument="true" name="dummy.StateMachine">
+    <constructor/>
+    <method kind="observer" exposeState="false" name="getState"/>
+    <method kind="mutator" exposeState="false" name="nextChar">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" array="false" type="char"/>
+    </method>
+    <method kind="observer" exposeState="false" name="nextChar"/>
+</ns2:class>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:class xmlns:ns2="http://home.dei.polimi.it/miraz/testful" instrument="true" name="dummy.WhiteSample">
+    <constructor/>
+    <method kind="mutator" exposeState="false" name="intif">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" array="false" type="int"/>
+    </method>
+    <method kind="mutator" exposeState="false" name="doubleif">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" array="false" type="double"/>
+    </method>
+    <method kind="mutator" exposeState="false" name="boolif">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" array="false" type="boolean"/>
+    </method>
+    <method kind="mutator" exposeState="false" name="objif">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" array="false" type="dummy.WhiteSample"/>
+    </method>
+    <method kind="mutator" exposeState="false" name="tSwitch">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" array="false" type="int"/>
+    </method>
+    <method kind="mutator" exposeState="false" name="lSwitch">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" array="false" type="int"/>
+    </method>
+</ns2:class>
