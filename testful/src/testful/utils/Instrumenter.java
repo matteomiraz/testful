@@ -126,6 +126,7 @@ public class Instrumenter {
 		SootMain.singleton.processCmdLine(params);
 	}
 
+	@SuppressWarnings("unused")
 	public static void run(IConfigProject config, Collection<String> toInstrument, String cutName, UnifiedInstrumentator ... instrumenters) {
 
 		TestfulInstrumenter instr = null;
