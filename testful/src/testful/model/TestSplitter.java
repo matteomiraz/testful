@@ -21,6 +21,7 @@ import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TestSizeInformation;
 import testful.coverage.TrackerDatum;
+import testful.model.MethodInformation.Kind;
 import testful.model.MethodInformation.ParameterInformation;
 import testful.runner.ClassFinder;
 import testful.runner.IRunner;
@@ -405,7 +406,7 @@ public class TestSplitter {
 		final Reference opTarget = op.getTarget();
 		final int opTargetId = opTarget != null ? opTarget.getId() : -1;
 
-		final Reference opThis = methodInfo.isMutator() ? op.getThis() : alias(op.getThis());
+		final Reference opThis = methodInfo.getType() == Kind.MUTATOR ? op.getThis() : alias(op.getThis());
 		final int opThisId = opThis != null ? opThis.getId() : -1;
 
 		final ParameterInformation[] paramsInfo = methodInfo.getParameters();
@@ -465,7 +466,7 @@ public class TestSplitter {
 		}
 
 		// 5. check if op is an observer and there is an equivalent operation
-		if(!splitObservers && !methodInfo.isMutator()) {
+		if(!splitObservers && methodInfo.getType() != Kind.MUTATOR) {
 			Set<Reference> deps = op.getUses();
 
 			Iterator<Operation> iter = newSet.descendingIterator();
@@ -557,12 +558,12 @@ public class TestSplitter {
 		}
 
 		if(splitObservers) {
-			if(methodInfo.isMutator())
+			if(methodInfo.getType() == Kind.MUTATOR)
 				operations[opThisId] = newSet;
 			else
 				emit(newSet);
 		} else {
-			if(methodInfo.isMutator() || opTarget == null || aliases[opTargetId] == null)
+			if(methodInfo.getType() == Kind.MUTATOR || opTarget == null || aliases[opTargetId] == null)
 				operations[opThisId] = newSet;
 		}
 

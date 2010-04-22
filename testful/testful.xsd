@@ -56,7 +56,7 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="static"/>
       <xs:enumeration value="observer"/>
-      <xs:enumeration value="worker"/>
+      <xs:enumeration value="pure"/>
       <xs:enumeration value="mutator"/>
     </xs:restriction>
   </xs:simpleType>

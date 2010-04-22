@@ -4,14 +4,14 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import testful.model.MethodInformation.Kind;
 import testful.model.MethodInformation.ParameterInformation;
-
 import ec.util.MersenneTwisterFast;
 
 public class Invoke extends Operation {
 
 	private static final long serialVersionUID = 3149066267226412341L;
-	
+
 	private final Reference _return;
 	private final Reference _this;
 	private final Methodz method;
@@ -105,24 +105,24 @@ public class Invoke extends Operation {
 		if(!(obj instanceof Invoke)) return false;
 
 		Invoke other = (Invoke) obj;
-		return ((_return == null) ? 
-					other._return == null : 
-					_return.equals(other._return)) && 
-						((_this == null) ? 
-								other._this == null : 
+		return ((_return == null) ?
+				other._return == null :
+					_return.equals(other._return)) &&
+					((_this == null) ?
+							other._this == null :
 								_this.equals(other._this)) && method.equals(other.method) && Arrays.equals(params, other.params);
 	}
-	
+
 	@Override
 	protected Set<Reference> calculateDefs() {
 		Set<Reference> defs = new HashSet<Reference>();
 
 		if(getTarget() != null)
 			defs.add(getTarget());
-		
+
 		MethodInformation info = getMethod().getMethodInformation();
-		if(getThis() != null) 
-			if(info.isMutator() || info.isReturnsState())
+		if(getThis() != null)
+			if(info.getType() == Kind.MUTATOR || info.isReturnsState())
 				defs.add(getThis());
 
 		ParameterInformation[] pInfo = info.getParameters();
@@ -130,20 +130,20 @@ public class Invoke extends Operation {
 			if(pInfo[i].isCaptured() || pInfo[i].isCapturedByReturn() || pInfo[i].isMutated())
 				defs.add(getParams()[i]);
 		}
-		
+
 		return defs;
 	}
-	
+
 	@Override
 	protected Set<Reference> calculateUses() {
 		Set<Reference> uses = new HashSet<Reference>();
 
 		if(getThis() != null)
 			uses.add(getThis());
-		
+
 		for(Reference u : getParams())
 			uses.add(u);
-		
+
 		return uses;
 	}
 }

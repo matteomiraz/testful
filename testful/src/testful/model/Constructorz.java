@@ -5,6 +5,7 @@ import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.List;
 
+import testful.model.MethodInformation.Kind;
 import testful.model.MethodInformation.ParameterInformation;
 import testful.model.xml.XmlConstructor;
 import testful.model.xml.XmlParameter;
@@ -35,7 +36,7 @@ public class Constructorz implements Serializable {
 				params[i].setCapturedByReturn(false);
 				params[i].setMutated(false);
 			}
-			info = new MethodInformation(true, false, params);
+			info = new MethodInformation(Kind.CONSTRUCTOR, false, params);
 		} else {
 			List<XmlParameter> paramsXml = xml.getParameter();
 			ParameterInformation[] paramsInfo = new ParameterInformation[paramsXml.size()];
@@ -51,7 +52,7 @@ public class Constructorz implements Serializable {
 				for(int exch : paramsXml.get(i).getExchangeState())
 					paramsInfo[i].addCaptureStateOf(paramsInfo[exch]);
 
-			info = new MethodInformation(true, true, paramsInfo);
+			info = new MethodInformation(Kind.CONSTRUCTOR, true, paramsInfo);
 		}
 	}
 

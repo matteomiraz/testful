@@ -4,7 +4,7 @@
     <method kind="mutator" exposeState="false" name="mInc"/>
     <method kind="mutator" exposeState="false" name="mDec"/>
     <method kind="observer" exposeState="false" name="oStatus"/>
-    <method kind="worker" exposeState="false" name="wModulo">
+    <method kind="pure" exposeState="false" name="wModulo">
         <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" array="false" type="int"/>
     </method>
     <method kind="observer" exposeState="false" name="oAbs"/>

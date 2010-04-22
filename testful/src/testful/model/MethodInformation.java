@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
+import testful.model.xml.XmlMethod;
+
 public class MethodInformation implements Serializable {
 
 	private static final long serialVersionUID = -4189345382981598729L;
@@ -81,26 +83,60 @@ public class MethodInformation implements Serializable {
 		}
 	}
 
+	public static enum Kind {
+		/** The method is static */
+		STATIC,
+
+		/** A Constructor */
+		CONSTRUCTOR,
+
+		/** The method is pure and to be used for writing assertions in tests. <br/>
+		 * <ul>
+		 * <li>Pure method: does not modify the state and returns an observation of the
+		 * object's state (changing the return value, the state is not changed).</li>
+		 * <li>Usable for creating assertions: it has no input parameters, and the value it returns
+		 * can be used for regression testing.</li>
+		 * </ul>
+		 */
+		OBSERVER,
+
+		/** the method is pure: does not modify the state and returns an observation of the
+		 * object's state (changing the return value, the state is not changed).*/
+		PURE,
+
+		/** the method is a mutator: does something, may mutate the object's state */
+		MUTATOR;
+
+		public static Kind convert (XmlMethod.Kind k) {
+			switch(k) {
+			case STATIC: return STATIC;
+			case OBSERVER: return OBSERVER;
+			case PURE: return PURE;
+			default: return MUTATOR;
+			}
+		}
+	}
+
 	/**
 	 * true if the method mutates the state of the object accepting the method
 	 * invocation. Constructors by definition mutate (constructs) the state of the
 	 * object
 	 */
-	private final boolean mutator;
+	private final Kind type;
 
 	/** true if method returns part of the object's state */
 	private final boolean returnsState;
 
 	private final ParameterInformation[] parameters;
 
-	public MethodInformation(boolean mutator, boolean returnsState, ParameterInformation[] parameters) {
-		this.mutator = mutator;
+	public MethodInformation(Kind type, boolean returnsState, ParameterInformation[] parameters) {
+		this.type = type;
 		this.returnsState = returnsState;
 		this.parameters = parameters;
 	}
 
-	public boolean isMutator() {
-		return mutator;
+	public Kind getType() {
+		return type;
 	}
 
 	public boolean isReturnsState() {

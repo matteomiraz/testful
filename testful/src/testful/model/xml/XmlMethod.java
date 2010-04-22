@@ -21,16 +21,22 @@ public class XmlMethod {
 		/** the method is static */
 		@XmlEnumValue("static")
 		STATIC("static"),
-		
-		/** the method is an observer: it has no input parameters, does not modify
-		 * the state, and returns an observation of the object's state (changing the return
-		 * value, the state is not changed) */
+
+		/** the method is pure and to be used in tests. <br/>
+		 * <ul>
+		 * <li>Pure method: does not modify the state and returns an observation of the
+		 * object's state (changing the return value, the state is not changed).</li>
+		 * <li>Usable for creating assertions: it has no input parameters, and the value it returns
+		 * can be used for regression testing.</li>
+		 * </ul>
+		 */
 		@XmlEnumValue("observer")
 		OBSERVER("observer"),
-		
-		/** the method is a worker: does something without modifying the the state */
-		@XmlEnumValue("worker")
-		WORKER("worker"),
+
+		/** the method is pure: does not modify the state and returns an observation of the
+		 * object's state (changing the return value, the state is not changed).*/
+		@XmlEnumValue("pure")
+		PURE("pure"),
 
 		/** the method is a mutator: does something, may mutate the object's state */
 		@XmlEnumValue("mutator")
@@ -51,7 +57,6 @@ public class XmlMethod {
 				if(c.value.equals(v)) return c;
 			throw new IllegalArgumentException(v.toString());
 		}
-
 	}
 
 	@XmlAttribute(required = true)

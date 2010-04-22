@@ -6,6 +6,7 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.List;
 
+import testful.model.MethodInformation.Kind;
 import testful.model.MethodInformation.ParameterInformation;
 import testful.model.xml.XmlMethod;
 import testful.model.xml.XmlParameter;
@@ -18,15 +19,15 @@ import testful.model.xml.XmlParameter;
 public class Methodz implements Serializable {
 
 	private static final long serialVersionUID = -6044812551106557800L;
-	
+
 	private final Clazz clazz;
 	private final String name;
 	private final Clazz[] params;
 	private final Clazz returnType;
 	private final boolean isStatic;
-	
+
 	private final String fullMethodName;
-	
+
 	private transient Method method = null;
 
 	private final MethodInformation info;
@@ -48,7 +49,12 @@ public class Methodz implements Serializable {
 				params[i].setCapturedByReturn(false);
 				params[i].setMutated(false);
 			}
-			info = new MethodInformation(true, (m.getReturnType() != null && m.getReturnType().isArray()), params);
+
+			final Kind type = Modifier.isStatic(m.getModifiers()) ? Kind.STATIC : Kind.MUTATOR;
+			final boolean returnsState = m.getReturnType() != null && m.getReturnType().isArray();
+
+			info = new MethodInformation(type, returnsState, params);
+
 		} else {
 			List<XmlParameter> paramsXml = xml.getParameter();
 			ParameterInformation[] paramsInfo = new ParameterInformation[paramsXml.size()];
@@ -64,7 +70,7 @@ public class Methodz implements Serializable {
 				for(int exch : paramsXml.get(i).getExchangeState())
 					paramsInfo[i].addCaptureStateOf(paramsInfo[exch]);
 
-			info = new MethodInformation(XmlMethod.Kind.MUTATOR.equals(xml.getKind()), xml.isExposeState(), paramsInfo);
+			info = new MethodInformation(MethodInformation.Kind.convert(xml.getKind()), xml.isExposeState(), paramsInfo);
 		}
 	}
 
@@ -151,7 +157,7 @@ public class Methodz implements Serializable {
 
 	/**
 	 * Check if the method is an interesting one or not.<br>
-	 * The method is skipped if 
+	 * The method is skipped if
 	 * <ul>
 	 *  <li>it is not public</li>
 	 * 	<li>it is a bridge or a synthetic method</li>
@@ -175,7 +181,7 @@ public class Methodz implements Serializable {
 		if(meth.getReturnType().isArray()) return true;
 		for(Class<?> param : meth.getParameterTypes())
 			if(param.isArray()) return true;
-		
+
 		Class<?> declaringClass = meth.getDeclaringClass();
 
 		// skip java-related methods
