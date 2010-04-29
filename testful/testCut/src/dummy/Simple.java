@@ -32,4 +32,11 @@ public class Simple {
 		if(status < 0) return -status;
 		else return status;
 	}
+	
+	public void compare(Object other) {
+		if(other == null) return;
+		
+		if(other instanceof Simple) this.status++;
+		else this.status--;
+	}
 }

@@ -18,7 +18,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Queue;
 
 public class Test implements Serializable {
@@ -356,7 +355,7 @@ public class Test implements Serializable {
 
 			if(t != null) {
 				Integer num = refs.get(t.getClazz());
-				if(num == null) num = 2; // this assignemnt and a null assignment
+				if(num == null) num = 1;
 				else num++;
 				refs.put(t.getClazz(), num);
 			}
@@ -372,14 +371,8 @@ public class Test implements Serializable {
 			newRefs.put(c, d);
 		}
 
-		Map<Clazz, Reference> nullValues = new HashMap<Clazz, Reference>();
-		for(Entry<Clazz, Deque<Reference>> e : newRefs.entrySet())
-			nullValues.put(e.getKey(), e.getValue().remove());
-
 		/** for each original reference (key) store the new reference to use (value) */
 		Map<Reference, Reference> convert = new HashMap<Reference, Reference>();
-
-		ssaInitConvert(convert, nullValues, this.refFactory.getReferences());
 
 		Operation[] newTest = new Operation[test.length];
 		for(int i = 0; i < test.length; i++) {
@@ -405,18 +398,12 @@ public class Test implements Serializable {
 				op = new Invoke(target, _this, in.getMethod(), params);
 			} else if(op instanceof ResetRepository) {
 				convert = new HashMap<Reference, Reference>();
-				ssaInitConvert(convert, nullValues, this.refFactory.getReferences());
 			}
 
 			newTest[i] = op;
 		}
 
 		return new Test(getCluster(), refFactory, newTest);
-	}
-
-	private void ssaInitConvert(Map<Reference, Reference> convert, Map<Clazz, Reference> nullValues, Reference[] references) {
-		for(Reference ref : references)
-			convert.put(ref, nullValues.get(ref.getClazz()));
 	}
 
 	private Reference ssaCreate(Map<Clazz, Deque<Reference>> newRefs, Map<Reference, Reference> convert, Reference ref) {

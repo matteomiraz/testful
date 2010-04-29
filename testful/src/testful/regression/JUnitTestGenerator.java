@@ -57,109 +57,8 @@ public class JUnitTestGenerator extends TestReader {
 	/** maximum number of operation per jUnit test */
 	private static final int MAX_TEST_LEN = 1000;
 
-	private static class Config extends ConfigProject implements IConfigProject.Args4j, IConfigRunner.Args4j {
-
-		@Option(required = false, name = "-dirTests", usage = "Specify the directory in which generated tests will be put.")
-		private File dirGeneratedTests;
-
-		@Argument
-		private List<String> tests = new ArrayList<String>();
-
-		private List<String> remote = new ArrayList<String>();
-
-		private boolean localEvaluation = true;
-
-		@Override
-		public List<String> getRemote() {
-			return remote;
-		}
-
-		@Override
-		public void addRemote(String remote) {
-			this.remote.add(remote);
-		}
-
-		@Override
-		public boolean isLocalEvaluation() {
-			return localEvaluation;
-		}
-
-		@Override
-		public void disableLocalEvaluation(boolean disableLocalEvaluation) {
-			localEvaluation = !disableLocalEvaluation;
-		}
-
-		public File getDirGeneratedTests() {
-			if(!dirGeneratedTests.isAbsolute()) dirGeneratedTests = new File(getDirBase(), dirGeneratedTests.getPath()).getAbsoluteFile();
-			return dirGeneratedTests;
-		}
-	}
-
 	private final File destDir;
 	private final TestSuite suite = new TestSuite();
-
-	public static void main(String[] args) {
-
-		Config config = new Config();
-		TestFul.parseCommandLine(config, args, JUnitTestGenerator.class, "JUnit test generator");
-
-		if(!config.isQuiet())
-			TestFul.printHeader("JUnit test generator");
-
-		TestFul.setupLogging(config);
-		RunnerPool.getRunnerPool().config(config);
-
-		ClassFinderCaching finder = null;
-		try {
-			finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
-		} catch (RemoteException e) {
-			// never happens
-		}
-
-		JUnitTestGenerator gen = new JUnitTestGenerator(config.getDirGeneratedTests());
-
-		gen.process(getOpStatus(finder, simplify(finder, config.tests)));
-
-		gen.writeSuite();
-
-		System.exit(0);
-	}
-
-	private static List<TestCoverage> getOpStatus(ClassFinder finder, Iterable<TestCoverage> simplify) {
-		List<TestCoverage> ret = new ArrayList<TestCoverage>();
-
-		for (TestCoverage test : simplify) {
-			try {
-				Operation[] op = TestExecutionManager.getOpStatus(finder, test);
-				ret.add(new TestCoverage(new Test(test.getCluster(), test.getReferenceFactory(), op), test.getCoverage()));
-			} catch (Exception e) {
-				logger.log(Level.WARNING, "Cannot execute a test: " + e.getLocalizedMessage(), e);
-				ret.add(test);
-			}
-		}
-
-		return ret;
-	}
-
-	private static Collection<TestCoverage> simplify(ClassFinder finder, List<String> tests) {
-		final TestSuiteReducer reducer = new TestSuiteReducer(finder, new TrackerDatum[0]);
-		new TestReader() {
-
-			@Override
-			protected Logger getLogger() {
-				return logger;
-			}
-
-			@Override
-			protected void read(String fileName, Test test) {
-				reducer.process(test);
-			}
-
-		}.read(tests);
-
-		return reducer.getOutput();
-	}
-
 	public JUnitTestGenerator(File destDir) {
 		this.destDir = destDir;
 	}
@@ -567,5 +466,107 @@ public class JUnitTestGenerator extends TestReader {
 		public TestCase clone() throws CloneNotSupportedException {
 			throw new CloneNotSupportedException("It is impossible to clone test cases");
 		}
+	}
+
+	// ------------------------------- main -----------------------------
+
+	public static void main(String[] args) {
+
+		Config config = new Config();
+		TestFul.parseCommandLine(config, args, JUnitTestGenerator.class, "JUnit test generator");
+
+		if(!config.isQuiet())
+			TestFul.printHeader("JUnit test generator");
+
+		TestFul.setupLogging(config);
+		RunnerPool.getRunnerPool().config(config);
+
+		ClassFinderCaching finder = null;
+		try {
+			finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
+		} catch (RemoteException e) {
+			// never happens
+		}
+
+		JUnitTestGenerator gen = new JUnitTestGenerator(config.getDirGeneratedTests());
+
+		gen.process(getOpStatus(finder, simplify(finder, config.tests)));
+
+		gen.writeSuite();
+
+		System.exit(0);
+	}
+
+	private static class Config extends ConfigProject implements IConfigProject.Args4j, IConfigRunner.Args4j {
+
+		@Option(required = false, name = "-dirTests", usage = "Specify the directory in which generated tests will be put.")
+		private File dirGeneratedTests;
+
+		@Argument
+		private List<String> tests = new ArrayList<String>();
+
+		private List<String> remote = new ArrayList<String>();
+
+		private boolean localEvaluation = true;
+
+		@Override
+		public List<String> getRemote() {
+			return remote;
+		}
+
+		@Override
+		public void addRemote(String remote) {
+			this.remote.add(remote);
+		}
+
+		@Override
+		public boolean isLocalEvaluation() {
+			return localEvaluation;
+		}
+
+		@Override
+		public void disableLocalEvaluation(boolean disableLocalEvaluation) {
+			localEvaluation = !disableLocalEvaluation;
+		}
+
+		public File getDirGeneratedTests() {
+			if(!dirGeneratedTests.isAbsolute()) dirGeneratedTests = new File(getDirBase(), dirGeneratedTests.getPath()).getAbsoluteFile();
+			return dirGeneratedTests;
+		}
+	}
+
+	private static List<TestCoverage> getOpStatus(ClassFinder finder, Iterable<TestCoverage> simplify) {
+		List<TestCoverage> ret = new ArrayList<TestCoverage>();
+
+		for (TestCoverage test : simplify) {
+			try {
+				Operation[] op = TestExecutionManager.getOpStatus(finder, test);
+				ret.add(new TestCoverage(new Test(test.getCluster(), test.getReferenceFactory(), op), test.getCoverage()));
+			} catch (Exception e) {
+				logger.log(Level.WARNING, "Cannot execute a test: " + e.getLocalizedMessage(), e);
+				ret.add(test);
+			}
+		}
+
+		return ret;
+	}
+
+	private static Collection<TestCoverage> simplify(ClassFinder finder, List<String> tests) {
+		final TestSuiteReducer reducer = new TestSuiteReducer(finder, new TrackerDatum[0]);
+		new TestReader() {
+
+			@Override
+			protected Logger getLogger() {
+				return logger;
+			}
+
+			@Override
+			protected void read(String fileName, Test test) {
+				reducer.process(test);
+			}
+
+		}.read(tests);
+
+		return reducer.getOutput();
 	}
 }

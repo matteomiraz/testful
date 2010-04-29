@@ -8,4 +8,7 @@
         <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" array="false" type="int"/>
     </method>
     <method kind="observer" exposeState="false" name="oAbs"/>
+    <method kind="pure" exposeState="false" name="compare">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" array="false" type="java.lang.Object"/>
+    </method>
 </ns2:class>
