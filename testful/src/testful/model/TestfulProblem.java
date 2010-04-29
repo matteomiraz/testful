@@ -129,7 +129,7 @@ public class TestfulProblem implements Serializable {
 		runnerCaching.updateCacheScore();
 
 		if(optimal != null)
-			optimal.write(num, invTot.get(), time, config.getLog(), logger);
+			optimal.log(num, invTot.get(), time);
 
 		if (trackers != null) {
 			for (Tracker tracker : trackers)

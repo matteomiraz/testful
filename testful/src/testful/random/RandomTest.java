@@ -126,7 +126,7 @@ public abstract class RandomTest {
 
 					long now = System.currentTimeMillis();
 
-					optimal.write(null, numCall, (now - start), logDirectory, logger);
+					optimal.log(null, numCall, (now - start));
 
 					runner.updateCacheScore();
 
