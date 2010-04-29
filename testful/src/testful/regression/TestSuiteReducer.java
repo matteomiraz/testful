@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -205,7 +206,7 @@ public class TestSuiteReducer {
 		return new TestCoverage(t, cov);
 	}
 
-	public List<TestCoverage> getOutput() {
+	public Collection<TestCoverage> getOutput() {
 		return optimal.get();
 	}
 }

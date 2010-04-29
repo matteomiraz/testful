@@ -125,7 +125,7 @@ public class JUnitTestGenerator extends TestReader {
 		System.exit(0);
 	}
 
-	private static List<TestCoverage> getOpStatus(ClassFinder finder, List<TestCoverage> simplify) {
+	private static List<TestCoverage> getOpStatus(ClassFinder finder, Iterable<TestCoverage> simplify) {
 		List<TestCoverage> ret = new ArrayList<TestCoverage>();
 
 		for (TestCoverage test : simplify) {
@@ -141,7 +141,7 @@ public class JUnitTestGenerator extends TestReader {
 		return ret;
 	}
 
-	private static List<TestCoverage> simplify(ClassFinder finder, List<String> tests) {
+	private static Collection<TestCoverage> simplify(ClassFinder finder, List<String> tests) {
 		final TestSuiteReducer reducer = new TestSuiteReducer(finder, new TrackerDatum[0]);
 		new TestReader() {
 

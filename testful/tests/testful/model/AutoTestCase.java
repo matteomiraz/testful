@@ -2,6 +2,7 @@ package testful.model;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -20,7 +21,7 @@ import ec.util.MersenneTwisterFast;
  */
 public abstract class AutoTestCase extends GenericTestCase {
 
-	protected abstract List<? extends Test> perform(Test test) throws Exception;
+	protected abstract Collection<? extends Test> perform(Test test) throws Exception;
 
 	protected String[] getCuts() {
 		return new String[] {
@@ -44,7 +45,7 @@ public abstract class AutoTestCase extends GenericTestCase {
 	}
 
 	protected void check(Test t, Operation[][] expected) throws Exception {
-		List<? extends Test> tests = perform(t);
+		Collection<? extends Test> tests = perform(t);
 
 		System.out.println("original:");
 		for(Operation o : t.getTest()) {
@@ -65,8 +66,10 @@ public abstract class AutoTestCase extends GenericTestCase {
 		assertEquals("Wrong number of results", expected.length, tests.size());
 
 		Operation[][] actual = new Operation[tests.size()][];
-		for(int i = 0; i < actual.length; i++)
-			actual[i] = tests.get(i).getTest();
+		{
+			int i = 0;
+			for(Test t1 : tests) actual[i++] = t1.getTest();
+		}
 
 		Arrays.sort(expected, dummyTestComparator);
 		Arrays.sort(actual, dummyTestComparator);
@@ -128,12 +131,12 @@ public abstract class AutoTestCase extends GenericTestCase {
 		checkSetup(origCov);
 
 		long minStart = System.nanoTime();
-		List<? extends Test> res = perform(orig);
+		Collection<? extends Test> res = perform(orig);
 		long minStop = System.nanoTime();
 
 		List<ElementManager<String, CoverageInformation>> partsCov = new ArrayList<ElementManager<String,CoverageInformation>>();
 		ElementManager<String, CoverageInformation> combinedCov;
-		if(res.size() == 1) partsCov.add(combinedCov = getCoverage(res.get(0)));
+		if(res.size() == 1) partsCov.add(combinedCov = getCoverage(res.iterator().next()));
 		else {
 			combinedCov = new ElementManager<String, CoverageInformation>();
 

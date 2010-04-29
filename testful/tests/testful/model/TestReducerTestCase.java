@@ -1,6 +1,6 @@
 package testful.model;
 
-import java.util.List;
+import java.util.Collection;
 
 import testful.coverage.TrackerDatum;
 import testful.regression.TestSuiteReducer;
@@ -11,7 +11,7 @@ import testful.regression.TestSuiteReducer;
 public class TestReducerTestCase extends AutoTestCase {
 
 	@Override
-	protected List<TestCoverage> perform(Test test) throws Exception {
+	protected Collection<TestCoverage> perform(Test test) throws Exception {
 		TestSuiteReducer reducer = new TestSuiteReducer(getFinder(), new TrackerDatum[0]);
 
 		reducer.process(test);
@@ -24,7 +24,7 @@ public class TestReducerTestCase extends AutoTestCase {
 
 		Test t = createRandomTest("dummy.Simple", 500, 2568267209504662348l);
 
-		List<TestCoverage> result = perform(t);
+		Collection<TestCoverage> result = perform(t);
 
 
 		for (TestCoverage p : result)

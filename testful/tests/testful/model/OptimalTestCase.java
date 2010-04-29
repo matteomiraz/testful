@@ -30,10 +30,10 @@ public class OptimalTestCase extends SimpleDummyTestCase {
 		System.out.println(msg.toString());
 
 		assertEquals(1, opt.get().size());
-		assertEquals(tc1, opt.get().get(0));
+		assertEquals(tc1, opt.get().iterator().next());
 
 		opt.update(tc2);
 		assertEquals(1, opt.get().size());
-		assertEquals(tc2, opt.get().get(0));
+		assertEquals(tc2, opt.get().iterator().next());
 	}
 }
