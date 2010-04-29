@@ -15,9 +15,17 @@ import testful.utils.Cloner;
 
 /**
  * Stores the result of an operation (Invoke or CreateObject).
- * It analyzes the state of the object accepting the method call (only for Invoke)
- * and the result of the invocation (i.e., the object created, or the returned
- * value of non-void functions).
+ * 
+ * It records the status of the operation (<b>invalid</b>, <b>faulty</b>,
+ * <b>normal</b>, or <b>exceptional</b>).<br>
+ * 
+ * Moreover,
+ * <ul>
+ *   <li>In case of a <b>normal method</b> invocation, stores the value of the result.</li>
+ *   <li>In case of a <b>normal constructor</b> invocation, stores the value of the result (the object created).</li>
+ *   <li>In case of a <b>normal</b> or an <b>exceptional method</b> invocation, stores the state of the object accepting the invocation.</li>
+ *   <li>In case of an <b>exception</b>, stores the thrown exception.</li>
+ * </ul>
  * 
  * The inner class OperationResult.Verifier allows the user to perform regression testing.
  * 
@@ -29,27 +37,73 @@ public class OperationResult extends OperationInformation {
 
 	public static final String KEY = "OP_RESULT";
 
+	public static enum Status {
+		/** The operation has not been executed */
+		NOT_EXECUTED,
+
+		/** the operation is invalid */
+		PRECONDITION_ERROR,
+
+		/** the operation is faulty */
+		POSTCONDITION_ERROR,
+
+		/** the operation is OK: it terminates without throwing any exception */
+		SUCCESSFUL,
+
+		/** the operation is OK: it terminates throwing an exception */
+		EXCEPTIONAL
+	}
+
+	protected Status status = Status.NOT_EXECUTED;
 	protected Value result = null;
 	protected Value object = null;
+	protected Throwable exc = null;
 
 	public OperationResult() {
 		super(KEY);
 	}
 
-	private OperationResult(Value object, Value result)  {
+	private OperationResult(OperationResult other)  {
 		super(KEY);
-		this.object = object;
-		this.result = result;
+
+		status = other.status;
+		object = other.object;
+		result = other.result;
+		exc = other.exc;
+	}
+
+	public void setPreconditionError() {
+		status = Status.PRECONDITION_ERROR;
+	}
+
+	public void setPostconditionError() {
+		status = Status.POSTCONDITION_ERROR;
 	}
 
 	@SuppressWarnings("unused")
-	public void setValue(Object object, Object result, TestCluster cluster) throws FaultyExecutionException {
+	public void setSuccessful(Object object, Object result, TestCluster cluster) throws FaultyExecutionException {
 
-		if(TestFul.DEBUG && (object != null || result != null))
+		if(TestFul.DEBUG && status != Status.NOT_EXECUTED)
 			Logger.getLogger("testful.model").warning(OperationResult.class.getCanonicalName() + " already set");
 
+		status = Status.SUCCESSFUL;
 		this.object = new Value(object, cluster);
 		this.result = new Value(result, cluster);
+	}
+
+	@SuppressWarnings("unused")
+	public void setExceptional(Throwable exc, Object object, TestCluster cluster) {
+
+		if(TestFul.DEBUG && status != Status.NOT_EXECUTED)
+			Logger.getLogger("testful.model").warning(OperationResult.class.getCanonicalName() + " already set");
+
+		status = Status.EXCEPTIONAL;
+		this.exc = exc;
+		this.object = new Value(object, cluster);
+	}
+
+	public Status getStatus() {
+		return status;
 	}
 
 	public Value getObject() {
@@ -58,6 +112,10 @@ public class OperationResult extends OperationInformation {
 
 	public Value getResult() {
 		return result;
+	}
+
+	public Throwable getException() {
+		return exc;
 	}
 
 	public static void insert(Operation[] ops) {
@@ -75,16 +133,17 @@ public class OperationResult extends OperationInformation {
 
 	@Override
 	public OperationInformation clone() {
-		return new OperationResult(object, result);
+		return new OperationResult(this);
 	}
 
 	@Override
 	public String toString() {
-		if(result == null && object == null) return "No info";
+		if(status == Status.NOT_EXECUTED) return "Not Executed";
 
-		String ret = "";
-		if(result != null) ret += "result: " + result + "; ";
-		if(object != null) ret += "object: " + object + "; ";
+		String ret = status.toString();
+		if(status == Status.EXCEPTIONAL) ret += " " + exc.getClass().getCanonicalName() + ": " + exc.getMessage() + ";";
+		if(object != null) ret += " object: " + object + ";";
+		if(result != null) ret += " result: " + result + ";";
 		return ret;
 	}
 
@@ -300,9 +359,31 @@ public class OperationResult extends OperationInformation {
 		}
 
 		@Override
-		public void setValue(Object object, Object result, TestCluster cluster) throws FaultyExecutionException {
+		public void setPreconditionError() {
+			if(status != Status.PRECONDITION_ERROR) throw new OperationVerifierException(status, Status.PRECONDITION_ERROR);
+		}
+
+		@Override
+		public void setPostconditionError() {
+			if(status != Status.POSTCONDITION_ERROR) throw new OperationVerifierException(status, Status.POSTCONDITION_ERROR);
+		}
+
+		@Override
+		public void setSuccessful(Object object, Object result, TestCluster cluster) throws FaultyExecutionException {
+			if(status != Status.SUCCESSFUL) throw new OperationVerifierException(status, Status.SUCCESSFUL);
+
 			this.object.check(new Value(object, cluster));
 			this.result.check(new Value(result, cluster));
+		}
+
+		@Override
+		public void setExceptional(Throwable exc, Object object, TestCluster cluster) {
+			if(status != Status.EXCEPTIONAL) throw new OperationVerifierException(status, Status.EXCEPTIONAL);
+
+			Throwable thisExc = this.exc;
+			if(!thisExc.getClass().equals(exc.getClass()) || !thisExc.getMessage().equals(exc.getMessage())) throw new OperationVerifierException(thisExc, exc);
+
+			this.object.check(new Value(object, cluster));
 		}
 
 		public static void insertOperationResultVerifier(Operation[] ops) {
@@ -319,6 +400,24 @@ public class OperationResult extends OperationInformation {
 			return new Verifier(this);
 		}
 	}
+
+	public static class OperationVerifierException extends FaultyExecutionException {
+
+		private static final long serialVersionUID = -5320352798948137983L;
+
+		private OperationVerifierException(String msg) {
+			super(msg, null);
+		}
+
+		public OperationVerifierException(Status expected, Status actual) {
+			this("Operation Verifier: expected " + expected + ", actual: " + actual);
+		}
+
+		public OperationVerifierException(Throwable expected, Throwable actual) {
+			this("Operation Verifier: operation termiated with a wrong exception. Expected " + expected + ", actual: " + actual);
+		}
+	}
+
 
 	public static class OperationResultVerifierException extends FaultyExecutionException {
 		private static final long serialVersionUID = -9113533247815125403L;

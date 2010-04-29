@@ -20,7 +20,6 @@ import testful.model.Invoke;
 import testful.model.Methodz;
 import testful.model.Operation;
 import testful.model.OperationResult;
-import testful.model.OperationStatus;
 import testful.model.PrimitiveClazz;
 import testful.model.Reference;
 import testful.model.ResetRepository;
@@ -204,7 +203,7 @@ public class ReflectionExecutor implements Executor {
 
 	/** createObject */
 	private boolean createObject(CreateObject op) throws FaultyExecutionException {
-		OperationStatus opStatus = (OperationStatus) op.getInfo(OperationStatus.KEY);
+		OperationResult opRes = (OperationResult) op.getInfo(OperationResult.KEY);
 
 		Reference targetPos = op.getTarget();
 		Constructorz constructor = op.getConstructor();
@@ -223,7 +222,7 @@ public class ReflectionExecutor implements Executor {
 
 				if(constructozParamsType[i] instanceof PrimitiveClazz)
 					if(initargs[i] == null) {
-						if(opStatus != null) opStatus.setPreconditionError();
+						if(opRes != null) opRes.setPreconditionError();
 						return false;
 					} else
 						initargs[i] = ((PrimitiveClazz) constructozParamsType[i]).cast(initargs[i]);
@@ -235,25 +234,22 @@ public class ReflectionExecutor implements Executor {
 
 			newObject = cons.newInstance(initargs);
 
-			if(opStatus != null) opStatus.setSuccessful();
-
 			// save results
 			if(targetPos != null) set(op, targetPos, newObject);
 
-			OperationResult opResult = (OperationResult) op.getInfo(OperationResult.KEY);
-			if(opResult != null) opResult.setValue(null, newObject, cluster);
+			if(opRes != null) opRes.setSuccessful(null, newObject, cluster);
 
 		} catch(InvocationTargetException invocationException) {
 			Throwable exc = invocationException.getTargetException();
 
 			if(exc instanceof org.jmlspecs.jmlrac.runtime.JMLPreconditionError) {
-				if(opStatus != null) opStatus.setPreconditionError();
+				if(opRes != null) opRes.setPreconditionError();
 				return false;
 			} else if(exc instanceof FaultyExecutionException) {
-				if(opStatus != null) opStatus.setPostconditionError();
+				if(opRes != null) opRes.setPostconditionError();
 				throw (FaultyExecutionException) exc;
 			} else // a valid exception is thrown
-				if(opStatus != null) opStatus.setExceptional(exc);
+				if(opRes != null) opRes.setExceptional(exc, null, cluster);
 		} catch(Throwable e) {
 			logger.log(Level.WARNING, "Reflection error in perform(CreateObject): " + e.getMessage(), e);
 
@@ -308,7 +304,7 @@ public class ReflectionExecutor implements Executor {
 		Methodz method = op.getMethod();
 		Reference[] params = op.getParams();
 		Clazz[] paramsTypes = method.getParameterTypes();
-		OperationStatus opStatus = (OperationStatus) op.getInfo(OperationStatus.KEY);
+		OperationResult opRes = (OperationResult) op.getInfo(OperationResult.KEY);
 
 		Method m = method.toMethod();
 		Object[] args = new Object[params.length];
@@ -319,39 +315,37 @@ public class ReflectionExecutor implements Executor {
 				args[i] = get(params[i]);
 
 				if(paramsTypes[i] instanceof PrimitiveClazz) if(args[i] == null) {
-					if(opStatus != null) opStatus.setPreconditionError();
+					if(opRes != null) opRes.setPreconditionError();
 					return false;
 				} else args[i] = ((PrimitiveClazz) paramsTypes[i]).cast(args[i]);
 			}
 
 		Object baseObject = get(sourcePos);
 		if(baseObject == null && !method.isStatic()) {
-			if(opStatus != null) opStatus.setPreconditionError();
+			if(opRes != null) opRes.setPreconditionError();
 			return false;
 		}
 
-		Object newObject = null;
+		Object result = null;
 		try {
 
-			newObject = m.invoke(baseObject, args);
+			result = m.invoke(baseObject, args);
 
-			if(targetPos != null) set(op, targetPos, newObject);
-			if(opStatus != null) opStatus.setSuccessful();
+			if(targetPos != null) set(op, targetPos, result);
 
-			OperationResult opResult = (OperationResult) op.getInfo(OperationResult.KEY);
-			if(opResult != null) opResult.setValue(baseObject, newObject, cluster);
+			if(opRes != null) opRes.setSuccessful(baseObject, result, cluster);
 
 		} catch(InvocationTargetException invocationException) {
 			Throwable exc = invocationException.getTargetException();
 
 			if(exc instanceof org.jmlspecs.jmlrac.runtime.JMLPreconditionError) {
-				if(opStatus != null) opStatus.setPreconditionError();
+				if(opRes != null) opRes.setPreconditionError();
 				return false;
 			} else if(exc instanceof FaultyExecutionException) {
-				if(opStatus != null) opStatus.setPostconditionError();
+				if(opRes != null) opRes.setPostconditionError();
 				throw (FaultyExecutionException) exc;
 			} else // a valid exception is thrown
-				if(opStatus != null) opStatus.setExceptional(exc);
+				if(opRes != null) opRes.setExceptional(exc, baseObject, cluster);
 		} catch(Throwable e) {
 			logger.log(Level.WARNING, "Reflection error in perform(Invoke): " + e.getMessage(), e);
 

@@ -14,11 +14,11 @@ import testful.ConfigProject;
 import testful.IConfigProject;
 import testful.TestFul;
 import testful.model.Operation;
-import testful.model.OperationStatus;
+import testful.model.OperationResult;
+import testful.model.OperationResult.Status;
 import testful.model.Test;
 import testful.model.TestExecutionManager;
 import testful.model.TestReader;
-import testful.model.OperationStatus.Status;
 import testful.runner.ClassFinder;
 import testful.runner.ClassFinderCaching;
 import testful.runner.ClassFinderImpl;
@@ -88,7 +88,7 @@ public class Replay extends TestReader {
 			Operation[] operations = future.get();
 
 			for(Operation op : operations) {
-				OperationStatus info = (OperationStatus) op.getInfo(OperationStatus.KEY);
+				OperationResult info = (OperationResult) op.getInfo(OperationResult.KEY);
 
 				if(info != null && info.getStatus() == Status.POSTCONDITION_ERROR) {
 					dump(operations);
@@ -107,7 +107,7 @@ public class Replay extends TestReader {
 
 		for(Operation op : operations) {
 			sb.append(op).append("\n");
-			OperationStatus info = (OperationStatus) op.getInfo(OperationStatus.KEY);
+			OperationResult info = (OperationResult) op.getInfo(OperationResult.KEY);
 			if(info != null) sb.append("  ").append(info);
 		}
 

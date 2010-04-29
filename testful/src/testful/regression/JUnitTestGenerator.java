@@ -32,7 +32,6 @@ import testful.model.CreateObject;
 import testful.model.Invoke;
 import testful.model.Operation;
 import testful.model.OperationResult;
-import testful.model.OperationStatus;
 import testful.model.PrimitiveClazz;
 import testful.model.Reference;
 import testful.model.Test;
@@ -315,7 +314,7 @@ public class JUnitTestGenerator extends TestReader {
 
 			out.println();
 			for(Operation op : test.getTest()) {
-				OperationStatus status = (OperationStatus) op.getInfo(OperationStatus.KEY);
+				OperationResult status = (OperationResult) op.getInfo(OperationResult.KEY);
 
 				if(status == null) {
 					if(op instanceof Invoke || op instanceof CreateObject) {

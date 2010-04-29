@@ -17,7 +17,6 @@ public class TestSimpifierTestCase extends AutoTestCase {
 	@Override
 	protected List<Test> perform(Test test) throws Exception {
 		OperationResult.insert(test.getTest());
-		OperationStatus.insert(test.getTest());
 
 		Context<Operation[], TestExecutionManager> ctx = TestExecutionManager.getContext(getFinder(), test);
 		ctx.setStopOnBug(false);
@@ -26,6 +25,8 @@ public class TestSimpifierTestCase extends AutoTestCase {
 		for (int i = 0; i < ops.length; i++) {
 			ops[i] = ops[i].adapt(test.getCluster(), test.getReferenceFactory());
 		}
+
+		System.out.println(new Test(test.getCluster(), test.getReferenceFactory(), ops));
 
 		TestSimplifier s = new TestSimplifier();
 		Test r = s.process(new Test(test.getCluster(), test.getReferenceFactory(), ops));

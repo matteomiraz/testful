@@ -38,7 +38,6 @@ public class TestExecutionManager extends ExecutionManager<Operation[]> {
 
 	public static Operation[] getOpStatus(ClassFinder finder, Test test) throws InterruptedException, ExecutionException {
 		OperationResult.insert(test.getTest());
-		OperationStatus.insert(test.getTest());
 
 		Context<Operation[], TestExecutionManager> ctx = TestExecutionManager.getContext(finder, test);
 		ctx.setStopOnBug(false);

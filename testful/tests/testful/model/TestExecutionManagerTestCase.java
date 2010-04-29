@@ -25,7 +25,6 @@ public class TestExecutionManagerTestCase extends SimpleDummyTestCase {
 
 	private Operation[] execute(Test test) throws RemoteException, InterruptedException, ExecutionException {
 		OperationResult.insert(test.getTest());
-		OperationStatus.insert(test.getTest());
 		Context<Operation[], TestExecutionManager> ctx = TestExecutionManager.getContext(getFinder(), test);
 		ctx.setStopOnBug(false);
 		Future<Operation[]> result = getExec().execute(ctx);
@@ -43,11 +42,11 @@ public class TestExecutionManagerTestCase extends SimpleDummyTestCase {
 		Operation[] testOperations = execute(test);
 		assertEquals(2, testOperations.length);
 
-		assertEquals(OperationStatus.Status.SUCCESSFUL, ((OperationStatus)testOperations[0].getInfo(OperationStatus.KEY)).status);
-		assertEquals(OperationStatus.Status.SUCCESSFUL, ((OperationStatus)testOperations[1].getInfo(OperationStatus.KEY)).status);
+		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
+		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
 
-		assertEquals(OperationStatus.Status.NOT_EXECUTED, ((OperationStatus)test.getTest()[0].getInfo(OperationStatus.KEY)).status);
-		assertEquals(OperationStatus.Status.NOT_EXECUTED, ((OperationStatus)test.getTest()[1].getInfo(OperationStatus.KEY)).status);
+		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
+		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[1].getInfo(OperationResult.KEY)).status);
 	}
 
 	public void testSimple2() throws Exception {
@@ -65,10 +64,10 @@ public class TestExecutionManagerTestCase extends SimpleDummyTestCase {
 		Operation[] testOperations = execute(test2);
 		assertEquals(2, testOperations.length);
 
-		assertEquals(OperationStatus.Status.SUCCESSFUL, ((OperationStatus)testOperations[0].getInfo(OperationStatus.KEY)).status);
-		assertEquals(OperationStatus.Status.SUCCESSFUL, ((OperationStatus)testOperations[1].getInfo(OperationStatus.KEY)).status);
+		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
+		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
 
-		assertEquals(OperationStatus.Status.NOT_EXECUTED, ((OperationStatus)test.getTest()[0].getInfo(OperationStatus.KEY)).status);
-		assertEquals(OperationStatus.Status.NOT_EXECUTED, ((OperationStatus)test.getTest()[1].getInfo(OperationStatus.KEY)).status);
+		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
+		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[1].getInfo(OperationResult.KEY)).status);
 	}
 }

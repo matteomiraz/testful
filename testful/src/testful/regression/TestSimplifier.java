@@ -7,7 +7,7 @@ import java.util.logging.Logger;
 import testful.model.CreateObject;
 import testful.model.Invoke;
 import testful.model.Operation;
-import testful.model.OperationStatus;
+import testful.model.OperationResult;
 import testful.model.ResetRepository;
 import testful.model.Test;
 
@@ -44,7 +44,7 @@ public class TestSimplifier {
 	public Operation[] process(final Operation[] test) {
 		List<Operation> ops = new ArrayList<Operation>();
 		for(Operation op : test) {
-			OperationStatus status = (OperationStatus) op.getInfo(OperationStatus.KEY);
+			OperationResult status = (OperationResult) op.getInfo(OperationResult.KEY);
 
 			if(status != null) {
 				switch(status.getStatus()) {
