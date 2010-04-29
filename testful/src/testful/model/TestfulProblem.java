@@ -312,4 +312,7 @@ public class TestfulProblem implements Serializable {
 		return ret;
 	}
 
+	public TrackerDatum[] getData() {
+		return data;
+	}
 }

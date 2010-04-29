@@ -1,5 +1,7 @@
 package testful.model;
 
+import java.util.concurrent.ExecutionException;
+
 import testful.TestfulException;
 import testful.coverage.TrackerDatum;
 import testful.model.executor.ReflectionExecutor;
@@ -7,6 +9,7 @@ import testful.runner.ClassFinder;
 import testful.runner.Context;
 import testful.runner.ExecutionManager;
 import testful.runner.Executor;
+import testful.runner.RunnerPool;
 
 public class TestExecutionManager extends ExecutionManager<Operation[]> {
 
@@ -31,4 +34,21 @@ public class TestExecutionManager extends ExecutionManager<Operation[]> {
 
 	@Override
 	protected void warmUp() {}
+
+
+	public static Operation[] getOpStatus(ClassFinder finder, Test test) throws InterruptedException, ExecutionException {
+		OperationResult.insert(test.getTest());
+		OperationStatus.insert(test.getTest());
+
+		Context<Operation[], TestExecutionManager> ctx = TestExecutionManager.getContext(finder, test);
+		ctx.setStopOnBug(false);
+		ctx.setRecycleClassLoader(true);
+
+		Operation[] ops = RunnerPool.getRunnerPool().execute(ctx).get();
+
+		for (int i = 0; i < ops.length; i++)
+			ops[i] = ops[i].adapt(test.getCluster(), test.getReferenceFactory());
+
+		return ops;
+	}
 }

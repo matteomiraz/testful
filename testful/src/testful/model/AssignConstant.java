@@ -1,6 +1,7 @@
 package testful.model;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import testful.TestFul;
@@ -29,7 +30,15 @@ public class AssignConstant extends Operation {
 
 	@Override
 	public Operation adapt(TestCluster cluster, ReferenceFactory refFactory) {
-		return new AssignConstant(refFactory.adapt(ref), cluster.adapt(staticValue));
+		final AssignConstant ret = new AssignConstant(refFactory.adapt(ref), cluster.adapt(staticValue));
+
+		Iterator<OperationInformation> it = getInfos();
+		while(it.hasNext()) {
+			OperationInformation info = it.next();
+			ret.addInfo(info.clone());
+		}
+
+		return ret;
 	}
 
 	public static AssignConstant generate(Clazz c, TestCluster cluster, ReferenceFactory refFactory, MersenneTwisterFast random) {
@@ -89,5 +98,10 @@ public class AssignConstant extends Operation {
 	@Override
 	protected Set<Reference> calculateUses() {
 		return emptyRefsSet;
+	}
+
+	@Override
+	public Operation clone() {
+		return new AssignConstant(ref, staticValue);
 	}
 }

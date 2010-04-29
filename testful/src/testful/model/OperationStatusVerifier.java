@@ -33,6 +33,11 @@ public class OperationStatusVerifier extends OperationStatus {
 	}
 
 	@Override
+	public OperationInformation clone() {
+		return new OperationStatusVerifier(this);
+	}
+
+	@Override
 	public String toString() {
 		return "(verified) " + super.toString();
 	}

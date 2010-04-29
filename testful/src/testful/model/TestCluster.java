@@ -200,7 +200,8 @@ public class TestCluster implements Serializable {
 			if(!Methodz.toSkip(meth)) {
 
 				// add the return type to the test cluster
-				todo.add(getRegistry().getClazz(meth.getReturnType()));
+				if(meth.getReturnType() != Void.TYPE)
+					todo.add(getRegistry().getClazz(meth.getReturnType()));
 
 				// add input parameters to the test cluster
 				for(Class<?> param : meth.getParameterTypes())
@@ -327,6 +328,18 @@ public class TestCluster implements Serializable {
 		return ret;
 	}
 
+	public Clazz getClass(Class<?> clazz) {
+		for (Clazz c : cluster) {
+			try {
+				if(c.toJavaClass() == clazz)
+					return c;
+			} catch (ClassNotFoundException e) {
+			}
+		}
+
+		return null;
+	}
+
 	public ClassRegistry getRegistry() {
 		if(registry == null) // if loaded from a serialized version, fill the registry!
 			try {
@@ -357,11 +370,18 @@ public class TestCluster implements Serializable {
 		StringBuilder ret = new StringBuilder();
 
 		ret.append("CUT: ").append(cut.getClassName()).append("\n");
+
 		ret.append("Test Cluster: ");
 		for(Clazz c : cluster)
 			ret.append("\n  ").append(c.getClassName());
+		ret.append("\n");
 
-		ret.append("\nregistry:\n");
+		ret.append("ALL:");
+		for(Clazz c : all)
+			ret.append("\n  ").append(c.getClassName());
+		ret.append("\n");
+
+		ret.append("registry:\n");
 		for(Clazz c : registry.registry.values()) {
 			ret.append(c.getClassName()).append(" -> ");
 			for(Clazz to : c.getAssignableTo())
@@ -378,7 +398,8 @@ public class TestCluster implements Serializable {
 	}
 
 	Class<?> loadClass(String name) throws ClassNotFoundException {
-		if(classLoader == null) throw new ClassNotFoundException("The classloader is not set");
+		if(classLoader == null)
+			throw new ClassNotFoundException("The classloader is not set");
 
 		return classLoader.loadClass(name);
 	}

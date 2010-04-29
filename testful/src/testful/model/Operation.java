@@ -26,10 +26,12 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 		infos.put(info);
 	}
 
-	public void removeInfo(String key) {
-		if(infos == null || key == null) return;
-		infos.remove(key);
+	public OperationInformation removeInfo(String key) {
+		if(infos == null || key == null) return null;
+
+		OperationInformation ret = infos.remove(key);
 		if(infos.isEmpty()) infos = null;
+		return ret;
 	}
 
 	public OperationInformation getInfo(String key) {
@@ -53,14 +55,7 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 	public abstract boolean equals(Object o);
 
 	@Override
-	public Operation clone() {
-		try {
-			return (Operation) super.clone();
-		} catch(CloneNotSupportedException e) {
-			e.printStackTrace();
-			return this;
-		}
-	}
+	public abstract Operation clone();
 
 	protected static final transient Set<Reference> emptyRefsSet = new HashSet<Reference>();
 

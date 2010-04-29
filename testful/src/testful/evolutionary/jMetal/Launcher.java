@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -15,18 +17,22 @@ import jmetal.base.operator.localSearch.LocalSearch;
 import jmetal.base.operator.selection.BinaryTournament2;
 import jmetal.base.operator.selection.Selection;
 import jmetal.util.JMException;
+import testful.IUpdate.Callback;
 import testful.TestFul;
 import testful.TestfulException;
-import testful.IUpdate.Callback;
 import testful.coverage.TrackerDatum;
 import testful.coverage.whiteBox.AnalysisWhiteBox;
 import testful.evolutionary.ConfigEvolutionary;
 import testful.evolutionary.IConfigEvolutionary;
 import testful.model.Operation;
+import testful.model.Test;
+import testful.model.TestCoverage;
+import testful.model.TestExecutionManager;
 import testful.model.TestSuite;
 import testful.random.RandomTest;
 import testful.random.RandomTestSplit;
 import testful.regression.JUnitTestGenerator;
+import testful.regression.TestSuiteReducer;
 import testful.runner.RunnerPool;
 import testful.utils.Utils;
 
@@ -117,15 +123,31 @@ public class Launcher {
 			throw new TestfulException(e);
 		}
 
+		/* simplify tests */
+		final TestSuiteReducer reducer = new TestSuiteReducer(problem.getFinder(), problem.getData());
+		for (Solution<Operation> sol : population)
+			reducer.process(problem.getTest(sol));
+
+		/* get Operation status */
+		List<TestCoverage> optimal = new ArrayList<TestCoverage>();
+		for (TestCoverage testCoverage : reducer.getOutput()) {
+			try {
+				Operation[] ops = TestExecutionManager.getOpStatus(problem.getFinder(), testCoverage);
+				optimal.add(new TestCoverage(new Test(testCoverage.getCluster(), testCoverage.getReferenceFactory(), ops), testCoverage.getCoverage()));
+			} catch (Exception e) {
+				logger.log(Level.WARNING, "Cannot execute the test: " + e.getLocalizedMessage(), e);
+				optimal.add(testCoverage);
+			}
+		}
+
+
 		/* convert tests to jUnit */
-
-		JUnitTestGenerator gen = new JUnitTestGenerator(config, config.getDirGeneratedTests(), config.isReload(), true);
-		for(Solution<Operation> t : population)
-			gen.read("", problem.getTest(t));
-
+		JUnitTestGenerator gen = new JUnitTestGenerator(config.getDirGeneratedTests());
+		gen.process(optimal);
 		gen.writeSuite();
 
 	}//main
+
 
 	/**
 	 * This function uses random.Launcher to generate a smarter initial population

@@ -15,6 +15,7 @@ import jmetal.base.operator.localSearch.LocalSearch;
 import jmetal.util.JMException;
 import testful.TestfulException;
 import testful.coverage.CoverageInformation;
+import testful.coverage.TrackerDatum;
 import testful.evolutionary.IConfigEvolutionary;
 import testful.model.Operation;
 import testful.model.ReferenceFactory;
@@ -159,5 +160,9 @@ public class JMProblem extends Problem<Operation> {
 
 	public ClassFinder getFinder() {
 		return problem.getFinder();
+	}
+
+	public TrackerDatum[] getData() {
+		return problem.getData();
 	}
 }

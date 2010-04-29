@@ -133,7 +133,6 @@ implements IUpdate {
 		int currentGeneration = 0;
 		problem_.setCurrentGeneration(currentGeneration++, 0);
 
-		// TODO: usare anche wall clock!
 		Time time;
 		if(useCpuTime) {
 			try {

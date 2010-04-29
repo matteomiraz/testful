@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.PrintWriter;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,6 +21,31 @@ import testful.model.Tracker.DataLight;
 public abstract class TestReader {
 
 	protected abstract Logger getLogger();
+
+	public void process(Iterable<? extends Test> tests) {
+
+		// count the number of tests
+		int tot = 1;
+		{
+			Iterator<? extends Test> it = tests.iterator();
+			while(it.hasNext()) {
+				it.next();
+				tot++;
+			}
+		}
+
+
+		int n = (int) Math.ceil(Math.log10(tot));
+		String format = "%0" + n + "d";
+
+		int i = 1;
+		for (Test t : tests) {
+			if(t instanceof TestCoverage)
+				read(String.format(format, i++), ((TestCoverage)t));
+			else
+				read(String.format(format, i++), t);
+		}
+	}
 
 	public void read(List<String> fileNames) {
 		for(String fileName : fileNames)

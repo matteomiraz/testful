@@ -77,11 +77,13 @@ public class RunnerPool implements IRunner, ITestRepository {
 		}
 
 		Remote remote = null;
-		if(registry != null) try {
-			remote = UnicastRemoteObject.exportObject(this, 0);
-		} catch(RemoteException e) {
-			logger.log(Level.WARNING, "Distributed evaluation disabled", e);
-			remote = null;
+		if(registry != null) {
+			try {
+				remote = UnicastRemoteObject.exportObject(this, 0);
+			} catch(RemoteException e) {
+				logger.log(Level.WARNING, "Distributed evaluation disabled", e);
+				remote = null;
+			}
 		}
 
 		try {

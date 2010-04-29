@@ -1,31 +1,43 @@
 package testful.model;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import testful.ConfigCut;
 import testful.GenericTestCase;
+import testful.regression.TestSimplifier;
+import testful.runner.Context;
 import testful.runner.TestfulClassLoader;
 
 /**
  * @author matteo
- *
  */
 public class TestSimpifierTestCase extends AutoTestCase {
 
 	@Override
 	protected List<Test> perform(Test test) throws Exception {
-		TestSimplifier s = new TestSimplifier(getFinder());
+		OperationResult.insert(test.getTest());
+		OperationStatus.insert(test.getTest());
 
-		List<Test> res = new ArrayList<Test>(1);
-		res.add(s.analyze(test));
-		return res;
+		Context<Operation[], TestExecutionManager> ctx = TestExecutionManager.getContext(getFinder(), test);
+		ctx.setStopOnBug(false);
+		ctx.setRecycleClassLoader(true);
+		Operation[] ops = getExec().execute(ctx).get();
+		for (int i = 0; i < ops.length; i++) {
+			ops[i] = ops[i].adapt(test.getCluster(), test.getReferenceFactory());
+		}
+
+		TestSimplifier s = new TestSimplifier();
+		Test r = s.process(new Test(test.getCluster(), test.getReferenceFactory(), ops));
+
+		return Arrays.asList(r);
 	}
 
 	public void testSimple1() throws Exception {
 		ConfigCut config = new ConfigCut(GenericTestCase.config);
 		config.setCut("dummy.Simple");
 		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
+
 		ReferenceFactory refFactory = new ReferenceFactory(cluster, 4, 4);
 
 		Clazz cut = cluster.getCut();

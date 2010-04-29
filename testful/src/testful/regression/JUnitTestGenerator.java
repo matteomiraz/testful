@@ -2,98 +2,101 @@ package testful.regression;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Future;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.GZIPOutputStream;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import testful.ConfigProject;
 import testful.IConfigProject;
+import testful.IConfigRunner;
 import testful.TestFul;
-import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
+import testful.coverage.TestSizeInformation;
 import testful.coverage.TrackerDatum;
-import testful.coverage.whiteBox.AnalysisWhiteBox;
 import testful.model.AssignPrimitive;
 import testful.model.Clazz;
 import testful.model.CreateObject;
 import testful.model.Invoke;
 import testful.model.Operation;
-import testful.model.OperationPrimitiveResult;
+import testful.model.OperationResult;
 import testful.model.OperationStatus;
-import testful.model.OptimalTestCreator;
 import testful.model.PrimitiveClazz;
 import testful.model.Reference;
 import testful.model.Test;
 import testful.model.TestCoverage;
 import testful.model.TestExecutionManager;
 import testful.model.TestReader;
-import testful.model.TestSplitter;
 import testful.runner.ClassFinder;
 import testful.runner.ClassFinderCaching;
 import testful.runner.ClassFinderImpl;
-import testful.runner.Context;
 import testful.runner.RunnerPool;
 import testful.utils.ElementManager;
 import testful.utils.ElementWithKey;
-import testful.utils.Utils;
 
+/**
+ * Given a test, generates jUnit3 test cases & test suite
+ *
+ * @author matteo
+ */
 public class JUnitTestGenerator extends TestReader {
 	private static final Logger logger = Logger.getLogger("testful.regression");
 
 	/** maximum number of operation per jUnit test */
 	private static final int MAX_TEST_LEN = 1000;
 
-	private static class Config extends ConfigProject implements IConfigProject.Args4j {
+	private static class Config extends ConfigProject implements IConfigProject.Args4j, IConfigRunner.Args4j {
 
-		@Option(required = false, name = "-reload", usage = "Reload classes before each run (reinitialize static fields)")
-		private boolean reloadClasses;
-
-		@Option(required = false, name = "-noMinimize", usage = "Do not try to split and minimize tests.")
-		private boolean noMinimize;
-
-		@Option(required = false, name = "-dirTests", usage = "Specify the directory in which generated tests will be put")
+		@Option(required = false, name = "-dirTests", usage = "Specify the directory in which generated tests will be put.")
 		private File dirGeneratedTests;
 
 		@Argument
 		private List<String> tests = new ArrayList<String>();
 
-		public List<String> getTests() {
-			return tests;
+		private List<String> remote = new ArrayList<String>();
+
+		private boolean localEvaluation = true;
+
+		@Override
+		public List<String> getRemote() {
+			return remote;
+		}
+
+		@Override
+		public void addRemote(String remote) {
+			this.remote.add(remote);
+		}
+
+		@Override
+		public boolean isLocalEvaluation() {
+			return localEvaluation;
+		}
+
+		@Override
+		public void disableLocalEvaluation(boolean disableLocalEvaluation) {
+			localEvaluation = !disableLocalEvaluation;
 		}
 
 		public File getDirGeneratedTests() {
 			if(!dirGeneratedTests.isAbsolute()) dirGeneratedTests = new File(getDirBase(), dirGeneratedTests.getPath()).getAbsoluteFile();
 			return dirGeneratedTests;
 		}
-
-		public boolean isReloadClasses() {
-			return reloadClasses;
-		}
-
-		public boolean isMinimize() {
-			return !noMinimize;
-		}
 	}
 
 	private final File destDir;
-	private final IConfigProject config;
-	private final boolean minimize;
-
-	private final boolean reloadClasses;
-	private final ClassFinder finder;
-	private final RunnerPool runner;
 	private final TestSuite suite = new TestSuite();
-
 
 	public static void main(String[] args) {
 
@@ -104,53 +107,82 @@ public class JUnitTestGenerator extends TestReader {
 			TestFul.printHeader("JUnit test generator");
 
 		TestFul.setupLogging(config);
+		RunnerPool.getRunnerPool().config(config);
 
-		RunnerPool.getRunnerPool().startLocalWorkers();
+		ClassFinderCaching finder = null;
+		try {
+			finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
+		} catch (RemoteException e) {
+			// never happens
+		}
 
-		JUnitTestGenerator gen = new JUnitTestGenerator(config, config.getDirGeneratedTests(), config.isReloadClasses(), config.isMinimize());
+		JUnitTestGenerator gen = new JUnitTestGenerator(config.getDirGeneratedTests());
 
-		gen.read(config.getTests());
+		gen.process(getOpStatus(finder, simplify(finder, config.tests)));
 
 		gen.writeSuite();
 
 		System.exit(0);
 	}
 
-	public JUnitTestGenerator(IConfigProject config, File destDir, boolean reloadClasses, boolean minimize) {
-		this.config = config;
-		this.destDir = destDir;
-		this.minimize = minimize;
+	private static List<TestCoverage> getOpStatus(ClassFinder finder, List<TestCoverage> simplify) {
+		List<TestCoverage> ret = new ArrayList<TestCoverage>();
 
-		runner = RunnerPool.getRunnerPool();
-		this.reloadClasses = reloadClasses;
-		ClassFinder tmp = null;
-		try {
-			tmp = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
-		} catch (RemoteException e) {
-			// ignore
+		for (TestCoverage test : simplify) {
+			try {
+				Operation[] op = TestExecutionManager.getOpStatus(finder, test);
+				ret.add(new TestCoverage(new Test(test.getCluster(), test.getReferenceFactory(), op), test.getCoverage()));
+			} catch (Exception e) {
+				logger.log(Level.WARNING, "Cannot execute a test: " + e.getLocalizedMessage(), e);
+				ret.add(test);
+			}
 		}
-		finder = tmp;
+
+		return ret;
+	}
+
+	private static List<TestCoverage> simplify(ClassFinder finder, List<String> tests) {
+		final TestSuiteReducer reducer = new TestSuiteReducer(finder, new TrackerDatum[0]);
+		new TestReader() {
+
+			@Override
+			protected Logger getLogger() {
+				return logger;
+			}
+
+			@Override
+			protected void read(String fileName, Test test) {
+				reducer.process(test);
+			}
+
+		}.read(tests);
+
+		return reducer.getOutput();
+	}
+
+	public JUnitTestGenerator(File destDir) {
+		this.destDir = destDir;
 	}
 
 	@Override
-	public void read(String fileName, Test test) {
-		TestCase testCase = suite.get(test.getCluster().getCut().getClassName());
+	public void read(String name, Test test) {
+		String className = test.getCluster().getCut().getClassName();
+		TestCase testCase = suite.get(className);
 
-		if(minimize) {
-			// simplify
-			test = test.removeUselessDefs().simplify().getSSA();
+		// write the binary file
+		File dir = new File(destDir, testCase.getPackageName().replace('.', File.separatorChar));
+		dir.mkdirs();
 
-			// split
-			List<Test> parts = TestSplitter.split(false, test);
+		File testFile = new File(dir, (testCase.getClassName() + "_" + name).replace('-', '_').replace(' ', '_') + ".ser.gz");
 
-			for (Test part : parts) {
-				//re-simplify
-				part = part.removeUselessDefs().simplify().getSSA().removeUselessDefs().reorganize().sortReferences();
-				testCase.add(part);
-			}
-		} else {
-			testCase.add(test);
+		try {
+			test.write(new GZIPOutputStream(new FileOutputStream(testFile)));
+		} catch (IOException e) {
+			logger.log(Level.WARNING, "Cannot write the test to file: " + e.getLocalizedMessage(), e);
 		}
+
+		// add to a jUnit test
+		testCase.add(testFile.getPath(), test);
 	}
 
 	public void writeSuite() {
@@ -162,6 +194,10 @@ public class JUnitTestGenerator extends TestReader {
 		return logger;
 	}
 
+	/**
+	 * Contains tests for different classes.
+	 * @author matteo
+	 */
 	private class TestSuite extends ElementManager<String, TestCase>{
 		private static final long serialVersionUID = -209417855781416430L;
 
@@ -228,6 +264,10 @@ public class JUnitTestGenerator extends TestReader {
 		}
 	}
 
+	/**
+	 * Contains tests for a single class
+	 * @author matteo
+	 */
 	private class TestCase implements ElementWithKey<String> {
 
 		/** full qualified class name */
@@ -239,9 +279,7 @@ public class JUnitTestGenerator extends TestReader {
 		/** the (simple) class name, without package */
 		private final String className;
 
-		private OptimalTestCreator tests = new OptimalTestCreator();
-
-		private final TrackerDatum[] data;
+		private final Map<String, Test> tests = new HashMap<String, Test>();
 
 		public TestCase(String className) {
 			fullQualifiedClassName = className;
@@ -259,9 +297,6 @@ public class JUnitTestGenerator extends TestReader {
 
 				packageName = pkgBuilder.toString();
 			}
-
-			AnalysisWhiteBox whiteAnalysis = AnalysisWhiteBox.read(config.getDirInstrumented(), className);
-			data = Utils.readData(whiteAnalysis);
 		}
 
 		public String getPackageName() {
@@ -279,17 +314,8 @@ public class JUnitTestGenerator extends TestReader {
 			return testName + "_TestCase";
 		}
 
-		public void add(Test t) {
-			try {
-				// calculate the coverage for the test
-				Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = CoverageExecutionManager.getContext(finder, t, data);
-				ctx.setRecycleClassLoader(!reloadClasses);
-				Future<ElementManager<String, CoverageInformation>> f = runner.execute(ctx);
-
-				tests.update(new TestCoverage(t, f.get()));
-			} catch (Exception e) {
-				logger.log(Level.WARNING, "Failed to evaluate a test: " + e.getMessage(), e);
-			}
+		public void add(String name, Test t) {
+			tests.put(name, t);
 		}
 
 		@Override
@@ -298,11 +324,9 @@ public class JUnitTestGenerator extends TestReader {
 		}
 
 		public List<String> write() {
-
-			final List<TestCoverage> optimalTests = tests.get();
 			final List<String> fileNames = new ArrayList<String>();
 
-			final boolean singleTest = isSingleTest(optimalTests);
+			final boolean singleTest = isSingleTest(tests.values());
 
 			/** the progressive number of a jUnit TestCase */
 			int currentJUnitTest = 0;
@@ -312,10 +336,10 @@ public class JUnitTestGenerator extends TestReader {
 
 			int testLength = 0;
 			PrintWriter writer = null;
-			for (TestCoverage test : optimalTests) {
+			for (Entry<String, Test> e : tests.entrySet()) {
 
 				try {
-					testLength += test.getTest().length;
+					testLength += e.getValue().getTest().length;
 					if(writer == null || testLength > MAX_TEST_LEN) {
 
 						if(writer != null) writeFooterAndClose(writer);
@@ -332,13 +356,13 @@ public class JUnitTestGenerator extends TestReader {
 						writeHeader(writer, testName);
 						fileNames.add((packageName.isEmpty()? "" : packageName + ".") + testName);
 						currentTestMethod = 0;
-						testLength = test.getTest().length;
+						testLength = e.getValue().getTest().length;
 					}
 
-					writeTest(test, writer, ++currentTestMethod);
+					writeTest(e.getKey(), e.getValue(), writer, ++currentTestMethod);
 
-				} catch (FileNotFoundException e) {
-					logger.log(Level.WARNING, "Cannot open the file: " + e.getMessage(), e);
+				} catch (FileNotFoundException exc) {
+					logger.log(Level.WARNING, "Cannot open the file: " + exc.getMessage(), exc);
 				}
 			}
 
@@ -348,21 +372,17 @@ public class JUnitTestGenerator extends TestReader {
 		}
 
 
-		private void writeTest(Test test, PrintWriter out, int testNumber) {
-			final Operation[] operationStatus;
-			try {
-				OperationPrimitiveResult.insert(test.getTest());
-				OperationStatus.insert(test.getTest());
-				Context<Operation[], TestExecutionManager> ctx = TestExecutionManager.getContext(finder, test, data);
-				ctx.setStopOnBug(false);
-				Future<Operation[]> result = runner.execute(ctx);
-				operationStatus = result.get();
-			} catch(Exception e) {
-				logger.warning(e.getMessage());
-				return;
-			}
+		private void writeTest(String name, Test test, PrintWriter out, int testNumber) {
 
 			out.println();
+
+			out.println("\t// Binary test: " + name);
+
+			if(test instanceof TestCoverage) {
+				for (CoverageInformation cov : ((TestCoverage)test).getCoverage())
+					if(!(cov instanceof TestSizeInformation))
+						out.println("\t// " + cov.getName() + ": " + cov.getQuality());
+			}
 			out.println("\tpublic void testFul" + testNumber + "() throws Exception {");
 			out.println();
 
@@ -395,7 +415,7 @@ public class JUnitTestGenerator extends TestReader {
 			}
 
 			out.println();
-			for(Operation op : operationStatus) {
+			for(Operation op : test.getTest()) {
 				OperationStatus status = (OperationStatus) op.getInfo(OperationStatus.KEY);
 
 				if(status == null) {
@@ -414,8 +434,8 @@ public class JUnitTestGenerator extends TestReader {
 					case SUCCESSFUL:
 						if(op instanceof Invoke) {
 
-							OperationPrimitiveResult result = (OperationPrimitiveResult) op.getInfo(OperationPrimitiveResult.KEY);
-							if(result != null && result.isSet()) {
+							OperationResult result = (OperationResult) op.getInfo(OperationResult.KEY);
+							if(result != null) {
 								Reference target = ((Invoke) op).getTarget();;
 								Clazz retType = ((Invoke)op).getMethod().getReturnType();
 
@@ -439,41 +459,41 @@ public class JUnitTestGenerator extends TestReader {
 									switch(((PrimitiveClazz) retType).getType()) {
 									case BooleanClass:
 									case BooleanType:
-										out.println("\t\tassertEquals((boolean) " + AssignPrimitive.getValueString(result.getValue()) + ", (boolean) (java.lang.Boolean) tmp);");
+										out.println("\t\tassertEquals((boolean) " + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (boolean) (java.lang.Boolean) tmp);");
 										break;
 									case ByteClass:
 									case ByteType:
-										out.println("\t\tassertEquals((byte)" + AssignPrimitive.getValueString(result.getValue()) + ", (byte) (java.lang.Byte) tmp);");
+										out.println("\t\tassertEquals((byte)" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (byte) (java.lang.Byte) tmp);");
 										break;
 									case CharacterClass:
 									case CharacterType:
-										out.println("\t\tassertEquals((char)" + AssignPrimitive.getValueString(result.getValue()) + ", (char) (java.lang.Character) tmp);");
+										out.println("\t\tassertEquals((char)" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (char) (java.lang.Character) tmp);");
 										break;
 									case ShortClass:
 									case ShortType:
-										out.println("\t\tassertEquals((short)" + AssignPrimitive.getValueString(result.getValue()) + ", (short) (java.lang.Short) tmp);");
+										out.println("\t\tassertEquals((short)" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (short) (java.lang.Short) tmp);");
 										break;
 									case IntegerClass:
 									case IntegerType:
-										out.println("\t\tassertEquals((int)" + AssignPrimitive.getValueString(result.getValue()) + ", (int) (java.lang.Integer) tmp);");
+										out.println("\t\tassertEquals((int)" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (int) (java.lang.Integer) tmp);");
 										break;
 									case LongClass:
 									case LongType:
-										out.println("\t\tassertEquals((long)" + AssignPrimitive.getValueString(result.getValue()) + ", (long) (java.lang.Long) tmp);");
+										out.println("\t\tassertEquals((long)" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (long) (java.lang.Long) tmp);");
 										break;
 									case FloatClass:
 									case FloatType:
-										out.println("\t\tassertEquals((float)" + AssignPrimitive.getValueString(result.getValue()) + ", (float) (java.lang.Float) tmp, 0.001f);");
+										out.println("\t\tassertEquals((float)" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (float) (java.lang.Float) tmp, 0.001f);");
 										break;
 									case DoubleClass:
 									case DoubleType:
-										out.println("\t\tassertEquals((double)" + AssignPrimitive.getValueString(result.getValue()) + ", (double) (java.lang.Double) tmp, 0.001);");
+										out.println("\t\tassertEquals((double)" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (double) (java.lang.Double) tmp, 0.001);");
 										break;
 									}
 								} else if(retType.getClassName().equals(String.class.getCanonicalName())) {
-									out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(result.getValue()) + ", (java.lang.String) tmp);");
+									out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (java.lang.String) tmp);");
 								} else {
-									logger.warning("Unusable return status: " + retType.getClass().getCanonicalName() + "(" + retType.getClassName() + ")");
+									logger.warning("Unusable return status: " + retType.getClassName());
 								}
 
 								out.println();
@@ -529,12 +549,12 @@ public class JUnitTestGenerator extends TestReader {
 
 		/**
 		 * Checks if the optimal tests fits in a single test
-		 * @param optimalTests the optimal tests
+		 * @param tests the optimal tests
 		 * @return true if the sum of all the operations are less than the maximum length of a test
 		 */
-		private boolean isSingleTest(List<TestCoverage> optimalTests) {
+		private boolean isSingleTest(Collection<? extends Test> tests) {
 			int tot = 0;
-			for (TestCoverage t : optimalTests) {
+			for (Test t : tests) {
 				tot += t.getTest().length;
 				if(tot > MAX_TEST_LEN)
 					return false;

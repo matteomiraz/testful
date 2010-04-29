@@ -20,7 +20,7 @@ import ec.util.MersenneTwisterFast;
  */
 public abstract class AutoTestCase extends GenericTestCase {
 
-	protected abstract List<Test> perform(Test test) throws Exception;
+	protected abstract List<? extends Test> perform(Test test) throws Exception;
 
 	protected String[] getCuts() {
 		return new String[] {
@@ -43,9 +43,8 @@ public abstract class AutoTestCase extends GenericTestCase {
 		}
 	}
 
-
 	protected void check(Test t, Operation[][] expected) throws Exception {
-		List<Test> tests = perform(t);
+		List<? extends Test> tests = perform(t);
 
 		System.out.println("original:");
 		for(Operation o : t.getTest()) {
@@ -129,7 +128,7 @@ public abstract class AutoTestCase extends GenericTestCase {
 		checkSetup(origCov);
 
 		long minStart = System.nanoTime();
-		List<Test> res = perform(orig);
+		List<? extends Test> res = perform(orig);
 		long minStop = System.nanoTime();
 
 		List<ElementManager<String, CoverageInformation>> partsCov = new ArrayList<ElementManager<String,CoverageInformation>>();

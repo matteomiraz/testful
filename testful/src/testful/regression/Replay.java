@@ -25,6 +25,10 @@ import testful.runner.ClassFinderImpl;
 import testful.runner.IRunner;
 import testful.runner.RunnerPool;
 
+/**
+ * Executes one or more tests on a given class.
+ * @author matteo
+ */
 public class Replay extends TestReader {
 
 	private static final Logger logger = Logger.getLogger("testful.regression");
@@ -35,7 +39,7 @@ public class Replay extends TestReader {
 		public boolean exitOnBug;
 
 		@Argument
-		private List<String> arguments = new ArrayList<String>();
+		private List<String> tests = new ArrayList<String>();
 	}
 
 	private final boolean exitOnBug;
@@ -56,7 +60,7 @@ public class Replay extends TestReader {
 		RunnerPool.getRunnerPool().startLocalWorkers();
 
 		Replay replay = new Replay(config, config.exitOnBug);
-		replay.read(config.arguments);
+		replay.read(config.tests);
 
 
 		System.exit(0);

@@ -9,8 +9,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jmlspecs.jmlexec.runtime.PostconditionException;
-
 import testful.model.AssignConstant;
 import testful.model.AssignPrimitive;
 import testful.model.Clazz;
@@ -18,11 +16,10 @@ import testful.model.Constructorz;
 import testful.model.CreateObject;
 import testful.model.ExceptionRaisedException;
 import testful.model.FaultyExecutionException;
-import testful.model.InvariantViolationException;
 import testful.model.Invoke;
 import testful.model.Methodz;
 import testful.model.Operation;
-import testful.model.OperationPrimitiveResult;
+import testful.model.OperationResult;
 import testful.model.OperationStatus;
 import testful.model.PrimitiveClazz;
 import testful.model.Reference;
@@ -30,7 +27,6 @@ import testful.model.ResetRepository;
 import testful.model.StaticValue;
 import testful.model.Test;
 import testful.model.TestCluster;
-import testful.model.OperationStatus.Status;
 import testful.runner.Executor;
 
 /**
@@ -188,18 +184,18 @@ public class ReflectionExecutor implements Executor {
 
 	private boolean perform(Operation op) throws FaultyExecutionException {
 
-		if(op instanceof AssignPrimitive) return perform((AssignPrimitive) op);
-		else if(op instanceof AssignConstant) return perform((AssignConstant) op);
-		else if(op instanceof CreateObject) return perform((CreateObject) op);
-		else if(op instanceof Invoke) return perform((Invoke) op);
-		else if(op instanceof ResetRepository) return perform((ResetRepository) op);
+		if(op instanceof AssignPrimitive) return assignPrimitive((AssignPrimitive) op);
+		else if(op instanceof AssignConstant) return assignConstant((AssignConstant) op);
+		else if(op instanceof CreateObject) return createObject((CreateObject) op);
+		else if(op instanceof Invoke) return invoke((Invoke) op);
+		else if(op instanceof ResetRepository) return reset((ResetRepository) op);
 		else {
 			logger.warning("Unknown operation: " + op.getClass().getCanonicalName() + " - " + op);
 			return false;
 		}
 	}
 
-	private boolean perform(ResetRepository op) {
+	private boolean reset(ResetRepository op) {
 		for(int i = 0; i < repository.length; i++)
 			repository[i] = null;
 
@@ -207,7 +203,7 @@ public class ReflectionExecutor implements Executor {
 	}
 
 	/** createObject */
-	private boolean perform(CreateObject op) throws FaultyExecutionException {
+	private boolean createObject(CreateObject op) throws FaultyExecutionException {
 		OperationStatus opStatus = (OperationStatus) op.getInfo(OperationStatus.KEY);
 
 		Reference targetPos = op.getTarget();
@@ -239,6 +235,14 @@ public class ReflectionExecutor implements Executor {
 
 			newObject = cons.newInstance(initargs);
 
+			if(opStatus != null) opStatus.setSuccessful();
+
+			// save results
+			if(targetPos != null) set(op, targetPos, newObject);
+
+			OperationResult opResult = (OperationResult) op.getInfo(OperationResult.KEY);
+			if(opResult != null) opResult.setValue(null, newObject, cluster);
+
 		} catch(InvocationTargetException invocationException) {
 			Throwable exc = invocationException.getTargetException();
 
@@ -246,7 +250,7 @@ public class ReflectionExecutor implements Executor {
 				if(opStatus != null) opStatus.setPreconditionError();
 				return false;
 			} else if(exc instanceof FaultyExecutionException) {
-				if(opStatus != null && (exc instanceof ExceptionRaisedException || exc instanceof InvariantViolationException || exc instanceof PostconditionException)) opStatus.setPostconditionError();
+				if(opStatus != null) opStatus.setPostconditionError();
 				throw (FaultyExecutionException) exc;
 			} else // a valid exception is thrown
 				if(opStatus != null) opStatus.setExceptional(exc);
@@ -256,16 +260,10 @@ public class ReflectionExecutor implements Executor {
 			throw new ExceptionRaisedException(e);
 		}
 
-		if(opStatus != null && opStatus.getStatus() != Status.EXCEPTIONAL)
-			opStatus.setSuccessful();
-
-		// save results
-		if(targetPos != null) set(op, targetPos, newObject);
-
 		return true;
 	}
 
-	private boolean perform(AssignPrimitive op) {
+	private boolean assignPrimitive(AssignPrimitive op) {
 		Reference ref = op.getTarget();
 		Serializable value = op.getValue();
 
@@ -276,7 +274,7 @@ public class ReflectionExecutor implements Executor {
 		return true;
 	}
 
-	private boolean perform(AssignConstant op) {
+	private boolean assignConstant(AssignConstant op) {
 		Reference ref = op.getTarget();
 		if(ref == null) return false;
 
@@ -304,7 +302,7 @@ public class ReflectionExecutor implements Executor {
 		}
 	}
 
-	private boolean perform(Invoke op) throws FaultyExecutionException {
+	private boolean invoke(Invoke op) throws FaultyExecutionException {
 		Reference targetPos = op.getTarget();
 		Reference sourcePos = op.getThis();
 		Methodz method = op.getMethod();
@@ -334,7 +332,15 @@ public class ReflectionExecutor implements Executor {
 
 		Object newObject = null;
 		try {
+
 			newObject = m.invoke(baseObject, args);
+
+			if(targetPos != null) set(op, targetPos, newObject);
+			if(opStatus != null) opStatus.setSuccessful();
+
+			OperationResult opResult = (OperationResult) op.getInfo(OperationResult.KEY);
+			if(opResult != null) opResult.setValue(baseObject, newObject, cluster);
+
 		} catch(InvocationTargetException invocationException) {
 			Throwable exc = invocationException.getTargetException();
 
@@ -342,7 +348,7 @@ public class ReflectionExecutor implements Executor {
 				if(opStatus != null) opStatus.setPreconditionError();
 				return false;
 			} else if(exc instanceof FaultyExecutionException) {
-				if(opStatus != null && (exc instanceof ExceptionRaisedException || exc instanceof InvariantViolationException || exc instanceof PostconditionException)) opStatus.setPostconditionError();
+				if(opStatus != null) opStatus.setPostconditionError();
 				throw (FaultyExecutionException) exc;
 			} else // a valid exception is thrown
 				if(opStatus != null) opStatus.setExceptional(exc);
@@ -351,13 +357,6 @@ public class ReflectionExecutor implements Executor {
 
 			throw new ExceptionRaisedException(e);
 		}
-
-		if(opStatus != null && opStatus.getStatus() != Status.EXCEPTIONAL) opStatus.setSuccessful();
-
-		if(targetPos != null) set(op, targetPos, newObject);
-
-		OperationPrimitiveResult opPrimResult = (OperationPrimitiveResult) op.getInfo(OperationPrimitiveResult.KEY);
-		if(opPrimResult != null) opPrimResult.setValue(newObject);
 
 		return true;
 	}

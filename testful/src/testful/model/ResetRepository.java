@@ -10,7 +10,7 @@ import java.util.Set;
 public final class ResetRepository extends Operation {
 
 	private static final long serialVersionUID = -8362944709273921763L;
-	
+
 	public static final ResetRepository singleton = new ResetRepository();
 
 	private ResetRepository() {
@@ -36,14 +36,19 @@ public final class ResetRepository extends Operation {
 	public Operation adapt(TestCluster cluster, ReferenceFactory refFactory) {
 		return this;
 	}
-	
+
 	@Override
 	protected Set<Reference> calculateDefs() {
 		throw new NullPointerException("Cannot calculate defs for ResetRepository!");
 	}
-	
+
 	@Override
 	protected Set<Reference> calculateUses() {
 		return emptyRefsSet;
+	}
+
+	@Override
+	public Operation clone() {
+		return singleton;
 	}
 }

@@ -6,7 +6,7 @@ import testful.utils.ElementManager;
 public class TestCoverage extends Test {
 
 	private static final long serialVersionUID = 1420569092643662448L;
-	
+
 	/** the coverage */
 	private final ElementManager<String, CoverageInformation> coverage;
 
@@ -29,7 +29,7 @@ public class TestCoverage extends Test {
 	 */
 	public float getRating(){
 		float ret = 0;
-		for (CoverageInformation i : this.getCoverage()){
+		for (CoverageInformation i : getCoverage()){
 			ret += i.getQuality();
 		}
 		return ret;

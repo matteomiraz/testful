@@ -2,6 +2,7 @@ package testful.model;
 
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import testful.TestFul;
@@ -45,7 +46,15 @@ public class AssignPrimitive extends Operation {
 
 	@Override
 	public Operation adapt(TestCluster cluster, ReferenceFactory refFactory) {
-		return new AssignPrimitive(refFactory.adapt(ref), value);
+		final AssignPrimitive ret = new AssignPrimitive(refFactory.adapt(ref), value);
+
+		Iterator<OperationInformation> it = getInfos();
+		while(it.hasNext()) {
+			OperationInformation info = it.next();
+			ret.addInfo(info.clone());
+		}
+
+		return ret;
 	}
 
 	public static String getValueString(Serializable value) {
@@ -322,5 +331,10 @@ public class AssignPrimitive extends Operation {
 			str[i] = getCharacter(r);
 
 		return new java.lang.String(str);
+	}
+
+	@Override
+	public Operation clone() {
+		return new AssignPrimitive(ref, value);
 	}
 }

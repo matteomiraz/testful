@@ -1,5 +1,15 @@
 package testful.model;
 
+/**
+ * Tracks the status of an operation, recording whether it is
+ * <ul>
+ *   <li>invalid (PRECONDITION_ERROR)</li>
+ *   <li>faulty (POSTCONDITION_ERROR)</li>
+ *   <li>ok, without exception (SUCCESSFUL)</li>
+ *   <li>ok, throwing exceptions (EXCEPTIONAL)</li>
+ * </ul>
+ * @author matteo
+ */
 public class OperationStatus extends OperationInformation {
 
 	private static final long serialVersionUID = 2202341615366183486L;
@@ -7,7 +17,20 @@ public class OperationStatus extends OperationInformation {
 	public static final String KEY = "STATUS";
 
 	public static enum Status {
-		NOT_EXECUTED, PRECONDITION_ERROR, POSTCONDITION_ERROR, SUCCESSFUL, EXCEPTIONAL
+		/** The operation has not been executed */
+		NOT_EXECUTED,
+
+		/** the operation is invalid */
+		PRECONDITION_ERROR,
+
+		/** the operation is faulty */
+		POSTCONDITION_ERROR,
+
+		/** the operation is ok: it terminates without throwing any exception */
+		SUCCESSFUL,
+
+		/** the operation is ok: it terminates throwing an exception */
+		EXCEPTIONAL
 	}
 
 	protected Status status;
@@ -17,6 +40,12 @@ public class OperationStatus extends OperationInformation {
 		super(KEY);
 		status = Status.NOT_EXECUTED;
 		exc = null;
+	}
+
+	private OperationStatus(Status status, Throwable exc) {
+		super(KEY);
+		this.status = status;
+		this.exc = exc;
 	}
 
 	public Status getStatus() {
@@ -44,6 +73,11 @@ public class OperationStatus extends OperationInformation {
 
 	public Throwable getException() {
 		return exc;
+	}
+
+	@Override
+	public OperationInformation clone() {
+		return new OperationStatus(status, exc);
 	}
 
 	@Override

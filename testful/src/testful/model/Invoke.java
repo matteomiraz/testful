@@ -2,6 +2,7 @@ package testful.model;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import testful.model.MethodInformation.Kind;
@@ -27,7 +28,15 @@ public class Invoke extends Operation {
 
 	@Override
 	public Operation adapt(TestCluster cluster, ReferenceFactory refFactory) {
-		return new Invoke(refFactory.adapt(_return), refFactory.adapt(_this), cluster.adapt(method), refFactory.adapt(params));
+		final Invoke ret = new Invoke(refFactory.adapt(_return), refFactory.adapt(_this), cluster.adapt(method), refFactory.adapt(params));
+
+		Iterator<OperationInformation> it = getInfos();
+		while(it.hasNext()) {
+			OperationInformation info = it.next();
+			ret.addInfo(info.clone());
+		}
+
+		return ret;
 	}
 
 	public static Invoke generate(Clazz c, TestCluster cluster, ReferenceFactory refFactory, MersenneTwisterFast random) {
@@ -145,5 +154,10 @@ public class Invoke extends Operation {
 			uses.add(u);
 
 		return uses;
+	}
+
+	@Override
+	public Operation clone() {
+		return new Invoke(_return, _this, method, params);
 	}
 }
