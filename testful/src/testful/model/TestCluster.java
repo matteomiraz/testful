@@ -131,12 +131,16 @@ public class TestCluster implements Serializable {
 			Clazz clazz = toDo.iterator().next();
 			toDo.remove(clazz);
 
+			if(clazz instanceof PrimitiveClazz || clazz.getClassName().equals("java.lang.String")) {
+				clusterBuilder.add(clazz);
+				continue;
+			}
+
 			if(!clusterBuilder.contains(clazz)) {
 				clusterBuilder.add(clazz);
 				addClazz(toDo, clazz, config);
 			}
 
-			if(clazz instanceof PrimitiveClazz) continue;
 
 			XmlClass xmlClass = xml.get(clazz.getClassName());
 			if(xmlClass != null && xmlClass.getAux() != null) {

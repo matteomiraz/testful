@@ -457,7 +457,7 @@ public class JUnitTestGenerator extends TestReader {
 						("int".equals(varType)  ? "" :  "(int)") + varName + ");");
 
 			} else if(expected instanceof Long &&
-					( varType.equals("long") || varType.equals("java.lang.Long"))) {
+					( varType == null || varType.equals("long") || varType.equals("java.lang.Long"))) {
 
 				out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
 						("long".equals(varType)  ? "" :  "(long)") + varName + ");");
