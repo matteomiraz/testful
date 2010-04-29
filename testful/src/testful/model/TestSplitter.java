@@ -156,15 +156,20 @@ public class TestSplitter {
 	}
 
 	public static Test splitAndMerge(Test test) {
-		List<Test> res = split(true, test);
+		try {
+			List<Test> res = split(true, test);
 
-		SortedSet<Operation> set = new TreeSet<Operation>(orderComparator);
+			SortedSet<Operation> set = new TreeSet<Operation>(orderComparator);
 
-		for(Test t : res)
-			for(Operation op : t.getTest())
-				set.add(op);
+			for(Test t : res)
+				for(Operation op : t.getTest())
+					set.add(op);
 
-		return new Test(test.getCluster(), test.getReferenceFactory(), set.toArray(new Operation[set.size()]));
+			return new Test(test.getCluster(), test.getReferenceFactory(), set.toArray(new Operation[set.size()]));
+		} catch (Throwable e) {
+			logger.log(Level.WARNING, "Error during split and merge: " + e, e);
+			return test;
+		}
 	}
 
 	static class OperationPosition extends OperationInformation {
@@ -653,7 +658,7 @@ public class TestSplitter {
 		// update parameters
 		for(ParameterInformation paramInfo : paramsInfo) {
 			int paramRefId = paramsRef[paramInfo.getPosition()].getId();
-			if(paramInfo.isCaptured()) merge(opTargetId, paramRefId);
+			if(opTarget != null && paramInfo.isCaptured()) merge(opTargetId, paramRefId);
 			else if(paramInfo.isMutated()) operations[paramRefId].add(op);
 
 			for(ParameterInformation captured : paramInfo.getCaptureStateOf())

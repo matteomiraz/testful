@@ -96,8 +96,7 @@ public class Launcher {
 		algorithm.setCrossover(crossover);
 
 		TestfulMutation mutation = new TestfulMutation(problem);
-		mutation.setProbSimplify(0.05f);
-		mutation.setProbability(0.01);
+		mutation.setProbability(0.05);
 		mutation.setProbRemove(0.75f);
 		algorithm.setMutation(mutation);
 
