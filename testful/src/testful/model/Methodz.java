@@ -37,7 +37,12 @@ public class Methodz implements Serializable {
 		name = m.getName();
 		fullMethodName = m.toGenericString();
 		params = cluster.getRegistry().convert(m.getParameterTypes());
-		returnType = cluster.getRegistry().getClazz(m.getReturnType());
+
+		if(m.getReturnType() ==  Void.TYPE)
+			returnType = null;
+		else
+			returnType = cluster.getRegistry().getClazz(m.getReturnType());
+
 		method = m;
 		isStatic = Modifier.isStatic(method.getModifiers());
 

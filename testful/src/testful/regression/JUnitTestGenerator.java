@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,6 +33,7 @@ import testful.model.CreateObject;
 import testful.model.Invoke;
 import testful.model.Operation;
 import testful.model.OperationResult;
+import testful.model.OperationResult.Value;
 import testful.model.PrimitiveClazz;
 import testful.model.Reference;
 import testful.model.Test;
@@ -284,10 +286,9 @@ public class JUnitTestGenerator extends TestReader {
 			out.println("\tpublic void testFul" + testNumber + "() throws Exception {");
 			out.println();
 
-			// create variables
-			out.println("\t\tObject tmp = null;");
+			{	// create variables
 
-			{	// group references by type
+				// group references by type
 				Map<String, List<String>> map = new HashMap<String, List<String>>();
 				for(Reference ref : test.getReferenceFactory().getReferences()) {
 					List<String> vars = map.get(ref.getClazz().getClassName());
@@ -313,10 +314,14 @@ public class JUnitTestGenerator extends TestReader {
 			}
 
 			out.println();
-			for(Operation op : test.getTest()) {
-				OperationResult status = (OperationResult) op.getInfo(OperationResult.KEY);
 
-				if(status == null) {
+			int tmpVarGenerator = 0;
+
+			// generate code
+			for(Operation op : test.getTest()) {
+				OperationResult opResult = (OperationResult) op.getInfo(OperationResult.KEY);
+
+				if(opResult == null) {
 					if(op instanceof Invoke || op instanceof CreateObject) {
 						out.println("\t\ttry {");
 						out.println("\t\t\t" + op + ";");
@@ -328,19 +333,37 @@ public class JUnitTestGenerator extends TestReader {
 					}
 
 				} else {
-					switch(status.getStatus()) {
+					switch(opResult.getStatus()) {
+					case NOT_EXECUTED:
+						out.println("\t\t//" + op + "; // Not Executed");
+						break;
+
+					case PRECONDITION_ERROR:
+						out.println("\t\t//" + op + "; // Precondition Error");
+						break;
+
+					case POSTCONDITION_ERROR:
+						out.println("\t\t" + op + "; //FIXME: this was a faulty invocation!");
+						break;
+
 					case SUCCESSFUL:
 						if(op instanceof Invoke) {
+							final Invoke invoke = (Invoke) op;
 
-							OperationResult result = (OperationResult) op.getInfo(OperationResult.KEY);
-							if(result != null) {
-								Reference target = ((Invoke) op).getTarget();;
-								Clazz retType = ((Invoke)op).getMethod().getReturnType();
+							final Clazz returnType = invoke.getMethod().getReturnType();
+							if(returnType == null) {
+								// the method does not return anything
+								out.println("\t\t" + invoke + ";");
 
-								Invoke inv = new Invoke(null, ((Invoke) op).getThis(), ((Invoke) op).getMethod(), ((Invoke) op).getParams());
-								out.println("\t\ttmp = " + inv + ";");
+							} else {
+								// create a temporary variable
+								String tmpVar = "tmp" + (tmpVarGenerator++);
+
+								// store the result in the tmp variable
+								out.println("\t\t" + returnType.getClassName() + " " + tmpVar + " = " + new Invoke(null, invoke.getThis(), invoke.getMethod(), invoke.getParams()) + ";");
 
 								// Put the value also in the original target
+								final Reference target = invoke.getTarget();
 								if(target != null) {
 									final String cast;
 									if(target.getClazz() instanceof PrimitiveClazz) {
@@ -349,84 +372,109 @@ public class JUnitTestGenerator extends TestReader {
 										cast = "(" + target.getClazz().getClassName() + ")";
 									}
 
-									out.println("\t\t" + target.toString() + " = " + cast + " tmp;");
+									out.println("\t\t" + target + " = " + cast + " " + tmpVar + ";");
 								}
 
-								// check the result (tmp's value)
-								if(retType instanceof PrimitiveClazz) {
-									switch(((PrimitiveClazz) retType).getType()) {
-									case BooleanClass:
-									case BooleanType:
-										out.println("\t\tassertEquals((boolean) " + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (boolean) (java.lang.Boolean) tmp);");
-										break;
-									case ByteClass:
-									case ByteType:
-										out.println("\t\tassertEquals((byte)" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (byte) (java.lang.Byte) tmp);");
-										break;
-									case CharacterClass:
-									case CharacterType:
-										out.println("\t\tassertEquals((char)" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (char) (java.lang.Character) tmp);");
-										break;
-									case ShortClass:
-									case ShortType:
-										out.println("\t\tassertEquals((short)" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (short) (java.lang.Short) tmp);");
-										break;
-									case IntegerClass:
-									case IntegerType:
-										out.println("\t\tassertEquals((int)" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (int) (java.lang.Integer) tmp);");
-										break;
-									case LongClass:
-									case LongType:
-										out.println("\t\tassertEquals((long)" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (long) (java.lang.Long) tmp);");
-										break;
-									case FloatClass:
-									case FloatType:
-										out.println("\t\tassertEquals((float)" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (float) (java.lang.Float) tmp, 0.001f);");
-										break;
-									case DoubleClass:
-									case DoubleType:
-										out.println("\t\tassertEquals((double)" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (double) (java.lang.Double) tmp, 0.001);");
-										break;
-									}
-								} else if(retType.getClassName().equals(String.class.getCanonicalName())) {
-									out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(result.getResult().getObject()) + ", (java.lang.String) tmp);");
-								} else {
-									logger.warning("Unusable return status: " + retType.getClassName());
-								}
-
-								out.println();
-
-								break;
+								generateAssertions(out, opResult.getResult(), returnType.getClassName(), tmpVar);
 							}
-						}
 
-						out.println("\t\t" + op + ";");
+							generateAssertions(out, opResult.getObject(), null, invoke.getThis().toString());
+
+							out.println();
+
+						} else if(op instanceof CreateObject) {
+							out.println("\t\t" + op + ";");
+							generateAssertions(out, opResult.getResult(), null, ((CreateObject)op).getTarget().toString());
+							out.println();
+
+						} else
+
+							out.println("\t\t" + op + ";");
+
 						break;
 
 					case EXCEPTIONAL:
 						out.println("\t\ttry {");
 						out.println("\t\t\t" + op + ";");
-						out.println("\t\t\tfail(\"Expecting a " + status.getException() + "\");");
-						out.println("\t\t} catch(" + status.getException().getClass().getCanonicalName() + " e) {");
-						out.println("\t\t\tassertEquals(\"" + status.getException().getMessage() + "\", e.getMessage());");
+						out.println("\t\t\tfail(\"Expecting a " + opResult.getException() + "\");");
+						out.println("\t\t} catch(" + opResult.getException().getClass().getCanonicalName() + " e) {");
+						out.println("\t\t\tassertEquals(\"" + opResult.getException().getMessage() + "\", e.getMessage());");
+
+						if(op instanceof Invoke)
+							generateAssertions(out, opResult.getObject(), null, ((Invoke)op).getThis().toString());
+
 						out.println("\t\t}");
-						break;
+						out.println();
 
-					case POSTCONDITION_ERROR:
-						out.println("\t\t" + op + "; //TODO: this was a faulty invocation!");
-						break;
-
-					case NOT_EXECUTED:
-						//skip: the operation has not been executed!
-						break;
-					case PRECONDITION_ERROR:
-						//skip: the operation has not been executed!
 						break;
 					}
 				}
 			}
 
 			out.println("\t}");
+		}
+
+		private void generateAssertions(PrintWriter out, final Value result, final String varType, final String varName) {
+			if(result == null) return;
+
+			if(result.isNull())
+				out.println("\t\tassertNull(" + varName + ");");
+			else if(varType != null)
+				generateSingleAssertion(out, result.getObject(), varType, varName);
+
+			for (String observer : result.getObservers())
+				generateSingleAssertion(out, result.getObserver(observer), null, varName + "." + observer + "()");
+		}
+
+		private void generateSingleAssertion(PrintWriter out, final Serializable expected, final String varType, final String varName) {
+
+			if(expected instanceof Boolean &&
+					(varType == null || varType.equals("boolean") ||  varType.equals("java.lang.Boolean"))) {
+
+				out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
+						("boolean".equals(varType) ? "" : "(boolean)") + varName + ");");
+
+			} else if(expected instanceof Byte &&
+					(varType == null ||  varType.equals("byte") ||  varType.equals("java.lang.Byte"))) {
+
+				out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
+						("byte".equals(varType)  ? "" :  "(byte)") + varName + ");");
+
+			} else if(expected instanceof Character &&
+					(varType == null ||  varType.equals("char") ||  varType.equals("java.lang.Character"))) {
+
+				out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
+						("char".equals(varType)  ? "" :  "(char)") + varName + ");");
+
+			} else if(expected instanceof String && (varType == null || varType.equals("java.lang.String"))) {
+
+				out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(expected) + ", " + varName + ");");
+
+			} else if(expected instanceof Integer &&
+					(varType == null || varType.equals("int") || varType.equals("java.lang.Integer"))) {
+
+				out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
+						("int".equals(varType)  ? "" :  "(int)") + varName + ");");
+
+			} else if(expected instanceof Long &&
+					( varType.equals("long") || varType.equals("java.lang.Long"))) {
+
+				out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
+						("long".equals(varType)  ? "" :  "(long)") + varName + ");");
+
+			} else if(expected instanceof Float &&
+					(varType == null ||  varType.equals("float") ||  varType.equals("java.lang.Float"))) {
+
+				out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
+						("float".equals(varType)  ? "" :  "(float)") + varName + ", 0.001f);");
+
+			} else if(expected instanceof Double &&
+					(varType == null ||  varType.equals("double") ||  varType.equals("java.lang.Double"))) {
+
+				out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
+						("double".equals(varType)  ? "" :  "(double)") + varName + ", 0.001);");
+
+			}
 		}
 
 		private void writeHeader(PrintWriter out, String testName) {
@@ -498,7 +546,7 @@ public class JUnitTestGenerator extends TestReader {
 
 	private static class Config extends ConfigProject implements IConfigProject.Args4j, IConfigRunner.Args4j {
 
-		@Option(required = false, name = "-dirTests", usage = "Specify the directory in which generated tests will be put.")
+		@Option(required = true, name = "-dirTests", usage = "Specify the directory in which generated tests will be put.")
 		private File dirGeneratedTests;
 
 		@Argument
