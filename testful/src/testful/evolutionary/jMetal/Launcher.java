@@ -123,7 +123,7 @@ public class Launcher {
 		}
 
 		/* simplify tests */
-		final TestSuiteReducer reducer = new TestSuiteReducer(problem.getFinder(), problem.getData());
+		final TestSuiteReducer reducer = new TestSuiteReducer(problem.getFinder(), problem.getData(), config.isSimplify());
 		for (Solution<Operation> sol : population)
 			reducer.process(problem.getTest(sol));
 

@@ -21,8 +21,11 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	private final IConfigRunner.Args4j configRunner = new ConfigRunner();
 	private final IConfigFitness.Args4j configFitness = new ConfigFitness();
 
+	@Option(required = false, name = "-noSimplify", usage = "Do not simplify tests")
+	private boolean noSimplify;
+
 	@Option(required = false, name = "-localSearchPeriod", usage = "Period of the local search (default: every 20 generations; <= 0 to disable local search)")
-	private int localSearchPeriod = 20;
+	private int localSearchPeriod = 5;
 
 	@Option(required = false, name = "-localSearchElements", usage = "% of elements on which the local search is applied (0 to consider the whole fronteer, 100 to enhance all the elements in the population)")
 	private int localSearchElements = 0;
@@ -34,7 +37,7 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	private FitnessInheritance fitnessInheritance = FitnessInheritance.UNIFORM;
 
 	@Option(required = false, name = "-smartAncestors", usage = "Use an enhanced initial population")
-	private int smartInitialPopulation = -1;
+	private int smartInitialPopulation = 30;
 
 	@Option(required = false, name = "-useCpuTime", usage = "Use CPU time instead of wall-clock time")
 	private boolean useCpuTime;
@@ -42,6 +45,10 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	@Override
 	public int getLocalSearchPeriod() {
 		return localSearchPeriod;
+	}
+
+	public void setLocalSearchPeriod(int localSearchPeriod) {
+		this.localSearchPeriod = localSearchPeriod;
 	}
 
 	@Override
@@ -54,9 +61,17 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 		return popSize;
 	}
 
+	public void setPopSize(int popSize) {
+		this.popSize = popSize;
+	}
+
 	@Override
 	public FitnessInheritance getFitnessInheritance() {
 		return fitnessInheritance;
+	}
+
+	public void setFitnessInheritance(FitnessInheritance fitnessInheritance) {
+		this.fitnessInheritance = fitnessInheritance;
 	}
 
 	@Override
@@ -288,6 +303,11 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 		return configRunner.getRemote();
 	}
 
+	public void setRemote(String remote) {
+		configRunner.getRemote().clear();
+		configRunner.addRemote(remote);
+	}
+
 	@Override
 	public boolean isLocalEvaluation() {
 		return configRunner.isLocalEvaluation();
@@ -331,5 +351,13 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	@Override
 	public void setLogLevel(LogLevel logLevel) {
 		configGenerator.setLogLevel(logLevel);
+	}
+
+	public void setSimplify(boolean simplify) {
+		noSimplify = !simplify;
+	}
+
+	public boolean isSimplify() {
+		return !noSimplify;
 	}
 }

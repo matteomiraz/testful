@@ -26,7 +26,6 @@ import testful.IConfigRunner;
 import testful.TestFul;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TestSizeInformation;
-import testful.coverage.TrackerDatum;
 import testful.model.AssignPrimitive;
 import testful.model.Clazz;
 import testful.model.CreateObject;
@@ -375,10 +374,10 @@ public class JUnitTestGenerator extends TestReader {
 									out.println("\t\t" + target + " = " + cast + " " + tmpVar + ";");
 								}
 
-								generateAssertions(out, opResult.getResult(), returnType.getClassName(), tmpVar);
+								generateAssertions("\t\t", out, opResult.getResult(), returnType.getClassName(), tmpVar);
 							}
 
-							generateAssertions(out, opResult.getObject(), null, invoke.getThis().toString());
+							generateAssertions("\t\t", out, opResult.getObject(), null, invoke.getThis().toString());
 
 							out.println();
 
@@ -387,14 +386,14 @@ public class JUnitTestGenerator extends TestReader {
 
 							if(create.getTarget() != null) {
 								out.println("\t\t" + create + ";");
-								generateAssertions(out, opResult.getResult(), null, create.getTarget().toString());
+								generateAssertions("\t\t", out, opResult.getResult(), null, create.getTarget().toString());
 								out.println();
 							} else {
 
 								// create a temporary variable and store there the created object
 								String tmpVar = "tmp" + (tmpVarGenerator++);
 								out.println("\t\t" + create.getConstructor().getClazz().getClassName() + " " + tmpVar + " = " + create + ";");
-								generateAssertions(out, opResult.getResult(), null, tmpVar);
+								generateAssertions("\t\t", out, opResult.getResult(), null, tmpVar);
 								out.println();
 							}
 
@@ -410,10 +409,12 @@ public class JUnitTestGenerator extends TestReader {
 						out.println("\t\t\t" + op + ";");
 						out.println("\t\t\tfail(\"Expecting a " + opResult.getException() + "\");");
 						out.println("\t\t} catch(" + opResult.getException().getClass().getCanonicalName() + " e) {");
-						out.println("\t\t\tassertEquals(\"" + opResult.getException().getMessage() + "\", e.getMessage());");
+
+						if(opResult.getException().getMessage() != null)
+							out.println("\t\t\tassertEquals(\"" + opResult.getException().getMessage() + "\", e.getMessage());");
 
 						if(op instanceof Invoke)
-							generateAssertions(out, opResult.getObject(), null, ((Invoke)op).getThis().toString());
+							generateAssertions("\t\t\t", out, opResult.getObject(), null, ((Invoke)op).getThis().toString());
 
 						out.println("\t\t}");
 						out.println();
@@ -426,64 +427,64 @@ public class JUnitTestGenerator extends TestReader {
 			out.println("\t}");
 		}
 
-		private void generateAssertions(PrintWriter out, final Value result, final String varType, final String varName) {
+		private void generateAssertions(String spaces, PrintWriter out, final Value result, final String varType, final String varName) {
 			if(result == null) return;
 
 			if(result.isNull())
-				out.println("\t\tassertNull(" + varName + ");");
+				out.println(spaces + "assertNull(" + varName + ");");
 			else if(varType != null)
-				generateSingleAssertion(out, result.getObject(), varType, varName);
+				generateSingleAssertion(spaces, out, result.getObject(), varType, varName);
 
 			for (String observer : result.getObservers())
-				generateSingleAssertion(out, result.getObserver(observer), null, varName + "." + observer + "()");
+				generateSingleAssertion(spaces, out, result.getObserver(observer), null, varName + "." + observer + "()");
 		}
 
-		private void generateSingleAssertion(PrintWriter out, final Serializable expected, final String varType, final String varName) {
+		private void generateSingleAssertion(String spaces, PrintWriter out, final Serializable expected, final String varType, final String varName) {
 
 			if(expected instanceof Boolean &&
 					(varType == null || varType.equals("boolean") ||  varType.equals("java.lang.Boolean"))) {
 
-				out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
+				out.println(spaces + "assertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
 						("boolean".equals(varType) ? "" : "(boolean)") + varName + ");");
 
 			} else if(expected instanceof Byte &&
 					(varType == null ||  varType.equals("byte") ||  varType.equals("java.lang.Byte"))) {
 
-				out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
+				out.println(spaces + "assertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
 						("byte".equals(varType)  ? "" :  "(byte)") + varName + ");");
 
 			} else if(expected instanceof Character &&
 					(varType == null ||  varType.equals("char") ||  varType.equals("java.lang.Character"))) {
 
-				out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
+				out.println(spaces + "assertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
 						("char".equals(varType)  ? "" :  "(char)") + varName + ");");
 
 			} else if(expected instanceof String && (varType == null || varType.equals("java.lang.String"))) {
 
-				out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(expected) + ", " + varName + ");");
+				out.println(spaces + "assertEquals(" + AssignPrimitive.getValueString(expected) + ", " + varName + ");");
 
 			} else if(expected instanceof Integer &&
 					(varType == null || varType.equals("int") || varType.equals("java.lang.Integer"))) {
 
-				out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
+				out.println(spaces + "assertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
 						("int".equals(varType)  ? "" :  "(int)") + varName + ");");
 
 			} else if(expected instanceof Long &&
 					( varType == null || varType.equals("long") || varType.equals("java.lang.Long"))) {
 
-				out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
+				out.println(spaces + "assertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
 						("long".equals(varType)  ? "" :  "(long)") + varName + ");");
 
 			} else if(expected instanceof Float &&
 					(varType == null ||  varType.equals("float") ||  varType.equals("java.lang.Float"))) {
 
-				out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
+				out.println(spaces + "assertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
 						("float".equals(varType)  ? "" :  "(float)") + varName + ", 0.001f);");
 
 			} else if(expected instanceof Double &&
 					(varType == null ||  varType.equals("double") ||  varType.equals("java.lang.Double"))) {
 
-				out.println("\t\tassertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
+				out.println(spaces + "assertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
 						("double".equals(varType)  ? "" :  "(double)") + varName + ", 0.001);");
 
 			}
@@ -549,14 +550,34 @@ public class JUnitTestGenerator extends TestReader {
 
 		JUnitTestGenerator gen = new JUnitTestGenerator(config.getDirGeneratedTests());
 
-		gen.process(getOpStatus(finder, simplify(finder, config.tests)));
+		gen.process(getOpStatus(finder, TestSuiteReducer.reduce(finder, config.tests, !config.noSimplify)));
 
 		gen.writeSuite();
 
 		System.exit(0);
 	}
 
+	private static List<TestCoverage> getOpStatus(ClassFinder finder, Iterable<TestCoverage> simplify) {
+		List<TestCoverage> ret = new ArrayList<TestCoverage>();
+
+		for (TestCoverage test : simplify) {
+			try {
+				Operation[] op = TestExecutionManager.getOpStatus(finder, test);
+				ret.add(new TestCoverage(new Test(test.getCluster(), test.getReferenceFactory(), op), test.getCoverage()));
+			} catch (Exception e) {
+				logger.log(Level.WARNING, "Cannot execute a test: " + e.getLocalizedMessage(), e);
+				ret.add(test);
+			}
+		}
+
+
+		return ret;
+	}
+
 	private static class Config extends ConfigProject implements IConfigProject.Args4j, IConfigRunner.Args4j {
+
+		@Option(required = false, name = "-noSimplify", usage = "Do not simplify tests")
+		private boolean noSimplify;
 
 		@Option(required = true, name = "-dirTests", usage = "Specify the directory in which generated tests will be put.")
 		private File dirGeneratedTests;
@@ -592,40 +613,5 @@ public class JUnitTestGenerator extends TestReader {
 			if(!dirGeneratedTests.isAbsolute()) dirGeneratedTests = new File(getDirBase(), dirGeneratedTests.getPath()).getAbsoluteFile();
 			return dirGeneratedTests;
 		}
-	}
-
-	private static List<TestCoverage> getOpStatus(ClassFinder finder, Iterable<TestCoverage> simplify) {
-		List<TestCoverage> ret = new ArrayList<TestCoverage>();
-
-		for (TestCoverage test : simplify) {
-			try {
-				Operation[] op = TestExecutionManager.getOpStatus(finder, test);
-				ret.add(new TestCoverage(new Test(test.getCluster(), test.getReferenceFactory(), op), test.getCoverage()));
-			} catch (Exception e) {
-				logger.log(Level.WARNING, "Cannot execute a test: " + e.getLocalizedMessage(), e);
-				ret.add(test);
-			}
-		}
-
-		return ret;
-	}
-
-	private static Collection<TestCoverage> simplify(ClassFinder finder, List<String> tests) {
-		final TestSuiteReducer reducer = new TestSuiteReducer(finder, new TrackerDatum[0]);
-		new TestReader() {
-
-			@Override
-			protected Logger getLogger() {
-				return logger;
-			}
-
-			@Override
-			protected void read(String fileName, Test test) {
-				reducer.process(test);
-			}
-
-		}.read(tests);
-
-		return reducer.getOutput();
 	}
 }

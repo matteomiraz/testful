@@ -18,4 +18,8 @@ public interface IConfigEvolutionary extends IConfigGeneration, IConfigRunner, I
 
 	public boolean isUseCpuTime();
 
+	public void setSimplify(boolean simplify);
+
+	public boolean isSimplify();
+
 }

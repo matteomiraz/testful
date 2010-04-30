@@ -47,100 +47,34 @@ import testful.utils.Utils;
 public class TestSuiteReducer {
 	private static final Logger logger = Logger.getLogger("testful.regression");
 
-	private static class Config extends ConfigCut implements IConfigCut.Args4j, IConfigRunner.Args4j {
-
-		@Option(required = true, name = "-dirOut", usage = "Specify the output directory")
-		private File out;
-
-		@Argument
-		private List<String> tests = new ArrayList<String>();
-
-		private List<String> remote = new ArrayList<String>();
-
-		private boolean localEvaluation = true;
-
-		@Override
-		public List<String> getRemote() {
-			return remote;
-		}
-
-		@Override
-		public void addRemote(String remote) {
-			this.remote.add(remote);
-		}
-
-		@Override
-		public boolean isLocalEvaluation() {
-			return localEvaluation;
-		}
-
-		@Override
-		public void disableLocalEvaluation(boolean disableLocalEvaluation) {
-			localEvaluation = !disableLocalEvaluation;
-		}
-	}
-
-	public static void main(String[] args) {
-		Config config = new Config();
-		TestFul.parseCommandLine(config, args, TestSuiteReducer.class, "Test suite reducer");
-
-		if(config.isQuiet())
-			testful.TestFul.printHeader("Test suite reducer");
-
-		TestFul.setupLogging(config);
-
-		RunnerPool.getRunnerPool().config(config);
-
-		ClassFinderCaching finder = null;
-		try {
-			finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
-		} catch (RemoteException e) {
-			// never happens
-		}
-
-		AnalysisWhiteBox whiteAnalysis = AnalysisWhiteBox.read(config.getDirInstrumented(), config.getCut());
-		TrackerDatum[] data = Utils.readData(whiteAnalysis);
-
-		final TestSuiteReducer reducer = new TestSuiteReducer(finder, data);
-		new TestReader() {
-
-			@Override
-			protected Logger getLogger() {
-				return logger;
-			}
-
-			@Override
-			protected void read(String fileName, Test test) {
-				reducer.process(test);
-			}
-
-		}.read(config.tests);
-
-
-		int i = 0;
-		for (TestCoverage t : reducer.getOutput()) {
-			try {
-				t.write(new GZIPOutputStream(new FileOutputStream(new File(config.out, "Test-" + (i++) + ".ser.gz"))));
-			} catch (IOException e) {
-				logger.log(Level.WARNING, "Cannot write a test: " + e.getLocalizedMessage(), e);
-			}
-		}
-
-		System.exit(0);
-	}
-
 	private static final TestSimplifier simplifier = new TestSimplifier();
 
 	private final OptimalTestCreator optimal = new OptimalTestCreator();
 	private final ClassFinder finder;
 	private final TrackerDatum[] data;
+	private final boolean simplify;
 
-	public TestSuiteReducer(ClassFinder finder, TrackerDatum[] data) {
+	public TestSuiteReducer(ClassFinder finder, TrackerDatum[] data, boolean simplify) {
 		this.finder = finder;
 		this.data = data;
+		this.simplify = simplify;
 	}
 
 	public void process(Test test) {
+		if(!simplify) {
+			try {
+				// calculate the coverage for the test
+				final TestCoverage coverage = getCoverage(test);
+				if(logger.isLoggable(Level.FINER)) logger.finer("Part - coverage:\n" + coverage);
+				optimal.update(coverage);
+			} catch (InterruptedException e) {
+				logger.log(Level.WARNING, "Error while executing a test: " + e, e);
+			} catch (ExecutionException e) {
+				logger.log(Level.WARNING, "Error while executing a test: " + e, e);
+			}
+			return;
+		}
+
 		logger.fine("Reducing test: initial length " + test.getTest().length);
 		if(logger.isLoggable(Level.FINER))
 			logger.finer("Original test:\n"+test);
@@ -208,5 +142,113 @@ public class TestSuiteReducer {
 
 	public Collection<TestCoverage> getOutput() {
 		return optimal.get();
+	}
+
+	// -------------------- static version ------------
+
+	public static Collection<TestCoverage> reduce(ClassFinder finder, List<String> tests, boolean simplify) {
+		final TestSuiteReducer reducer = new TestSuiteReducer(finder, new TrackerDatum[0], simplify);
+		new TestReader() {
+
+			@Override
+			protected Logger getLogger() {
+				return logger;
+			}
+
+			@Override
+			protected void read(String fileName, Test test) {
+				reducer.process(test);
+			}
+
+		}.read(tests);
+
+		return reducer.getOutput();
+	}
+
+	// -------------------- main ----------------------
+
+	private static class Config extends ConfigCut implements IConfigCut.Args4j, IConfigRunner.Args4j {
+
+		@Option(required = false, name = "-noSimplify", usage = "Do not simplify tests")
+		private boolean noSimplify;
+
+		@Option(required = true, name = "-dirOut", usage = "Specify the output directory")
+		private File out;
+
+		@Argument
+		private List<String> tests = new ArrayList<String>();
+
+		private List<String> remote = new ArrayList<String>();
+
+		private boolean localEvaluation = true;
+
+		@Override
+		public List<String> getRemote() {
+			return remote;
+		}
+
+		@Override
+		public void addRemote(String remote) {
+			this.remote.add(remote);
+		}
+
+		@Override
+		public boolean isLocalEvaluation() {
+			return localEvaluation;
+		}
+
+		@Override
+		public void disableLocalEvaluation(boolean disableLocalEvaluation) {
+			localEvaluation = !disableLocalEvaluation;
+		}
+	}
+
+	public static void main(String[] args) {
+		Config config = new Config();
+		TestFul.parseCommandLine(config, args, TestSuiteReducer.class, "Test suite reducer");
+
+		if(config.isQuiet())
+			testful.TestFul.printHeader("Test suite reducer");
+
+		TestFul.setupLogging(config);
+
+		RunnerPool.getRunnerPool().config(config);
+
+		ClassFinderCaching finder = null;
+		try {
+			finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
+		} catch (RemoteException e) {
+			// never happens
+		}
+
+		AnalysisWhiteBox whiteAnalysis = AnalysisWhiteBox.read(config.getDirInstrumented(), config.getCut());
+		TrackerDatum[] data = Utils.readData(whiteAnalysis);
+
+		final TestSuiteReducer reducer = new TestSuiteReducer(finder, data, !config.noSimplify);
+		new TestReader() {
+
+			@Override
+			protected Logger getLogger() {
+				return logger;
+			}
+
+			@Override
+			protected void read(String fileName, Test test) {
+				reducer.process(test);
+			}
+
+		}.read(config.tests);
+
+
+		int i = 0;
+		for (TestCoverage t : reducer.getOutput()) {
+			try {
+				t.write(new GZIPOutputStream(new FileOutputStream(new File(config.out, "Test-" + (i++) + ".ser.gz"))));
+			} catch (IOException e) {
+				logger.log(Level.WARNING, "Cannot write a test: " + e.getLocalizedMessage(), e);
+			}
+		}
+
+		System.exit(0);
 	}
 }
