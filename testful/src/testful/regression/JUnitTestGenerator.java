@@ -383,9 +383,21 @@ public class JUnitTestGenerator extends TestReader {
 							out.println();
 
 						} else if(op instanceof CreateObject) {
-							out.println("\t\t" + op + ";");
-							generateAssertions(out, opResult.getResult(), null, ((CreateObject)op).getTarget().toString());
-							out.println();
+							final CreateObject create = (CreateObject) op;
+
+							if(create.getTarget() != null) {
+								out.println("\t\t" + create + ";");
+								generateAssertions(out, opResult.getResult(), null, create.getTarget().toString());
+								out.println();
+							} else {
+
+								// create a temporary variable and store there the created object
+								String tmpVar = "tmp" + (tmpVarGenerator++);
+								out.println("\t\t" + create.getConstructor().getClazz().getClassName() + " " + tmpVar + " = " + create + ";");
+								generateAssertions(out, opResult.getResult(), null, tmpVar);
+								out.println();
+							}
+
 
 						} else
 
