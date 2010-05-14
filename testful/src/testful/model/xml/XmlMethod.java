@@ -12,11 +12,11 @@ import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(namespace = "http://home.dei.polimi.it/miraz/testful", name = "method", propOrder = { "parameter", "extra" })
+@XmlType(namespace = "http://testful.sourceforge.net/schema/1.1/testful.xsd", name = "method", propOrder = { "parameter", "extra" })
 public class XmlMethod {
 
 	@XmlEnum
-	@XmlType(namespace = "http://home.dei.polimi.it/miraz/testful")
+	@XmlType(namespace = "http://testful.sourceforge.net/schema/1.1/testful.xsd")
 	public static enum Kind {
 		/** the method is static */
 		@XmlEnumValue("static")

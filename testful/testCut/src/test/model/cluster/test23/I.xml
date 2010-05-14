@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<ns2:class xmlns:ns2="http://home.dei.polimi.it/miraz/testful" instrument="false" name="test.model.cluster.test23.I">
+<ns2:class xmlns:ns2="http://testful.sourceforge.net/schema/1.1/testful.xsd" instrument="false" name="test.model.cluster.test23.I">
     <aux name="test.model.cluster.test23.C"/>
 </ns2:class>

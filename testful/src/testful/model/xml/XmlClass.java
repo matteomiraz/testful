@@ -13,13 +13,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(namespace = "http://home.dei.polimi.it/miraz/testful", name = "class", propOrder = { "aux", "constructor", "method", "extra" })
-@XmlRootElement(name = "class", namespace = "http://home.dei.polimi.it/miraz/testful")
+@XmlType(namespace = "http://testful.sourceforge.net/schema/1.1/testful.xsd", name = "class", propOrder = { "aux", "constructor", "method", "extra" })
+@XmlRootElement(name = "class", namespace = "http://testful.sourceforge.net/schema/1.1/testful.xsd")
 public class XmlClass {
 
 	@XmlAttribute(required = true)
 	protected String name;
-	
+
 	@XmlAttribute(required = false)
 	protected boolean instrument;
 
@@ -46,17 +46,17 @@ public class XmlClass {
 	public boolean isInstrument() {
 		return instrument;
 	}
-	
+
 	public void setInstrument(boolean instrument) {
 		this.instrument = instrument;
 	}
-	
+
 	public List<XmlAux> getAux() {
 		if(aux == null) aux = new ArrayList<XmlAux>();
 
 		return aux;
 	}
-	
+
 	public List<XmlMethod> getMethod() {
 		if(method == null) method = new ArrayList<XmlMethod>();
 

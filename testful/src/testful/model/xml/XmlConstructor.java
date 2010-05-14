@@ -9,7 +9,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(namespace = "http://home.dei.polimi.it/miraz/testful", name = "constructor", propOrder = { "parameter", "extra" })
+@XmlType(namespace = "http://testful.sourceforge.net/schema/1.1/testful.xsd", name = "constructor", propOrder = { "parameter", "extra" })
 public class XmlConstructor {
 
 	@XmlElement(nillable = true)

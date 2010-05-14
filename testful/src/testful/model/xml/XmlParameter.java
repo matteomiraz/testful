@@ -10,15 +10,12 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(namespace = "http://home.dei.polimi.it/miraz/testful", name = "parameter")
+@XmlType(namespace = "http://testful.sourceforge.net/schema/1.1/testful.xsd", name = "parameter")
 public class XmlParameter {
 
 	@XmlAttribute(required = true)
 	protected String type;
 
-	@XmlAttribute()
-	protected boolean array;
-	
 	@XmlAttribute
 	protected Boolean mutated;
 
@@ -62,14 +59,6 @@ public class XmlParameter {
 
 	public void setExposedByReturn(Boolean value) {
 		exposedByReturn = value;
-	}
-	
-	public boolean isArray() {
-		return array;
-	}
-	
-	public void setArray(boolean array) {
-		this.array = array;
 	}
 
 	public Boolean isCaptured() {

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<xs:schema version="1.0" targetNamespace="http://home.dei.polimi.it/miraz/testful" xmlns:tns="http://home.dei.polimi.it/miraz/testful" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:schema version="1.0" targetNamespace="http://testful.sourceforge.net/schema/1.1/testful.xsd" xmlns:tns="http://testful.sourceforge.net/schema/1.1/testful.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
   <xs:element name="class" type="tns:class"/>
 
@@ -34,7 +34,6 @@
     <xs:attribute name="exposedByReturn" type="xs:boolean"/>
     <xs:attribute name="captured" type="xs:boolean"/>
     <xs:attribute name="mutated" type="xs:boolean"/>
-    <xs:attribute name="array" type="xs:boolean" use="required"/>
     <xs:attribute name="type" type="xs:string" use="required"/>
   </xs:complexType>
 

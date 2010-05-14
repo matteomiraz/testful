@@ -6,7 +6,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(namespace = "http://home.dei.polimi.it/miraz/testful", name = "aux")
+@XmlType(namespace = "http://testful.sourceforge.net/schema/1.1/testful.xsd", name = "aux")
 public class XmlAux {
 
 	@XmlAttribute(required = true)
@@ -14,15 +14,15 @@ public class XmlAux {
 
 	public XmlAux() {
 	}
-	
+
 	public XmlAux(String name) {
 		this.name = name;
 	}
-	
+
 	public String getName() {
 		return name;
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}

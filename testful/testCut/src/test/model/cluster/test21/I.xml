@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<ns2:class xmlns:ns2="http://home.dei.polimi.it/miraz/testful" instrument="false" name="test.model.cluster.test21.I">
+<ns2:class xmlns:ns2="http://testful.sourceforge.net/schema/1.1/testful.xsd" instrument="false" name="test.model.cluster.test21.I">
     <aux name="test.model.cluster.test21.C"/>
     <constructor/>
 </ns2:class>
