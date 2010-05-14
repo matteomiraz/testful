@@ -22,13 +22,16 @@ public class AnalysisWhiteBox implements Serializable {
 	private static final long serialVersionUID = -8517242673275381964L;
 
 	private static final String FILE_SUFFIX = ".wb.gz";
+	private static final Logger logger = Logger.getLogger("testful.coverage.whiteBox");
 
 	public static AnalysisWhiteBox read(File baseDir, String className) {
 		ObjectInput oi = null;
+		final File file = getFile(baseDir, className);
 		try {
-			oi = new ObjectInputStream(new GZIPInputStream(new FileInputStream(getFile(baseDir, className))));
+			oi = new ObjectInputStream(new GZIPInputStream(new FileInputStream(file)));
 			return (AnalysisWhiteBox) oi.readObject();
 		} catch(Exception e) {
+			logger.log(Level.WARNING, "Exception while reading the file " + file.getAbsolutePath() + ": " + e.toString(), e);
 			return null;
 		} finally {
 			if(oi != null)

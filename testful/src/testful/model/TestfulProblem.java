@@ -81,9 +81,11 @@ public class TestfulProblem implements Serializable {
 			refFactory = new ReferenceFactory(cluster, config.getNumVarCut(), config.getNumVar());
 
 		} catch(ClassNotFoundException e) {
+			logger.log(Level.WARNING, "Class not found: " + e.toString(), e);
 			throw new TestfulException("Class not found: " + e.toString());
 		} catch(RemoteException e) {
 			// never happens
+			logger.log(Level.WARNING, "Remote exception (should never happen): " + e.toString(), e);
 			throw new TestfulException(e);
 		}
 

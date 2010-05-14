@@ -23,6 +23,8 @@ public class TestFul {
 
 	public static final boolean DEBUG = false;
 
+	private static final String VERSION = "1.1.1";
+
 	public static void parseCommandLine(Object config, String[] args, Class<?> launcher, String name) {
 
 		CmdLineParser parser = new CmdLineParser(config);
@@ -48,9 +50,8 @@ public class TestFul {
 	}
 
 	public static void printHeader(String module) {
-		System.out.println("Testful" + (module == null ? "" : (" - " + module)));
+		System.out.println("Testful v. " + VERSION + (module != null ? " - " + module : ""));
 		System.out.println("Copyright 2010 - Matteo Miraz (miraz@elet.polimi.it)");
-		System.out.println();
 		System.out.println();
 	}
 

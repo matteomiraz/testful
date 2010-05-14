@@ -478,8 +478,12 @@ public class JUnitTestGenerator extends TestReader {
 			} else if(expected instanceof Float &&
 					(varType == null ||  varType.equals("float") ||  varType.equals("java.lang.Float"))) {
 
+				// Assert.assertEquals(float, float, float) is buggy when NaN are used:
+				// Assert.assertEquals(Float.NaN, Float.NaN, 0.001f) raises an assertionFaliedError! (discovered during the ICSE 2010 presentation! :( )
+				// hence we use the Assert.assertEquals(double, double, double)
+				// (note the epsilon parameter: it is a double!)
 				out.println(spaces + "assertEquals(" + AssignPrimitive.getValueString(expected) + ", " +
-						("float".equals(varType)  ? "" :  "(float)") + varName + ", 0.001f);");
+						("float".equals(varType)  ? "" :  "(float)") + varName + ", 0.001);");
 
 			} else if(expected instanceof Double &&
 					(varType == null ||  varType.equals("double") ||  varType.equals("java.lang.Double"))) {

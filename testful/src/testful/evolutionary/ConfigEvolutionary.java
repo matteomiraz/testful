@@ -37,7 +37,7 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	private FitnessInheritance fitnessInheritance = FitnessInheritance.UNIFORM;
 
 	@Option(required = false, name = "-smartAncestors", usage = "Use an enhanced initial population")
-	private int smartInitialPopulation = 30;
+	private int smartInitialPopulation = 60;
 
 	@Option(required = false, name = "-useCpuTime", usage = "Use CPU time instead of wall-clock time")
 	private boolean useCpuTime;
@@ -353,10 +353,12 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 		configGenerator.setLogLevel(logLevel);
 	}
 
+	@Override
 	public void setSimplify(boolean simplify) {
 		noSimplify = !simplify;
 	}
 
+	@Override
 	public boolean isSimplify() {
 		return !noSimplify;
 	}
