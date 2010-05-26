@@ -20,64 +20,76 @@ public class Test_reorganizerTestCase extends AutoTestCase {
 		return ret;
 	}
 
-	public void testHardStatemachine1() throws Exception {
+	/**
+	 * Found a bug in dummy.Simple: the test
+	 * <ul>
+	 * <li>1) java_lang_Integer_1 = (int) dummy_Simple_3.oStatus();</li>
+	 * <li>2) dummy_Simple_3 = new dummy.Simple();</li>
+	 * <li>3) java_lang_Integer_0 = (int) dummy_Simple_3.oAbs();</li>
+	 * <li>4) java_lang_Object_3 = new java.lang.Object();</li>
+	 * <li>5) dummy_Simple_2 = new dummy.Simple();</li>
+	 * <li>6) dummy_Simple_2.compare(java_lang_Object_3);</li>
+	 * <li>7) java_lang_Integer_2 = (int) dummy_Simple_2.oAbs();</li>
+	 * </ul>
+	 * became (note the istruction #1):
+	 * <ul>
+	 * <li>5) dummy_Simple_2 = new dummy.Simple();</li>
+	 * <li>4) java_lang_Object_3 = new java.lang.Object();</li>
+	 * <li>1) java_lang_Integer_1 = (int) dummy_Simple_3.oStatus();</li>
+	 * <li>2) dummy_Simple_3 = new dummy.Simple();</li>
+	 * <li>3) java_lang_Integer_2 = (int) dummy_Simple_2.oAbs();</li>
+	 * <li>6) dummy_Simple_2.compare(java_lang_Object_3);</li>
+	 * <li>7) java_lang_Integer_0 = (int) dummy_Simple_3.oAbs();</li>
+	 * </ul>
+	 */
+	public void testSimple() throws Exception {
 		ConfigCut config = new ConfigCut(GenericTestCase.config);
-		config.setCut("dummy.WhiteSample");
+		config.setCut("dummy.Simple");
 		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
-		ReferenceFactory refFactory = new ReferenceFactory(cluster, 1, 2);
+		ReferenceFactory refFactory = new ReferenceFactory(cluster, 4, 4);
 
 		Clazz cut = cluster.getCut();
-
-		Clazz cClazz = null;
-		Clazz[] cl = cluster.getCluster();
-		for(Clazz clazz : cl) {
-			if("java.lang.Character".equals(clazz.getClassName())) {
-				cClazz = clazz;
-				break;
-			}
+		Clazz iClazz = null;
+		Clazz oClazz = null;
+		for(Clazz clazz : cluster.getCluster()) {
+			if("java.lang.Integer".equals(clazz.getClassName())) iClazz = clazz;
+			if("java.lang.Object".equals(clazz.getClassName())) oClazz = clazz;
 		}
+		assertNotNull("Cannot find java.lang.Integer", iClazz);
+		assertNotNull("Cannot find java.lang.Object", oClazz);
 
-		Reference c0 = refFactory.getReferences(cClazz)[0];
-		Reference c1 = refFactory.getReferences(cClazz)[1];
-		Reference s0 = refFactory.getReferences(cut)[0];
+		Reference s2 = refFactory.getReferences(cut)[2];
+		Reference s3 = refFactory.getReferences(cut)[3];
+		Reference i0 = refFactory.getReferences(iClazz)[0];
+		Reference i1 = refFactory.getReferences(iClazz)[1];
+		Reference i2 = refFactory.getReferences(iClazz)[2];
+		Reference o3 = refFactory.getReferences(oClazz)[3];
 
-		Methodz nextCharV = null;
-		Methodz nextCharC = null;
+		Methodz oStatus = null;
+		Methodz oAbs = null;
+		Methodz compare = null;
 		for(Methodz m : cut.getMethods()) {
-			if("nextChar".equals(m.getName())) {
-				if(m.getParameterTypes().length == 0) nextCharV = m;
-				else nextCharC = m;
-			}
+			if("oStatus".equals(m.getName())) oStatus = m;
+			if("oAbs".equals(m.getName())) oAbs = m;
+			if("compare".equals(m.getName())) compare = m;
 		}
+		assertNotNull("Cannot find a method", oAbs);
+		assertNotNull("Cannot find a method", oStatus);
+		assertNotNull("Cannot find a method", compare);
 
-		Constructorz cns = cut.getConstructors()[0];
+		Constructorz sCns = cut.getConstructors()[0];
+		Constructorz oCns = oClazz.getConstructors()[0];
 
-		//statemachine_Hard_1 = new statemachine.Hard();
-		//java_lang_Character_2 = (char) statemachine_Hard_1.nextChar();
-		//java_lang_Character_2 = (char)((int) 44 /* , */ );
-		//java_lang_Character_0 = (char) statemachine_Hard_1.nextChar();
-		//statemachine_Hard_1.nextChar(java_lang_Character_0);
-		Operation[] ops = new Operation[] {
-				new CreateObject(s0, cns, new Reference[] { }),
-				new Invoke(c1, s0, nextCharV, new Reference[] { }),
-				new AssignPrimitive(c1, 'w'),
-				new Invoke(c0, s0, nextCharV, new Reference[] { }),
-				new Invoke(null, s0, nextCharC, new Reference[] { c0 }),
-		};
+		Test orig = new Test(cluster, refFactory, new Operation[] {
+				new Invoke(i1, s3, oStatus, new Reference[]{ }),
+				new CreateObject(s3, sCns, new Reference[] { }),
+				new Invoke(i0, s3, oAbs, new Reference[]{ }),
+				new CreateObject(o3, oCns, new Reference[]{ }),
+				new CreateObject(s2, sCns, new Reference[]{ }),
+				new Invoke(null, s2, compare, new Reference[] { o3 }),
+				new Invoke(i2, s2, oAbs, new Reference[] { })
+		});
 
-		Test t = new Test(cluster, refFactory, ops);
-
-		Operation[][] expected = {
-				{
-					new CreateObject(s0, cns, new Reference[] { }),
-					new Invoke(c0, s0, nextCharV, new Reference[] { }),
-					new Invoke(c1, s0, nextCharV, new Reference[] { }),
-					new AssignPrimitive(c1, 'w'),
-					new Invoke(null, s0, nextCharC, new Reference[] { c0 }),
-				}
-		};
-
-		check(t, expected);
+		autoTest(orig);
 	}
-
 }

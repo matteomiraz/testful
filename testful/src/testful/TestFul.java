@@ -21,7 +21,7 @@ public class TestFul {
 
 	public static final long runId = System.currentTimeMillis();
 
-	public static final boolean DEBUG = false;
+	public static final boolean DEBUG = true;
 
 	private static final String VERSION = "1.1.2";
 

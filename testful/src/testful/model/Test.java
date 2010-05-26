@@ -775,14 +775,10 @@ public class Test implements Serializable {
 
 		for(Operation op : test) {
 
-			sb.append("\n");
-
 			Iterator<OperationInformation> infos = op.getInfos();
-			if(infos.hasNext()) {
-				while(infos.hasNext()) {
-					sb.append("  //").append(infos.next().toString()).append("\n");
-				}
-			}
+			if(infos.hasNext()) sb.append("\n");
+			while(infos.hasNext())
+				sb.append("  //").append(infos.next().toString()).append("\n");
 
 			sb.append("  ").append(op.toString()).append(";\n");
 		}

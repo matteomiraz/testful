@@ -1,3 +1,2 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<ns2:class xmlns:ns2="http://testful.sourceforge.net/schema/1.1/testful.xsd" instrument="false" name="java.lang.Object">
-</ns2:class>
+<ns2:class xmlns:ns2="http://testful.sourceforge.net/schema/1.1/testful.xsd" instrument="false" name="java.lang.Object"/>

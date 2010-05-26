@@ -26,7 +26,17 @@ public abstract class AutoTestCase extends GenericTestCase {
 	protected String[] getCuts() {
 		return new String[] {
 				"dummy.Simple",
+				"apache.Fraction"
 		};
+	}
+
+	@Override
+	protected void setUp() throws Exception {
+		super.setUp();
+
+		for(String cut : getCuts())
+			getCoverage(createRandomTest(cut, 1000, 17l));
+
 	}
 
 	public void testSetup() throws Exception {
@@ -39,7 +49,7 @@ public abstract class AutoTestCase extends GenericTestCase {
 			MersenneTwisterFast r = new MersenneTwisterFast(37);
 			for(int n = 1; n < 1000; n++) {
 				System.out.printf("%5.1f%% ", n/10.0);
-				autoTest(cut, 1000+r.nextInt(1000), r.nextLong());
+				autoTest(cut, 100+r.nextInt(1900), r.nextLong());
 			}
 		}
 	}

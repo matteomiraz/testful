@@ -45,7 +45,6 @@ public abstract class GenericTestCase  extends TestCase {
 	protected static final TestFailedException SETUP = new TestFailedException("Please setup correctly your system!");
 
 	protected static boolean RECYCLE_CLASS_LOADER = true;
-	protected boolean SKIP_CONTRACTS = false;
 
 	public static class TestFailedException extends Exception {
 		private static final long serialVersionUID = 1L;
@@ -73,7 +72,6 @@ public abstract class GenericTestCase  extends TestCase {
 		boolean err = false;
 		for(CoverageInformation o : origCov) {
 			if(o instanceof TestSizeInformation) continue;
-			if(SKIP_CONTRACTS && !o.getKey().endsWith("n")) continue;
 
 			float origQ = o.getQuality();
 

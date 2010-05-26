@@ -14,14 +14,15 @@ public class AssignConstant extends Operation {
 	private final Reference ref;
 	private final StaticValue staticValue;
 
-	@SuppressWarnings("unused")
 	public AssignConstant(Reference ref, StaticValue staticValue) {
 		super();
 
-		if(TestFul.DEBUG && ref == null) {
-			final NullPointerException nullPointerException = new NullPointerException("REf cannot be null!");
-			nullPointerException.printStackTrace();
-			throw nullPointerException;
+		if(TestFul.DEBUG) {
+			if(ref == null) {
+				final NullPointerException exception = new NullPointerException("REF cannot be null!");
+				exception.printStackTrace();
+				throw exception;
+			}
 		}
 
 		this.ref = ref;

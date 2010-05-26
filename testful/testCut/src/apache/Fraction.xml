@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:class xmlns:ns2="http://testful.sourceforge.net/schema/1.1/testful.xsd" instrument="true" name="apache.Fraction">
+    <constructor>
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="double"/>
+    </constructor>
+    <constructor>
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="double"/>
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="double"/>
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="int"/>
+    </constructor>
+    <constructor>
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="double"/>
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="int"/>
+    </constructor>
+    <constructor>
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="int"/>
+    </constructor>
+    <constructor>
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="int"/>
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="int"/>
+    </constructor>
+    <method kind="pure" exposeState="false" name="add">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="apache.Fraction"/>
+    </method>
+    <method kind="pure" exposeState="false" name="add">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="int"/>
+    </method>
+    <method kind="observer" exposeState="false" name="hashCode"/>
+    <method kind="pure" exposeState="false" name="abs"/>
+    <method kind="pure" exposeState="false" name="equals">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="java.lang.Object"/>
+    </method>
+    <method kind="pure" exposeState="false" name="compareTo">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="apache.Fraction"/>
+    </method>
+    <method kind="observer" exposeState="false" name="toString"/>
+    <method kind="observer" exposeState="false" name="intValue"/>
+    <method kind="observer" exposeState="false" name="longValue"/>
+    <method kind="observer" exposeState="false" name="floatValue"/>
+    <method kind="observer" exposeState="false" name="doubleValue"/>
+    <method kind="pure" exposeState="false" name="subtract">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="apache.Fraction"/>
+    </method>
+    <method kind="pure" exposeState="false" name="subtract">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="int"/>
+    </method>
+    <method kind="pure" exposeState="false" name="multiply">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="apache.Fraction"/>
+    </method>
+    <method kind="pure" exposeState="false" name="multiply">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="int"/>
+    </method>
+    <method kind="pure" exposeState="false" name="divide">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="apache.Fraction"/>
+    </method>
+    <method kind="pure" exposeState="false" name="divide">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="int"/>
+    </method>
+    <method kind="pure" exposeState="false" name="negate"/>
+    <method kind="observer" exposeState="false" name="getDenominator"/>
+    <method kind="observer" exposeState="false" name="getNumerator"/>
+    <method kind="pure" exposeState="false" name="reciprocal"/>
+</ns2:class>

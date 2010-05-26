@@ -101,6 +101,7 @@ public class ReflectionExecutor implements Executor {
 		repository = new Object[repositoryType.length];
 		faults = new HashMap<Operation, FaultyExecutionException>();
 
+		int nValid = 0;
 		for(Operation op : test) {
 			try {
 				if(logger.isLoggable(Level.FINEST)) {
@@ -108,7 +109,9 @@ public class ReflectionExecutor implements Executor {
 					logger.finest("Executing " + op);
 				}
 
-				perform(op);
+				boolean valid = perform(op);
+
+				if(valid) nValid++;
 			} catch(FaultyExecutionException e) {
 				faults.put(op, e);
 				for(int i = 0; i < repository.length; i++)
@@ -120,6 +123,9 @@ public class ReflectionExecutor implements Executor {
 
 		if(logger.isLoggable(Level.FINEST))
 			logger.finest(toString());
+
+		logger.fine(String.format("STATS ops valid valid%% invalid invalid%% -- %d %d %.2f %d %.2f",
+				test.length, nValid, (nValid*100.0/test.length), (test.length-nValid), ((test.length-nValid)*100.0/test.length)));
 
 		return faults.size();
 	}
@@ -141,7 +147,7 @@ public class ReflectionExecutor implements Executor {
 			return repository[objRef.getId()];
 		} catch(Throwable e) {
 			// something very strange happens!
-			logger.log(Level.WARNING, "Reflection error in get(Reference): " + e.getMessage(), e);
+			logger.log(Level.WARNING, "Reflection error in get(" + objRef + "): " + e.getMessage(), e);
 
 			if(logger.isLoggable(Level.FINEST)) {
 
@@ -160,11 +166,11 @@ public class ReflectionExecutor implements Executor {
 		}
 	}
 
-	private void set(Operation op, Reference objRef, Object value) {
+	private void set(Reference objRef, Object value) {
 		try {
 			repository[objRef.getId()] = value;
 		} catch(Throwable e) {
-			logger.log(Level.WARNING, "Reflection error in set(Reference): " + e.getMessage(), e);
+			logger.log(Level.WARNING, "Reflection error in set(" + objRef + "=" + value + "): " + e.getMessage(), e);
 
 			if(logger.isLoggable(Level.FINEST)) {
 				StringBuilder sb = new StringBuilder();
@@ -235,7 +241,7 @@ public class ReflectionExecutor implements Executor {
 			newObject = cons.newInstance(initargs);
 
 			// save results
-			if(targetPos != null) set(op, targetPos, newObject);
+			if(targetPos != null) set(targetPos, newObject);
 
 			if(opRes != null) opRes.setSuccessful(null, newObject, cluster);
 
@@ -251,7 +257,7 @@ public class ReflectionExecutor implements Executor {
 			} else // a valid exception is thrown
 				if(opRes != null) opRes.setExceptional(exc, null, cluster);
 		} catch(Throwable e) {
-			logger.log(Level.WARNING, "Reflection error in perform(CreateObject): " + e.getMessage(), e);
+			logger.log(Level.WARNING, "Reflection error in createObject(" + op + "): " + e.getMessage(), e);
 
 			throw new ExceptionRaisedException(e);
 		}
@@ -266,7 +272,7 @@ public class ReflectionExecutor implements Executor {
 		if(ref == null || value == null) return false;
 
 		// perform the real invocation
-		set(op, ref, value);
+		set(ref, value);
 		return true;
 	}
 
@@ -278,22 +284,22 @@ public class ReflectionExecutor implements Executor {
 
 		// set to null
 		if(value == null) try {
-			set(op, ref, null);
+			set(ref, null);
 			return true;
 		} catch(Throwable e) {
 			// something very strange happens!
-			logger.log(Level.WARNING, "Reflection error in perform(AssignConstant): " + e.getMessage(), e);
+			logger.log(Level.WARNING, "Reflection error in assignConstant(" + op + "): " + e.getMessage(), e);
 			throw new ExceptionRaisedException(e);
 		}
 
 		// set to value
 		try {
 			Object newObject = value.toField().get(null);
-			set(op, ref, newObject);
+			set(ref, newObject);
 			return true;
 		} catch(Throwable e) {
 			// something very strange happens!
-			logger.log(Level.WARNING, "Reflection error in perform(AssignConstant): " + e.getMessage(), e);
+			logger.log(Level.WARNING, "Reflection error in assignConstant(" + op + "): " + e.getMessage(), e);
 			throw new ExceptionRaisedException(e);
 		}
 	}
@@ -309,29 +315,32 @@ public class ReflectionExecutor implements Executor {
 		Method m = method.toMethod();
 		Object[] args = new Object[params.length];
 
-		for(int i = 0; i < args.length; i++)
-			if(params[i] == null) args[i] = null;
-			else {
-				args[i] = get(params[i]);
-
-				if(paramsTypes[i] instanceof PrimitiveClazz) if(args[i] == null) {
-					if(opRes != null) opRes.setPreconditionError();
-					return false;
-				} else args[i] = ((PrimitiveClazz) paramsTypes[i]).cast(args[i]);
-			}
-
 		Object baseObject = get(sourcePos);
 		if(baseObject == null && !method.isStatic()) {
 			if(opRes != null) opRes.setPreconditionError();
 			return false;
 		}
 
+		for(int i = 0; i < args.length; i++)
+			if(params[i] == null) args[i] = null;
+			else {
+				args[i] = get(params[i]);
+
+				if(paramsTypes[i] instanceof PrimitiveClazz) {
+					if(args[i] == null) {
+						if(opRes != null) opRes.setPreconditionError();
+						return false;
+					} else
+						args[i] = ((PrimitiveClazz) paramsTypes[i]).cast(args[i]);
+				}
+			}
+
 		Object result = null;
 		try {
 
 			result = m.invoke(baseObject, args);
 
-			if(targetPos != null) set(op, targetPos, result);
+			if(targetPos != null) set(targetPos, result);
 
 			if(opRes != null) opRes.setSuccessful(baseObject, result, cluster);
 
@@ -347,7 +356,7 @@ public class ReflectionExecutor implements Executor {
 			} else // a valid exception is thrown
 				if(opRes != null) opRes.setExceptional(exc, baseObject, cluster);
 		} catch(Throwable e) {
-			logger.log(Level.WARNING, "Reflection error in perform(Invoke): " + e.getMessage(), e);
+			logger.log(Level.WARNING, "Reflection error in invoke(" + op + "): " + e.getMessage(), e);
 
 			throw new ExceptionRaisedException(e);
 		}
