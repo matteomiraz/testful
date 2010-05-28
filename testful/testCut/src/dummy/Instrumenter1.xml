@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:class xmlns:ns2="http://testful.sourceforge.net/schema/1.1/testful.xsd" instrument="true" name="dummy.Instrumenter1">
+    <constructor/>
+    <method kind="mutator" exposeState="false" name="emptyCatch"/>
+</ns2:class>

@@ -42,7 +42,7 @@ public class TestFul {
 
 	public static final boolean DEBUG = false;
 
-	private static final String VERSION = "1.1.2";
+	private static final String VERSION = "1.1.3";
 
 	public static void parseCommandLine(Object config, String[] args, Class<?> launcher, String name) {
 

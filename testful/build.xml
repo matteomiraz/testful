@@ -290,28 +290,37 @@
 
 			<doctitle>
 				<![CDATA[<h1>TestFul's JavaDoc</h1>]]></doctitle>
-		<bottom>
-			<![CDATA[<i>Copyright &#169; 2009 Matteo Miraz.</i>
-		<a rel="license" href="http://creativecommons.org/licenses/by-sa/2.5/it/">
-			<img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-sa/2.5/it/80x15.png" />
-		</a>
-		<br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/2.5/it/">Creative Commons Attribution-Share Alike 2.5 Italy License</a>.]]></bottom>
-	<tag name="testful.classloader" scope="all" description="ClassLoader of this class:"/>
-	<group packages="testful.model"			title="Test Model"/>
-	<group packages="testful.coverage"		title="Coverage"/>
-	<group packages="testful.random"		title="Random Test"/>
-	<group packages="testful.evolutionary"	title="Evolutionary Test"/>
-	<group packages="testful.runner"		title="Generic Test Runner"/>
-	<group packages="testful.mutation"		title="Mutation Testing"/>
-	<group packages="testful.regression"	title="Regression Testing"/>
-	<link href="http://java.sun.com/javase/6/docs/api/"/>
-	<link href="http://commons.apache.org/jexl/apidocs-1.0/"/>
-	<link href="http://commons.apache.org/logging/apidocs/"/>
-	<link href="http://www.sable.mcgill.ca/soot/doc/"/>
-	<link href="http://www.jdom.org/docs/apidocs/"/>
-	<link href="https://args4j.dev.java.net/nonav/maven/apidocs/"/>
-	<link href="https://jaxb.dev.java.net/nonav/jaxb20-pfd/api/"/>
-	<link href="http://www.cs.gmu.edu/~eclab/projects/ecj/docs/classdocs/"/>
-</javadoc>
-</target>
+			<bottom>
+				<![CDATA[<i>Copyright &#169; 2010 Matteo Miraz - <a href="http://code.google.com/p/testful/">TestFul</a>.</i>
+				<a rel="license" href="http://creativecommons.org/licenses/by-sa/2.5/it/">
+					<img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-sa/2.5/it/80x15.png" />
+				</a>
+				<br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/2.5/it/">Creative Commons Attribution-Share Alike 2.5 Italy License</a>.]]>
+			</bottom>
+			<tag name="testful.classloader" scope="all" description="ClassLoader of this class:"/>
+			<group packages="testful.model"			title="Test Model"/>
+			<group packages="testful.coverage"		title="Coverage"/>
+			<group packages="testful.random"		title="Random Test"/>
+			<group packages="testful.evolutionary"	title="Evolutionary Test"/>
+			<group packages="testful.runner"		title="Generic Test Runner"/>
+			<group packages="testful.mutation"		title="Mutation Testing"/>
+			<group packages="testful.regression"	title="Regression Testing"/>
+			<link href="http://java.sun.com/javase/6/docs/api/"/>
+			<link href="http://commons.apache.org/jexl/apidocs-1.0/"/>
+			<link href="http://commons.apache.org/logging/apidocs/"/>
+			<link href="http://www.sable.mcgill.ca/soot/doc/"/>
+			<link href="http://www.jdom.org/docs/apidocs/"/>
+			<link href="https://args4j.dev.java.net/nonav/maven/apidocs/"/>
+			<link href="https://jaxb.dev.java.net/nonav/jaxb20-pfd/api/"/>
+			<link href="http://www.cs.gmu.edu/~eclab/projects/ecj/docs/classdocs/"/>
+		</javadoc>
+	</target>
+	
+	<!-- ================================= 
+          target: Compile testCut              
+         ================================= -->
+    <target name="compile_testCut" description="Compile the testCut">
+		<javac srcdir="testCut/src" destdir="testCut/bin" optimize="false" debug="true" source="1.4" target="1.4" />
+    </target>
+
 </project>

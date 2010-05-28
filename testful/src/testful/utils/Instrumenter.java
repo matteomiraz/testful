@@ -39,6 +39,7 @@ import soot.Transform;
 import soot.Trap;
 import soot.Unit;
 import soot.jimple.GotoStmt;
+import soot.jimple.IdentityStmt;
 import soot.jimple.IfStmt;
 import soot.jimple.Jimple;
 import soot.jimple.JimpleBody;
@@ -115,6 +116,7 @@ public class Instrumenter {
 	private static final boolean instrumenter  = true;
 	private static final boolean postWriter    = false;
 	private static final boolean nopEliminator = true;
+	private static final boolean postWriter2   = false;
 
 	public static void prepare(IConfigProject config, Collection<String> toInstrument) {
 		String[] SOOT_CONF = new String[] { "-validate", "--keep-line-number", "--xml-attributes", "-f", "c", "-output-dir", config.getDirInstrumented().getAbsolutePath() };
@@ -189,6 +191,14 @@ public class Instrumenter {
 			logger.fine("Enabled phase: " + newPhase);
 			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(NopEliminator.v())));
 			else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, ActiveBodyTransformer.v(NopEliminator.v())), last);
+			last = newPhase;
+		}
+
+		if(postWriter2) {
+			String newPhase = "jtp.postWriter2";
+			logger.fine("Enabled phase: " + newPhase);
+			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(JimpleWriter.singleton)));
+			else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, ActiveBodyTransformer.v(JimpleWriter.singleton)), last);
 			last = newPhase;
 		}
 
@@ -361,16 +371,31 @@ public class Instrumenter {
 				nopAfter.addTag(new StringTag("nopAfter"));
 				stop.put(stmt, nopAfter);
 
+				// process!
+
+
+				if(stmt instanceof IdentityStmt) {
+					newUnits.add(nopOrig1);
+					newUnits.add((Stmt) stmt.clone());
+					newUnits.add(nopOrig2);
+
+					Unit nopPre2 = Jimple.v().newNopStmt();
+					nopPre2.addTag(new StringTag("nopPre2"));
+					newUnits.add(nopPre2);
+				}
+
 				// preprocess
 				for(UnifiedInstrumentator i : instrumenters)
 					i.processPre(newUnits, stmt);
 
 				// insert original stmt
-				newUnits.add(nopOrig1);
-				newUnits.add((Stmt) stmt.clone());
-				if(stmt.containsInvokeExpr())
-					newUnits.add(Jimple.v().newGotoStmt(nopPost));
-				newUnits.add(nopOrig2);
+				if(!(stmt instanceof IdentityStmt)) {
+					newUnits.add(nopOrig1);
+					newUnits.add((Stmt) stmt.clone());
+					if(stmt.containsInvokeExpr())
+						newUnits.add(Jimple.v().newGotoStmt(nopPost));
+					newUnits.add(nopOrig2);
+				}
 
 				// postprocess exceptional
 				if(nopPostExc != null) {

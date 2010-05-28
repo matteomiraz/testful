@@ -91,7 +91,7 @@ public class JimpleWriter extends BodyTransformer {
 				for(int v = 0; v < sw.getTargetCount(); v++)
 					System.out.println("      case " + sw.getLookupValue(v) + ": goto " + findIndex(units, sw.getTarget(v)));
 				System.out.println("      default: goto " + findIndex(units, sw.getDefaultTarget()));
-			} else System.out.println(units[i].toString() + " " + units[i].getClass().getCanonicalName());
+			} else System.out.println(units[i].toString()); // + " " + units[i].getClass().getCanonicalName());
 
 			if(units[i].hasTag("StringTag")) {
 				String info = ((StringTag) units[i].getTag("StringTag")).getInfo();

@@ -83,8 +83,8 @@ import soot.jimple.TableSwitchStmt;
 import soot.jimple.ThrowStmt;
 import soot.util.Chain;
 import testful.IConfigProject;
-import testful.utils.SootUtils;
 import testful.utils.Instrumenter.UnifiedInstrumentator;
+import testful.utils.SootUtils;
 
 public class WhiteInstrumenter implements UnifiedInstrumentator {
 
@@ -432,6 +432,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			newUnits.add(Jimple.v().newIfStmt(expr, handleTrue));
 
 			{ // handle false
+				newUnits.add(Jimple.v().newAssignStmt(localTracker, Jimple.v().newStaticInvokeExpr(trackerSingleton.makeRef()))); // This is a fix for the SOOT bug!
 				newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, trackBranch.makeRef(), IntConstant.v(falseBranch.getId()))));
 
 				// calculate distance (true)
@@ -439,11 +440,13 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				newUnits.add(Jimple.v().newIfStmt(Jimple.v().newNeExpr(localConditionTarget, IntConstant.v(trueBranch.getId())), nop));
 
 				if(type instanceof BooleanType) {
+					newUnits.add(Jimple.v().newAssignStmt(localTracker, Jimple.v().newStaticInvokeExpr(trackerSingleton.makeRef()))); // This is a fix for the SOOT bug!
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance1.makeRef(), DoubleConstant.v(1))));
 
 				} else if(type instanceof IntegerType || type instanceof LongType || type instanceof FloatType || type instanceof DoubleType) {
 					newUnits.add(Jimple.v().newAssignStmt(localTmpDouble1, Jimple.v().newCastExpr(op1, DoubleType.v())));
 					newUnits.add(Jimple.v().newAssignStmt(localTmpDouble2, Jimple.v().newCastExpr(op2, DoubleType.v())));
+					newUnits.add(Jimple.v().newAssignStmt(localTracker, Jimple.v().newStaticInvokeExpr(trackerSingleton.makeRef()))); // This is a fix for the SOOT bug!
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance3.makeRef(), localTmpDouble1, localTmpDouble2)));
 
 				} else if(type instanceof RefLikeType) {
@@ -462,6 +465,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					newUnits.add(Jimple.v().newAssignStmt(localTmpDouble2, DoubleConstant.v(1)));
 					newUnits.add(isNull);
 
+					newUnits.add(Jimple.v().newAssignStmt(localTracker, Jimple.v().newStaticInvokeExpr(trackerSingleton.makeRef()))); // This is a fix for the SOOT bug!
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance3.makeRef(), localTmpDouble1, localTmpDouble2)));
 
 				} else logger.warning("Unknown operand type: " + type + " (" + type.getClass().getCanonicalName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getCanonicalName() + ")");
@@ -471,6 +475,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				// calculate distance (false)
 				newUnits.add(nop);
 				newUnits.add(Jimple.v().newIfStmt(Jimple.v().newNeExpr(localConditionTarget, IntConstant.v(falseBranch.getId())), after));
+				newUnits.add(Jimple.v().newAssignStmt(localTracker, Jimple.v().newStaticInvokeExpr(trackerSingleton.makeRef()))); // This is a fix for the SOOT bug!
 				newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance1.makeRef(), DoubleConstant.v(0))));
 				newUnits.add(Jimple.v().newGotoStmt(after));
 			}
@@ -478,11 +483,13 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			newUnits.add(handleTrue);
 
 			{ // handle true
+				newUnits.add(Jimple.v().newAssignStmt(localTracker, Jimple.v().newStaticInvokeExpr(trackerSingleton.makeRef()))); // This is a fix for the SOOT bug!
 				newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, trackBranch.makeRef(), IntConstant.v(trueBranch.getId()))));
 
 				// calculate distance (true)
 				Unit nop = Jimple.v().newNopStmt();
 				newUnits.add(Jimple.v().newIfStmt(Jimple.v().newNeExpr(localConditionTarget, IntConstant.v(trueBranch.getId())), nop));
+				newUnits.add(Jimple.v().newAssignStmt(localTracker, Jimple.v().newStaticInvokeExpr(trackerSingleton.makeRef()))); // This is a fix for the SOOT bug!
 				newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance1.makeRef(), DoubleConstant.v(0))));
 				newUnits.add(Jimple.v().newGotoStmt(after));
 
@@ -491,11 +498,13 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				newUnits.add(Jimple.v().newIfStmt(Jimple.v().newNeExpr(localConditionTarget, IntConstant.v(falseBranch.getId())), after));
 
 				if(type instanceof BooleanType) {
+					newUnits.add(Jimple.v().newAssignStmt(localTracker, Jimple.v().newStaticInvokeExpr(trackerSingleton.makeRef()))); // This is a fix for the SOOT bug!
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance1.makeRef(), DoubleConstant.v(1))));
 
 				} else if(type instanceof IntegerType || type instanceof LongType || type instanceof FloatType || type instanceof DoubleType) {
 					newUnits.add(Jimple.v().newAssignStmt(localTmpDouble1, Jimple.v().newCastExpr(op1, DoubleType.v())));
 					newUnits.add(Jimple.v().newAssignStmt(localTmpDouble2, Jimple.v().newCastExpr(op2, DoubleType.v())));
+					newUnits.add(Jimple.v().newAssignStmt(localTracker, Jimple.v().newStaticInvokeExpr(trackerSingleton.makeRef()))); // This is a fix for the SOOT bug!
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance3.makeRef(), localTmpDouble1, localTmpDouble2)));
 
 				} else if(type instanceof RefLikeType) {
@@ -514,6 +523,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					newUnits.add(Jimple.v().newAssignStmt(localTmpDouble2, DoubleConstant.v(1)));
 					newUnits.add(isNull);
 
+					newUnits.add(Jimple.v().newAssignStmt(localTracker, Jimple.v().newStaticInvokeExpr(trackerSingleton.makeRef()))); // This is a fix for the SOOT bug!
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance3.makeRef(), localTmpDouble1, localTmpDouble2)));
 
 				} else logger.warning("Unknown operand type: " + type + " (" + type.getClass().getCanonicalName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getCanonicalName() + ")");
@@ -633,6 +643,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				final int branchId = keyBranchId.get(key);
 
 				newUnits.add(start);
+				newUnits.add(Jimple.v().newAssignStmt(localTracker, Jimple.v().newStaticInvokeExpr(trackerSingleton.makeRef()))); // This is a fix for the SOOT bug!
 				newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, trackBranch.makeRef(), IntConstant.v(branchId))));
 
 				// track distance
@@ -652,12 +663,14 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				for(int i = 0; i < keys.length; i++) {
 					final int ctKey = keys[i];
 					newUnits.add(ctTargets[i]);
+					newUnits.add(Jimple.v().newAssignStmt(localTracker, Jimple.v().newStaticInvokeExpr(trackerSingleton.makeRef()))); // This is a fix for the SOOT bug!
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance1.makeRef(), DoubleConstant.v(Math.abs(ctKey - key)))));
 					newUnits.add(Jimple.v().newGotoStmt(lastNop));
 				}
 
 				{ // handle default target
 					newUnits.add(ctTargets[keys.length]);
+					newUnits.add(Jimple.v().newAssignStmt(localTracker, Jimple.v().newStaticInvokeExpr(trackerSingleton.makeRef()))); // This is a fix for the SOOT bug!
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance1.makeRef(), DoubleConstant.v(switchDistanceToDefault(key, keyBranchId.keySet())))));
 					newUnits.add(Jimple.v().newGotoStmt(lastNop));
 				}
@@ -666,6 +679,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			// manage default target
 			{
 				newUnits.add(defaultTarget);
+				newUnits.add(Jimple.v().newAssignStmt(localTracker, Jimple.v().newStaticInvokeExpr(trackerSingleton.makeRef()))); // This is a fix for the SOOT bug!
 				newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, trackBranch.makeRef(), IntConstant.v(defaultBranchId))));
 
 				// track distance
@@ -684,12 +698,14 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					final int ctKey = keys[i];
 					newUnits.add(ctTargets[i]);
 					newUnits.add(Jimple.v().newAssignStmt(localTmpDouble1, Jimple.v().newCastExpr(keyValue, DoubleType.v())));
+					newUnits.add(Jimple.v().newAssignStmt(localTracker, Jimple.v().newStaticInvokeExpr(trackerSingleton.makeRef()))); // This is a fix for the SOOT bug!
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance2.makeRef(), DoubleConstant.v(ctKey), localTmpDouble1)));
 					newUnits.add(Jimple.v().newGotoStmt(lastNop));
 				}
 
 				{ // handle default target
 					newUnits.add(ctTargets[keys.length]);
+					newUnits.add(Jimple.v().newAssignStmt(localTracker, Jimple.v().newStaticInvokeExpr(trackerSingleton.makeRef()))); // This is a fix for the SOOT bug!
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance1.makeRef(), DoubleConstant.v(0))));
 					newUnits.add(Jimple.v().newGotoStmt(lastNop));
 				}
@@ -890,6 +906,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 		private void postCreateBuildingBlock(Chain<Unit> newUnits, Stmt stmt) {
 			// call the tracker for the building block coverage
+			newUnits.add(Jimple.v().newAssignStmt(localTracker, Jimple.v().newStaticInvokeExpr(trackerSingleton.makeRef()))); // This is a fix for the SOOT bug!
 			newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, trackerBasicBlock.makeRef(), Arrays.asList(new Value[] { IntConstant.v(current.getId()) }))));
 
 			done.put(stmt, current);
