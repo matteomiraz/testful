@@ -35,7 +35,7 @@ import soot.jimple.Stmt;
 import soot.tagkit.StringTag;
 import soot.util.Chain;
 import testful.IConfigProject;
-import testful.utils.Instrumenter.UnifiedInstrumentator;
+import testful.coverage.soot.Instrumenter.UnifiedInstrumentator;
 
 /**
  * Instruments each method, in the following way:<br>

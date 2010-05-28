@@ -83,8 +83,8 @@ import soot.jimple.TableSwitchStmt;
 import soot.jimple.ThrowStmt;
 import soot.util.Chain;
 import testful.IConfigProject;
-import testful.utils.Instrumenter.UnifiedInstrumentator;
-import testful.utils.SootUtils;
+import testful.coverage.soot.SootUtils;
+import testful.coverage.soot.Instrumenter.UnifiedInstrumentator;
 
 public class WhiteInstrumenter implements UnifiedInstrumentator {
 

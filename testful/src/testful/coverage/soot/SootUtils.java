@@ -16,8 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-package testful.utils;
+package testful.coverage.soot;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -61,7 +60,7 @@ public class SootUtils {
 
 		return false;
 	}
-	
+
 	public static boolean isReference(Type t) {
 		while(t instanceof ArrayType)
 			t = ((ArrayType)t).getElementType();

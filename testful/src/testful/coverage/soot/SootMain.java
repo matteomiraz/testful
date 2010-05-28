@@ -1,23 +1,5 @@
-/*
- * TestFul - http://code.google.com/p/testful/
- * Copyright (C) 2010  Matteo Miraz
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-
-package testful.utils;
+/* Derived from SOOT 2.3.0 class soot.Main */
+package testful.coverage.soot;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -53,10 +35,10 @@ public class SootMain {
 	private void printVersion() {
 		G.v().out.println("Soot version " + versionString);
 
-		G.v().out.println("Copyright (C) 1997-2008 Raja Vallee-Rai and others.");
+		G.v().out.println("Copyright (C) 1997-2010 Raja Vallee-Rai and others.");
 		G.v().out.println("All rights reserved.");
 		G.v().out.println("");
-		G.v().out.println("Contributions are copyright (C) 1997-2008 by their respective contributors.");
+		G.v().out.println("Contributions are copyright (C) 1997-2010 by their respective contributors.");
 		G.v().out.println("See the file 'credits' for a list of contributors.");
 		G.v().out.println("See individual source files for details.");
 		G.v().out.println("");
@@ -72,12 +54,15 @@ public class SootMain {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void processCmdLine(String[] args) {
 		cmdLineArgs = args;
-		if(!Options.v().parse(args)) throw new CompilationDeathException(CompilationDeathException.COMPILATION_ABORTED, "Option parse error");
+		if(!Options.v().parse(args))
+			throw new CompilationDeathException(CompilationDeathException.COMPILATION_ABORTED, "Option parse error");
 
-		if(PackManager.v().onlyStandardPacks()) for(Pack pack : PackManager.v().allPacks()) {
-			Options.v().warnForeignPhase(pack.getPhaseName());
-			for(Iterator<Transform> trIt = pack.iterator(); trIt.hasNext();)
-				Options.v().warnForeignPhase(trIt.next().getPhaseName());
+		if(PackManager.v().onlyStandardPacks()) {
+			for(Pack pack : PackManager.v().allPacks()) {
+				Options.v().warnForeignPhase(pack.getPhaseName());
+				for(Iterator<Transform> trIt = pack.iterator(); trIt.hasNext();)
+					Options.v().warnForeignPhase(trIt.next().getPhaseName());
+			}
 		}
 		Options.v().warnNonexistentPhase();
 

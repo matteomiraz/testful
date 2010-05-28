@@ -26,11 +26,11 @@ import java.util.logging.Logger;
 import testful.ConfigCut;
 import testful.IConfigCut;
 import testful.TestFul;
+import testful.coverage.soot.Instrumenter;
 import testful.model.TestCluster;
 import testful.runner.ClassFinderCaching;
 import testful.runner.ClassFinderImpl;
 import testful.runner.TestfulClassLoader;
-import testful.utils.Instrumenter;
 
 /**
  * Modify the class under test, adding trackers and other stuff.

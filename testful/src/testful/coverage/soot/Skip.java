@@ -16,30 +16,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+package testful.coverage.soot;
 
-package testful.utils;
+import soot.tagkit.AttributeValueException;
+import soot.tagkit.Tag;
 
-import java.util.Map;
+public class Skip implements Tag {
 
-import soot.Body;
-import soot.BodyTransformer;
+	public static final String NAME = "SKIP";
+	public static final Skip s = new Skip();
 
-public class ActiveBodyTransformer extends BodyTransformer {
-
-	public static BodyTransformer v(BodyTransformer delegate) {
-		return new ActiveBodyTransformer(delegate);
-	}
-
-	private final BodyTransformer delegate;
-
-	private ActiveBodyTransformer(BodyTransformer delegate) {
-		this.delegate = delegate;
+	@Override
+	public String getName() {
+		return NAME;
 	}
 
 	@Override
-	@SuppressWarnings("rawtypes")
-	protected void internalTransform(Body body, String phaseName, Map options) {
-		delegate.transform(body.getMethod().getActiveBody(), phaseName, options);
+	public byte[] getValue() throws AttributeValueException {
+		throw new RuntimeException("Skip has no value for bytecode");
 	}
 
 }
