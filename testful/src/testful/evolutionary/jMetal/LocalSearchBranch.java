@@ -49,7 +49,7 @@ import testful.coverage.whiteBox.Condition;
 import testful.coverage.whiteBox.ConditionTargetDatum;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
 import testful.coverage.whiteBox.CoverageConditionTarget;
-import testful.coverage.whiteBox.CoverageConditions;
+import testful.coverage.whiteBox.CoverageBranch;
 import testful.coverage.whiteBox.Data;
 import testful.coverage.whiteBox.DataUse;
 import testful.coverage.whiteBox.WhiteBoxData;
@@ -358,11 +358,11 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 		BitSet ret = new BitSet();
 
 		for(TestCoverage testCoverage : tests) {
-			CoverageConditions cov;
-			cov = (CoverageConditions) testCoverage.getCoverage().get(CoverageConditions.KEY_CODE);
+			CoverageBranch cov;
+			cov = (CoverageBranch) testCoverage.getCoverage().get(CoverageBranch.KEY_CODE);
 			if(cov != null) ret.or(cov.getCoverage());
 
-			cov = (CoverageConditions) testCoverage.getCoverage().get(CoverageConditions.KEY_CONTRACT);
+			cov = (CoverageBranch) testCoverage.getCoverage().get(CoverageBranch.KEY_CONTRACT);
 			if(cov != null) ret.or(cov.getCoverage());
 		}
 

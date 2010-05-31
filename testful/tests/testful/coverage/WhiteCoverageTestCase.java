@@ -29,7 +29,7 @@ import testful.GenericTestCase;
 import testful.coverage.whiteBox.ConditionTargetDatum;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
 import testful.coverage.whiteBox.CoverageConditionTarget;
-import testful.coverage.whiteBox.CoverageConditions;
+import testful.coverage.whiteBox.CoverageBranch;
 import testful.model.AssignPrimitive;
 import testful.model.Clazz;
 import testful.model.Constructorz;
@@ -149,7 +149,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 	}
 
 	private void checkCondCov(ElementManager<String, CoverageInformation> cov, Set<Integer> expected) {
-		final CoverageConditions condCov = (CoverageConditions) cov.get(CoverageConditions.KEY_CODE);
+		final CoverageBranch condCov = (CoverageBranch) cov.get(CoverageBranch.KEY_CODE);
 		assertEquals((float) expected.size(), condCov.getQuality());
 
 		for(Integer i : expected)

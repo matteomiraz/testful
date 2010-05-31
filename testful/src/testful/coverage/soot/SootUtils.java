@@ -60,7 +60,7 @@ public class SootUtils {
 
 		return false;
 	}
-
+	
 	public static boolean isReference(Type t) {
 		while(t instanceof ArrayType)
 			t = ((ArrayType)t).getElementType();

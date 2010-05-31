@@ -42,7 +42,7 @@ import testful.coverage.TrackerDatum;
 import testful.coverage.bug.BugCoverage;
 import testful.coverage.whiteBox.AnalysisWhiteBox;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
-import testful.coverage.whiteBox.CoverageConditions;
+import testful.coverage.whiteBox.CoverageBranch;
 import testful.evolutionary.IConfigEvolutionary;
 import testful.runner.ClassFinderCaching;
 import testful.runner.ClassFinderImpl;
@@ -200,7 +200,7 @@ public class TestfulProblem implements Serializable {
 			}
 
 			if(config.isBrd()) {
-				CoverageInformation cov = infos.get(CoverageConditions.KEY_CODE);
+				CoverageInformation cov = infos.get(CoverageBranch.KEY_CODE);
 				if(cov != null) {
 					covTot += cov.getQuality();
 					ret[i] = config.isToMinimize() ? -1 * cov.getQuality() : cov.getQuality();
@@ -209,7 +209,7 @@ public class TestfulProblem implements Serializable {
 			}
 
 			if(config.isBrn()) {
-				CoverageInformation cov = infos.get(CoverageConditions.KEY_CONTRACT);
+				CoverageInformation cov = infos.get(CoverageBranch.KEY_CONTRACT);
 				if(cov != null) {
 					covTot += cov.getQuality();
 					ret[i] = config.isToMinimize() ? -1 * cov.getQuality() : cov.getQuality();
