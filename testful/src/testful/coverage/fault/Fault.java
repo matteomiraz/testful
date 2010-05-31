@@ -16,30 +16,45 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-package testful.coverage.bug;
+package testful.coverage.fault;
 
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
-import testful.model.FaultyExecutionException;
+import testful.model.faults.FaultyExecutionException;
 
-public class Bug implements Serializable {
+/**
+ * Represents a fault of the system.
+ * It is automatically derivable from the {@link FaultyExecutionException}.
+ * Faults with same message and same source (the stack trace) are assumed to be the same (they are equal).
+ * 
+ * @author matteo
+ */
+public class Fault implements Serializable {
 
 	private static final long serialVersionUID = 7235014552766544190L;
 
 	private StackTraceElement[] stackTrace;
 	private String msg;
-	private FaultyExecutionException exc;
+	private FaultyExecutionException fault;
 
-	public Bug(FaultyExecutionException exc, StackTraceElement base) {
-		stackTrace = processStackTrace(exc.getCause(), base);
+	/**
+	 * Creates a fault from the {@link FaultyExecutionException} and the
+	 * base element of the stack trace. The latter is the element of the stack trace
+	 * that called the System Under Test.
+	 * 
+	 * @param exc The exception thrown
+	 * @param base the element to consider as the base of stack trace
+	 */
+	public Fault(FaultyExecutionException exc, StackTraceElement base) {
+		fault = exc;
+		stackTrace = processStackTrace(exc, base);
 		msg = exc.getMessage();
-		this.exc = exc;
 	}
 
-	private StackTraceElement[] processStackTrace(Throwable cause, StackTraceElement base) {
+
+	private StackTraceElement[] processStackTrace(FaultyExecutionException cause, StackTraceElement base) {
 		StackTraceElement[] stackTrace = cause.getStackTrace();
 
 		if(stackTrace.length == 0) {
@@ -63,14 +78,25 @@ public class Bug implements Serializable {
 		return ret;
 	}
 
-	public FaultyExecutionException getFaultyExecutionException() {
-		return exc;
+	/**
+	 * Returns the exception containing the fault
+	 * @return the exception containing the fault
+	 */
+	public FaultyExecutionException getFault() {
+		return fault;
 	}
 
+	/**
+	 * Returns the stack trace
+	 * @return the stack trace
+	 */
 	public StackTraceElement[] getStackTrace() {
 		return stackTrace;
 	}
 
+	/**
+	 * Calculate the hashCode of the fault, using the message of the exception and the (readapted) stack trace.
+	 */
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -80,12 +106,15 @@ public class Bug implements Serializable {
 		return result;
 	}
 
+	/**
+	 * Compare two faults using the message of the exception and the (readapted) stack trace.
+	 */
 	@Override
 	public boolean equals(Object obj) {
 		if(this == obj) return true;
 		if(obj == null) return false;
 		if(getClass() != obj.getClass()) return false;
-		Bug other = (Bug) obj;
+		Fault other = (Fault) obj;
 		if(msg == null) {
 			if(other.msg != null) return false;
 		} else if(!msg.equals(other.msg)) return false;

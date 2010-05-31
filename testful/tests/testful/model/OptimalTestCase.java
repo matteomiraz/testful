@@ -36,7 +36,7 @@ public class OptimalTestCase extends SimpleDummyTestCase {
 		});
 		TestCoverage tc2 = new TestCoverage(t2, getCoverage(t2));
 
-		assertTrue("Invalid test configuration", tc1.getCoverage().get(CoverageBasicBlocks.KEY_CODE).getQuality() < tc2.getCoverage().get(CoverageBasicBlocks.KEY_CODE).getQuality());
+		assertTrue("Invalid test configuration", tc1.getCoverage().get(CoverageBasicBlocks.KEY).getQuality() < tc2.getCoverage().get(CoverageBasicBlocks.KEY).getQuality());
 
 		OptimalTestCreator opt = new OptimalTestCreator();
 		assertEquals(0, opt.get().size());

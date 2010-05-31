@@ -16,18 +16,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+package testful.model.faults;
 
-package testful.model;
+import java.io.Serializable;
 
-public class InternalPreConditionViolationException extends FaultyExecutionException {
+/**
+ * This exception is thrown when the client does not satisfy the preconditions of a method.<br>
+ * 
+ * @author matteo
+ */
+public interface PreconditionViolationException extends Serializable {
 
-	private static final long serialVersionUID = -1297683563545327991L;
+	public static class Impl extends RuntimeException implements PreconditionViolationException {
 
-	public InternalPreConditionViolationException() {
-		super("", null);
-	}
+		private static final long serialVersionUID = 7500467195429874425L;
 
-	public InternalPreConditionViolationException(String msg, Throwable exc) {
-		super(msg, exc);
+		public Impl(String msg, Throwable e) {
+			super(msg, e);
+		}
 	}
 }

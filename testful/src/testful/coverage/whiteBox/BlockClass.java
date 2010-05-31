@@ -23,9 +23,9 @@ import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 public class BlockClass extends Block implements Iterable<Block> {
@@ -39,17 +39,15 @@ public class BlockClass extends Block implements Iterable<Block> {
 
 	private final Set<BlockFunctionEntry> methods;
 
-	final BitSet blocksCode, blocksContract;
-	final BitSet conditionsCode, conditionsContract;
+	final BitSet blocks;
+	final BitSet branches;
 
 	public BlockClass(String name, Set<Data> fields) {
 		this.name = name;
 		this.fields = fields;
 		methods = new HashSet<BlockFunctionEntry>();
-		blocksCode = new BitSet();
-		blocksContract = new BitSet();
-		conditionsCode = new BitSet();
-		conditionsContract = new BitSet();
+		blocks = new BitSet();
+		branches = new BitSet();
 	}
 
 	public String getName() {
@@ -68,20 +66,12 @@ public class BlockClass extends Block implements Iterable<Block> {
 		methods.add(m);
 	}
 
-	public BitSet getBlocksCode() {
-		return blocksCode;
+	public BitSet getBlocks() {
+		return blocks;
 	}
 
-	public BitSet getBlocksContract() {
-		return blocksContract;
-	}
-
-	public BitSet getConditionsContract() {
-		return conditionsContract;
-	}
-
-	public BitSet getConditionsCode() {
-		return conditionsCode;
+	public BitSet getBranches() {
+		return branches;
 	}
 
 	@Override

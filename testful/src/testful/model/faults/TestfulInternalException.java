@@ -16,18 +16,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+package testful.model.faults;
 
-package testful.model;
+import java.io.Serializable;
 
-public class PostConditionViolationException extends FaultyExecutionException {
+/**
+ * Marker for internal exceptions, which denote internal problems of testful.
+ * @author matteo
+ */
+public interface TestfulInternalException extends Serializable {
 
-	private static final long serialVersionUID = -5000838658322301775L;
+	/**
+	 * Default implementation for Testful Internal Exception.
+	 * @author matteo
+	 */
+	public static class Impl extends RuntimeException implements TestfulInternalException {
 
-	public PostConditionViolationException() {
-		super("", null);
-	}
+		private static final long serialVersionUID = -6508965666007161067L;
 
-	public PostConditionViolationException(String msg, Throwable exc) {
-		super(msg, exc);
+		public Impl(Throwable e) {
+			super(null, e);
+		}
+
+		public Impl(String msg, Throwable e) {
+			super(msg, e);
+		}
 	}
 }

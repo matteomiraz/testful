@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.coverage;
 
 import java.util.HashMap;
@@ -28,8 +27,8 @@ import testful.ConfigCut;
 import testful.GenericTestCase;
 import testful.coverage.whiteBox.ConditionTargetDatum;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
-import testful.coverage.whiteBox.CoverageConditionTarget;
 import testful.coverage.whiteBox.CoverageBranch;
+import testful.coverage.whiteBox.CoverageConditionTarget;
 import testful.model.AssignPrimitive;
 import testful.model.Clazz;
 import testful.model.Constructorz;
@@ -43,7 +42,6 @@ import testful.model.Test;
 import testful.model.TestCluster;
 import testful.runner.TestfulClassLoader;
 import testful.utils.ElementManager;
-
 
 public class WhiteCoverageTestCase extends GenericTestCase {
 
@@ -140,7 +138,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 	}
 
 	private void checkBBCov(ElementManager<String, CoverageInformation> cov, Set<Integer> expected) {
-		final CoverageBasicBlocks bbCov = (CoverageBasicBlocks) cov.get(CoverageBasicBlocks.KEY_CODE);
+		final CoverageBasicBlocks bbCov = (CoverageBasicBlocks) cov.get(CoverageBasicBlocks.KEY);
 
 		assertEquals((float) expected.size(), bbCov.getQuality());
 
@@ -149,7 +147,7 @@ public class WhiteCoverageTestCase extends GenericTestCase {
 	}
 
 	private void checkCondCov(ElementManager<String, CoverageInformation> cov, Set<Integer> expected) {
-		final CoverageBranch condCov = (CoverageBranch) cov.get(CoverageBranch.KEY_CODE);
+		final CoverageBranch condCov = (CoverageBranch) cov.get(CoverageBranch.KEY);
 		assertEquals((float) expected.size(), condCov.getQuality());
 
 		for(Integer i : expected)

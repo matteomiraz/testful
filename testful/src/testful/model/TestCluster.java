@@ -439,7 +439,6 @@ public class TestCluster implements Serializable {
 				if((field.getModifiers() & (Modifier.STATIC | Modifier.PUBLIC)) == 0) continue;
 
 				if(fieldName.startsWith("__")) continue;
-				if(cz.hasContracts() && fieldName.startsWith("rac$")) continue;
 
 				Clazz fieldClazz = registry.getClazzIfExists(fieldType);
 				if(fieldClazz == null || !contains(fieldClazz)) continue;

@@ -99,28 +99,13 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	}
 
 	@Override
-	public boolean isBbd() {
-		return configFitness.isBbd();
+	public boolean isBasicBlock() {
+		return configFitness.isBasicBlock();
 	}
 
 	@Override
-	public boolean isBbn() {
-		return configFitness.isBbn();
-	}
-
-	@Override
-	public boolean isBrd() {
-		return configFitness.isBrd();
-	}
-
-	@Override
-	public boolean isBrn() {
-		return configFitness.isBrn();
-	}
-
-	@Override
-	public boolean isBug() {
-		return configFitness.isBug();
+	public boolean isBranch() {
+		return configFitness.isBranch();
 	}
 
 	@Override
@@ -144,38 +129,13 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	}
 
 	@Override
-	public void setDisableBasicBlockCode(boolean disable) {
-		configFitness.setDisableBasicBlockCode(disable);
-	}
-
-	@Override
-	public void setDisableBasicBlockContract(boolean disable) {
-		configFitness.setDisableBasicBlockContract(disable);
-	}
-
-	@Override
 	public void setDisableBranch(boolean disable) {
 		configFitness.setDisableBranch(disable);
 	}
 
 	@Override
-	public void setDisableBranchCode(boolean disable) {
-		configFitness.setDisableBranchCode(disable);
-	}
-
-	@Override
-	public void setDisableBranchContract(boolean disable) {
-		configFitness.setDisableBranchContract(disable);
-	}
-
-	@Override
 	public void setDisableLength(boolean disable) {
 		configFitness.setDisableLength(disable);
-	}
-
-	@Override
-	public void setEnableBug(boolean bug) {
-		configFitness.setEnableBug(bug);
 	}
 
 	@Override

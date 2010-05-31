@@ -28,67 +28,27 @@ public class WhiteBoxData implements TrackerDatum {
 
 	static final String KEY = "testful.coverage.whiteBox.WhiteBoxData";
 
-	private final BitSet blocksCode, blocksContract;
-	private final BitSet conditionsCode, conditionsContract;
-	
-	public WhiteBoxData(BitSet blocksCode, BitSet blocksContract, BitSet conditionsCode, BitSet conditionsContract) {
-		this.blocksCode = blocksCode;
-		this.blocksContract = blocksContract;
-		this.conditionsCode = conditionsCode;
-		this.conditionsContract = conditionsContract;
+	private final BitSet blocks;
+	private final BitSet branches;
+
+	public WhiteBoxData(BitSet blocks, BitSet branches) {
+		this.blocks = blocks;
+		this.branches = branches;
 	}
 
 	@Override
 	public String getKey() {
 		return KEY;
 	}
-	
-	public boolean hasContracts() {
-		return !(blocksContract.isEmpty() && conditionsContract.isEmpty());
-	}
-	
-	public BitSet getBlocksCode() {
-		return blocksCode;
+
+	public BitSet getBlocks() {
+		return blocks;
 	}
 
-	public BitSet getBlocksCode(BitSet cov) {
-		cov = (BitSet) cov.clone();
-		cov.and(blocksCode);
-		return cov;
+	public BitSet getBranches() {
+		return branches;
 	}
 
-	public BitSet getBlocksContract() {
-		return blocksContract;
-	}
-
-	public BitSet getBlocksContract(BitSet cov) {
-		cov = (BitSet) cov.clone();
-		cov.and(blocksContract);
-		return cov;
-	}
-
-	
-	public BitSet getConditionsCode() {
-		return conditionsCode;
-	}
-
-	public BitSet getConditionsCode(BitSet cov) {
-		cov = (BitSet) cov.clone();
-		cov.and(conditionsCode);
-		return cov;
-	}
-
-	public BitSet getConditionsContract() {
-		return conditionsContract;
-	}
-	
-	public BitSet getConditionsContract(BitSet cov) {
-		cov = (BitSet) cov.clone();
-		cov.and(conditionsContract);
-		return cov;
-	}
-
-	
 	@Override
 	public WhiteBoxData clone() throws CloneNotSupportedException {
 		return (WhiteBoxData) super.clone();
@@ -98,10 +58,8 @@ public class WhiteBoxData implements TrackerDatum {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((blocksCode == null) ? 0 : blocksCode.hashCode());
-		result = prime * result + ((blocksContract == null) ? 0 : blocksContract.hashCode());
-		result = prime * result + ((conditionsCode == null) ? 0 : conditionsCode.hashCode());
-		result = prime * result + ((conditionsContract == null) ? 0 : conditionsContract.hashCode());
+		result = prime * result + ((blocks == null) ? 0 : blocks.hashCode());
+		result = prime * result + ((branches == null) ? 0 : branches.hashCode());
 		return result;
 	}
 
@@ -111,18 +69,12 @@ public class WhiteBoxData implements TrackerDatum {
 		if(obj == null) return false;
 		if(!(obj instanceof WhiteBoxData)) return false;
 		WhiteBoxData other = (WhiteBoxData) obj;
-		if(blocksCode == null) {
-			if(other.blocksCode != null) return false;
-		} else if(!blocksCode.equals(other.blocksCode)) return false;
-		if(blocksContract == null) {
-			if(other.blocksContract != null) return false;
-		} else if(!blocksContract.equals(other.blocksContract)) return false;
-		if(conditionsCode == null) {
-			if(other.conditionsCode != null) return false;
-		} else if(!conditionsCode.equals(other.conditionsCode)) return false;
-		if(conditionsContract == null) {
-			if(other.conditionsContract != null) return false;
-		} else if(!conditionsContract.equals(other.conditionsContract)) return false;
+		if(blocks == null) {
+			if(other.blocks != null) return false;
+		} else if(!blocks.equals(other.blocks)) return false;
+		if(branches == null) {
+			if(other.branches != null) return false;
+		} else if(!branches.equals(other.branches)) return false;
 		return true;
 	}
 }

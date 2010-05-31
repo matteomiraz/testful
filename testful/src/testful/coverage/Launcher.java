@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.coverage;
 
 import java.util.Collection;
@@ -61,12 +60,13 @@ public class Launcher {
 			Instrumenter.prepare(config, toInstrument);
 
 			Instrumenter.run(config, toInstrument, config.getCut(),
-					//			testful.coverage.behavior.BehaviorInstrumenter.singleton,
-					//			testful.coverage.bug.BugInstrumenter.singleton,
+					testful.coverage.fault.FaultInstrumenter.singleton,
 					testful.coverage.whiteBox.WhiteInstrumenter.singleton
 			);
 		} catch (Exception e) {
 			logger.log(Level.WARNING, "Error during the instrumentation: " + e.getMessage(), e);
+			e.printStackTrace();
+			System.exit(1);
 		}
 
 		System.exit(0);

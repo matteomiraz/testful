@@ -39,7 +39,6 @@ import testful.coverage.CoverageInformation;
 import testful.coverage.RunnerCaching;
 import testful.coverage.TestSizeInformation;
 import testful.coverage.TrackerDatum;
-import testful.coverage.bug.BugCoverage;
 import testful.coverage.whiteBox.AnalysisWhiteBox;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
 import testful.coverage.whiteBox.CoverageBranch;
@@ -109,9 +108,8 @@ public class TestfulProblem implements Serializable {
 		}
 
 		numObjs = (config.isLength() ? 1 : 0) +
-		(config.isBug() ? 1 : 0) +
-		(config.isBbd() ? 1 : 0) + (config.isBbn() ? 1 : 0) +
-		(config.isBrd() ? 1 : 0) + (config.isBrn() ? 1 : 0);
+		(config.isBasicBlock() ? 1 : 0) +
+		(config.isBranch() ? 1 : 0);
 
 		if(logger.isLoggable(Level.FINER))
 			optimal = new OptimalTestCreator();
@@ -172,8 +170,8 @@ public class TestfulProblem implements Serializable {
 		if(infos != null) {
 			int i = config.isLength() ? 1 : 0;
 
-			if(config.isBug()) {
-				CoverageInformation cov = infos.get(BugCoverage.KEY);
+			if(config.isBasicBlock()) {
+				CoverageInformation cov = infos.get(CoverageBasicBlocks.KEY);
 				if(cov != null) {
 					covTot += cov.getQuality();
 					ret[i] = config.isToMinimize() ? -1 * cov.getQuality() : cov.getQuality();
@@ -181,35 +179,8 @@ public class TestfulProblem implements Serializable {
 				i++;
 			}
 
-			if(config.isBbd()) {
-				CoverageInformation cov = infos.get(CoverageBasicBlocks.KEY_CODE);
-				if(cov != null) {
-					covTot += cov.getQuality();
-					ret[i] = config.isToMinimize() ? -1 * cov.getQuality() : cov.getQuality();
-				}
-				i++;
-			}
-
-			if(config.isBbn()) {
-				CoverageInformation cov = infos.get(CoverageBasicBlocks.KEY_CONTRACT);
-				if(cov != null) {
-					covTot += cov.getQuality();
-					ret[i] = config.isToMinimize() ? -1 * cov.getQuality() : cov.getQuality();
-				}
-				i++;
-			}
-
-			if(config.isBrd()) {
-				CoverageInformation cov = infos.get(CoverageBranch.KEY_CODE);
-				if(cov != null) {
-					covTot += cov.getQuality();
-					ret[i] = config.isToMinimize() ? -1 * cov.getQuality() : cov.getQuality();
-				}
-				i++;
-			}
-
-			if(config.isBrn()) {
-				CoverageInformation cov = infos.get(CoverageBranch.KEY_CONTRACT);
+			if(config.isBranch()) {
+				CoverageInformation cov = infos.get(CoverageBranch.KEY);
 				if(cov != null) {
 					covTot += cov.getQuality();
 					ret[i] = config.isToMinimize() ? -1 * cov.getQuality() : cov.getQuality();

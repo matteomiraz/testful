@@ -48,11 +48,10 @@ import testful.coverage.whiteBox.AnalysisWhiteBox;
 import testful.coverage.whiteBox.Condition;
 import testful.coverage.whiteBox.ConditionTargetDatum;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
-import testful.coverage.whiteBox.CoverageConditionTarget;
 import testful.coverage.whiteBox.CoverageBranch;
+import testful.coverage.whiteBox.CoverageConditionTarget;
 import testful.coverage.whiteBox.Data;
 import testful.coverage.whiteBox.DataUse;
-import testful.coverage.whiteBox.WhiteBoxData;
 import testful.model.AssignPrimitive;
 import testful.model.Operation;
 import testful.model.PrimitiveClazz;
@@ -86,9 +85,6 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 	private final float SCORE_ONE_USE = 0;
 	private final float SCORE_TWO_USES = -100;
 
-	private final float SCORE_COND_CODE = 5;
-	private final float SCORE_COND_CONTRACT = 0;
-
 	private final float SCORE_MISS_ATTEMPTS = -1000;
 
 	/** if there is a constant, this is the probability to modify its value */
@@ -100,9 +96,6 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 	private TestfulProblem problem;
 	private final AnalysisWhiteBox whiteAnalysis;
-
-	private final BitSet condCode;
-	private final BitSet condContract;
 
 	/** for each branch (key) stores the number of attempts (value) */
 	private final Map<Integer, Integer> attempts;
@@ -126,12 +119,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 		random = PseudoRandom.getMersenneTwisterFast();
 
 		problem = testfulProblem;
-		whiteAnalysis = testfulProblem.getWhiteAnalysis();
-
-		final WhiteBoxData data = whiteAnalysis.getData();
-
-		condCode = data.getConditionsCode();
-		condContract = data.getConditionsContract();
+		whiteAnalysis = problem.getWhiteAnalysis();
 
 		attempts = new HashMap<Integer, Integer>();
 	}
@@ -157,7 +145,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 	public Solution<Operation> execute(Solution<Operation> solution) throws JMException {
 		try {
 			Collection<TestCoverage> tests = evalParts(solution);
-			BitSet execConds = getExecutedConditions(tests);
+			BitSet execConds = getExecutedBranches(tests);
 			Set<TestWithScore> testScore = addSearchScore(tests, execConds);
 			TestWithScore test = getBest(testScore);
 			if(test == null || test.score == null) return null;
@@ -184,7 +172,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			for(Solution<Operation> solution : solutionSet)
 				tests.addAll(evalParts(solution));
 
-			BitSet execConds = getExecutedConditions(tests);
+			BitSet execConds = getExecutedBranches(tests);
 
 			Set<TestWithScore> testScore = addSearchScore(tests, execConds);
 			TestWithScore test = getBest(testScore);
@@ -354,15 +342,11 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 	}
 
 
-	private BitSet getExecutedConditions(Collection<TestCoverage> tests) {
+	private BitSet getExecutedBranches(Collection<TestCoverage> tests) {
 		BitSet ret = new BitSet();
 
 		for(TestCoverage testCoverage : tests) {
-			CoverageBranch cov;
-			cov = (CoverageBranch) testCoverage.getCoverage().get(CoverageBranch.KEY_CODE);
-			if(cov != null) ret.or(cov.getCoverage());
-
-			cov = (CoverageBranch) testCoverage.getCoverage().get(CoverageBranch.KEY_CONTRACT);
+			CoverageBranch cov = (CoverageBranch) testCoverage.getCoverage().get(CoverageBranch.KEY);
 			if(cov != null) ret.or(cov.getCoverage());
 		}
 
@@ -427,10 +411,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			BitSet cond = new BitSet();
 			CoverageBasicBlocks bbCov;
 
-			bbCov = (CoverageBasicBlocks) t.getCoverage().get(CoverageBasicBlocks.KEY_CODE);
-			if(bbCov != null) cond.or(whiteAnalysis.getReachableBranches(bbCov.getCoverage()));
-
-			bbCov = (CoverageBasicBlocks) t.getCoverage().get(CoverageBasicBlocks.KEY_CONTRACT);
+			bbCov = (CoverageBasicBlocks) t.getCoverage().get(CoverageBasicBlocks.KEY);
 			if(bbCov != null) cond.or(whiteAnalysis.getReachableBranches(bbCov.getCoverage()));
 
 			cond.andNot(execConds);
@@ -442,10 +423,6 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 				float score = 0;
 				if(attempts.containsKey(branchId))
 					score += SCORE_MISS_ATTEMPTS * attempts.get(branchId);
-
-				if(condCode.get(branchId)) score += SCORE_COND_CODE;
-				else if(condContract.get(branchId)) score += SCORE_COND_CONTRACT;
-				else logger.fine("WARNING: branch not in code or contracts");
 
 				//TBD: consider defs & uses
 				// score type, fields/var/params

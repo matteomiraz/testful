@@ -64,13 +64,11 @@ public class Instrumenter {
 		/**
 		 * Called at the beginning of the method (after identity statements).
 		 * Instrumenters can safely initialize their variables and do initial stuff.
-		 * @param newUnits the chain that will be emitted
-		 * @param newBody the new body
 		 * @param oldBody the old body (read only!)
-		 * @param classWithContracts true if the class has contracts
-		 * @param contractMethod true if the method being analyzed is the java version of a contract
+		 * @param newBody the new body
+		 * @param newUnits the chain that will be emitted
 		 */
-		public void init(Chain<Unit> newUnits, Body newBody, Body oldBody, boolean classWithContracts, boolean contractMethod);
+		public void init(Body oldBody, Body newBody, Chain<Unit> newUnits);
 
 		/**
 		 * Do something before an operation
@@ -115,7 +113,7 @@ public class Instrumenter {
 	private static final boolean instrumenter  = true;
 	private static final boolean postWriter    = false;
 	private static final boolean nopEliminator = true;
-	private static final boolean postWriter2   = false;
+	private static final boolean finalWriter   = false;
 
 	public static void prepare(IConfigProject config, Collection<String> toInstrument) {
 		String[] SOOT_CONF = new String[] { "-validate", "--keep-line-number", "--xml-attributes", "-f", "c", "-output-dir", config.getDirInstrumented().getAbsolutePath() };
@@ -193,8 +191,8 @@ public class Instrumenter {
 			last = newPhase;
 		}
 
-		if(postWriter2) {
-			String newPhase = "jtp.postWriter2";
+		if(finalWriter) {
+			String newPhase = "jtp.finalWriter";
 			logger.fine("Enabled phase: " + newPhase);
 			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(JimpleWriter.singleton)));
 			else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, ActiveBodyTransformer.v(JimpleWriter.singleton)), last);
@@ -264,11 +262,7 @@ public class Instrumenter {
 			final Local exc = Jimple.v().newLocal("__throwable_exc__", throwableClass.getType());
 			newBody.getLocals().add(exc);
 
-			// checking if the class has (JML) contracts
-			boolean classWithContracts = sClass.implementsInterface(org.jmlspecs.jmlrac.runtime.JMLCheckable.class.getCanonicalName());
-			boolean contractMethod = classWithContracts && !methodName.startsWith("internal$");
-
-			logger.info("Instrumenting " + sClass.getName() + "." + methodName + " (" + (contractMethod ? "contract" : "implementation") + ")");
+			logger.info("Instrumenting " + sClass.getName() + "." + methodName);
 
 			/** stores the start of an operation (i.e. nopPre) */
 			final Map<Unit, Unit> start = new HashMap<Unit, Unit>();
@@ -328,7 +322,7 @@ public class Instrumenter {
 				newUnits.add(nopPre);
 
 				for(UnifiedInstrumentator i : instrumenters)
-					i.init(newUnits, newBody, oldBody, classWithContracts, contractMethod);
+					i.init(oldBody, newBody, newUnits);
 
 				final Unit nopPost = Jimple.v().newNopStmt();
 				nopPost.addTag(new StringTag("nopInitAfter"));
@@ -424,21 +418,19 @@ public class Instrumenter {
 			// --------------------------------------------------------------------------
 			// Exceptional tracking activities
 			// --------------------------------------------------------------------------
-			if(!contractMethod) {
-				final Unit nopCatchBegin = Jimple.v().newNopStmt();
-				nopCatchBegin.addTag(new StringTag("nopCatchPre"));
-				newUnits.add(nopCatchBegin);
-				newUnits.add(Jimple.v().newIdentityStmt(exc, Jimple.v().newCaughtExceptionRef()));
-				// update the traps
-				newBody.getTraps().add(Jimple.v().newTrap(throwableClass, nopMethodBegin, nopMethodEnd, nopCatchBegin));
-				for(UnifiedInstrumentator i : instrumenters)
-					i.exceptional(newUnits, exc);
-				// The last istruction of the handler is "throw exc"
-				newUnits.add(Jimple.v().newThrowStmt(exc));
-				final Unit nopPost = Jimple.v().newNopStmt();
-				nopPost.addTag(new StringTag("nopCatchAfter"));
-				newUnits.add(nopPost);
-			}
+			final Unit nopCatchBegin = Jimple.v().newNopStmt();
+			nopCatchBegin.addTag(new StringTag("nopCatchPre"));
+			newUnits.add(nopCatchBegin);
+			newUnits.add(Jimple.v().newIdentityStmt(exc, Jimple.v().newCaughtExceptionRef()));
+			// update the traps
+			newBody.getTraps().add(Jimple.v().newTrap(throwableClass, nopMethodBegin, nopMethodEnd, nopCatchBegin));
+			for(UnifiedInstrumentator i : instrumenters)
+				i.exceptional(newUnits, exc);
+			// The last istruction of the handler is "throw exc"
+			newUnits.add(Jimple.v().newThrowStmt(exc));
+			final Unit nopPost = Jimple.v().newNopStmt();
+			nopPost.addTag(new StringTag("nopCatchAfter"));
+			newUnits.add(nopPost);
 
 			// Fix jumps (goto, if, switch)
 			for(Unit unit : newUnits) {

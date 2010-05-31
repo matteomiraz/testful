@@ -23,24 +23,22 @@ import java.util.BitSet;
 import java.util.HashSet;
 
 /**
- * Represents the entry point of a function. 
+ * Represents the entry point of a function.
  * 
  * @author matteo
  */
 public class BlockFunctionEntry extends Block {
 
 	private static final long serialVersionUID = -3816067359592430951L;
-	
+
 	private final BlockClass clazz;
 	private final String fullQualifiedName;
 	private final boolean isPublic;
-	private final boolean contract;
 
-	public BlockFunctionEntry(BlockClass clazz, String fullQualifiedName, boolean isPublic, boolean contract) {
+	public BlockFunctionEntry(BlockClass clazz, String fullQualifiedName, boolean isPublic) {
 		this.fullQualifiedName = fullQualifiedName;
 		this.clazz = clazz;
 		this.isPublic = isPublic;
-		this.contract = contract;
 
 		pre = new HashSet<Edge>();
 		post = new HashSet<Edge>();
@@ -55,15 +53,11 @@ public class BlockFunctionEntry extends Block {
 	public BlockClass getClazz() {
 		return clazz;
 	}
-	
+
 	public boolean isPublic() {
 		return isPublic;
 	}
-	
-	public boolean isContract() {
-		return contract;
-	}
-	
+
 	@Override
 	public boolean updateData() {
 		BitSet oldIn = in;

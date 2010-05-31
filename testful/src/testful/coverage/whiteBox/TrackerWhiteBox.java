@@ -48,18 +48,8 @@ public class TrackerWhiteBox extends Tracker {
 	public ElementManager<String, CoverageInformation> getCoverage() {
 		ElementManager<String, CoverageInformation> ret = new ElementManager<String, CoverageInformation>();
 
-		if(whiteData == null || !whiteData.hasContracts()) {
-			ret.put(new CoverageBasicBlocks(CoverageBasicBlocks.KEY_CODE, CoverageBasicBlocks.NAME_CODE, covBlocks));
-
-			ret.put(new CoverageBranch(CoverageBranch.KEY_CODE, CoverageBranch.NAME_CODE, covConditions));
-
-		} else {
-			ret.put(new CoverageBasicBlocks(CoverageBasicBlocks.KEY_CODE, CoverageBasicBlocks.NAME_CODE, whiteData.getBlocksCode(covBlocks)));
-			ret.put(new CoverageBasicBlocks(CoverageBasicBlocks.KEY_CONTRACT, CoverageBasicBlocks.NAME_CONTRACT, whiteData.getBlocksContract(covBlocks)));
-
-			ret.put(new CoverageBranch(CoverageBranch.KEY_CODE, CoverageBranch.NAME_CODE, whiteData.getConditionsCode(covConditions)));
-			ret.put(new CoverageBranch(CoverageBranch.KEY_CONTRACT, CoverageBranch.NAME_CONTRACT, whiteData.getConditionsContract(covConditions)));
-		}
+		ret.put(new CoverageBasicBlocks(CoverageBasicBlocks.KEY, CoverageBasicBlocks.NAME, covBlocks));
+		ret.put(new CoverageBranch(CoverageBranch.KEY, CoverageBranch.NAME, covBranches));
 
 		if(condTarget != null)
 			ret.put(condTarget);
@@ -70,7 +60,7 @@ public class TrackerWhiteBox extends Tracker {
 	@Override
 	public void reset() {
 		covBlocks = new BitSet();
-		covConditions = new BitSet();
+		covBranches = new BitSet();
 
 		whiteData = (WhiteBoxData) Tracker.getDatum(WhiteBoxData.KEY);
 
@@ -92,7 +82,7 @@ public class TrackerWhiteBox extends Tracker {
 
 	// ----------------------- Condition coverage  -------------------------------
 	/** condition coverage */
-	private BitSet covConditions;
+	private BitSet covBranches;
 
 	/** id of the target; -1 if no target */
 	private int condTargetId;
@@ -109,7 +99,7 @@ public class TrackerWhiteBox extends Tracker {
 	 * @param branchId the id of the executed branch
 	 */
 	public void trackBranch(int branchId) {
-		covConditions.set(branchId);
+		covBranches.set(branchId);
 	}
 
 	/**

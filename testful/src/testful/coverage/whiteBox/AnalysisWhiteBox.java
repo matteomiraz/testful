@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.coverage.whiteBox;
 
 import java.io.File;
@@ -103,18 +102,13 @@ public class AnalysisWhiteBox implements Serializable {
 	private transient WhiteBoxData data = null;
 	public WhiteBoxData getData() {
 		if(data == null) {
-			BitSet blocksCode = new BitSet();
-			BitSet blocksContract = new BitSet();
-			BitSet conditionsCode = new BitSet();
-			BitSet conditionsContract = new BitSet();
+			BitSet blocks = new BitSet();
+			BitSet branches = new BitSet();
 			for(BlockClass bClass : classes.values()) {
-				blocksCode.or(bClass.getBlocksCode());
-				blocksContract.or(bClass.getBlocksContract());
-
-				conditionsCode.or(bClass.getConditionsCode());
-				conditionsContract.or(bClass.getConditionsContract());
+				blocks.or(bClass.getBlocks());
+				branches.or(bClass.getBranches());
 			}
-			data = new WhiteBoxData(blocksCode, blocksContract, conditionsCode, conditionsContract);
+			data = new WhiteBoxData(blocks, branches);
 		}
 		return data;
 	}

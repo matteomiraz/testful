@@ -24,61 +24,43 @@ public class ConfigFitness implements IConfigFitness, IConfigFitness.Args4j {
 
 	private boolean toMinimize;
 
-	private boolean bbd = true;
-
-	private boolean bbn = true;
-
-	private boolean brd = true;
-
-	private boolean brn = true;
-
-	private boolean bug = false;
+	private boolean basicBlock = true;
+	private boolean branch = true;
 
 	private boolean length = true;
 
+	/* (non-Javadoc)
+	 * @see testful.evolutionary.IConfigFitness#isBasicBlock()
+	 */
 	@Override
-	public void setToMinimize(boolean toMinimize) {
-		this.toMinimize = toMinimize;
+	public boolean isBasicBlock() {
+		return basicBlock;
 	}
 
 	/* (non-Javadoc)
-	 * @see testful.evolutionary.IFitness#isBbd()
+	 * @see testful.evolutionary.IConfigFitness.Args4j#setDisableBranch(boolean)
 	 */
 	@Override
-	public boolean isBbd() {
-		return bbd;
+	public void setDisableBranch(boolean disable) {
+		basicBlock = !disable;
 	}
 
 	/* (non-Javadoc)
-	 * @see testful.evolutionary.IFitness#isBbn()
+	 * @see testful.evolutionary.IFitness#isBranch()
 	 */
 	@Override
-	public boolean isBbn() {
-		return bbn;
+	public boolean isBranch() {
+		return branch;
 	}
 
 	/* (non-Javadoc)
-	 * @see testful.evolutionary.IFitness#isBrd()
+	 * @see testful.evolutionary.IConfigFitness.Args4j#setDisableBasicBlock(boolean)
 	 */
 	@Override
-	public boolean isBrd() {
-		return brd;
+	public void setDisableBasicBlock(boolean disable) {
+		basicBlock = !disable;
 	}
 
-	/* (non-Javadoc)
-	 * @see testful.evolutionary.IFitness#isBrn()
-	 */
-	@Override
-	public boolean isBrn() {
-		return brn;
-	}
-	/* (non-Javadoc)
-	 * @see testful.evolutionary.IFitness#isBug()
-	 */
-	@Override
-	public boolean isBug() {
-		return bug;
-	}
 
 	/* (non-Javadoc)
 	 * @see testful.evolutionary.IFitness#isLength()
@@ -86,76 +68,6 @@ public class ConfigFitness implements IConfigFitness, IConfigFitness.Args4j {
 	@Override
 	public boolean isLength() {
 		return length;
-	}
-
-	/* (non-Javadoc)
-	 * @see testful.evolutionary.IFitness#isToMinimize()
-	 */
-	@Override
-	public boolean isToMinimize() {
-		return toMinimize;
-	}
-
-	/* (non-Javadoc)
-	 * @see testful.evolutionary.Args4j#setDisableBasicBlock(boolean)
-	 */
-	@Override
-	public void setDisableBasicBlock(boolean disable) {
-		if(disable) {
-			bbd = false;
-			bbn = false;
-		}
-	}
-
-	/* (non-Javadoc)
-	 * @see testful.evolutionary.Args4j#setDisableBasicBlockCode(boolean)
-	 */
-	@Override
-	public void setDisableBasicBlockCode(boolean disable) {
-		if(disable) {
-			bbd = false;
-		}
-	}
-
-	/* (non-Javadoc)
-	 * @see testful.evolutionary.Args4j#setDisableBasicBlockContract(boolean)
-	 */
-	@Override
-	public void setDisableBasicBlockContract(boolean disable) {
-		if(disable) {
-			bbn = false;
-		}
-	}
-
-	/* (non-Javadoc)
-	 * @see testful.evolutionary.Args4j#setDisableBranch(boolean)
-	 */
-	@Override
-	public void setDisableBranch(boolean disable) {
-		if(disable) {
-			brd = false;
-			brn = false;
-		}
-	}
-
-	/* (non-Javadoc)
-	 * @see testful.evolutionary.Args4j#setDisableBranchCode(boolean)
-	 */
-	@Override
-	public void setDisableBranchCode(boolean disable) {
-		if(disable) {
-			brd = false;
-		}
-	}
-
-	/* (non-Javadoc)
-	 * @see testful.evolutionary.Args4j#setDisableBranchContract(boolean)
-	 */
-	@Override
-	public void setDisableBranchContract(boolean disable) {
-		if(disable) {
-			brn = false;
-		}
 	}
 
 	/* (non-Javadoc)
@@ -167,10 +79,18 @@ public class ConfigFitness implements IConfigFitness, IConfigFitness.Args4j {
 	}
 
 	/* (non-Javadoc)
-	 * @see testful.evolutionary.Args4j#setEnableBug(boolean)
+	 * @see testful.evolutionary.IFitness#isToMinimize()
 	 */
 	@Override
-	public void setEnableBug(boolean bug) {
-		if(bug) this.bug = true;
+	public boolean isToMinimize() {
+		return toMinimize;
+	}
+
+	/* (non-Javadoc)
+	 * @see testful.evolutionary.IConfigFitness#setToMinimize(boolean)
+	 */
+	@Override
+	public void setToMinimize(boolean toMinimize) {
+		this.toMinimize = toMinimize;
 	}
 }

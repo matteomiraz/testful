@@ -30,6 +30,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.TestFul;
+import testful.model.faults.FaultyExecutionException;
 import testful.utils.Cloner;
 
 /**
@@ -91,16 +92,24 @@ public class OperationResult extends OperationInformation {
 		exc = other.exc;
 	}
 
-	public void setPreconditionError() {
+	/**
+	 * Sets the status of the operation as precondition error
+	 * @throws ReplayException during a replay, this operation signals a different behavior of the class
+	 */
+	public void setPreconditionError() throws ReplayException {
 		status = Status.PRECONDITION_ERROR;
 	}
 
-	public void setPostconditionError() {
+	/**
+	 * Sets the status of the operation as postcondition error
+	 * @throws ReplayException during a replay, this operation signals a different behavior of the class
+	 */
+	public void setPostconditionError() throws ReplayException {
 		status = Status.POSTCONDITION_ERROR;
 	}
 
 	@SuppressWarnings("unused")
-	public void setSuccessful(Object object, Object result, TestCluster cluster) throws FaultyExecutionException {
+	public void setSuccessful(Object object, Object result, TestCluster cluster) throws ReplayException {
 
 		if(TestFul.DEBUG && status != Status.NOT_EXECUTED)
 			Logger.getLogger("testful.model").warning(OperationResult.class.getCanonicalName() + " already set");
@@ -111,7 +120,7 @@ public class OperationResult extends OperationInformation {
 	}
 
 	@SuppressWarnings("unused")
-	public void setExceptional(Throwable exc, Object object, TestCluster cluster) {
+	public void setExceptional(Throwable exc, Object object, TestCluster cluster) throws ReplayException {
 
 		if(TestFul.DEBUG && status != Status.NOT_EXECUTED)
 			Logger.getLogger("testful.model").warning(OperationResult.class.getCanonicalName() + " already set");
@@ -174,7 +183,7 @@ public class OperationResult extends OperationInformation {
 		private final Serializable object;
 		private final Map<String, Serializable> observers;
 
-		public Value(Object o, TestCluster cluster) throws FaultyExecutionException {
+		public Value(Object o, TestCluster cluster) {
 			if(o == null) {
 				isNull = true;
 				type = null;
@@ -347,7 +356,7 @@ public class OperationResult extends OperationInformation {
 			return true;
 		}
 
-		public void check(Value other) {
+		public void check(Value other) throws ReplayException {
 			if(other == null) throw new OperationResultVerifierException("", this, other);
 
 
@@ -368,7 +377,6 @@ public class OperationResult extends OperationInformation {
 		}
 	}
 
-
 	public static class Verifier extends OperationResult {
 		private static final long serialVersionUID = -1087900671239338703L;
 
@@ -378,17 +386,17 @@ public class OperationResult extends OperationInformation {
 		}
 
 		@Override
-		public void setPreconditionError() {
+		public void setPreconditionError() throws ReplayException {
 			if(status != Status.PRECONDITION_ERROR) throw new OperationVerifierException(status, Status.PRECONDITION_ERROR);
 		}
 
 		@Override
-		public void setPostconditionError() {
+		public void setPostconditionError() throws ReplayException {
 			if(status != Status.POSTCONDITION_ERROR) throw new OperationVerifierException(status, Status.POSTCONDITION_ERROR);
 		}
 
 		@Override
-		public void setSuccessful(Object object, Object result, TestCluster cluster) throws FaultyExecutionException {
+		public void setSuccessful(Object object, Object result, TestCluster cluster) throws ReplayException {
 			if(status != Status.SUCCESSFUL) throw new OperationVerifierException(status, Status.SUCCESSFUL);
 
 			this.object.check(new Value(object, cluster));
@@ -396,7 +404,7 @@ public class OperationResult extends OperationInformation {
 		}
 
 		@Override
-		public void setExceptional(Throwable exc, Object object, TestCluster cluster) {
+		public void setExceptional(Throwable exc, Object object, TestCluster cluster) throws ReplayException {
 			if(status != Status.EXCEPTIONAL) throw new OperationVerifierException(status, Status.EXCEPTIONAL);
 
 			Throwable thisExc = this.exc;
@@ -420,25 +428,32 @@ public class OperationResult extends OperationInformation {
 		}
 	}
 
-	public static class OperationVerifierException extends FaultyExecutionException {
+	/**
+	 * This exception signals that the class has a different behavior from the one registered during the initial test.
+	 * @author matteo
+	 */
+	public static abstract class ReplayException extends Throwable implements FaultyExecutionException {
+		private static final long serialVersionUID = -2557677122227176278L;
 
-		private static final long serialVersionUID = -5320352798948137983L;
-
-		private OperationVerifierException(String msg) {
+		public ReplayException(String msg) {
 			super(msg, null);
-		}
-
-		public OperationVerifierException(Status expected, Status actual) {
-			this("Operation Verifier: expected " + expected + ", actual: " + actual);
-		}
-
-		public OperationVerifierException(Throwable expected, Throwable actual) {
-			this("Operation Verifier: operation termiated with a wrong exception. Expected " + expected + ", actual: " + actual);
 		}
 	}
 
+	public static class OperationVerifierException extends ReplayException {
 
-	public static class OperationResultVerifierException extends FaultyExecutionException {
+		private static final long serialVersionUID = -5320352798948137983L;
+
+		public OperationVerifierException(Status expected, Status actual) {
+			super("Operation Verifier: expected " + expected + ", actual: " + actual);
+		}
+
+		public OperationVerifierException(Throwable expected, Throwable actual) {
+			super("Operation Verifier: operation termiated with a wrong exception. Expected " + expected + ", actual: " + actual);
+		}
+	}
+
+	public static class OperationResultVerifierException extends ReplayException {
 		private static final long serialVersionUID = -9113533247815125403L;
 
 		private final Serializable expected;
@@ -446,14 +461,14 @@ public class OperationResult extends OperationInformation {
 		private final String method;
 
 		public OperationResultVerifierException(String msg) {
-			super("Operation result verifier: " + msg, null);
+			super("Operation result verifier: " + msg);
 			method = null;
 			expected = null;
 			actual = null;
 		}
 
 		public OperationResultVerifierException(String method, Serializable expected, Serializable actual) {
-			super("Operation result verifier: " + method + " expected: " + expected + " actual: " + actual, null);
+			super("Operation result verifier: " + method + " expected: " + expected + " actual: " + actual);
 			this.method = method;
 			this.expected = expected;
 			this.actual = actual;

@@ -26,13 +26,8 @@ import testful.coverage.CoverageInformation;
 public class CoverageBranch extends BitSetCoverage {
 	private static final long serialVersionUID = 1841450132658247037L;
 
-	private static String NAME = "Branch Coverage";
-	public static String NAME_CODE = NAME + " (Code)";
-	public static String NAME_CONTRACT = NAME + " (Contracts)";
-
-	private static String KEY = "br";
-	public static String KEY_CODE = KEY + "d";
-	public static String KEY_CONTRACT = KEY + "n";
+	public static String KEY = "br";
+	public static String NAME = "Branch Coverage";
 
 	private final String key;
 	private final String name;

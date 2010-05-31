@@ -22,7 +22,7 @@ package testful.model;
 import testful.ConfigCut;
 import testful.GenericTestCase;
 import testful.coverage.CoverageInformation;
-import testful.coverage.bug.BugCoverage;
+import testful.coverage.fault.FaultsCoverage;
 import testful.runner.TestfulClassLoader;
 import testful.utils.ElementManager;
 
@@ -100,8 +100,8 @@ public class BugCoverageTestCase extends GenericTestCase {
 
 		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 
-		assertNotNull("no bug coverage", cov.get(BugCoverage.KEY));
-		assertEquals(0.0f, cov.get(BugCoverage.KEY).getQuality());
+		assertNotNull("no bug coverage", cov.get(FaultsCoverage.KEY));
+		assertEquals(0.0f, cov.get(FaultsCoverage.KEY).getQuality());
 
 	}
 
@@ -120,8 +120,8 @@ public class BugCoverageTestCase extends GenericTestCase {
 
 		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 
-		assertNotNull("no bug coverage", cov.get(BugCoverage.KEY));
-		assertEquals(1.0f, cov.get(BugCoverage.KEY).getQuality());
+		assertNotNull("no bug coverage", cov.get(FaultsCoverage.KEY));
+		assertEquals(1.0f, cov.get(FaultsCoverage.KEY).getQuality());
 	}
 
 	/**
@@ -142,8 +142,8 @@ public class BugCoverageTestCase extends GenericTestCase {
 
 		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 
-		assertNotNull("no bug coverage", cov.get(BugCoverage.KEY));
-		assertEquals(0.0f, cov.get(BugCoverage.KEY).getQuality());
+		assertNotNull("no bug coverage", cov.get(FaultsCoverage.KEY));
+		assertEquals(0.0f, cov.get(FaultsCoverage.KEY).getQuality());
 
 	}
 
@@ -166,8 +166,8 @@ public class BugCoverageTestCase extends GenericTestCase {
 
 		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 
-		assertNotNull("no bug coverage", cov.get(BugCoverage.KEY));
-		assertEquals(1.0f, cov.get(BugCoverage.KEY).getQuality());
+		assertNotNull("no bug coverage", cov.get(FaultsCoverage.KEY));
+		assertEquals(1.0f, cov.get(FaultsCoverage.KEY).getQuality());
 
 	}
 

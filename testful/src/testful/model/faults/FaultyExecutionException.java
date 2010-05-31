@@ -16,22 +16,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+package testful.model.faults;
 
-package testful.model;
+import java.io.Serializable;
 
 /**
  * This exception represents a faulty execution of the class under testing.<br>
- * Internally, this exception stores the stacktrace of the fault, and thus it is
- * possible to compare two instances of this exception and find out if them are
- * manifestations of the same bug or not.
+ * 
+ * Internally, this exception must store the stack trace of the fault.
+ * This way, one can compare two instances of this exception and determine
+ * if they share the same cause or not. <br>
  * 
  * @author matteo
  */
-public abstract class FaultyExecutionException extends RuntimeException {
+public interface FaultyExecutionException extends Serializable {
 
-	private static final long serialVersionUID = -6674159663143126864L;
+	String getMessage();
 
-	public FaultyExecutionException(String msg, Throwable e) {
-		super(msg, e);
-	}
+	StackTraceElement[] getStackTrace();
+
+	Throwable fillInStackTrace();
 }

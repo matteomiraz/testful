@@ -33,8 +33,6 @@ import testful.model.AssignPrimitive;
 import testful.model.Clazz;
 import testful.model.Constructorz;
 import testful.model.CreateObject;
-import testful.model.ExceptionRaisedException;
-import testful.model.FaultyExecutionException;
 import testful.model.Invoke;
 import testful.model.Methodz;
 import testful.model.Operation;
@@ -45,6 +43,9 @@ import testful.model.ResetRepository;
 import testful.model.StaticValue;
 import testful.model.Test;
 import testful.model.TestCluster;
+import testful.model.faults.FaultyExecutionException;
+import testful.model.faults.TestfulInternalException;
+import testful.model.faults.PreconditionViolationException;
 import testful.runner.Executor;
 
 /**
@@ -120,7 +121,13 @@ public class ReflectionExecutor implements Executor {
 		repository = new Object[repositoryType.length];
 		faults = new HashMap<Operation, FaultyExecutionException>();
 
+		/** Number of invalid operations: precondition errors */
+		int nPre = 0;
+		/** Number of valid operations */
 		int nValid = 0;
+		/** Number of valid operations that reveal faults */
+		int nFaulty = 0;
+
 		for(Operation op : test) {
 			try {
 				if(logger.isLoggable(Level.FINEST)) {
@@ -128,23 +135,39 @@ public class ReflectionExecutor implements Executor {
 					logger.finest("Executing " + op);
 				}
 
-				boolean valid = perform(op);
+				perform(op);
 
-				if(valid) nValid++;
-			} catch(FaultyExecutionException e) {
-				faults.put(op, e);
-				for(int i = 0; i < repository.length; i++)
-					repository[i] = null;
+				nValid++;
 
-				if(stopOnBug) break;
+			} catch(Throwable e) {
+				if (e instanceof TestfulInternalException) {
+					// discard the exception and go ahead
+
+				} else if(e instanceof PreconditionViolationException) {
+					nPre++;
+
+				} else if(e instanceof FaultyExecutionException) {
+					nFaulty++;
+
+					faults.put(op, (FaultyExecutionException) e);
+
+					if(stopOnBug) break;
+
+					// reset the repository
+					for(int i = 0; i < repository.length; i++)
+						repository[i] = null;
+				}
 			}
 		}
 
 		if(logger.isLoggable(Level.FINEST))
 			logger.finest(toString());
 
-		logger.fine(String.format("STATS ops valid valid%% invalid invalid%% -- %d %d %.2f %d %.2f",
-				test.length, nValid, (nValid*100.0/test.length), (test.length-nValid), ((test.length-nValid)*100.0/test.length)));
+		logger.fine(String.format("STATS ops invalid invalid%% valid valid%% faulty faulty%% -- %d %d %.2f %d %.2f %d %.2f",
+				test.length,
+				nPre, (nPre*100.0/test.length),
+				nValid, (nValid*100.0/test.length),
+				nFaulty, (nFaulty*100.0/test.length)));
 
 		return faults.size();
 	}
@@ -181,7 +204,7 @@ public class ReflectionExecutor implements Executor {
 				logger.finest(sb.toString());
 			}
 
-			return null;
+			throw new TestfulInternalException.Impl(e);
 		}
 	}
 
@@ -202,32 +225,28 @@ public class ReflectionExecutor implements Executor {
 
 				logger.finest(sb.toString());
 			}
-			return;
+
+			throw new TestfulInternalException.Impl(e);
 		}
 	}
 
-	private boolean perform(Operation op) throws FaultyExecutionException {
+	private void perform(Operation op) throws Throwable {
 
-		if(op instanceof AssignPrimitive) return assignPrimitive((AssignPrimitive) op);
-		else if(op instanceof AssignConstant) return assignConstant((AssignConstant) op);
-		else if(op instanceof CreateObject) return createObject((CreateObject) op);
-		else if(op instanceof Invoke) return invoke((Invoke) op);
-		else if(op instanceof ResetRepository) return reset((ResetRepository) op);
-		else {
-			logger.warning("Unknown operation: " + op.getClass().getCanonicalName() + " - " + op);
-			return false;
-		}
+		if(op instanceof AssignPrimitive) assignPrimitive((AssignPrimitive) op);
+		else if(op instanceof AssignConstant) assignConstant((AssignConstant) op);
+		else if(op instanceof CreateObject) createObject((CreateObject) op);
+		else if(op instanceof Invoke) invoke((Invoke) op);
+		else if(op instanceof ResetRepository) reset((ResetRepository) op);
+		else logger.warning("Unknown operation: " + op.getClass().getCanonicalName() + " - " + op);
 	}
 
-	private boolean reset(ResetRepository op) {
+	private void reset(ResetRepository op) {
 		for(int i = 0; i < repository.length; i++)
 			repository[i] = null;
-
-		return true;
 	}
 
 	/** createObject */
-	private boolean createObject(CreateObject op) throws FaultyExecutionException {
+	private void createObject(CreateObject op) throws Throwable {
 		OperationResult opRes = (OperationResult) op.getInfo(OperationResult.KEY);
 
 		Reference targetPos = op.getTarget();
@@ -245,12 +264,14 @@ public class ReflectionExecutor implements Executor {
 			else {
 				initargs[i] = get(params[i]);
 
-				if(constructozParamsType[i] instanceof PrimitiveClazz)
+				if(constructozParamsType[i] instanceof PrimitiveClazz) {
 					if(initargs[i] == null) {
 						if(opRes != null) opRes.setPreconditionError();
-						return false;
-					} else
+						throw new PreconditionViolationException.Impl("The primitive value has not been initialized", null);
+					} else {
 						initargs[i] = ((PrimitiveClazz) constructozParamsType[i]).cast(initargs[i]);
+					}
+				}
 			}
 
 		// perform the real invocation
@@ -267,63 +288,72 @@ public class ReflectionExecutor implements Executor {
 		} catch(InvocationTargetException invocationException) {
 			Throwable exc = invocationException.getTargetException();
 
-			if(exc instanceof org.jmlspecs.jmlrac.runtime.JMLPreconditionError) {
+			if(exc instanceof PreconditionViolationException) {
 				if(opRes != null) opRes.setPreconditionError();
-				return false;
-			} else if(exc instanceof FaultyExecutionException) {
+				throw exc;
+			}
+
+			if(exc instanceof FaultyExecutionException) {
 				if(opRes != null) opRes.setPostconditionError();
-				throw (FaultyExecutionException) exc;
-			} else // a valid exception is thrown
-				if(opRes != null) opRes.setExceptional(exc, null, cluster);
+				throw exc;
+			}
+
+			if(exc instanceof TestfulInternalException) {
+				throw exc;
+			}
+
+			// a valid exception is thrown
+			if(opRes != null) opRes.setExceptional(exc, null, cluster);
+
 		} catch(Throwable e) {
 			logger.log(Level.WARNING, "Reflection error in createObject(" + op + "): " + e.getMessage(), e);
 
-			throw new ExceptionRaisedException(e);
+			throw new TestfulInternalException.Impl(e);
 		}
-
-		return true;
 	}
 
-	private boolean assignPrimitive(AssignPrimitive op) {
+	private void assignPrimitive(AssignPrimitive op) throws PreconditionViolationException.Impl, TestfulInternalException.Impl {
 		Reference ref = op.getTarget();
 		Serializable value = op.getValue();
 
-		if(ref == null || value == null) return false;
+		if(ref == null) throw new PreconditionViolationException.Impl("The reference is not set", null);
+		if(value == null) throw new PreconditionViolationException.Impl("The primitive value has not been initialized", null);
 
-		// perform the real invocation
+		// perform the assignment
 		set(ref, value);
-		return true;
 	}
 
-	private boolean assignConstant(AssignConstant op) {
+	private void assignConstant(AssignConstant op) throws PreconditionViolationException.Impl, TestfulInternalException.Impl {
 		Reference ref = op.getTarget();
-		if(ref == null) return false;
+
+		if(ref == null) throw new PreconditionViolationException.Impl("The reference is not set", null);
 
 		StaticValue value = op.getValue();
 
 		// set to null
-		if(value == null) try {
-			set(ref, null);
-			return true;
-		} catch(Throwable e) {
-			// something very strange happens!
-			logger.log(Level.WARNING, "Reflection error in assignConstant(" + op + "): " + e.getMessage(), e);
-			throw new ExceptionRaisedException(e);
+		if(value == null) {
+			try {
+				set(ref, null);
+				return;
+			} catch(Throwable e) {
+				// something very strange happens!
+				logger.log(Level.WARNING, "Reflection error in assignConstant(" + op + "): " + e.getMessage(), e);
+				throw new TestfulInternalException.Impl(e);
+			}
 		}
 
 		// set to value
 		try {
 			Object newObject = value.toField().get(null);
 			set(ref, newObject);
-			return true;
 		} catch(Throwable e) {
 			// something very strange happens!
 			logger.log(Level.WARNING, "Reflection error in assignConstant(" + op + "): " + e.getMessage(), e);
-			throw new ExceptionRaisedException(e);
+			throw new TestfulInternalException.Impl(e);
 		}
 	}
 
-	private boolean invoke(Invoke op) throws FaultyExecutionException {
+	private void invoke(Invoke op) throws Throwable {
 		Reference targetPos = op.getTarget();
 		Reference sourcePos = op.getThis();
 		Methodz method = op.getMethod();
@@ -337,7 +367,7 @@ public class ReflectionExecutor implements Executor {
 		Object baseObject = get(sourcePos);
 		if(baseObject == null && !method.isStatic()) {
 			if(opRes != null) opRes.setPreconditionError();
-			return false;
+			throw new PreconditionViolationException.Impl("The object accepting the method call is null", null);
 		}
 
 		for(int i = 0; i < args.length; i++)
@@ -348,7 +378,7 @@ public class ReflectionExecutor implements Executor {
 				if(paramsTypes[i] instanceof PrimitiveClazz) {
 					if(args[i] == null) {
 						if(opRes != null) opRes.setPreconditionError();
-						return false;
+						throw new PreconditionViolationException.Impl("The primitive value has not been initialized", null);
 					} else
 						args[i] = ((PrimitiveClazz) paramsTypes[i]).cast(args[i]);
 				}
@@ -366,21 +396,28 @@ public class ReflectionExecutor implements Executor {
 		} catch(InvocationTargetException invocationException) {
 			Throwable exc = invocationException.getTargetException();
 
-			if(exc instanceof org.jmlspecs.jmlrac.runtime.JMLPreconditionError) {
+			if(exc instanceof PreconditionViolationException) {
 				if(opRes != null) opRes.setPreconditionError();
-				return false;
-			} else if(exc instanceof FaultyExecutionException) {
+				throw exc;
+			}
+
+			if(exc instanceof FaultyExecutionException) {
 				if(opRes != null) opRes.setPostconditionError();
-				throw (FaultyExecutionException) exc;
-			} else // a valid exception is thrown
-				if(opRes != null) opRes.setExceptional(exc, baseObject, cluster);
+				throw exc;
+			}
+
+			if(exc instanceof TestfulInternalException) {
+				throw exc;
+			}
+
+			// a valid exception is thrown
+			if(opRes != null) opRes.setExceptional(exc, null, cluster);
+
 		} catch(Throwable e) {
 			logger.log(Level.WARNING, "Reflection error in invoke(" + op + "): " + e.getMessage(), e);
 
-			throw new ExceptionRaisedException(e);
+			throw new TestfulInternalException.Impl(e);
 		}
-
-		return true;
 	}
 
 	@Override

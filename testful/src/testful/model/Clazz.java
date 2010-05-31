@@ -38,7 +38,6 @@ public class Clazz implements Serializable {
 
 	private transient Class<?> javaClass;
 	private final String name;
-	private final boolean hasContracts;
 	protected final TestCluster cluster;
 
 	/** constructor of the clazz */
@@ -67,7 +66,6 @@ public class Clazz implements Serializable {
 		javaClass = type;
 		name = type.getCanonicalName();
 		this.cluster = cluster;
-		hasContracts = org.jmlspecs.jmlrac.runtime.JMLCheckable.class.isAssignableFrom(type);
 
 		isAbstract = type.isInterface() || Modifier.isAbstract(type.getModifiers());
 
@@ -145,10 +143,6 @@ public class Clazz implements Serializable {
 
 			return sb.toString();
 		}
-	}
-
-	public boolean hasContracts() {
-		return hasContracts;
 	}
 
 	public String getClassName() {

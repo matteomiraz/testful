@@ -16,61 +16,59 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-package testful.coverage.bug;
+package testful.coverage.fault;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 import testful.coverage.CoverageInformation;
 
-public class BugCoverage implements CoverageInformation {
+public class FaultsCoverage implements CoverageInformation {
 
 	private static final long serialVersionUID = -7544654531090656602L;
 
-	public static final String KEY = "bug";
-	public static final String NAME = "bug discovered";
+	public static final String KEY = "faults";
+	public static final String NAME = "fault discovered";
 
-	public static BugCoverage getEmpty() {
-		return new BugCoverage();
+	public static FaultsCoverage getEmpty() {
+		return new FaultsCoverage();
 	}
 
-	/** only BugTracker can access directly this field! */
-	public final Set<Bug> bugs;
+	/** only FaultTracker can access directly this field! */
+	public final Set<Fault> faults;
 
-	private BugCoverage() {
-		bugs = new LinkedHashSet<Bug>();
+	private FaultsCoverage() {
+		faults = new LinkedHashSet<Fault>();
 	}
 
 	@Override
 	public float getQuality() {
-		return bugs.size();
+		return faults.size();
 	}
 
 	@Override
 	public boolean contains(CoverageInformation other) {
-		if(!(other instanceof BugCoverage)) return false;
+		if(!(other instanceof FaultsCoverage)) return false;
 
-		return bugs.containsAll(((BugCoverage) other).bugs);
+		return faults.containsAll(((FaultsCoverage) other).faults);
 	}
 
 	@Override
 	public void merge(CoverageInformation other) {
-		if(other instanceof BugCoverage) bugs.addAll(((BugCoverage) other).bugs);
+		if(other instanceof FaultsCoverage) faults.addAll(((FaultsCoverage) other).faults);
 	}
 
 	@Override
 	public CoverageInformation createEmpty() {
-		return new BugCoverage();
+		return new FaultsCoverage();
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 
-		for(Bug exc : bugs) {
-			sb.append("--- Exception: ").append(exc.getFaultyExecutionException().getClass().getCanonicalName()).append(
-					" -> " + exc.getFaultyExecutionException().getCause().getClass().getCanonicalName() + " ---\n");
+		for(Fault exc : faults) {
+			sb.append("--- Exception: ").append(exc.getFault().getClass().getCanonicalName()).append("\n");
 			for(StackTraceElement ste : exc.getStackTrace())
 				sb.append("  ").append(ste.toString()).append("\n");
 		}
@@ -89,11 +87,11 @@ public class BugCoverage implements CoverageInformation {
 	}
 
 	@Override
-	public BugCoverage clone() {
-		BugCoverage ret = new BugCoverage();
-		for(Bug b : bugs)
-			ret.bugs.add(b);
-		
+	public FaultsCoverage clone() {
+		FaultsCoverage ret = new FaultsCoverage();
+		for(Fault b : faults)
+			ret.faults.add(b);
+
 		return ret;
 	}
 }
