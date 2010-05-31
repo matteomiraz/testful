@@ -451,11 +451,13 @@ public class JUnitTestGenerator extends TestReader {
 
 			if(result.isNull())
 				out.println(spaces + "assertNull(" + varName + ");");
-			else if(varType != null)
-				generateSingleAssertion(spaces, out, result.getObject(), varType, varName);
+			else {
+				if(varType != null)
+					generateSingleAssertion(spaces, out, result.getObject(), varType, varName);
 
-			for (String observer : result.getObservers())
-				generateSingleAssertion(spaces, out, result.getObserver(observer), null, varName + "." + observer + "()");
+				for (String observer : result.getObservers())
+					generateSingleAssertion(spaces, out, result.getObserver(observer), null, varName + "." + observer + "()");
+			}
 		}
 
 		private void generateSingleAssertion(String spaces, PrintWriter out, final Serializable expected, final String varType, final String varName) {
