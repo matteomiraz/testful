@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful;
 
 import java.io.File;
@@ -31,7 +30,6 @@ import java.util.concurrent.Future;
 import junit.framework.TestCase;
 import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
-import testful.coverage.TestSizeInformation;
 import testful.coverage.TrackerDatum;
 import testful.model.Operation;
 import testful.model.ReferenceFactory;
@@ -90,8 +88,6 @@ public abstract class GenericTestCase  extends TestCase {
 
 		boolean err = false;
 		for(CoverageInformation o : origCov) {
-			if(o instanceof TestSizeInformation) continue;
-
 			float origQ = o.getQuality();
 
 			CoverageInformation c = combinedCov.get(o.getKey());
@@ -145,8 +141,7 @@ public abstract class GenericTestCase  extends TestCase {
 		if(covs != null) {
 			msg.append("\nCoverage:\n");
 			for(CoverageInformation cov : covs)
-				if(!(cov instanceof TestSizeInformation))
-					msg.append("  ").append(cov.getKey()).append(" ").append(cov.getQuality()).append("\n");
+				msg.append("  ").append(cov.getKey()).append(" ").append(cov.getQuality()).append("\n");
 			msg.append("---------");
 		}
 

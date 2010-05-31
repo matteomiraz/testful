@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.runner;
 
 import java.io.Serializable;
@@ -62,7 +61,7 @@ public abstract class ExecutionManager<T extends Serializable> {
 
 	/** the number of faults revealed */
 	protected Integer faults;
-	
+
 	/**
 	 * Create a new execution manager.<br/>
 	 * <b>NOTICE:</b> subclasses must have the same constructor (same parameters.
@@ -72,7 +71,7 @@ public abstract class ExecutionManager<T extends Serializable> {
 	public ExecutionManager(byte[] executorSerGz, byte[] trackerDataSerGz, boolean recycleClassloader) throws TestfulException {
 
 		this.recycleClassLoader = recycleClassloader;
-		
+
 		ClassLoader loader = this.getClass().getClassLoader();
 		if(!(loader instanceof TestfulClassLoader)) throw new ClassCastException("FATAL: The execution manager must be loaded using a testful class loader!");
 
@@ -87,11 +86,11 @@ public abstract class ExecutionManager<T extends Serializable> {
 				this.executor = (Executor) deserialize.invoke(null, executorSerGz, true);
 			else
 				this.executor = null;
-			
+
 			if(trackerDataSerGz != null) {
 				// Setup the tracker data
 				TrackerDatum[] data = (TrackerDatum[]) deserialize.invoke(null, trackerDataSerGz, true);
-	
+
 				Class<?> trackerDatum = loader.loadClass("testful.coverage.Tracker");
 				Method setup = trackerDatum.getMethod("setup", TrackerDatum[].class);
 				setup.invoke(null, new Object[] { data });

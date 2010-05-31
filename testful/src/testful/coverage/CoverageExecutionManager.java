@@ -52,9 +52,7 @@ public class CoverageExecutionManager extends ExecutionManager<ElementManager<St
 			return null;
 		}
 
-		ElementManager<String, CoverageInformation> cov = Tracker.getAllCoverage();
-		cov.put(new TestSizeInformation(executionTime, executor.getTestLength()));
-		return cov;
+		return Tracker.getAllCoverage();
 	}
 
 	@Override

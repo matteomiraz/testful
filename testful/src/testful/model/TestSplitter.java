@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.model;
 
 import java.util.ArrayList;
@@ -38,7 +37,6 @@ import java.util.logging.Logger;
 
 import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
-import testful.coverage.TestSizeInformation;
 import testful.coverage.TrackerDatum;
 import testful.model.MethodInformation.Kind;
 import testful.model.MethodInformation.ParameterInformation;
@@ -144,10 +142,10 @@ public class TestSplitter {
 				if(v != 0) return v;
 
 				float c1 = 0;
-				for(CoverageInformation cov : o1.getCoverage()) if(!(cov instanceof TestSizeInformation )) c1 += cov.getQuality();
+				for(CoverageInformation cov : o1.getCoverage()) c1 += cov.getQuality();
 
 				float c2 = 0;
-				for(CoverageInformation cov : o2.getCoverage()) if(!(cov instanceof TestSizeInformation )) c2 += cov.getQuality();
+				for(CoverageInformation cov : o2.getCoverage()) c2 += cov.getQuality();
 
 				if(c1 < c2) return -1;
 				else if(c1 > c2) return 1;

@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.runner;
 
 import java.io.Serializable;
@@ -33,9 +32,7 @@ public interface Executor extends Serializable {
 
 	/**
 	 * Run the test, using the specified class loader.
-	 * @param stopOnBug true if the execution must stop as soon as the first bug
-	 *          is revealed
-	 * 
+	 * @param stopOnBug true if the execution must stop as soon as the first bug is revealed
 	 * @return the number of bug found
 	 * @throws ClassNotFoundException if there is any problem resolving classes
 	 */

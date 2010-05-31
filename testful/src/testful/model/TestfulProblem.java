@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.model;
 
 import java.io.Serializable;
@@ -37,7 +36,6 @@ import jmetal.util.PseudoRandom;
 import testful.TestfulException;
 import testful.coverage.CoverageInformation;
 import testful.coverage.RunnerCaching;
-import testful.coverage.TestSizeInformation;
 import testful.coverage.TrackerDatum;
 import testful.coverage.whiteBox.AnalysisWhiteBox;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
@@ -168,7 +166,7 @@ public class TestfulProblem implements Serializable {
 
 		float covTot = 1;
 		if(infos != null) {
-			int i = config.isLength() ? 1 : 0;
+			int i = 0;
 
 			if(config.isBasicBlock()) {
 				CoverageInformation cov = infos.get(CoverageBasicBlocks.KEY);
@@ -189,11 +187,13 @@ public class TestfulProblem implements Serializable {
 			}
 
 			if(config.isLength()) {
-				TestSizeInformation cov = (TestSizeInformation) infos.get(TestSizeInformation.KEY);
-				if(cov != null) {
-					cov.setOtherCovs(covTot);
-					ret[0] = config.isToMinimize() ? -1.0f * cov.getQuality() : cov.getQuality();
-				}
+				if(ops.size() > 1)
+					ret[i] = 1.0f*covTot*covTot / (float) Math.log(ops.size());
+				else
+					ret[i] = 0;
+
+				if(config.isToMinimize())
+					ret[i] = -1.0f * ret[i];
 			}
 
 			if(coverageWriter != null)

@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.regression;
 
 import java.io.File;
@@ -44,7 +43,6 @@ import testful.IConfigProject;
 import testful.IConfigRunner;
 import testful.TestFul;
 import testful.coverage.CoverageInformation;
-import testful.coverage.TestSizeInformation;
 import testful.model.AssignPrimitive;
 import testful.model.Clazz;
 import testful.model.CreateObject;
@@ -298,8 +296,7 @@ public class JUnitTestGenerator extends TestReader {
 
 			if(test instanceof TestCoverage) {
 				for (CoverageInformation cov : ((TestCoverage)test).getCoverage())
-					if(!(cov instanceof TestSizeInformation))
-						out.println("\t// " + cov.getName() + ": " + cov.getQuality());
+					out.println("\t// " + cov.getName() + ": " + cov.getQuality());
 			}
 			out.println("\tpublic void testFul" + testNumber + "() throws Exception {");
 			out.println();

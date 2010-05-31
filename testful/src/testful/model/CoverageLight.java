@@ -16,11 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.model;
 
 import testful.coverage.CoverageInformation;
-import testful.coverage.TestSizeInformation;
 import testful.utils.ElementManager;
 
 public class CoverageLight implements CoverageInformation {
@@ -34,8 +32,7 @@ public class CoverageLight implements CoverageInformation {
 	public static TestCoverage convert(TestCoverage test) {
 		ElementManager<String, CoverageInformation> coverage = new ElementManager<String, CoverageInformation>();
 		for(CoverageInformation info : test.getCoverage())
-			if(!(info instanceof TestSizeInformation))
-				coverage.put(new CoverageLight(info));
+			coverage.put(new CoverageLight(info));
 
 		return new TestCoverage(test.getCluster(), test.getReferenceFactory(), test.getTest(), coverage);
 	}

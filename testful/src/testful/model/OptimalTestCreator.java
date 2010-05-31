@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.model;
 
 import java.util.Collection;
@@ -25,7 +24,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import testful.coverage.CoverageInformation;
-import testful.coverage.TestSizeInformation;
 import testful.utils.ElementManager;
 
 public class OptimalTestCreator {
@@ -62,9 +60,6 @@ public class OptimalTestCreator {
 
 		// update the combined coverage & check if the test is innovative
 		for(CoverageInformation coverage : test.getCoverage()) {
-
-			// skip the "Test Size": it is not a coverage information
-			if(coverage instanceof TestSizeInformation) continue;
 
 			// get or create the combined coverage
 			CoverageInformation combined = combinedCoverage.get(coverage.getKey());
@@ -120,8 +115,6 @@ public class OptimalTestCreator {
 	 */
 	private boolean performsBetter(TestCoverage test, TestCoverage other) {
 		for (CoverageInformation otherCov : other.getCoverage()) {
-			if(otherCov instanceof TestSizeInformation) continue;
-
 			CoverageInformation thisCov = test.getCoverage().get(otherCov.getKey());
 			if(thisCov == null || !thisCov.contains(otherCov)) return false;
 		}
