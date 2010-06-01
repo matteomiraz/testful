@@ -1,0 +1,13 @@
+syntax: glob
+
+*~
+./.metadata/
+*/bin/
+*/build/
+*/run/
+
+syntax: regexp
+^testful/testCut/instrumented/attributes$
+
+syntax: regexp
+^testful/testCut/genTests$

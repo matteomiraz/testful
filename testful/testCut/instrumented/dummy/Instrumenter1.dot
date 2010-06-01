@@ -1,0 +1,24 @@
+digraph clazz {
+  0 [shape=box,label="dummy.Instrumenter1\nFields:"];
+  0 -> 5;
+  0 -> 1;
+  5 [label="(5) emptyCatch::Start"];
+  5 -> 6;
+  1 [label="(1) <init>::Start"];
+  1 -> 2;
+  6 [label="6"];
+  6 -> 8;
+  2 [label="2"];
+  2 -> 4;
+  8 [label="8\ncall:hashCode\ndefs: d1:1\nuses: d0:1(0)",color=red];
+  8 -> 9;
+  4 [label="4"];
+  4 -> 3;
+  9 [label="9"];
+  9 -> 7;
+  3 [label="<init>::End"];
+  3 -> 0;
+  7 [label="emptyCatch::End"];
+  7 -> 0;
+}
+

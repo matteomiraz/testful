@@ -1,0 +1,9 @@
+package test.model.cluster.test14;
+
+public class Cut {
+	public void m1(I p) {
+		
+	}
+	
+	public I f;
+}
