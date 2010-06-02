@@ -17,4 +17,17 @@
     <ant dir="testful" antfile="build.xml" target="build"/>
   </target>
 
+  <!-- ================================= 
+       target: test
+       description: Run jUnit tests on all projects
+       Note: You must have junit.jar and ant-junit.jar available.
+             We suggest to put both of them in ANT_HOME/lib.
+             (Otherwise you can do not put either in ANT_HOME/lib, 
+              and instead include their locations in your 
+              CLASSPATH environment variable.)
+       ================================= -->
+  <target name="test" description="Test all projects">
+    <ant dir="testful" antfile="build.xml" target="test"/>
+  </target>
+
 </project>

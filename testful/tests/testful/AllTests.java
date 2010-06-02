@@ -16,27 +16,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package testful.model;
+package testful;
 
 import junit.framework.Test;
+import junit.framework.TestResult;
 import junit.framework.TestSuite;
+import junit.textui.TestRunner;
 
-/**
- * Runs all tests within the testful.model package
- * @author matteo
- */
 public class AllTests {
 
 	public static Test suite() {
-		TestSuite suite = new TestSuite(AllTests.class.getName());
+		TestSuite suite = new TestSuite("Test for testful.model");
 
-		//$JUnit-BEGIN$
-		suite.addTestSuite(TestClusterTestCase.class);
-
-		suite.addTestSuite(OptimalTestCase.class);
-		suite.addTestSuite(TestExecutionManagerTestCase.class);
-		//$JUnit-END$
+		suite.addTest(testful.coverage.AllTests.suite());
+		suite.addTest(testful.model.AllTests.suite());
 
 		return suite;
 	}
+
+	public static void main(String[] args) {
+		TestRunner runner = new TestRunner();
+		TestResult result = runner.doRun(suite(), false);
+
+		if (! result.wasSuccessful())
+			System.exit(1);
+	}
+
 }
