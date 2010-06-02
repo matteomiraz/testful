@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="build" name="TestFul">
+
+  <!-- ================================= 
+       target: clean              
+       description: Clean all projects
+       ================================= -->
+  <target name="clean" depends="" description="Clean all projects">
+    <ant dir="testful" antfile="build.xml" target="clean"/>
+  </target>
+
+  <!-- ================================= 
+       target: build
+       description: Build all projects
+       ================================= -->
+  <target name="build" description="Build all projects">
+    <ant dir="testful" antfile="build.xml" target="build"/>
+  </target>
+
+</project>

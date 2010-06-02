@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project default="create_jars" name="TestFul">
+<project default="build" name="TestFul">
 
 	<property name="artefacts" value="build"/>
 	<property name="build" value="bin"/>
@@ -103,9 +103,9 @@
 	</target>
 
 	<!-- ================================= 
-          target: create_jars              
+          target: build              
          ================================= -->
-	<target name="create_jars" depends="create_instrumenter_jar,create_runner_jar,create_testful_jar,create_randomTest_jar" description="Creater executable jars">
+	<target name="build" depends="create_instrumenter_jar,create_runner_jar,create_testful_jar,create_randomTest_jar" description="Creater executable jars">
 	</target>
 
 	<!-- - - - - - - - - - - - - - - - - - 
