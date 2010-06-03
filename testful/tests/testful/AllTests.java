@@ -23,6 +23,10 @@ import junit.framework.TestResult;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
+/**
+ * Runs all valuable tests (excluding long random tests).
+ * @author matteo
+ */
 public class AllTests {
 
 	public static Test suite() {

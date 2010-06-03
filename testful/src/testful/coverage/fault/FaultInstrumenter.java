@@ -1,17 +1,17 @@
 /*
  * TestFul - http://code.google.com/p/testful/
  * Copyright (C) 2010  Matteo Miraz
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -47,7 +47,7 @@ import testful.model.faults.FaultyExecutionException;
  * BugTracker.getTracker().process(__bug_exc__, hasContracts); <br>
  * throw __bug_exc__; <br>
  * </b>
- * 
+ *
  * @author matteo
  */
 public class FaultInstrumenter implements UnifiedInstrumentator {
@@ -83,13 +83,11 @@ public class FaultInstrumenter implements UnifiedInstrumentator {
 	public void preprocess(SootClass sClass) { }
 
 	private Body body;
-	private Local boolTmp;
 
 	@Override
 	public void init(Body oldBody, Body newBody, Chain<Unit> newUnits) {
 		logger.finer(" processing " + newBody.getMethod().getName());
 		body = newBody;
-		boolTmp = null;
 	}
 
 	@Override
@@ -104,10 +102,8 @@ public class FaultInstrumenter implements UnifiedInstrumentator {
 	@Override
 	public void exceptional(Chain<Unit> newUnits, Local exc) {
 
-		if(boolTmp == null) {
-			boolTmp = Jimple.v().newLocal("__fault_tracker__", BooleanType.v());
-			body.getLocals().add(boolTmp);
-		}
+		Local boolTmp = Jimple.v().newLocal("__fault_tracker__", BooleanType.v());
+		body.getLocals().add(boolTmp);
 
 		// Process fault: jump here if the exception is a fault!
 		final Unit processFault = Jimple.v().newNopStmt();

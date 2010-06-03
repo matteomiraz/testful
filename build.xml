@@ -30,4 +30,11 @@
     <ant dir="testful" antfile="build.xml" target="test"/>
   </target>
 
+  <!-- =================================
+       target: Run tests and collect code coverage
+       ================================= -->
+  <target name="test.coverage" description="Run tests and collect code coverage">
+    <ant dir="testful" antfile="build.xml" target="test.coverage"/>
+  </target>
+
 </project>
