@@ -16,35 +16,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package testful;
+package testful.runner;
 
 import junit.framework.Test;
-import junit.framework.TestResult;
 import junit.framework.TestSuite;
-import junit.textui.TestRunner;
 
 /**
- * Runs all valuable tests (excluding long random tests).
+ * Runs all tests within the testful.runner package
  * @author matteo
  */
 public class AllTests {
 
 	public static Test suite() {
-		TestSuite suite = new TestSuite("Test for testful.model");
-
-		suite.addTest(testful.model.AllTests.suite());
-		suite.addTest(testful.runner.AllTests.suite());
-		suite.addTest(testful.coverage.AllTests.suite());
-
+		TestSuite suite = new TestSuite(AllTests.class.getName());
+		//$JUnit-BEGIN$
+		suite.addTestSuite(ClassFinderTestCase.class);
+		//$JUnit-END$
 		return suite;
-	}
-
-	public static void main(String[] args) {
-		TestRunner runner = new TestRunner();
-		TestResult result = runner.doRun(suite(), false);
-
-		if (! result.wasSuccessful())
-			System.exit(1);
 	}
 
 }
