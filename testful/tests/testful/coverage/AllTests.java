@@ -16,13 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package testful.model;
+package testful.coverage;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
 /**
- * Runs all tests within the testful.model package
+ * Runs all tests within the testful.coverage package
  * @author matteo
  */
 public class AllTests {
@@ -31,10 +31,7 @@ public class AllTests {
 		TestSuite suite = new TestSuite(AllTests.class.getName());
 
 		//$JUnit-BEGIN$
-		suite.addTestSuite(TestClusterTestCase.class);
-
-		suite.addTestSuite(OptimalTestCase.class);
-		suite.addTestSuite(TestExecutionManagerTestCase.class);
+		suite.addTestSuite(ControlFlowCoverageTestCase.class);
 		//$JUnit-END$
 
 		return suite;
