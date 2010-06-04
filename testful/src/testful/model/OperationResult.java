@@ -1,21 +1,20 @@
 /*
  * TestFul - http://code.google.com/p/testful/
  * Copyright (C) 2010  Matteo Miraz
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 package testful.model;
 
@@ -35,10 +34,10 @@ import testful.utils.Cloner;
 
 /**
  * Stores the result of an operation (Invoke or CreateObject).
- * 
+ *
  * It records the status of the operation (<b>invalid</b>, <b>faulty</b>,
  * <b>normal</b>, or <b>exceptional</b>).<br>
- * 
+ *
  * Moreover,
  * <ul>
  *   <li>In case of a <b>normal method</b> invocation, stores the value of the result.</li>
@@ -46,9 +45,9 @@ import testful.utils.Cloner;
  *   <li>In case of a <b>normal</b> or an <b>exceptional method</b> invocation, stores the state of the object accepting the invocation.</li>
  *   <li>In case of an <b>exception</b>, stores the thrown exception.</li>
  * </ul>
- * 
+ *
  * The inner class OperationResult.Verifier allows the user to perform regression testing.
- * 
+ *
  * @author matteo
  */
 public class OperationResult extends OperationInformation {

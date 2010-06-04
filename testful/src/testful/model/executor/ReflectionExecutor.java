@@ -1,17 +1,17 @@
 /*
  * TestFul - http://code.google.com/p/testful/
  * Copyright (C) 2010  Matteo Miraz
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -44,16 +44,17 @@ import testful.model.StaticValue;
 import testful.model.Test;
 import testful.model.TestCluster;
 import testful.model.faults.FaultyExecutionException;
-import testful.model.faults.TestfulInternalException;
 import testful.model.faults.PreconditionViolationException;
+import testful.model.faults.TestfulInternalException;
 import testful.runner.Executor;
+import testful.runner.TestfulClassLoader;
 
 /**
  * This class is able to host a pool of objects, and execute operations on them.
  * It should be executed in another virtual machine than the caller, enabling
  * the managements of hard-fault (e.g., if the callee invokes
  * "System.exit(1);").
- * 
+ *
  * @author matteo
  */
 
@@ -98,10 +99,13 @@ public class ReflectionExecutor implements Executor {
 	}
 
 	@Override
-	public int execute(boolean stopOnBug) throws ClassNotFoundException {
+	public int execute(boolean stopOnBug) throws ClassNotFoundException, ClassCastException {
+		final ClassLoader classLoader = this.getClass().getClassLoader();
+		if(!(classLoader instanceof TestfulClassLoader))
+			throw new ClassCastException("The executor must be loaded using the TestfulClassLoader!");
 
 		cluster.clearCache();
-		cluster.setClassLoader(this.getClass().getClassLoader());
+		cluster.setClassLoader((TestfulClassLoader) classLoader);
 
 		Clazz cut = cluster.getCut();
 		cut.toJavaClass();
@@ -176,7 +180,7 @@ public class ReflectionExecutor implements Executor {
 	/**
 	 * Returns the object with the given type at the given position. Returns NULL
 	 * if such element doesn't exist
-	 * 
+	 *
 	 * @param c the type of the desired element
 	 * @param pos the position of the desired element
 	 * @return the object

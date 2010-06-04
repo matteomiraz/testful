@@ -1,21 +1,20 @@
 /*
  * TestFul - http://code.google.com/p/testful/
  * Copyright (C) 2010  Matteo Miraz
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 package testful.model;
 
@@ -24,8 +23,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import testful.utils.JavaUtils;
 import ec.util.MersenneTwisterFast;
@@ -33,13 +32,13 @@ import ec.util.MersenneTwisterFast;
 public class ReferenceFactory implements Serializable {
 
 	private static final long serialVersionUID = -3020356606264676381L;
-	
+
 	private final Map<Clazz, Reference[]> refMap;
 	private transient Reference[] all;
 
 	public ReferenceFactory(TestCluster cluster, int cutSize, int auxSize) {
 		Set<Clazz> refClasses = new HashSet<Clazz>();
-		
+
 		for(Clazz c : cluster.getCluster())
 			refClasses.add(c.getReferenceClazz());
 
@@ -57,7 +56,7 @@ public class ReferenceFactory implements Serializable {
 
 	/**
 	 * Create a reference factory with map.get(clazz) entries for each clazz used as key
-	 * @param map indicates how many references create for each clazz 
+	 * @param map indicates how many references create for each clazz
 	 */
 	public ReferenceFactory(Map<Clazz, Integer> map) {
 		int idGenerator = 0;
@@ -81,9 +80,9 @@ public class ReferenceFactory implements Serializable {
 			int num = 0;
 			for(Reference[] refs : refMap.values())
 				num += refs.length;
-			
+
 			all = new Reference[num];
-			
+
 			int i = 0;
 			for(Reference[] refs : refMap.values())
 				for(Reference ref : refs)
@@ -123,7 +122,7 @@ public class ReferenceFactory implements Serializable {
 	/**
 	 * Converts a reference of another instance of a ReferenceFatory into a
 	 * reference of this instance of the ReferenceFactory
-	 * 
+	 *
 	 * @param ref a reference
 	 * @return a reference of this instance of the ReferenceFactory
 	 */
@@ -135,7 +134,7 @@ public class ReferenceFactory implements Serializable {
 	/**
 	 * Converts an array of references of another instance of a ReferenceFatory
 	 * into an array of references of this instance of the ReferenceFactory
-	 * 
+	 *
 	 * @param array an array of references
 	 * @return an array of references of this instance of the ReferenceFactory
 	 */
@@ -147,14 +146,14 @@ public class ReferenceFactory implements Serializable {
 
 		return ret;
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		
+
 		for(int i = 0; i < all.length; i++)
 			sb.append(" ").append(i).append(": ").append(all[i].toString()).append("\n");
-		
+
 		return sb.toString();
 	}
 }

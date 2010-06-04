@@ -1,21 +1,20 @@
 /*
  * TestFul - http://code.google.com/p/testful/
  * Copyright (C) 2010  Matteo Miraz
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 package testful.model;
 
@@ -29,7 +28,7 @@ import testful.model.MethodInformation.ParameterInformation;
 import testful.model.xml.XmlConstructor;
 import testful.model.xml.XmlParameter;
 
-public class Constructorz implements Serializable {
+public class Constructorz implements Serializable, Comparable<Constructorz> {
 
 	private static final long serialVersionUID = -6107876679557652859L;
 
@@ -47,32 +46,21 @@ public class Constructorz implements Serializable {
 		constructor = c;
 		fullConstructorName = c.toGenericString();
 
-		if(xml == null) {
-			ParameterInformation[] params = new ParameterInformation[c.getParameterTypes().length];
-			for(int i = 0; i < params.length; i++) {
-				params[i] = new ParameterInformation(i);
-				params[i].setCaptured(false);
-				params[i].setCapturedByReturn(false);
-				params[i].setMutated(false);
-			}
-			info = new MethodInformation(Kind.CONSTRUCTOR, false, params);
-		} else {
-			List<XmlParameter> paramsXml = xml.getParameter();
-			ParameterInformation[] paramsInfo = new ParameterInformation[paramsXml.size()];
-			for(int i = 0; i < paramsXml.size(); i++) {
-				XmlParameter p = paramsXml.get(i);
-				paramsInfo[i] = new ParameterInformation(i);
-				paramsInfo[i].setMutated(p.isMutated());
-				paramsInfo[i].setCaptured(p.isCaptured());
-				paramsInfo[i].setCapturedByReturn(p.isExposedByReturn());
-			}
-
-			for(int i = 0; i < paramsXml.size(); i++)
-				for(int exch : paramsXml.get(i).getExchangeState())
-					paramsInfo[i].addCaptureStateOf(paramsInfo[exch]);
-
-			info = new MethodInformation(Kind.CONSTRUCTOR, true, paramsInfo);
+		List<XmlParameter> paramsXml = xml.getParameter();
+		ParameterInformation[] paramsInfo = new ParameterInformation[paramsXml.size()];
+		for(int i = 0; i < paramsXml.size(); i++) {
+			XmlParameter p = paramsXml.get(i);
+			paramsInfo[i] = new ParameterInformation(i);
+			paramsInfo[i].setMutated(p.isMutated());
+			paramsInfo[i].setCaptured(p.isCaptured());
+			paramsInfo[i].setCapturedByReturn(p.isExposedByReturn());
 		}
+
+		for(int i = 0; i < paramsXml.size(); i++)
+			for(int exch : paramsXml.get(i).getExchangeState())
+				paramsInfo[i].addCaptureStateOf(paramsInfo[exch]);
+
+		info = new MethodInformation(Kind.CONSTRUCTOR, true, paramsInfo);
 	}
 
 	public Clazz getClazz() {
@@ -140,5 +128,24 @@ public class Constructorz implements Serializable {
 
 		Constructorz other = (Constructorz) obj;
 		return clazz.equals(other.clazz) && Arrays.equals(params, other.params);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Comparable#compareTo(java.lang.Object)
+	 */
+	@Override
+	public int compareTo(Constructorz o) {
+		int i1 = 0, i2 = 0;
+		while(i1 < params.length & i2 < o.params.length) {
+			Clazz p1 = params[i1++];
+			Clazz p2 = o.params[i2++];
+
+			final int compare = p1.compareTo(p2);
+			if(compare != 0) return compare;
+		}
+
+		if(i1 >= params.length) return -1;
+		if(i2 >= o.params.length) return  1;
+		return 0;
 	}
 }

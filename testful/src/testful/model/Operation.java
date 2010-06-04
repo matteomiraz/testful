@@ -1,21 +1,20 @@
 /*
  * TestFul - http://code.google.com/p/testful/
  * Copyright (C) 2010  Matteo Miraz
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 package testful.model;
 
@@ -31,7 +30,6 @@ import java.util.logging.Logger;
 import jmetal.base.Variable;
 import testful.utils.ElementManager;
 import ec.util.MersenneTwisterFast;
-
 public abstract class Operation implements Serializable, Cloneable, Variable {
 
 	private static final long serialVersionUID = -4200667624940186523L;
@@ -185,7 +183,8 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 				} else op = Invoke.generate(c, cluster, refFactory, random);
 				if(op != null) return op;
 			} catch(Throwable e) {
-				Logger.getLogger("testful.model").log(Level.WARNING, "Cannot create a random element: " + e.getMessage(), e);
+				e.printStackTrace();
+				Logger.getLogger("testful.model").log(Level.WARNING, "Cannot create a random element: " + e, e);
 			}
 		}
 	}
@@ -199,7 +198,7 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 
 	/**
 	 * Adapts the operation on cluster and refFactory
-	 * 
+	 *
 	 * @return the new operation
 	 */
 	public abstract Operation adapt(TestCluster cluster, ReferenceFactory refFactory);

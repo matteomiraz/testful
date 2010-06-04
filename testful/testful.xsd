@@ -1,22 +1,28 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<xs:schema version="1.0" targetNamespace="http://testful.sourceforge.net/schema/1.1/testful.xsd" xmlns:tns="http://testful.sourceforge.net/schema/1.1/testful.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:schema version="1.0" targetNamespace="http://testful.sourceforge.net/schema/1.2/testful.xsd" xmlns:tns="http://testful.sourceforge.net/schema/1.2/testful.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
   <xs:element name="class" type="tns:class"/>
 
   <xs:complexType name="class">
     <xs:sequence>
-      <xs:element name="aux" type="tns:aux" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="cluster" nillable="true" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="class" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="instrument" nillable="true" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="class" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element name="constructor" type="tns:constructor" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element name="method" type="tns:method" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element name="extra" type="tns:extra" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
-    <xs:attribute name="instrument" type="xs:boolean" use="required"/>
-    <xs:attribute name="name" type="xs:string" use="required"/>
-  </xs:complexType>
-
-  <xs:complexType name="aux">
-    <xs:sequence/>
-    <xs:attribute name="name" type="xs:string" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="constructor">

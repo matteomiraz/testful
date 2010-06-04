@@ -1,17 +1,17 @@
 /*
  * TestFul - http://code.google.com/p/testful/
  * Copyright (C) 2010  Matteo Miraz
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -56,13 +56,13 @@ public class TestFul {
 			System.err.println(e.getMessage());
 
 			System.err.println();
-			System.err.println("Usage: java " + launcher.getCanonicalName() + " [options...] arguments...");
+			System.err.println("Usage: java " + launcher.getName() + " [options...] arguments...");
 			parser.setUsageWidth(120);
 			parser.printUsage(System.err);
 			System.err.println();
 
 			// print option sample. This is useful some time
-			System.err.println("   Example: java " + launcher.getCanonicalName() + parser.printExample(org.kohsuke.args4j.ExampleMode.REQUIRED));
+			System.err.println("   Example: java " + launcher.getName() + parser.printExample(org.kohsuke.args4j.ExampleMode.REQUIRED));
 
 			System.exit(1);
 		}

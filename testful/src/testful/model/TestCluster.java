@@ -1,21 +1,20 @@
 /*
  * TestFul - http://code.google.com/p/testful/
  * Copyright (C) 2010  Matteo Miraz
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 package testful.model;
 
@@ -35,13 +34,13 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.xml.bind.JAXBException;
-
 import testful.IConfigCut;
 import testful.TestfulException;
-import testful.model.xml.Parser;
-import testful.model.xml.XmlAux;
 import testful.model.xml.XmlClass;
+import testful.model.xml.XmlConstructor;
+import testful.model.xml.XmlMethod;
+import testful.runner.TestfulClassLoader;
+import testful.utils.ClassComparator;
 
 public class TestCluster implements Serializable {
 
@@ -131,11 +130,11 @@ public class TestCluster implements Serializable {
 	private final Clazz[] all;
 
 	private transient ClassRegistry registry;
-	private transient ClassLoader classLoader;
+	private transient TestfulClassLoader classLoader;
 
 	private transient Map<String, XmlClass> xml;
 
-	public TestCluster(ClassLoader classLoader, IConfigCut config) throws ClassNotFoundException {
+	public TestCluster(TestfulClassLoader classLoader, IConfigCut config) throws ClassNotFoundException {
 		Set<Clazz> clusterBuilder = new HashSet<Clazz>();
 		Set<Clazz> toDo = new HashSet<Clazz>();
 		registry = new ClassRegistry();
@@ -160,12 +159,10 @@ public class TestCluster implements Serializable {
 				addClazz(toDo, clazz, config);
 			}
 
-
 			XmlClass xmlClass = xml.get(clazz.getClassName());
-			if(xmlClass != null && xmlClass.getAux() != null) {
-				for(XmlAux aux : xmlClass.getAux())
-					if(aux.getName() != null)
-						toDo.add(getRegistry().getClazz(this.classLoader.loadClass(aux.getName())));
+			if(xmlClass != null) {
+				for(String aux : xmlClass.getCluster())
+					toDo.add(getRegistry().getClazz(this.classLoader.loadClass(aux)));
 			}
 		}
 
@@ -176,7 +173,7 @@ public class TestCluster implements Serializable {
 
 		try {
 			for(Clazz c : cluster)
-				c.setup(xml.get(c.getClassName()));
+				c.calculateMethods(xml.get(c.getClassName()));
 
 			// for each known class
 			for(Clazz c : all)
@@ -185,9 +182,22 @@ public class TestCluster implements Serializable {
 			calculateConstants();
 
 			calculateSubClasses();
+
 		} catch(ClassNotFoundException e) {
 			// if happens, it is really weird
 			logger.log(Level.WARNING, "Cannot find a class: " + e.getMessage(), e);
+		}
+
+		if(logger.isLoggable(Level.FINER)) {
+			StringBuilder sb = new StringBuilder("Test Cluster:");
+
+			for (Clazz c : cluster) {
+				sb.append("\nclass " + c.getClassName());
+				for (Constructorz cns : c.getConstructors()) sb.append("\n * " + cns);
+				for (Methodz m : c.getMethods()) sb.append("\n * " + m);
+			}
+
+			logger.finer(sb.toString());
 		}
 	}
 
@@ -197,14 +207,11 @@ public class TestCluster implements Serializable {
 		Class<?> javaClass = clazz.toJavaClass();
 
 		if(xml == null) xml = new HashMap<String, XmlClass>();
-
-		if(!xml.containsKey(clazz.getClassName())) {
-			try {
-				XmlClass xmlClass = Parser.singleton.parse(config, clazz.getClassName());
-				xml.put(clazz.getClassName(), xmlClass);
-			} catch(JAXBException e) {
-				logger.log(Level.WARNING, "Cannot parse XML descriptor of class " + clazz.getClassName() + ": " + e.getMessage());
-			}
+		XmlClass xmlClass = xml.get(clazz.getClassName());
+		if(xmlClass == null) {
+			xmlClass = XmlClass.get(config, javaClass);
+			if(xmlClass == null) return; // if null, ignore it!
+			xml.put(clazz.getClassName(), xmlClass);
 		}
 
 		// Consider public fields
@@ -213,23 +220,23 @@ public class TestCluster implements Serializable {
 				todo.add(getRegistry().getClazz(f.getType()));
 
 		// Consider constructors
-		for(Constructor<?> cns : javaClass.getConstructors())
-			if(Modifier.isPublic(cns.getModifiers()))
+		for(Constructor<?> cns : javaClass.getConstructors()) {
+			XmlConstructor xmlCns = xmlClass.getConstructor(cns);
+			if(xmlCns != null && !xmlCns.isSkip())
 				for(Class<?> param : cns.getParameterTypes())
 					todo.add(getRegistry().getClazz(param));
+		}
 
 		// Consider methods
-		for(Method meth : javaClass.getMethods())
-			if(!Methodz.toSkip(meth)) {
-
-				// add the return type to the test cluster
-				if(meth.getReturnType() != Void.TYPE)
-					todo.add(getRegistry().getClazz(meth.getReturnType()));
+		for(Method meth : javaClass.getMethods()) {
+			XmlMethod xmlMeth = xmlClass.getMethod(meth);
+			if(xmlMeth != null && !xmlMeth.isSkip()) {
 
 				// add input parameters to the test cluster
 				for(Class<?> param : meth.getParameterTypes())
 					todo.add(getRegistry().getClazz(param));
 			}
+		}
 	}
 
 	/**
@@ -311,19 +318,17 @@ public class TestCluster implements Serializable {
 	public Collection<String> getClassesToInstrument() {
 		Collection<String> ret = new TreeSet<String>();
 
-		for(Clazz c : all) {
-			XmlClass xmlClazz = xml.get(c.getClassName());
-			if(xmlClazz != null && xmlClazz.isInstrument()) ret.add(c.getClassName());
-		}
+		ret.add(cut.getClassName());
+		ret.addAll(xml.get(cut.getClassName()).getInstrument());
 
 		return ret;
 	}
 
 	/**
-	 * When the testCluster is deserialized, use this method to set the
+	 * When the testCluster is de-serialized, use this method to set the
 	 * classLoader
 	 */
-	public void setClassLoader(ClassLoader classLoader) throws ClassNotFoundException {
+	public void setClassLoader(TestfulClassLoader classLoader) throws ClassNotFoundException {
 		if(this.classLoader == classLoader) return;
 
 		clearCache();
@@ -446,7 +451,7 @@ public class TestCluster implements Serializable {
 				for(Clazz d : fieldClazz.getAssignableTo()) {
 					Set<StaticValue> fields = fieldMap.get(d);
 					if(fields == null) {
-						fields = new HashSet<StaticValue>();
+						fields = new TreeSet<StaticValue>();
 						fieldMap.put(d, fields);
 					}
 					fields.add(new StaticValue(this, field));
@@ -467,7 +472,7 @@ public class TestCluster implements Serializable {
 			Class<?> c = cz.toJavaClass();
 
 			// all cz's parents
-			Set<Class<?>> parents = new HashSet<Class<?>>();
+			Set<Class<?>> parents = new TreeSet<Class<?>>(ClassComparator.singleton);
 			c = c.getSuperclass();
 			while(c != null) {
 				parents.add(c);
@@ -482,7 +487,7 @@ public class TestCluster implements Serializable {
 				if(contains(pz)) {
 					Set<Clazz> sons = sonMap.get(pz);
 					if(sons == null) {
-						sons = new HashSet<Clazz>();
+						sons = new TreeSet<Clazz>();
 						sonMap.put(pz, sons);
 					}
 					sons.add(cz);
@@ -527,7 +532,7 @@ public class TestCluster implements Serializable {
 	/**
 	 * Adapts a clazz belonging to another test cluster to a clazz belonging to
 	 * this test cluster
-	 * 
+	 *
 	 * @param clazz the clazz
 	 * @return a class belonging to this test cluster
 	 */
@@ -542,7 +547,7 @@ public class TestCluster implements Serializable {
 	/**
 	 * Adapts a method belonging to another test cluster to a method belonging to
 	 * this test cluster
-	 * 
+	 *
 	 * @param method the method
 	 * @return a method belonging to this test cluster
 	 */
@@ -562,7 +567,7 @@ public class TestCluster implements Serializable {
 	/**
 	 * Adapts a constructor belonging to another test cluster to a constructor
 	 * belonging to this test cluster
-	 * 
+	 *
 	 * @param cns the constructor
 	 * @return a constructor belonging to this test cluster
 	 */
@@ -582,7 +587,7 @@ public class TestCluster implements Serializable {
 	/**
 	 * Adapts a constant belonging to another test cluster to a constant belonging
 	 * to this test cluster
-	 * 
+	 *
 	 * @param sv the constant
 	 * @return a constant belonging to this test cluster
 	 */

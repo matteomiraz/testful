@@ -149,7 +149,7 @@
           target: really_compile
          - - - - - - - - - - - - - - - - - -->
     <target name="really_compile">
-		<javac srcdir="${source.classes}" destdir="${build.classes}" optimize="true" debug="false" source="6" target="6" >
+		<javac srcdir="${source.classes}" destdir="${build.classes}" optimize="true" debug="true" source="6" target="6" >
 			<classpath>
 				<fileset file="lib/*.jar"/>
 			</classpath>
