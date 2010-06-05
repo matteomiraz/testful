@@ -16,12 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.runner;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -83,11 +81,6 @@ public class ClassFinderCaching implements ClassFinder {
 			logger.log(Level.WARNING, "(" + key + ") cannot retrieve class " + name, e);
 			throw new ClassNotFoundException("Cannot retrieve the class " + name, e);
 		}
-	}
-
-	@Override
-	public List<String> getInnerClasses(String fullClassName) throws ClassNotFoundException, RemoteException {
-		return finder.getInnerClasses(fullClassName);
 	}
 
 	@Override

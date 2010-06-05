@@ -20,13 +20,10 @@ package testful.runner;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -125,44 +122,5 @@ public class ClassFinderImpl implements ClassFinder {
 		}
 
 		throw new FileNotFoundException("cannot find class " + name);
-	}
-
-	@Override
-	public List<String> getInnerClasses(final String fullClassName) throws ClassNotFoundException {
-
-		try {
-			final File classFile = searchClassFile(fullClassName);
-
-			/** the package name (complete) */
-			final String _package;
-			/** the class name */
-			final String className;
-			final int lastDot = fullClassName.lastIndexOf('.');
-			if(lastDot < 0) {
-				_package = null;
-				className = fullClassName;
-			} else {
-				_package = fullClassName.substring(0, lastDot);
-				className = fullClassName.substring(_package.length()+1);
-			}
-
-			final String prefix = className + "$";
-			String[] files = classFile.getParentFile().list(new FilenameFilter() {
-				@Override
-				public boolean accept(File dir, String name) {
-					return name.startsWith(prefix) && name.endsWith(".class");
-				}
-			});
-
-			List<String> ret = new ArrayList<String>();
-			for (String innerClass : files) {
-				ret.add((_package == null ? "" : _package + ".")
-						+ innerClass.substring(0, innerClass.length() - 6));
-			}
-			return ret;
-
-		} catch (FileNotFoundException e) {
-			throw new ClassNotFoundException("Cannot load the class " + fullClassName, e);
-		}
 	}
 }

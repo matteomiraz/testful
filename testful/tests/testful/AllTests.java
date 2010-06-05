@@ -33,7 +33,6 @@ public class AllTests {
 		TestSuite suite = new TestSuite("Test for testful.model");
 
 		suite.addTest(testful.model.AllTests.suite());
-		suite.addTest(testful.runner.AllTests.suite());
 		suite.addTest(testful.coverage.AllTests.suite());
 
 		return suite;

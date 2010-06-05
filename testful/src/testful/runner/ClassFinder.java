@@ -20,7 +20,6 @@ package testful.runner;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.List;
 
 /**
  * Allows one to retrieve the bytecode of a class.
@@ -32,11 +31,4 @@ public interface ClassFinder extends Remote {
 	public String getKey() throws RemoteException;
 
 	public byte[] getClass(String name) throws ClassNotFoundException, RemoteException;
-
-	/**
-	 * Returns the list of inner (nested) classes in a given class.
-	 * @param fullClassName the name of the class (using the File convention: full.package.Name$InnerClass)
-	 * @return the list of the name of the inner classes
-	 */
-	public List<String> getInnerClasses(final String fullClassName) throws ClassNotFoundException, RemoteException;
 }

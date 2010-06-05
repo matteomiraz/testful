@@ -16,12 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.runner;
 
 import java.rmi.RemoteException;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import testful.utils.ElementWithKey;
@@ -68,7 +66,6 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 			if(name.equals(forbid)) return false;
 
 		return true;
-
 	}
 
 	private static long idGenerator = 0;
@@ -115,21 +112,6 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 			throw new ClassNotFoundException("Cannot retrieve the class " + name, e);
 		}
 	}
-
-	/**
-	 * Returns the list of inner (nested) classes in a given class.
-	 * @param fullClassName the name of the class (using the File convention: full.package.Name$InnerClass)
-	 * @return the list of the name of the inner classes
-	 */
-	public List<String> getInnerClasses(final String fullClassName) throws ClassNotFoundException {
-		try {
-			return finder.getInnerClasses(fullClassName);
-		} catch(RemoteException e) {
-			throw new ClassNotFoundException("Cannot retrieve the class " + fullClassName, e);
-		}
-	}
-
-
 
 	public boolean isWarmedUp() {
 		return isWarmedUp;
