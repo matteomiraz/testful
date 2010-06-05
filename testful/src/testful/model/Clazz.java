@@ -179,7 +179,7 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 	}
 
 	void calculateAssignableTo() throws ClassNotFoundException {
-		Set<Clazz> destinoBuilder = new HashSet<Clazz>();
+		Set<Clazz> destinoBuilder = new TreeSet<Clazz>();
 
 		/** store all interfaces to process which the class implements */
 		Set<Class<?>> todo = new HashSet<Class<?>>();

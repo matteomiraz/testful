@@ -20,6 +20,7 @@ package testful.model;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 public final class PrimitiveClazz extends Clazz {
@@ -281,7 +282,7 @@ public final class PrimitiveClazz extends Clazz {
 
 	@Override
 	void calculateAssignableTo() throws ClassNotFoundException {
-		Set<Clazz> builder = new HashSet<Clazz>();
+		Set<Clazz> builder = new TreeSet<Clazz>();
 
 		// process primitive types (equivalent primitive types are stored in assignableTo)
 		for(Clazz clazz : assignableTo)
@@ -315,6 +316,12 @@ public final class PrimitiveClazz extends Clazz {
 		assignableTo = builder.toArray(new Clazz[builder.size()]);
 	}
 
+	/**
+	 * Analyze the set of classes, and make sure that each primitive type
+	 * is present in its class version (e.g., java.lang.Boolean) and not in
+	 * its primitive version (e.g., boolean).
+	 * @param set the set of classes to analze
+	 */
 	public static void refine(Set<Clazz> set) {
 		Set<PrimitiveClazz> toRemove = new HashSet<PrimitiveClazz>();
 		Set<PrimitiveClazz> toAdd = new HashSet<PrimitiveClazz>();

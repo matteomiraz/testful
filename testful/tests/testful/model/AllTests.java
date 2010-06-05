@@ -32,6 +32,7 @@ public class AllTests {
 
 		//$JUnit-BEGIN$
 		suite.addTestSuite(TestClusterTestCase.class);
+		suite.addTestSuite(RepeatableTestCase.class);
 
 		suite.addTestSuite(OptimalTestCase.class);
 		suite.addTestSuite(TestExecutionManagerTestCase.class);

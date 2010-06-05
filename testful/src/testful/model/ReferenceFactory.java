@@ -21,10 +21,10 @@ package testful.model;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeSet;
 
 import testful.utils.JavaUtils;
 import ec.util.MersenneTwisterFast;
@@ -37,7 +37,7 @@ public class ReferenceFactory implements Serializable {
 	private transient Reference[] all;
 
 	public ReferenceFactory(TestCluster cluster, int cutSize, int auxSize) {
-		Set<Clazz> refClasses = new HashSet<Clazz>();
+		Set<Clazz> refClasses = new TreeSet<Clazz>();
 
 		for(Clazz c : cluster.getCluster())
 			refClasses.add(c.getReferenceClazz());
@@ -81,12 +81,13 @@ public class ReferenceFactory implements Serializable {
 			for(Reference[] refs : refMap.values())
 				num += refs.length;
 
-			all = new Reference[num];
-
 			int i = 0;
+			all = new Reference[num];
 			for(Reference[] refs : refMap.values())
 				for(Reference ref : refs)
 					all[i++] = ref;
+
+			Arrays.sort(all);
 		}
 
 		return all;
@@ -151,6 +152,7 @@ public class ReferenceFactory implements Serializable {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 
+		final Reference[] all = getReferences();
 		for(int i = 0; i < all.length; i++)
 			sb.append(" ").append(i).append(": ").append(all[i].toString()).append("\n");
 

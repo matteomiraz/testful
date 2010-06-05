@@ -20,7 +20,7 @@ package testful.model;
 
 import java.io.Serializable;
 
-public class Reference implements Serializable {
+public class Reference implements Serializable, Comparable<Reference> {
 
 	private static final long serialVersionUID = 2679593062737380911L;
 
@@ -75,5 +75,13 @@ public class Reference implements Serializable {
 
 		Reference other = (Reference) obj;
 		return id == other.id && pos == other.pos && clazz.equals(other.clazz);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Comparable#compareTo(java.lang.Object)
+	 */
+	@Override
+	public int compareTo(Reference o) {
+		return id - o.id;
 	}
 }

@@ -135,7 +135,7 @@ public class TestCluster implements Serializable {
 	private transient Map<String, XmlClass> xml;
 
 	public TestCluster(TestfulClassLoader classLoader, IConfigCut config) throws ClassNotFoundException {
-		Set<Clazz> clusterBuilder = new HashSet<Clazz>();
+		Set<Clazz> clusterBuilder = new TreeSet<Clazz>();
 		Set<Clazz> toDo = new HashSet<Clazz>();
 		registry = new ClassRegistry();
 		this.classLoader = classLoader;
