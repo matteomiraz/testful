@@ -45,7 +45,6 @@ import testful.runner.Context;
 import testful.runner.RunnerPool;
 import testful.runner.TestfulClassLoader;
 import testful.utils.ElementManager;
-import testful.utils.Utils;
 
 /**
  * Describe the problem being addressed.
@@ -76,7 +75,7 @@ public class TestfulProblem implements Serializable {
 			cluster.clearCache();
 
 			whiteAnalysis = AnalysisWhiteBox.read(config.getDirInstrumented(), config.getCut());
-			data = Utils.readData(whiteAnalysis);
+			data = new TrackerDatum[0];//TODO: Utils.readData(whiteAnalysis);
 
 			refFactory = new ReferenceFactory(cluster, config.getNumVarCut(), config.getNumVar());
 		} catch (RemoteException e) {

@@ -39,7 +39,6 @@ import testful.IUpdate.Callback;
 import testful.TestFul;
 import testful.TestfulException;
 import testful.coverage.TrackerDatum;
-import testful.coverage.whiteBox.AnalysisWhiteBox;
 import testful.model.Operation;
 import testful.model.Test;
 import testful.model.TestCoverage;
@@ -50,7 +49,6 @@ import testful.random.RandomTestSplit;
 import testful.regression.JUnitTestGenerator;
 import testful.regression.TestSuiteReducer;
 import testful.runner.RunnerPool;
-import testful.utils.Utils;
 
 /**
  * Main TestFul class.
@@ -85,9 +83,9 @@ public class Launcher {
 	public static void run(IConfigEvolutionary config, Callback ... callBacks) throws TestfulException {
 		RunnerPool.getRunnerPool().config(config);
 
-		if(config.getLog() != null && config.getLogLevel().getLoggingLevel().intValue() > Level.FINE.intValue()) {
+		if(config.getLog() != null && logger.isLoggable(Level.FINE)) {
 			try {
-				final String logFile = config.getLog().getAbsolutePath() + File.separator + "NSGAII_main.log";
+				final String logFile = new File(config.getLog(),  "NSGAII.log").getAbsolutePath();
 				jmetal.base.Configuration.logger_.addHandler(new FileHandler(logFile));
 
 				logger.info("Logging NSGAII to " + logFile);
@@ -194,8 +192,7 @@ public class Launcher {
 
 		logger.info("Generating smart population");
 
-		AnalysisWhiteBox whiteAnalysis = AnalysisWhiteBox.read(config.getDirInstrumented(), config.getCut());
-		TrackerDatum[] data = Utils.readData(whiteAnalysis);
+		TrackerDatum[] data = new TrackerDatum[] { };
 
 		RandomTest rt = new RandomTestSplit(config.isCache(), null, testfulProblem.getFinder() , testfulProblem.getCluster(), testfulProblem.getReferenceFactory(), data);
 

@@ -116,6 +116,14 @@ public class XmlParameter implements Comparable<XmlParameter> {
 		return type.compareTo(o.type);
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return type;
+	}
+
 	public static XmlParameter create(Class<?> param, final Class<?> returnType) {
 		XmlParameter xmlParam = testful.model.xml.ObjectFactory.factory.createParameter();
 

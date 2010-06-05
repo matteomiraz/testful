@@ -55,7 +55,8 @@ public class Methodz implements Serializable, Comparable<Methodz> {
 		fullMethodName = m.toGenericString();
 		params = cluster.getRegistry().convert(m.getParameterTypes());
 
-		if(m.getReturnType() ==  Void.TYPE)
+		// ISSUE #1: if you need array support, vote here: http://code.google.com/p/testful/issues/detail?id=1
+		if(m.getReturnType() ==  Void.TYPE || m.getReturnType().isArray())
 			returnType = null;
 		else
 			returnType = cluster.getRegistry().getClazz(m.getReturnType());

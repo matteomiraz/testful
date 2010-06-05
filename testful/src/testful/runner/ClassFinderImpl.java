@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.runner;
 
 import java.io.File;
@@ -120,7 +119,6 @@ public class ClassFinderImpl implements ClassFinder {
 			}
 		}
 
-		logger.warning("(" + key + ") " + "cannot find class " + name);
 		throw new FileNotFoundException("cannot find class " + name);
 	}
 

@@ -23,6 +23,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -35,6 +36,8 @@ import javax.xml.bind.annotation.XmlType;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(namespace = "http://testful.sourceforge.net/schema/1.2/testful.xsd", name = "method", propOrder = { "parameter", "extra" })
 public class XmlMethod implements Comparable<XmlMethod> {
+
+	private static final Logger logger = Logger.getLogger("testful.model.xml");
 
 	@XmlEnum
 	@XmlType(namespace = "http://testful.sourceforge.net/schema/1.2/testful.xsd")
@@ -185,6 +188,13 @@ public class XmlMethod implements Comparable<XmlMethod> {
 		if(packageName.startsWith("java.") || packageName.startsWith("javax.") || packageName.startsWith("sun."))
 			return null;
 
+		// skip methods with arrays
+		for (Class<?> params : meth.getParameterTypes()) {
+			if(params.isArray()) {
+				logger.info("Skipping " + meth + ": has an array as parameter. If you are interested in testing this method, vote for issue #1: http://code.google.com/p/testful/issues/detail?id=1");
+				return null;
+			}
+		}
 
 		// create the XML description
 		final Class<?> returnType = meth.getReturnType();

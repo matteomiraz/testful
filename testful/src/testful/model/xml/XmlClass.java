@@ -111,8 +111,9 @@ public class XmlClass {
 			final Class<?> returnType = meth.getReturnType();
 			final XmlMethod xmlMeth = xmlClass.getMethod(meth);
 
-			if(xmlMeth != null && !xmlMeth.isSkip() &&
-					returnType != Void.TYPE && !returnType.isPrimitive() && !returnType.isArray()) {
+			if(xmlMeth != null && !xmlMeth.isSkip()
+					&& !returnType.isArray() // ISSUE #1: if you need array support, vote here: http://code.google.com/p/testful/issues/detail?id=1
+					&& returnType != Void.TYPE && !returnType.isPrimitive()) {
 
 				logger.fine("Including " + returnType.getName() + " to the test cluster");
 				xmlClass.getCluster().add(returnType.getName());
@@ -209,7 +210,7 @@ public class XmlClass {
 
 				boolean ok = true;
 				for(int i = 0; i < params.length && ok; i++)
-					if(!params[i].equals(xmlParams.get(i).getType())) ok = false;
+					if(!params[i].getName().equals(xmlParams.get(i).getType())) ok = false;
 				if(ok) return xmlCons;
 			}
 		}
@@ -260,7 +261,7 @@ public class XmlClass {
 
 				boolean ok = true;
 				for (int i = 0; i < params.length && ok; i++)
-					if (!params[i].equals(xmlParams.get(i).getType()))
+					if (!params[i].getName().equals(xmlParams.get(i).getType()))
 						ok = false;
 				if (ok)
 					return xmlMeth;

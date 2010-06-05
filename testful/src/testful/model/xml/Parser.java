@@ -21,6 +21,8 @@ package testful.model.xml;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -106,7 +108,7 @@ public class Parser {
 			Class<?> clazz = loader.loadClass(config.getCut());
 			XmlClass xmlClass = XmlClass.create(clazz);
 
-			//TODO: calculate toInstrument by analyzing call dependencies on the test cluster
+			xmlClass.getInstrument().addAll(getProjectClasses(loader, config));
 
 			singleton.encode(config.getCut(), xmlClass, config);
 		} catch(ClassNotFoundException e) {
@@ -115,6 +117,46 @@ public class Parser {
 		}
 
 		System.exit(0);
+	}
+
+	/**
+	 * Builds the list of classes in the current project
+	 * @param config the configuration of the current project
+	 * @return the collection with all the names of the classes in the current project
+	 */
+	private static Collection<String> getProjectClasses(ClassLoader loader, IConfigProject config) {
+		Collection<String> ret = new TreeSet<String>();
+
+		getProjectClasses(loader, ret, config.getDirCompiled(), config.getDirCompiled().getAbsolutePath());
+
+		return ret;
+	}
+
+	/**
+	 * Recursive method to get the list of classes in the current project
+	 * @param ret the list of classes being built
+	 * @param dir the directory to analyze
+	 * @param base the base directory
+	 */
+	private static void getProjectClasses(ClassLoader loader, Collection<String> ret, File dir, String base) {
+		for (File f : dir.listFiles()) {
+			if(f.isDirectory()) getProjectClasses(loader, ret, f, base);
+			else if(f.isFile() && f.getName().endsWith(".class")) {
+				final String fullName = f.getAbsolutePath();
+				final String className = fullName.substring(base.length()+1, fullName.length() - 6).replace(File.separatorChar, '.');
+
+				try {
+					Class<?> c = loader.loadClass(className);
+
+					if(!c.isInterface()) {
+						ret.add(className);
+					}
+
+				} catch (Throwable e) {
+					logger.warning("Cannot load class " + className + ": " + e);
+				}
+			}
+		}
 	}
 
 	private static class TestfulValidationEventHandler implements ValidationEventHandler {

@@ -1,21 +1,20 @@
 /*
  * TestFul - http://code.google.com/p/testful/
  * Copyright (C) 2010  Matteo Miraz
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 package testful.regression;
 
@@ -42,7 +41,6 @@ import testful.TestFul;
 import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
-import testful.coverage.whiteBox.AnalysisWhiteBox;
 import testful.model.Operation;
 import testful.model.OptimalTestCreator;
 import testful.model.Test;
@@ -56,11 +54,10 @@ import testful.runner.ClassFinderImpl;
 import testful.runner.Context;
 import testful.runner.RunnerPool;
 import testful.utils.ElementManager;
-import testful.utils.Utils;
 
 /**
  * Given a test suite for a class, tries to reduce it.
- * 
+ *
  * @author matteo
  */
 public class TestSuiteReducer {
@@ -240,8 +237,7 @@ public class TestSuiteReducer {
 			// never happens
 		}
 
-		AnalysisWhiteBox whiteAnalysis = AnalysisWhiteBox.read(config.getDirInstrumented(), config.getCut());
-		TrackerDatum[] data = Utils.readData(whiteAnalysis);
+		TrackerDatum[] data = new TrackerDatum[] { };
 
 		final TestSuiteReducer reducer = new TestSuiteReducer(finder, data, !config.noSimplify);
 		new TestReader() {
