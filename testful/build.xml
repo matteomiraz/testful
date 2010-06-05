@@ -36,9 +36,6 @@
 		<include name="testful/mutation/TestStoppedException*.class"/>
 		<include name="testful/mutation/Utils*.class"/>
 
-		<include name="org/jmlspecs/**/*.class"/>
-		<include name="org/multijava/**/*.class"/>
-
 		<include name="org/apache/commons/jexl/**"/>
 		<include name="org/apache/commons/logging/**/*"/>
 
@@ -83,13 +80,6 @@
 
 		<include name="jmetal/base/Variable.*"/>
 		<include name="ec/util/MersenneTwister*.class"/>
-
-		<include name="org/jmlspecs/jmlexec/**/*.clazz"/>
-		<include name="org/jmlspecs/jmlrac/**/*.clazz"/>
-		<include name="org/jmlspecs/jmlrac/runtime/**/*.class"/>
-		<include name="org/jmlspecs/models/**/*.clazz"/>
-		<include name="org/jmlspecs/models/**/*.clazz"/>
-		<include name="org/jmlspecs/util/**/*.clazz"/>
 
 		<include name="org/apache/commons/jexl/**/*"/>
 		<include name="org/apache/commons/logging/**/*"/>
@@ -196,11 +186,9 @@
 				<include name="testful/IConfigCut*.class"/>
 				<include name="testful/ConfigCut.class"/>
 
-
 				<include name="org/apache/commons/jexl/**/*.class"/>
 				<include name="org/apache/commons/logging/**/*.class"/>
 				<include name="org/jdom/**/*.class"/>
-				<include name="org/jmlspecs/jmlrac/runtime/**/*.class"/>
 				<include name="org/kohsuke/args4j/**/*"/>
 				<patternset refid="soot"/>
 
@@ -340,22 +328,38 @@
           target: Compile testCut
           description: compile classes used by tests as CUT (in testCut)
          - - - - - - - - - - - - - - - - - -->
-    <target name="test.prepare.cut" depends="create_instrumenter_jar" >
+    <target name="test.cut.compile" depends="create_instrumenter_jar" >
     	<mkdir dir="${testCut.bin}" />
 		<javac srcdir="${testCut.source}" destdir="${testCut.bin}" optimize="false" debug="true" source="1.4" target="1.4" />
-
-    	<delete dir="${base}/testCut/instrumented" />
-    	<java jar="${artifacts}/instrumenter.jar" fork="true" args="-dir ${testCut} -cut dummy.Simple"/>
-    	<java jar="${artifacts}/instrumenter.jar" fork="true" args="-dir ${testCut} -cut dummy.StateMachine"/>
-    	<java jar="${artifacts}/instrumenter.jar" fork="true" args="-dir ${testCut} -cut dummy.Instrumenter1"/>
-    	<java jar="${artifacts}/instrumenter.jar" fork="true" args="-dir ${testCut} -cut dummy.WhiteSample"/>
-    	<java jar="${artifacts}/instrumenter.jar" fork="true" args="-dir ${testCut} -cut apache.Fraction"/>
     </target>
+
+	<!-- - - - - - - - - - - - - - - - - -
+          target: Instrument testCut
+          description: Instrument the classes used by tests as CUT (in testCut)
+         - - - - - - - - - - - - - - - - - -->
+    <target name="test.cut.instrument" depends="create_instrumenter_jar, test.cut.compile" description="instrument the tests' cut">
+    	<delete dir="${base}/testCut/instrumented" />
+    	<java jar="${artifacts}/instrumenter.jar" fork="true">
+    		<arg line="-dir ${testCut} -cut dummy.Simple"/>
+    	</java>
+    	<java jar="${artifacts}/instrumenter.jar" fork="true">
+    		<arg line="-dir ${testCut} -cut dummy.StateMachine"/>
+		</java>
+    	<java jar="${artifacts}/instrumenter.jar" fork="true">
+    		<arg line="-dir ${testCut} -cut dummy.Instrumenter1"/>
+		</java>
+    	<java jar="${artifacts}/instrumenter.jar" fork="true">
+    		<arg line="-dir ${testCut} -cut dummy.WhiteSample"/>
+		</java>
+    	<java jar="${artifacts}/instrumenter.jar" fork="true">
+    		<arg line="-dir ${testCut} -cut apache.Fraction"/>
+    	</java>
+	</target>
 
 	<!-- =================================
           target: test
          ================================= -->
-    <target name="test" depends="test.prepare.cut" description="run jUnit tests">
+    <target name="test" depends="test.cut.instrument" description="run jUnit tests">
 		<javac srcdir="${base}/tests" destdir="${build.tests}" classpath="${build.classes}" optimize="false" debug="true" />
 
 		<junit printsummary="on" dir="${base}" fork="true">
@@ -434,11 +438,22 @@
     	<mkdir dir="${base}/testCut/bin" />
     	<delete dir="${base}/testCut/instrumented" />
 		<javac srcdir="${testCut.source}" destdir="${testCut.bin}" optimize="false" debug="true" source="1.4" target="1.4"  />
-		<java classname="testful.coverage.Launcher" args="-dir ${testCut} -cut dummy.Simple" fork="true" classpathref="instrumented.classpath"/>
-		<java classname="testful.coverage.Launcher" args="-dir ${testCut} -cut dummy.StateMachine" fork="true" classpathref="instrumented.classpath"/>
-		<java classname="testful.coverage.Launcher" args="-dir ${testCut} -cut dummy.Instrumenter1" fork="true" classpathref="instrumented.classpath"/>
-		<java classname="testful.coverage.Launcher" args="-dir ${testCut} -cut dummy.WhiteSample" fork="true" classpathref="instrumented.classpath"/>
-		<java classname="testful.coverage.Launcher" args="-dir ${testCut} -cut apache.Fraction" fork="true" classpathref="instrumented.classpath"/>
+
+		<java classname="testful.coverage.Launcher" fork="true" classpathref="instrumented.classpath">
+			<arg line="-dir ${testCut} -cut dummy.Simple"/>
+		</java>
+		<java classname="testful.coverage.Launcher" fork="true" classpathref="instrumented.classpath">
+			<arg line="-dir ${testCut} -cut dummy.StateMachine"/>
+		</java>
+		<java classname="testful.coverage.Launcher" fork="true" classpathref="instrumented.classpath">
+			<arg line="-dir ${testCut} -cut dummy.Instrumenter1"/>
+		</java>
+		<java classname="testful.coverage.Launcher" fork="true" classpathref="instrumented.classpath">
+			<arg line="-dir ${testCut} -cut dummy.WhiteSample"/>
+		</java>
+		<java classname="testful.coverage.Launcher" fork="true" classpathref="instrumented.classpath">
+			<arg line="-dir ${testCut} -cut apache.Fraction"/>
+		</java>
 
 		<!-- run jUnit tests -->
 		<junit printsummary="on" dir="${base}" fork="true" >

@@ -232,7 +232,7 @@ public class TestSuiteReducer {
 
 		ClassFinderCaching finder = null;
 		try {
-			finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
+			finder = new ClassFinderCaching(new ClassFinderImpl(config));
 		} catch (RemoteException e) {
 			// never happens
 		}

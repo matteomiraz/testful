@@ -69,7 +69,7 @@ public class TestCoverageReporter extends TestReader {
 		try {
 
 			exec = RunnerPool.getRunnerPool();
-			finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
+			finder = new ClassFinderCaching(new ClassFinderImpl(config));
 
 		} catch(RemoteException e) {
 			// never happens

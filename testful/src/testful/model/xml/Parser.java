@@ -102,7 +102,7 @@ public class Parser {
 		TestFul.parseCommandLine(config, args, Parser.class, "XML Creator");
 		testful.TestFul.setupLogging(config);
 
-		final TestfulClassLoader loader = new TestfulClassLoader(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
+		final TestfulClassLoader loader = new TestfulClassLoader(new ClassFinderImpl(config));
 
 		try {
 			Class<?> clazz = loader.loadClass(config.getCut());

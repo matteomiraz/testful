@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import soot.Body;
@@ -109,11 +110,11 @@ public class Instrumenter {
 
 	private static final Logger logger = Logger.getLogger("testful.instrumenter");
 
-	private static final boolean preWriter     = false;
+	private static final boolean preWriter     = logger.isLoggable(Level.FINEST);
 	private static final boolean instrumenter  = true;
-	private static final boolean postWriter    = false;
+	private static final boolean postWriter    = logger.isLoggable(Level.FINER);
 	private static final boolean nopEliminator = true;
-	private static final boolean finalWriter   = false;
+	private static final boolean finalWriter   = logger.isLoggable(Level.FINEST);
 
 	public static void prepare(IConfigProject config, Collection<String> toInstrument) {
 		String[] SOOT_CONF = new String[] { "-validate", "--keep-line-number", "--xml-attributes", "-f", "c", "-output-dir", config.getDirInstrumented().getAbsolutePath() };
@@ -128,8 +129,7 @@ public class Instrumenter {
 		String params[] = new String[SOOT_CONF.length + 2 + toInstrument.size()];
 
 		params[0] = "-cp";
-		params[1] = config.getDirContracts().getAbsolutePath()
-		+ File.pathSeparator + config.getDirCompiled().getAbsolutePath()
+		params[1] = config.getDirCompiled().getAbsolutePath()
 		+ File.pathSeparator + System.getProperty("java.class.path")
 		+ File.pathSeparator + System.getProperty("sun.boot.class.path");
 

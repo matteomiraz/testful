@@ -23,6 +23,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.ConfigCut;
+import testful.ConfigProject;
 import testful.IConfigCut;
 import testful.TestFul;
 import testful.coverage.soot.Instrumenter;
@@ -38,6 +39,10 @@ import testful.runner.TestfulClassLoader;
  */
 public class Launcher {
 
+	public static class ConfigInstrumenter extends ConfigProject {
+
+	}
+
 	private static Logger logger = Logger.getLogger("testful.coverage.Instrumenter");
 
 	public static void main(String[] args) {
@@ -51,7 +56,7 @@ public class Launcher {
 		testful.TestFul.setupLogging(config);
 
 		try {
-			ClassFinderCaching finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirContracts(), config.getDirCompiled()));
+			ClassFinderCaching finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirCompiled()));
 			TestfulClassLoader tcl = new TestfulClassLoader(finder);
 			TestCluster tc = new TestCluster(tcl, config);
 

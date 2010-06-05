@@ -230,8 +230,6 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 	}
 
 	static void insertInterfaceWithParents(Set<Class<?>> set, Class<?> i) {
-		if(i.getPackage() != null && i.getPackage().getName().startsWith("org.jmlspecs.")) return;
-
 		if(set.add(i)) // if i is a new interface
 			for(Class<?> ext : i.getInterfaces())
 				insertInterfaceWithParents(set, ext);

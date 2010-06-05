@@ -31,6 +31,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import testful.IConfigProject;
 import testful.utils.ByteReader;
 
 /**
@@ -45,6 +46,10 @@ public class ClassFinderImpl implements ClassFinder {
 
 	private final File[] where;
 	private final String key;
+
+	public ClassFinderImpl(IConfigProject config) {
+		this(config.getDirInstrumented(), config.getDirCompiled());
+	}
 
 	public ClassFinderImpl(File ... where) {
 		this.where = where;

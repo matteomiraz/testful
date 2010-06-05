@@ -68,7 +68,7 @@ public class Launcher {
 		ClassFinder finder;
 		TestCluster tc;
 		try {
-			finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
+			finder = new ClassFinderCaching(new ClassFinderImpl(config));
 			tc = new TestCluster(new TestfulClassLoader(finder), config);
 		} catch (RemoteException e) {
 			// never happens

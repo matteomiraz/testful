@@ -28,7 +28,7 @@ public class ClassFinderTestCase extends TestCase {
 	public void testInnerClasses() throws Exception {
 		ClassFinder finder =
 			new ClassFinderCaching(
-					new ClassFinderImpl(GenericTestCase.config.getDirInstrumented(), GenericTestCase.config.getDirContracts(), GenericTestCase.config.getDirCompiled())
+					new ClassFinderImpl(GenericTestCase.config)
 			);
 		List<String> innerClasses = finder.getInnerClasses("test.instrument.Nested");
 
@@ -58,7 +58,7 @@ public class ClassFinderTestCase extends TestCase {
 	public void testDefaultInnerClasses() throws Exception {
 		ClassFinder finder =
 			new ClassFinderCaching(
-					new ClassFinderImpl(GenericTestCase.config.getDirInstrumented(), GenericTestCase.config.getDirContracts(), GenericTestCase.config.getDirCompiled())
+					new ClassFinderImpl(GenericTestCase.config)
 			);
 		List<String> innerClasses = finder.getInnerClasses("Nested");
 
@@ -88,7 +88,7 @@ public class ClassFinderTestCase extends TestCase {
 	public void testNoInnerClasse() throws Exception {
 		ClassFinder finder =
 			new ClassFinderCaching(
-					new ClassFinderImpl(GenericTestCase.config.getDirInstrumented(), GenericTestCase.config.getDirContracts(), GenericTestCase.config.getDirCompiled())
+					new ClassFinderImpl(GenericTestCase.config)
 			);
 		List<String> innerClasses = finder.getInnerClasses("apache.Fraction");
 

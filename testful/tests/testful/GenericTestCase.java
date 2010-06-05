@@ -188,7 +188,7 @@ public abstract class GenericTestCase  extends TestCase {
 	private static ClassFinder finder = null;
 	protected static ClassFinder getFinder() throws RemoteException {
 		if(finder == null)
-			finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
+			finder = new ClassFinderCaching(new ClassFinderImpl(config));
 
 		return finder;
 	}

@@ -69,7 +69,7 @@ public class TestfulProblem implements Serializable {
 	public TestfulProblem(IConfigGeneration config) throws ClassNotFoundException {
 		try {
 			reload = config.isReload();
-			finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
+			finder = new ClassFinderCaching(new ClassFinderImpl(config));
 			TestfulClassLoader tcl = new TestfulClassLoader(finder);
 			cluster = new TestCluster(tcl, config);
 			cluster.clearCache();

@@ -1,21 +1,20 @@
 /*
  * TestFul - http://code.google.com/p/testful/
  * Copyright (C) 2010  Matteo Miraz
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 package testful;
 
@@ -24,6 +23,15 @@ import java.util.logging.Level;
 
 import org.kohsuke.args4j.Option;
 
+/**
+ * Stores information on the project being tested:
+ * <ul>
+ *   <li>The <b>directory</b> configuration
+ *   </li>
+ * <li>The <b>logging</b> configuration</li>
+ * </ul>
+ * @author matteo
+ */
 public interface IConfigProject {
 
 	/**
@@ -43,12 +51,6 @@ public interface IConfigProject {
 	 * @return the compiled directory
 	 */
 	public File getDirCompiled();
-
-	/**
-	 * Returns the directory containing contract-enabled binaries (e.g. $HOME/workspace/project/jml-compiled/ )
-	 * @return the directory containing contract-enabled binaries
-	 */
-	public File getDirContracts();
 
 	/**
 	 * Returns the directory containing instrumented binaries (e.g. $HOME/workspace/project/instrumented/ )
@@ -129,15 +131,6 @@ public interface IConfigProject {
 		 */
 		@Option(required = false, name = "-dirCompiled", usage = "Specify the directory containing compiled files (default: bin)")
 		public void setDirCompiled(File dirCompiled);
-
-		/**
-		 * Sets the directory containing contract-enabled compiled files.
-		 * It can be both a path relative to the base directory (e.g., "bar" or "../foo/bar")
-		 * or an absolute path (e.g., $HOME/workspace/foo/bar")
-		 * @param dirContracts the directory containing contract-enabled compiled files.
-		 */
-		@Option(required = false, name = "-dirContracts", usage = "Specify the directory with contract-enabled compiled files (default: jml-compiled)")
-		public void setDirContracts(File dirContracts);
 
 		/**
 		 * Sets the directory containing instrumented files.

@@ -156,11 +156,6 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	}
 
 	@Override
-	public File getDirContracts() {
-		return configGenerator.getDirContracts();
-	}
-
-	@Override
 	public int getTime() {
 		return configGenerator.getTime();
 	}
@@ -218,11 +213,6 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	@Override
 	public void setDirGeneratedTests(File dirGeneratedTests) {
 		configGenerator.setDirGeneratedTests(dirGeneratedTests);
-	}
-
-	@Override
-	public void setDirContracts(File dirContracts) {
-		configGenerator.setDirContracts(dirContracts);
 	}
 
 	@Override
