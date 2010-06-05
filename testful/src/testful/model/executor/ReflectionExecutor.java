@@ -110,16 +110,16 @@ public class ReflectionExecutor implements Executor {
 		Clazz cut = cluster.getCut();
 		cut.toJavaClass();
 
-		if(logger.isLoggable(Level.FINEST)) {
+		if(logger.isLoggable(Level.FINER)) {
 			StringBuilder sb = new StringBuilder();
 
-			sb.append("Cluster: \n").append(cluster).append("\n---\n");
+			sb.append("Cluster: \n").append(cluster.toString()).append("\n---\n");
 
 			sb.append("Executing:\n");
 			for(Operation op : test)
 				sb.append(" ").append(op).append("\n");
 
-			logger.finest(sb.toString());
+			logger.finer(sb.toString());
 		}
 
 		repository = new Object[repositoryType.length];

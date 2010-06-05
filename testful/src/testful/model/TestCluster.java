@@ -169,24 +169,18 @@ public class TestCluster implements Serializable {
 		PrimitiveClazz.refine(clusterBuilder);
 
 		cluster = clusterBuilder.toArray(new Clazz[clusterBuilder.size()]);
+
+		for(Clazz c : cluster)
+			c.calculateMethods(xml.get(c.getClassName()));
+
+		// for each known class
 		all = registry.registry.values().toArray(new Clazz[registry.registry.size()]);
+		for(Clazz c : all)
+			c.calculateAssignableTo();
 
-		try {
-			for(Clazz c : cluster)
-				c.calculateMethods(xml.get(c.getClassName()));
+		calculateConstants();
 
-			// for each known class
-			for(Clazz c : all)
-				c.calculateAssignableTo();
-
-			calculateConstants();
-
-			calculateSubClasses();
-
-		} catch(ClassNotFoundException e) {
-			// if happens, it is really weird
-			logger.log(Level.WARNING, "Cannot find a class: " + e.getMessage(), e);
-		}
+		calculateSubClasses();
 
 		if(logger.isLoggable(Level.FINER)) {
 			StringBuilder sb = new StringBuilder("Test Cluster:");
@@ -402,20 +396,17 @@ public class TestCluster implements Serializable {
 		ret.append("Test Cluster: ");
 		for(Clazz c : cluster)
 			ret.append("\n  ").append(c.getClassName());
-		ret.append("\n");
 
-		ret.append("ALL:");
-		for(Clazz c : all)
-			ret.append("\n  ").append(c.getClassName());
-		ret.append("\n");
-
-		ret.append("registry:\n");
-		for(Clazz c : registry.registry.values()) {
-			ret.append(c.getClassName()).append(" -> ");
-			for(Clazz to : c.getAssignableTo())
-				ret.append(to.getClassName()).append(" ");
-
-			ret.append("\n");
+		if (logger.isLoggable(Level.FINEST)) {
+			ret.append("\nALL:");
+			for (Clazz c : all)
+				ret.append("\n  ").append(c.getClassName());
+			ret.append("\nregistry:");
+			for (Clazz c : registry.registry.values()) {
+				ret.append("\n").append(c.getClassName()).append(" -> ");
+				for (Clazz to : c.getAssignableTo())
+					ret.append(to.getClassName()).append(" ");
+			}
 		}
 
 		return ret.toString();

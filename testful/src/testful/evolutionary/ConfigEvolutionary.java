@@ -35,8 +35,7 @@ import testful.TestfulException;
  * Contains the information required to run Testful.
  * @author matteo
  */
-public class ConfigEvolutionary
-implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, IConfigGeneration.Args4j, IConfigCut.Args4j, IConfigProject.Args4j {
+public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, IConfigGeneration.Args4j, IConfigCut.Args4j, IConfigProject.Args4j {
 
 	private final IConfigGeneration.Args4j configGenerator = new ConfigGeneration();
 	private final IConfigRunner.Args4j configRunner = new ConfigRunner();
@@ -62,6 +61,9 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 
 	@Option(required = false, name = "-useCpuTime", usage = "Use CPU time instead of wall-clock time")
 	private boolean useCpuTime;
+
+	@Option(required = false, name =" -seed", usage = "Set the seed of the random number generator")
+	private long seed = System.currentTimeMillis();
 
 	@Override
 	public int getLocalSearchPeriod() {
@@ -160,6 +162,15 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 		return configGenerator.getTime();
 	}
 
+	/**
+	 * Returns the seed to use in the random number generator
+	 * @return the seed to use in the random number generator
+	 */
+	@Override
+	public long getSeed() {
+		return seed;
+	}
+
 	@Override
 	public File getDirInstrumented() {
 		return configGenerator.getDirInstrumented();
@@ -218,6 +229,14 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	@Override
 	public void setTime(int time) {
 		configGenerator.setTime(time);
+	}
+
+	/**
+	 * Set the seed to use in the random number generator
+	 * @param seed the seed to use in the random number generator
+	 */
+	public void setSeed(long seed) {
+		this.seed = seed;
 	}
 
 	@Override

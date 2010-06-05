@@ -31,8 +31,7 @@ import testful.IConfigProject;
 import testful.IConfigRunner;
 import testful.TestfulException;
 
-public class ConfigRandom
-implements IConfigRandom, IConfigRunner.Args4j, IConfigGeneration.Args4j, IConfigCut.Args4j, IConfigProject.Args4j {
+public class ConfigRandom implements IConfigRandom, IConfigRunner.Args4j, IConfigGeneration.Args4j, IConfigCut.Args4j, IConfigProject.Args4j {
 
 	private final IConfigGeneration.Args4j configGenerator = new ConfigGeneration();
 	private final IConfigRunner.Args4j configRunner = new ConfigRunner();
@@ -42,6 +41,9 @@ implements IConfigRandom, IConfigRunner.Args4j, IConfigGeneration.Args4j, IConfi
 
 	@Option(required = false, name = "-type", usage = "Choose the falvor of random testing")
 	private RandomType randomType = RandomType.SIMPLE;
+
+	@Option(required = false, name = "-seed", usage = "Set the seed of the random number generator")
+	private long seed = System.currentTimeMillis();
 
 	/* (non-Javadoc)
 	 * @see testful.random.IConfigRandom#getpGenNewObj()
@@ -65,6 +67,23 @@ implements IConfigRandom, IConfigRunner.Args4j, IConfigGeneration.Args4j, IConfi
 
 	public void setRandomType(RandomType simple) {
 		randomType = simple;
+	}
+
+	/**
+	 * Set the seed to use in the random number generator
+	 * @param seed the seed to use in the random number generator
+	 */
+	public void setSeed(long seed) {
+		this.seed = seed;
+	}
+
+	/**
+	 * Returns the seed to use in the random number generator
+	 * @return the seed to use in the random number generator
+	 */
+	@Override
+	public long getSeed() {
+		return seed;
 	}
 
 	@Override
