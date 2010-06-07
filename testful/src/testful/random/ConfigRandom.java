@@ -1,8 +1,27 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful.random;
 
 import java.io.File;
 import java.util.List;
 
+import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.Option;
 
 import testful.ConfigGeneration;
@@ -13,8 +32,7 @@ import testful.IConfigProject;
 import testful.IConfigRunner;
 import testful.TestfulException;
 
-public class ConfigRandom
-implements IConfigRandom, IConfigRunner.Args4j, IConfigGeneration.Args4j, IConfigCut.Args4j, IConfigProject.Args4j {
+public class ConfigRandom implements IConfigRandom, IConfigRunner.Args4j, IConfigGeneration.Args4j, IConfigCut.Args4j, IConfigProject.Args4j {
 
 	private final IConfigGeneration.Args4j configGenerator = new ConfigGeneration();
 	private final IConfigRunner.Args4j configRunner = new ConfigRunner();
@@ -24,6 +42,9 @@ implements IConfigRandom, IConfigRunner.Args4j, IConfigGeneration.Args4j, IConfi
 
 	@Option(required = false, name = "-type", usage = "Choose the falvor of random testing")
 	private RandomType randomType = RandomType.SIMPLE;
+
+	@Option(required = false, name = "-seed", usage = "Set the seed of the random number generator")
+	private long seed = System.currentTimeMillis();
 
 	/* (non-Javadoc)
 	 * @see testful.random.IConfigRandom#getpGenNewObj()
@@ -47,6 +68,23 @@ implements IConfigRandom, IConfigRunner.Args4j, IConfigGeneration.Args4j, IConfi
 
 	public void setRandomType(RandomType simple) {
 		randomType = simple;
+	}
+
+	/**
+	 * Set the seed to use in the random number generator
+	 * @param seed the seed to use in the random number generator
+	 */
+	public void setSeed(long seed) {
+		this.seed = seed;
+	}
+
+	/**
+	 * Returns the seed to use in the random number generator
+	 * @return the seed to use in the random number generator
+	 */
+	@Override
+	public long getSeed() {
+		return seed;
 	}
 
 	@Override
@@ -77,11 +115,6 @@ implements IConfigRandom, IConfigRunner.Args4j, IConfigGeneration.Args4j, IConfi
 	@Override
 	public File getDirGeneratedTests() {
 		return configGenerator.getDirGeneratedTests();
-	}
-
-	@Override
-	public File getDirContracts() {
-		return configGenerator.getDirContracts();
 	}
 
 	@Override
@@ -142,11 +175,6 @@ implements IConfigRandom, IConfigRunner.Args4j, IConfigGeneration.Args4j, IConfi
 	@Override
 	public void setDirGeneratedTests(File dirGeneratedTests) {
 		configGenerator.setDirGeneratedTests(dirGeneratedTests);
-	}
-
-	@Override
-	public void setDirContracts(File dirContracts) {
-		configGenerator.setDirContracts(dirContracts);
 	}
 
 	@Override
@@ -227,5 +255,13 @@ implements IConfigRandom, IConfigRunner.Args4j, IConfigGeneration.Args4j, IConfi
 	@Override
 	public void setLogLevel(LogLevel logLevel) {
 		configGenerator.setLogLevel(logLevel);
+	}
+
+	/* (non-Javadoc)
+	 * @see testful.IConfig#validate()
+	 */
+	@Override
+	public void validate() throws CmdLineException {
+		// everything is ok!
 	}
 }

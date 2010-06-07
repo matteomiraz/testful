@@ -1,3 +1,22 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
 package testful.model;
 
 import java.rmi.RemoteException;
@@ -25,7 +44,6 @@ public class TestExecutionManagerTestCase extends SimpleDummyTestCase {
 
 	private Operation[] execute(Test test) throws RemoteException, InterruptedException, ExecutionException {
 		OperationResult.insert(test.getTest());
-		OperationStatus.insert(test.getTest());
 		Context<Operation[], TestExecutionManager> ctx = TestExecutionManager.getContext(getFinder(), test);
 		ctx.setStopOnBug(false);
 		Future<Operation[]> result = getExec().execute(ctx);
@@ -43,11 +61,11 @@ public class TestExecutionManagerTestCase extends SimpleDummyTestCase {
 		Operation[] testOperations = execute(test);
 		assertEquals(2, testOperations.length);
 
-		assertEquals(OperationStatus.Status.SUCCESSFUL, ((OperationStatus)testOperations[0].getInfo(OperationStatus.KEY)).status);
-		assertEquals(OperationStatus.Status.SUCCESSFUL, ((OperationStatus)testOperations[1].getInfo(OperationStatus.KEY)).status);
+		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
+		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
 
-		assertEquals(OperationStatus.Status.NOT_EXECUTED, ((OperationStatus)test.getTest()[0].getInfo(OperationStatus.KEY)).status);
-		assertEquals(OperationStatus.Status.NOT_EXECUTED, ((OperationStatus)test.getTest()[1].getInfo(OperationStatus.KEY)).status);
+		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
+		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[1].getInfo(OperationResult.KEY)).status);
 	}
 
 	public void testSimple2() throws Exception {
@@ -65,10 +83,10 @@ public class TestExecutionManagerTestCase extends SimpleDummyTestCase {
 		Operation[] testOperations = execute(test2);
 		assertEquals(2, testOperations.length);
 
-		assertEquals(OperationStatus.Status.SUCCESSFUL, ((OperationStatus)testOperations[0].getInfo(OperationStatus.KEY)).status);
-		assertEquals(OperationStatus.Status.SUCCESSFUL, ((OperationStatus)testOperations[1].getInfo(OperationStatus.KEY)).status);
+		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
+		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
 
-		assertEquals(OperationStatus.Status.NOT_EXECUTED, ((OperationStatus)test.getTest()[0].getInfo(OperationStatus.KEY)).status);
-		assertEquals(OperationStatus.Status.NOT_EXECUTED, ((OperationStatus)test.getTest()[1].getInfo(OperationStatus.KEY)).status);
+		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
+		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[1].getInfo(OperationResult.KEY)).status);
 	}
 }

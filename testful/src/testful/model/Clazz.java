@@ -1,3 +1,21 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful.model;
 
 import java.io.Serializable;
@@ -6,10 +24,13 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import testful.model.xml.XmlClass;
+import testful.model.xml.XmlConstructor;
+import testful.model.xml.XmlMethod;
 
-public class Clazz implements Serializable {
+public class Clazz implements Serializable, Comparable<Clazz> {
 	private static final long serialVersionUID = 5752705690732971069L;
 
 	private static final boolean PRINT_VERBOSE = false;
@@ -19,7 +40,6 @@ public class Clazz implements Serializable {
 
 	private transient Class<?> javaClass;
 	private final String name;
-	private final boolean hasContracts;
 	protected final TestCluster cluster;
 
 	/** constructor of the clazz */
@@ -48,28 +68,38 @@ public class Clazz implements Serializable {
 		javaClass = type;
 		name = type.getCanonicalName();
 		this.cluster = cluster;
-		hasContracts = org.jmlspecs.jmlrac.runtime.JMLCheckable.class.isAssignableFrom(type);
 
 		isAbstract = type.isInterface() || Modifier.isAbstract(type.getModifiers());
 
 		hashCode = name.hashCode();
 	}
 
-	void setup(XmlClass xml) throws SecurityException, ClassNotFoundException {
-		// calculate methodz
-		Set<Methodz> mlist = new HashSet<Methodz>();
-		for(Method meth : toJavaClass().getMethods())
-			if(!Methodz.toSkip(meth)) // add the method to the set
-				mlist.add(new Methodz(cluster, this, meth, xml != null ? xml.getMethod(meth) : null));
+	void calculateMethods(XmlClass xml) throws SecurityException, ClassNotFoundException {
 
+		// if the XML is null (i.e., it is a primitive class)
+		// do not consider methods of the class
+		if(xml == null) {
+			methods = new Methodz[0];
+			constructors = new Constructorz[0];
+			return;
+		}
+
+		// calculate methodz
+		Set<Methodz> mlist = new TreeSet<Methodz>();
+		for(Method meth : toJavaClass().getMethods()) {
+			final XmlMethod xmlMethod = xml.getMethod(meth);
+			if(xmlMethod != null && !xmlMethod.isSkip())
+				mlist.add(new Methodz(cluster, this, meth, xmlMethod));
+		}
 		methods = mlist.toArray(new Methodz[mlist.size()]);
 
 		// calculate constructorz
-		Set<Constructorz> clist = new HashSet<Constructorz>();
-		for(Constructor<?> c : toJavaClass().getConstructors())
-			if(Modifier.isPublic(c.getModifiers()))
-				clist.add(new Constructorz(cluster, c, xml != null ? xml.getConstructor(c) : null));
-
+		Set<Constructorz> clist = new TreeSet<Constructorz>();
+		for(Constructor<?> cns : toJavaClass().getConstructors()) {
+			final XmlConstructor xmlCns = xml.getConstructor(cns);
+			if(xmlCns != null && !xmlCns.isSkip())
+				clist.add(new Constructorz(cluster, cns, xmlCns));
+		}
 		constructors = clist.toArray(new Constructorz[clist.size()]);
 	}
 
@@ -128,10 +158,6 @@ public class Clazz implements Serializable {
 		}
 	}
 
-	public boolean hasContracts() {
-		return hasContracts;
-	}
-
 	public String getClassName() {
 		return name;
 	}
@@ -153,7 +179,7 @@ public class Clazz implements Serializable {
 	}
 
 	void calculateAssignableTo() throws ClassNotFoundException {
-		Set<Clazz> destinoBuilder = new HashSet<Clazz>();
+		Set<Clazz> destinoBuilder = new TreeSet<Clazz>();
 
 		/** store all interfaces to process which the class implements */
 		Set<Class<?>> todo = new HashSet<Class<?>>();
@@ -204,8 +230,6 @@ public class Clazz implements Serializable {
 	}
 
 	static void insertInterfaceWithParents(Set<Class<?>> set, Class<?> i) {
-		if(i.getPackage() != null && i.getPackage().getName().startsWith("org.jmlspecs.")) return;
-
 		if(set.add(i)) // if i is a new interface
 			for(Class<?> ext : i.getInterfaces())
 				insertInterfaceWithParents(set, ext);
@@ -223,5 +247,10 @@ public class Clazz implements Serializable {
 		if(!(obj instanceof Clazz)) return false;
 
 		return name.equals(((Clazz) obj).name);
+	}
+
+	@Override
+	public int compareTo(Clazz o) {
+		return name.compareTo(o.name);
 	}
 }

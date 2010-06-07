@@ -1,8 +1,27 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful.evolutionary;
 
 import java.io.File;
 import java.util.List;
 
+import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.Option;
 
 import testful.ConfigGeneration;
@@ -12,17 +31,22 @@ import testful.IConfigGeneration;
 import testful.IConfigProject;
 import testful.IConfigRunner;
 import testful.TestfulException;
-import testful.evolutionary.jMetal.FitnessInheritance;
 
-public class ConfigEvolutionary
-implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, IConfigGeneration.Args4j, IConfigCut.Args4j, IConfigProject.Args4j {
+/**
+ * Contains the information required to run Testful.
+ * @author matteo
+ */
+public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, IConfigGeneration.Args4j, IConfigCut.Args4j, IConfigProject.Args4j {
 
 	private final IConfigGeneration.Args4j configGenerator = new ConfigGeneration();
 	private final IConfigRunner.Args4j configRunner = new ConfigRunner();
 	private final IConfigFitness.Args4j configFitness = new ConfigFitness();
 
+	@Option(required = false, name = "-noSimplify", usage = "Do not simplify tests")
+	private boolean noSimplify;
+
 	@Option(required = false, name = "-localSearchPeriod", usage = "Period of the local search (default: every 20 generations; <= 0 to disable local search)")
-	private int localSearchPeriod = 20;
+	private int localSearchPeriod = 5;
 
 	@Option(required = false, name = "-localSearchElements", usage = "% of elements on which the local search is applied (0 to consider the whole fronteer, 100 to enhance all the elements in the population)")
 	private int localSearchElements = 0;
@@ -34,14 +58,21 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	private FitnessInheritance fitnessInheritance = FitnessInheritance.UNIFORM;
 
 	@Option(required = false, name = "-smartAncestors", usage = "Use an enhanced initial population")
-	private int smartInitialPopulation = -1;
+	private int smartInitialPopulation = 60;
 
 	@Option(required = false, name = "-useCpuTime", usage = "Use CPU time instead of wall-clock time")
 	private boolean useCpuTime;
 
+	@Option(required = false, name ="-seed", usage = "Set the seed of the random number generator")
+	private long seed = System.currentTimeMillis();
+
 	@Override
 	public int getLocalSearchPeriod() {
 		return localSearchPeriod;
+	}
+
+	public void setLocalSearchPeriod(int localSearchPeriod) {
+		this.localSearchPeriod = localSearchPeriod;
 	}
 
 	@Override
@@ -54,39 +85,13 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 		return popSize;
 	}
 
+	public void setPopSize(int popSize) {
+		this.popSize = popSize;
+	}
+
 	@Override
 	public FitnessInheritance getFitnessInheritance() {
 		return fitnessInheritance;
-	}
-
-	@Override
-	public void setToMinimize(boolean value) {
-		configFitness.setToMinimize(value);
-	}
-
-	@Override
-	public boolean isBbd() {
-		return configFitness.isBbd();
-	}
-
-	@Override
-	public boolean isBbn() {
-		return configFitness.isBbn();
-	}
-
-	@Override
-	public boolean isBrd() {
-		return configFitness.isBrd();
-	}
-
-	@Override
-	public boolean isBrn() {
-		return configFitness.isBrn();
-	}
-
-	@Override
-	public boolean isBug() {
-		return configFitness.isBug();
 	}
 
 	@Override
@@ -94,14 +99,18 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 		return configFitness.isDefUse();
 	}
 
-	@Override
-	public boolean isLength() {
-		return configFitness.isLength();
+	public void setFitnessInheritance(FitnessInheritance fitnessInheritance) {
+		this.fitnessInheritance = fitnessInheritance;
 	}
 
 	@Override
-	public boolean isToMinimize() {
-		return configFitness.isToMinimize();
+	public boolean isBasicBlock() {
+		return configFitness.isBasicBlock();
+	}
+
+	@Override
+	public boolean isBranch() {
+		return configFitness.isBranch();
 	}
 
 	@Override
@@ -115,43 +124,13 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	}
 
 	@Override
-	public void setDisableBasicBlockCode(boolean disable) {
-		configFitness.setDisableBasicBlockCode(disable);
-	}
-
-	@Override
-	public void setDisableBasicBlockContract(boolean disable) {
-		configFitness.setDisableBasicBlockContract(disable);
-	}
-
-	@Override
 	public void setDisableBranch(boolean disable) {
 		configFitness.setDisableBranch(disable);
 	}
 
 	@Override
-	public void setDisableBranchCode(boolean disable) {
-		configFitness.setDisableBranchCode(disable);
-	}
-
-	@Override
-	public void setDisableBranchContract(boolean disable) {
-		configFitness.setDisableBranchContract(disable);
-	}
-
-	@Override
 	public void setDisableDefUse(boolean disable) {
 		configFitness.setDisableDefUse(disable);
-	}
-
-	@Override
-	public void setDisableLength(boolean disable) {
-		configFitness.setDisableLength(disable);
-	}
-
-	@Override
-	public void setEnableBug(boolean bug) {
-		configFitness.setEnableBug(bug);
 	}
 
 	@Override
@@ -190,13 +169,17 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	}
 
 	@Override
-	public File getDirContracts() {
-		return configGenerator.getDirContracts();
-	}
-
-	@Override
 	public int getTime() {
 		return configGenerator.getTime();
+	}
+
+	/**
+	 * Returns the seed to use in the random number generator
+	 * @return the seed to use in the random number generator
+	 */
+	@Override
+	public long getSeed() {
+		return seed;
 	}
 
 	@Override
@@ -255,13 +238,16 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	}
 
 	@Override
-	public void setDirContracts(File dirContracts) {
-		configGenerator.setDirContracts(dirContracts);
-	}
-
-	@Override
 	public void setTime(int time) {
 		configGenerator.setTime(time);
+	}
+
+	/**
+	 * Set the seed to use in the random number generator
+	 * @param seed the seed to use in the random number generator
+	 */
+	public void setSeed(long seed) {
+		this.seed = seed;
 	}
 
 	@Override
@@ -296,6 +282,11 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	@Override
 	public List<String> getRemote() {
 		return configRunner.getRemote();
+	}
+
+	public void setRemote(String remote) {
+		configRunner.getRemote().clear();
+		configRunner.addRemote(remote);
 	}
 
 	@Override
@@ -341,5 +332,23 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	@Override
 	public void setLogLevel(LogLevel logLevel) {
 		configGenerator.setLogLevel(logLevel);
+	}
+
+	@Override
+	public void setSimplify(boolean simplify) {
+		noSimplify = !simplify;
+	}
+
+	@Override
+	public boolean isSimplify() {
+		return !noSimplify;
+	}
+
+	/* (non-Javadoc)
+	 * @see testful.IConfig#validate()
+	 */
+	@Override
+	public void validate() throws CmdLineException {
+		// everything is ok!
 	}
 }

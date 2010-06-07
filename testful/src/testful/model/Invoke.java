@@ -1,33 +1,64 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful.model;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
+import testful.model.MethodInformation.Kind;
 import testful.model.MethodInformation.ParameterInformation;
-
 import ec.util.MersenneTwisterFast;
 
 public class Invoke extends Operation {
 
 	private static final long serialVersionUID = 3149066267226412341L;
-	
+
 	private final Reference _return;
 	private final Reference _this;
 	private final Methodz method;
 	private final Reference[] params;
 
-	public Invoke(Reference return1, Reference this1, Methodz method, Reference[] params) {
-		super();
-		_return = return1;
-		_this = this1;
+	public Invoke(Reference _return, Reference _this, Methodz method, Reference[] params) {
+		super(37 * 37 * 37 * ((_return == null) ? 0 : _return.hashCode()) +
+				37 * 37 * ((_this == null) ? 0 : _this.hashCode()) +
+				37 * method.hashCode() +
+				Arrays.hashCode(params));
+
+		this._return = _return;
+		this._this = _this;
 		this.method = method;
 		this.params = params;
 	}
 
 	@Override
 	public Operation adapt(TestCluster cluster, ReferenceFactory refFactory) {
-		return new Invoke(refFactory.adapt(_return), refFactory.adapt(_this), cluster.adapt(method), refFactory.adapt(params));
+		final Invoke ret = new Invoke(refFactory.adapt(_return), refFactory.adapt(_this), cluster.adapt(method), refFactory.adapt(params));
+
+		Iterator<OperationInformation> it = getInfos();
+		while(it.hasNext()) {
+			OperationInformation info = it.next();
+			ret.addInfo(info.clone());
+		}
+
+		return ret;
 	}
 
 	public static Invoke generate(Clazz c, TestCluster cluster, ReferenceFactory refFactory, MersenneTwisterFast random) {
@@ -88,41 +119,30 @@ public class Invoke extends Operation {
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((_return == null) ? 0 : _return.hashCode());
-		result = prime * result + ((_this == null) ? 0 : _this.hashCode());
-		result = prime * result + method.hashCode();
-		result = prime * result + Arrays.hashCode(params);
-		return result;
-	}
-
-	@Override
 	public boolean equals(Object obj) {
 		if(this == obj) return true;
 		if(obj == null) return false;
 		if(!(obj instanceof Invoke)) return false;
 
 		Invoke other = (Invoke) obj;
-		return ((_return == null) ? 
-					other._return == null : 
-					_return.equals(other._return)) && 
-						((_this == null) ? 
-								other._this == null : 
+		return ((_return == null) ?
+				other._return == null :
+					_return.equals(other._return)) &&
+					((_this == null) ?
+							other._this == null :
 								_this.equals(other._this)) && method.equals(other.method) && Arrays.equals(params, other.params);
 	}
-	
+
 	@Override
 	protected Set<Reference> calculateDefs() {
 		Set<Reference> defs = new HashSet<Reference>();
 
 		if(getTarget() != null)
 			defs.add(getTarget());
-		
+
 		MethodInformation info = getMethod().getMethodInformation();
-		if(getThis() != null) 
-			if(info.isMutator() || info.isReturnsState())
+		if(getThis() != null)
+			if(info.getType() == Kind.MUTATOR || info.isReturnsState())
 				defs.add(getThis());
 
 		ParameterInformation[] pInfo = info.getParameters();
@@ -130,20 +150,25 @@ public class Invoke extends Operation {
 			if(pInfo[i].isCaptured() || pInfo[i].isCapturedByReturn() || pInfo[i].isMutated())
 				defs.add(getParams()[i]);
 		}
-		
+
 		return defs;
 	}
-	
+
 	@Override
 	protected Set<Reference> calculateUses() {
 		Set<Reference> uses = new HashSet<Reference>();
 
 		if(getThis() != null)
 			uses.add(getThis());
-		
+
 		for(Reference u : getParams())
 			uses.add(u);
-		
+
 		return uses;
+	}
+
+	@Override
+	public Operation clone() {
+		return new Invoke(_return, _this, method, params);
 	}
 }

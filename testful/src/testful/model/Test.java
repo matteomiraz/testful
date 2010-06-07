@@ -1,3 +1,21 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful.model;
 
 import java.io.IOException;
@@ -19,7 +37,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Map.Entry;
 
 public class Test implements Serializable {
 
@@ -126,6 +143,12 @@ public class Test implements Serializable {
 		}
 	}
 
+	/**
+	 * Calculate the hash of the current test.
+	 * Other parts of Testful requires that the hash code calculus is deterministic
+	 * (i.e., it does not depend on random variation such as the location in memory, like the
+	 * Object.hashCode).
+	 */
 	@Override
 	public int hashCode() {
 		return hashCode;
@@ -157,7 +180,7 @@ public class Test implements Serializable {
 	/**
 	 * Split the test into its independent parts (identified by ResetRepository
 	 * operation)
-	 * 
+	 *
 	 * @return the collection of independent tests
 	 */
 	public Collection<Test> split() {
@@ -243,7 +266,7 @@ public class Test implements Serializable {
 	}
 
 	/**
-	 * Returns a simplified copy of the test, removing invalid operations
+	 * Returns a simplified copy of the test, removing invalid operations (statically analyzed)
 	 * @return a simplified copy of the test
 	 */
 	public Test simplify() {
@@ -315,6 +338,7 @@ public class Test implements Serializable {
 		return new Test(getCluster(), getReferenceFactory(), ops.toArray(new Operation[ops.size()]));
 	}
 
+	/** checks if all the parameters has been initialized */
 	private boolean simplifyIsInvokable(Clazz[] paramsType, Reference[] params, boolean[] initialized) {
 		for(int i = 0; i < paramsType.length; i++)
 			if(paramsType[i] instanceof PrimitiveClazz && // the parameter is primitive
@@ -325,6 +349,7 @@ public class Test implements Serializable {
 		return true;
 	}
 
+	/** if a reference is used as parameter, but it is not initialized, insert ref = null */
 	private void simplifyAddNullRef(List<Operation> ops, Reference[] params, boolean[] initialized, boolean[] nullInitialized) {
 		for(int i = 0; i < params.length; i++) {
 			if(!initialized[params[i].getId()] &&
@@ -336,6 +361,7 @@ public class Test implements Serializable {
 		}
 	}
 
+	/** returns a Single Static Assignment of the test */
 	public Test getSSA() {
 		// for each clazz, counts the number of assignments (i.e. the number of required references)
 		Map<Clazz, Integer> refs = new HashMap<Clazz, Integer>();
@@ -353,7 +379,7 @@ public class Test implements Serializable {
 
 			if(t != null) {
 				Integer num = refs.get(t.getClazz());
-				if(num == null) num = 2; // this assignemnt and a null assignment
+				if(num == null) num = 1;
 				else num++;
 				refs.put(t.getClazz(), num);
 			}
@@ -369,14 +395,8 @@ public class Test implements Serializable {
 			newRefs.put(c, d);
 		}
 
-		Map<Clazz, Reference> nullValues = new HashMap<Clazz, Reference>();
-		for(Entry<Clazz, Deque<Reference>> e : newRefs.entrySet())
-			nullValues.put(e.getKey(), e.getValue().remove());
-
 		/** for each original reference (key) store the new reference to use (value) */
 		Map<Reference, Reference> convert = new HashMap<Reference, Reference>();
-
-		ssaInitConvert(convert, nullValues, this.refFactory.getReferences());
 
 		Operation[] newTest = new Operation[test.length];
 		for(int i = 0; i < test.length; i++) {
@@ -402,18 +422,12 @@ public class Test implements Serializable {
 				op = new Invoke(target, _this, in.getMethod(), params);
 			} else if(op instanceof ResetRepository) {
 				convert = new HashMap<Reference, Reference>();
-				ssaInitConvert(convert, nullValues, this.refFactory.getReferences());
 			}
 
 			newTest[i] = op;
 		}
 
 		return new Test(getCluster(), refFactory, newTest);
-	}
-
-	private void ssaInitConvert(Map<Reference, Reference> convert, Map<Clazz, Reference> nullValues, Reference[] references) {
-		for(Reference ref : references)
-			convert.put(ref, nullValues.get(ref.getClazz()));
 	}
 
 	private Reference ssaCreate(Map<Clazz, Deque<Reference>> newRefs, Map<Reference, Reference> convert, Reference ref) {
@@ -439,6 +453,7 @@ public class Test implements Serializable {
 		return ret;
 	}
 
+	/** sort references */
 	public Test sortReferences() {
 		Operation[] ops = getTest().clone();
 
@@ -782,8 +797,15 @@ public class Test implements Serializable {
 
 		sb.append("Test for class ").append(cluster.getCut().getClassName()).append("\n");
 
-		for(Operation op : test)
+		for(Operation op : test) {
+
+			Iterator<OperationInformation> infos = op.getInfos();
+			if(infos.hasNext()) sb.append("\n");
+			while(infos.hasNext())
+				sb.append("  //").append(infos.next().toString()).append("\n");
+
 			sb.append("  ").append(op.toString()).append(";\n");
+		}
 
 		return sb.toString();
 	}

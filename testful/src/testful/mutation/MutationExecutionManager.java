@@ -11,10 +11,6 @@ import testful.TestfulException;
 import testful.coverage.TrackerDatum;
 import testful.model.Operation;
 import testful.model.OperationResult;
-import testful.model.OperationResultPruner;
-import testful.model.OperationResultVerifier;
-import testful.model.OperationStatus;
-import testful.model.OperationStatusVerifier;
 import testful.model.Test;
 import testful.model.executor.ReflectionExecutor;
 import testful.runner.ClassFinder;
@@ -27,7 +23,7 @@ import testful.utils.Cloner;
 /**
  * This is a fake execution manager: it is able to manage "real" mutant execution managers,
  * giving to each of them a mutant to evaluate. Users must use this class to evaluate mutants.
- * 
+ *
  * @author matteo
  *
  */
@@ -122,18 +118,12 @@ public class MutationExecutionManager extends ExecutionManager<MutationCoverage>
 
 			if(faults == 0) {
 				// re-run the test, tracking operation status
-				OperationStatus.insert(test);
 				OperationResult.insert(test);
 				super.reallyExecute(stopOnBug);
 				logger.fine("Tracked operation status on " + className);
 
-				OperationResultPruner.insertOperationResultPruner(test);
-				super.reallyExecute(stopOnBug);
-				logger.fine("Pruned operation status on " + className);
-
 				// re-run the test, verifying operation status
-				OperationStatusVerifier.insertOperationStatusVerifier(test);
-				OperationResultVerifier.insertOperationResultVerifier(test);
+				OperationResult.Verifier.insertOperationResultVerifier(test);
 				super.reallyExecute(stopOnBug);
 				logger.fine("Verified operation status on " + className);
 			}

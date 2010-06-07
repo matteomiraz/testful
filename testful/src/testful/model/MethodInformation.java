@@ -1,8 +1,28 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful.model;
 
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+
+import testful.model.xml.XmlMethod;
 
 public class MethodInformation implements Serializable {
 
@@ -81,26 +101,60 @@ public class MethodInformation implements Serializable {
 		}
 	}
 
+	public static enum Kind {
+		/** The method is static */
+		STATIC,
+
+		/** A Constructor */
+		CONSTRUCTOR,
+
+		/** The method is pure and to be used for writing assertions in tests. <br/>
+		 * <ul>
+		 * <li>Pure method: does not modify the state and returns an observation of the
+		 * object's state (changing the return value, the state is not changed).</li>
+		 * <li>Usable for creating assertions: it has no input parameters, and the value it returns
+		 * can be used for regression testing.</li>
+		 * </ul>
+		 */
+		OBSERVER,
+
+		/** the method is pure: does not modify the state and returns an observation of the
+		 * object's state (changing the return value, the state is not changed).*/
+		PURE,
+
+		/** the method is a mutator: does something, may mutate the object's state */
+		MUTATOR;
+
+		public static Kind convert (XmlMethod.Kind k) {
+			switch(k) {
+			case STATIC: return STATIC;
+			case OBSERVER: return OBSERVER;
+			case PURE: return PURE;
+			default: return MUTATOR;
+			}
+		}
+	}
+
 	/**
 	 * true if the method mutates the state of the object accepting the method
 	 * invocation. Constructors by definition mutate (constructs) the state of the
 	 * object
 	 */
-	private final boolean mutator;
+	private final Kind type;
 
 	/** true if method returns part of the object's state */
 	private final boolean returnsState;
 
 	private final ParameterInformation[] parameters;
 
-	public MethodInformation(boolean mutator, boolean returnsState, ParameterInformation[] parameters) {
-		this.mutator = mutator;
+	public MethodInformation(Kind type, boolean returnsState, ParameterInformation[] parameters) {
+		this.type = type;
 		this.returnsState = returnsState;
 		this.parameters = parameters;
 	}
 
-	public boolean isMutator() {
-		return mutator;
+	public Kind getType() {
+		return type;
 	}
 
 	public boolean isReturnsState() {

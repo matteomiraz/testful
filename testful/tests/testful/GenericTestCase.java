@@ -1,19 +1,35 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful;
 
 import java.io.File;
-import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import junit.framework.TestCase;
-import testful.IConfigProject.LogLevel;
 import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
-import testful.coverage.TestSizeInformation;
 import testful.coverage.TrackerDatum;
 import testful.model.Operation;
 import testful.model.ReferenceFactory;
@@ -27,7 +43,6 @@ import testful.runner.IRunner;
 import testful.runner.RunnerPool;
 import testful.runner.TestfulClassLoader;
 import testful.utils.ElementManager;
-import testful.utils.FileUtils;
 import ec.util.MersenneTwisterFast;
 
 /**
@@ -36,28 +51,24 @@ import ec.util.MersenneTwisterFast;
  */
 public abstract class GenericTestCase  extends TestCase {
 
-	protected final static IConfigProject config;
-
 	static {
 		ConfigProject tmp = new ConfigProject();
 		tmp.setDirBase(new File("testCut"));
-
-		try {
-			File tmpDir = FileUtils.createTempDir("testful-", "-test");
-			tmp.setLogLevel(LogLevel.FINEST);
-			tmp.setLog(tmpDir);
-			TestFul.setupLogging(tmp);
-		} catch (IOException e) {
-			System.err.println("WARNING: " + e);
-		}
-
 		config = tmp;
+	}
+	public final static IConfigProject config;
+
+	private static ClassFinder finder = null;
+	public static ClassFinder getFinder() throws RemoteException {
+		if(finder == null)
+			finder = new ClassFinderCaching(new ClassFinderImpl(config));
+
+		return finder;
 	}
 
 	protected static final TestFailedException SETUP = new TestFailedException("Please setup correctly your system!");
 
 	protected static boolean RECYCLE_CLASS_LOADER = true;
-	protected boolean SKIP_CONTRACTS = false;
 
 	public static class TestFailedException extends Exception {
 		private static final long serialVersionUID = 1L;
@@ -79,14 +90,11 @@ public abstract class GenericTestCase  extends TestCase {
 		}
 	}
 
-	protected void checkTestFailed(Test orig, ElementManager<String, CoverageInformation> origCov, List<Test> parts, List<ElementManager<String, CoverageInformation>> partsCov, ElementManager<String,CoverageInformation> combinedCov) throws TestFailedException {
+	protected void checkTestFailed(Test orig, ElementManager<String, CoverageInformation> origCov, Collection<? extends Test> parts, List<ElementManager<String, CoverageInformation>> partsCov, ElementManager<String,CoverageInformation> combinedCov) throws TestFailedException {
 		StringBuilder msg = new StringBuilder();
 
 		boolean err = false;
 		for(CoverageInformation o : origCov) {
-			if(o instanceof TestSizeInformation) continue;
-			if(SKIP_CONTRACTS && !o.getKey().endsWith("n")) continue;
-
 			float origQ = o.getQuality();
 
 			CoverageInformation c = combinedCov.get(o.getKey());
@@ -121,7 +129,7 @@ public abstract class GenericTestCase  extends TestCase {
 		printTest(msg, "Modified Test", null, combinedCov);
 
 		int i = 0;
-		Iterator<Test> testIt = parts.iterator();
+		Iterator<? extends Test> testIt = parts.iterator();
 		Iterator<ElementManager<String, CoverageInformation>> covIt = partsCov.iterator();
 		while(testIt.hasNext())
 			printTest(msg, "Part " + ++i, testIt.next(), covIt.next());
@@ -140,8 +148,7 @@ public abstract class GenericTestCase  extends TestCase {
 		if(covs != null) {
 			msg.append("\nCoverage:\n");
 			for(CoverageInformation cov : covs)
-				if(!(cov instanceof TestSizeInformation))
-					msg.append("  ").append(cov.getKey()).append(" ").append(cov.getQuality()).append("\n--raw-begin--\n").append(cov.toString()).append("\n--raw-end--\n");
+				msg.append("  ").append(cov.getKey()).append(" ").append(cov.getQuality()).append("\n");
 			msg.append("---------");
 		}
 
@@ -168,7 +175,7 @@ public abstract class GenericTestCase  extends TestCase {
 		return coverage;
 	}
 
-	public Test createRandomTest(String cut, int lenght, long seed) throws RemoteException, ClassNotFoundException, TestfulException {
+	public static Test createRandomTest(String cut, int lenght, long seed) throws RemoteException, ClassNotFoundException, TestfulException {
 		MersenneTwisterFast random = new MersenneTwisterFast(seed);
 
 		ConfigCut testfulConfig = new ConfigCut(config);
@@ -184,13 +191,4 @@ public abstract class GenericTestCase  extends TestCase {
 		Test t = new Test(cluster, refFactory, ops);
 		return t;
 	}
-
-	private static ClassFinder finder = null;
-	protected static ClassFinder getFinder() throws RemoteException {
-		if(finder == null)
-			finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
-
-		return finder;
-	}
-
 }

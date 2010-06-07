@@ -1,10 +1,30 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful;
 
 import java.io.File;
 
+import org.kohsuke.args4j.CmdLineException;
+
 /**
- * Stores the configuration of the project being tested
- * 
+ * Stores the configuration of the project being tested.
+ *
  * @author matteo
  */
 public class ConfigProject implements IConfigProject.Args4j {
@@ -17,9 +37,6 @@ public class ConfigProject implements IConfigProject.Args4j {
 
 	/** directory with classes compiled by the user */
 	private File dirCompiled;
-
-	/** directory with classes with contracts, not instrumented */
-	private File dirContracts;
 
 	/** directory with classes instrumented */
 	private File dirInstrumented;
@@ -38,7 +55,6 @@ public class ConfigProject implements IConfigProject.Args4j {
 
 		dirSource = new File("src");
 		dirCompiled = new File("bin");
-		dirContracts = new File("jml-compiled");
 		dirInstrumented = new File("instrumented");
 	}
 
@@ -47,7 +63,6 @@ public class ConfigProject implements IConfigProject.Args4j {
 
 		dirSource = config.getDirSource();
 		dirCompiled = config.getDirCompiled();
-		dirContracts = config.getDirContracts();
 		dirInstrumented = config.getDirInstrumented();
 	}
 
@@ -104,23 +119,6 @@ public class ConfigProject implements IConfigProject.Args4j {
 	}
 
 	/* (non-Javadoc)
-	 * @see testful.ProjectConfig#getDirContracts()
-	 */
-	@Override
-	public File getDirContracts() {
-		if(!dirContracts.isAbsolute()) dirContracts = new File(dirBase, dirContracts.getPath()).getAbsoluteFile();
-		return dirContracts;
-	}
-
-	/* (non-Javadoc)
-	 * @see testful.ProjectConfig#setDirContracts(java.io.File)
-	 */
-	@Override
-	public void setDirContracts(File dirJml) {
-		dirContracts = dirJml;
-	}
-
-	/* (non-Javadoc)
 	 * @see testful.ProjectConfig#getDirInstrumented()
 	 */
 	@Override
@@ -172,5 +170,13 @@ public class ConfigProject implements IConfigProject.Args4j {
 	@Override
 	public LogLevel getLogLevel() {
 		return logLevel;
+	}
+
+	/* (non-Javadoc)
+	 * @see testful.IConfig#validate()
+	 */
+	@Override
+	public void validate() throws CmdLineException {
+		// everything is ok!
 	}
 }

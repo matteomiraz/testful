@@ -3,7 +3,7 @@ package testful.model;
 import testful.SimpleDummyTestCase;
 import testful.coverage.CoverageInformation;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
-import testful.coverage.whiteBox.CoverageConditions;
+import testful.coverage.whiteBox.CoverageBranch;
 import testful.coverage.whiteBox.CoverageDataFlow;
 import testful.coverage.whiteBox.CoverageDefExp;
 import testful.utils.ElementManager;
@@ -21,8 +21,8 @@ public class Test_getSSA_DSTestCase extends SimpleDummyTestCase {
 				new Invoke(i0, c2, wModulo, new Reference[] { i3 })
 		});
 		ElementManager<String, CoverageInformation> cov1 = getCoverage(t1);
-		assertEquals(3.0f, cov1.get(CoverageBasicBlocks.KEY_CODE).getQuality());
-		assertEquals(0.0f, cov1.get(CoverageConditions.KEY_CODE).getQuality());
+		assertEquals(3.0f, cov1.get(CoverageBasicBlocks.KEY).getQuality());
+		assertEquals(0.0f, cov1.get(CoverageBranch.KEY).getQuality());
 		assertEquals(8.0f, cov1.get(CoverageDataFlow.KEY).getQuality());
 		assertEquals(3.0f, cov1.get(CoverageDefExp.KEY).getQuality());
 
@@ -36,8 +36,8 @@ public class Test_getSSA_DSTestCase extends SimpleDummyTestCase {
 				new Invoke(i3, c1, wModulo, new Reference[] { i1 }) // the SSA uses i3 as input parameter! (it's wrong, since the first call to wModulo did not produce any result)
 		});
 		ElementManager<String, CoverageInformation> cov2 = getCoverage(t2);
-		assertEquals(cov1.get(CoverageBasicBlocks.KEY_CODE).getQuality(), cov2.get(CoverageBasicBlocks.KEY_CODE).getQuality());
-		assertEquals(cov1.get(CoverageConditions.KEY_CODE).getQuality(), cov2.get(CoverageConditions.KEY_CODE).getQuality());
+		assertEquals(cov1.get(CoverageBasicBlocks.KEY).getQuality(), cov2.get(CoverageBasicBlocks.KEY).getQuality());
+		assertEquals(cov1.get(CoverageBranch.KEY).getQuality(), cov2.get(CoverageBranch.KEY).getQuality());
 		assertEquals(cov1.get(CoverageDataFlow.KEY).getQuality(), cov2.get(CoverageDataFlow.KEY).getQuality());
 		assertEquals(cov1.get(CoverageDefExp.KEY).getQuality(), cov2.get(CoverageDefExp.KEY).getQuality());
 	}

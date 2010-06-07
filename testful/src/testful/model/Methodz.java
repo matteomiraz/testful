@@ -1,3 +1,21 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful.model;
 
 import java.io.Serializable;
@@ -12,10 +30,10 @@ import testful.model.xml.XmlParameter;
 
 /**
  * Methodz render methods of classes
- * 
+ *
  * @author matteo
  */
-public class Methodz implements Serializable {
+public class Methodz implements Serializable, Comparable<Methodz> {
 
 	private static final long serialVersionUID = -6044812551106557800L;
 
@@ -36,36 +54,31 @@ public class Methodz implements Serializable {
 		name = m.getName();
 		fullMethodName = m.toGenericString();
 		params = cluster.getRegistry().convert(m.getParameterTypes());
-		returnType = cluster.getRegistry().getClazz(m.getReturnType());
+
+		// ISSUE #1: if you need array support, vote here: http://code.google.com/p/testful/issues/detail?id=1
+		if(m.getReturnType() ==  Void.TYPE || m.getReturnType().isArray())
+			returnType = null;
+		else
+			returnType = cluster.getRegistry().getClazz(m.getReturnType());
+
 		method = m;
 		isStatic = Modifier.isStatic(method.getModifiers());
 
-		if(xml == null) {
-			ParameterInformation[] params = new ParameterInformation[m.getParameterTypes().length];
-			for(int i = 0; i < params.length; i++) {
-				params[i] = new ParameterInformation(i);
-				params[i].setCaptured(false);
-				params[i].setCapturedByReturn(false);
-				params[i].setMutated(false);
-			}
-			info = new MethodInformation(true, (m.getReturnType() != null && m.getReturnType().isArray()), params);
-		} else {
-			List<XmlParameter> paramsXml = xml.getParameter();
-			ParameterInformation[] paramsInfo = new ParameterInformation[paramsXml.size()];
-			for(int i = 0; i < paramsXml.size(); i++) {
-				XmlParameter p = paramsXml.get(i);
-				paramsInfo[i] = new ParameterInformation(i);
-				paramsInfo[i].setMutated(p.isMutated());
-				paramsInfo[i].setCaptured(p.isCaptured());
-				paramsInfo[i].setCapturedByReturn(p.isExposedByReturn());
-			}
-
-			for(int i = 0; i < paramsXml.size(); i++)
-				for(int exch : paramsXml.get(i).getExchangeState())
-					paramsInfo[i].addCaptureStateOf(paramsInfo[exch]);
-
-			info = new MethodInformation(XmlMethod.Kind.MUTATOR.equals(xml.getKind()), xml.isExposeState(), paramsInfo);
+		List<XmlParameter> paramsXml = xml.getParameter();
+		ParameterInformation[] paramsInfo = new ParameterInformation[paramsXml.size()];
+		for(int i = 0; i < paramsXml.size(); i++) {
+			XmlParameter p = paramsXml.get(i);
+			paramsInfo[i] = new ParameterInformation(i);
+			paramsInfo[i].setMutated(p.isMutated());
+			paramsInfo[i].setCaptured(p.isCaptured());
+			paramsInfo[i].setCapturedByReturn(p.isExposedByReturn());
 		}
+
+		for(int i = 0; i < paramsXml.size(); i++)
+			for(int exch : paramsXml.get(i).getExchangeState())
+				paramsInfo[i].addCaptureStateOf(paramsInfo[exch]);
+
+		info = new MethodInformation(MethodInformation.Kind.convert(xml.getKind()), xml.isExposeState(), paramsInfo);
 	}
 
 	public Clazz getClazz() {
@@ -151,53 +164,24 @@ public class Methodz implements Serializable {
 		return clazz.equals(other.clazz) && name.equals(other.name) && Arrays.equals(params, other.params);
 	}
 
-	/**
-	 * Check if the method is an interesting one or not.<br>
-	 * The method is skipped if
-	 * <ul>
-	 *  <li>it is not public</li>
-	 * 	<li>it is a bridge or a synthetic method</li>
-	 *  <li>it is implemented in a standard java class (e.g. equals is skipped if it is not
-	 * 			overridden) </li>
-	 * 	<li>it is related to JML contracts</li>
-	 *  <li>it has invalid parameters (e.g., arrays)</li>
-	 * </ul>
-	 * 
-	 * @param meth the method to check
-	 * @return true if the method is not interesting, false otherwise
+	/* (non-Javadoc)
+	 * @see java.lang.Comparable#compareTo(java.lang.Object)
 	 */
-	public static boolean toSkip(Method meth) {
-		// skip strange methods
-		if(meth.isBridge() || meth.isSynthetic()) return true;
+	@Override
+	public int compareTo(Methodz o) {
+		if(name.compareTo(o.name) != 0) return name.compareTo(o.name);
 
-		// skip non-public methods
-		if(!Modifier.isPublic(meth.getModifiers())) return true;
+		int i1 = 0, i2 = 0;
+		while(i1 < params.length & i2 < o.params.length) {
+			Clazz p1 = params[i1++];
+			Clazz p2 = o.params[i2++];
 
-		// skip if one of the input or output sparameters is an array
-		if(meth.getReturnType().isArray()) return true;
-		for(Class<?> param : meth.getParameterTypes())
-			if(param.isArray()) return true;
+			final int compare = p1.compareTo(p2);
+			if(compare != 0) return compare;
+		}
 
-		Class<?> declaringClass = meth.getDeclaringClass();
-
-		// skip java-related methods
-		String packageName = declaringClass.getPackage() == null ? "" : declaringClass.getPackage().getName();
-		if(packageName.startsWith("java.") || packageName.startsWith("javax.") || packageName.startsWith("sun.") || packageName.startsWith("org.jmlspecs.")) return true;
-
-		// skip contract-related methods
-		String methodName = meth.getName();
-		if(withJmlContracts(declaringClass)
-				&& (methodName.startsWith("checkHC$") || methodName.startsWith("checkInv$") || methodName.startsWith("checkPost$") || methodName.startsWith("checkPre$")
-						|| methodName.startsWith("checkXPost$") || methodName.startsWith("evalOldExprInHC$") || methodName.startsWith("rac$"))) return true;
-
-		return false;
-
-	}
-
-	private static boolean withJmlContracts(Class<?> declaringClass) {
-		for(Class<?> i : declaringClass.getInterfaces())
-			if("org.jmlspecs.jmlrac.runtime.JMLCheckable".equals(i.getCanonicalName())) return true;
-
-		return false;
+		if(i1 >= params.length) return -1;
+		if(i2 >= o.params.length) return  1;
+		return 0;
 	}
 }

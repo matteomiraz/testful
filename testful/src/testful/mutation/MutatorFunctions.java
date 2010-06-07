@@ -74,8 +74,8 @@ import soot.jimple.XorExpr;
 import soot.tagkit.StringTag;
 import soot.util.Chain;
 import testful.IConfigProject;
-import testful.utils.Skip;
-import testful.utils.Instrumenter.UnifiedInstrumentator;
+import testful.coverage.soot.Instrumenter.UnifiedInstrumentator;
+import testful.coverage.soot.Skip;
 
 public class MutatorFunctions implements UnifiedInstrumentator {
 
@@ -154,18 +154,14 @@ public class MutatorFunctions implements UnifiedInstrumentator {
 	private Local lCurrentMutation;
 	private Map<Type, Local> tempLocals;
 
+	/* (non-Javadoc)
+	 * @see testful.coverage.soot.Instrumenter.UnifiedInstrumentator#init(soot.Body, soot.Body, soot.util.Chain)
+	 */
 	@Override
-	public void init(Chain<Unit> newUnits, Body newBody, Body oldBody, boolean classWithContracts, boolean contractMethod) {
+	public void init(Body oldBody, Body newBody, Chain<Unit> newUnits) {
 		method = oldBody.getMethod();
 		sClass = method.getDeclaringClass();
 		final String className = sClass.getName();
-
-		if(contractMethod) {
-			System.out.println("Skipping contract " + method.getName());
-			liveMutants = null;
-			tempLocals = null;
-			return;
-		}
 
 		tempLocals = new HashMap<Type, Local>();
 		tempLocals.put(BooleanType.v(), Jimple.v().newLocal("__mutation_temp_bool__", BooleanType.v()));
@@ -284,11 +280,11 @@ public class MutatorFunctions implements UnifiedInstrumentator {
 	public void exceptional(Chain<Unit> newUnits, Local exc) { }
 
 	@Override
-	public void done(IConfigProject config, String cutName) {
+	public void done(IConfigProject config) {
 		try {
 			ConfigHandler.singleton.done(config.getDirInstrumented());
 
-			PrintStream statFile = new PrintStream(new File(config.getDirInstrumented(), cutName + ".txt"));
+			PrintStream statFile = new PrintStream(new File(config.getDirInstrumented(),  "mutants.txt"));
 			ConfigHandler.singleton.writeStats(statFile);
 			statFile.close();
 		} catch(IOException e) {

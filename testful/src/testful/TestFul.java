@@ -1,3 +1,21 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful;
 
 import java.io.File;
@@ -21,36 +39,49 @@ public class TestFul {
 
 	public static final long runId = System.currentTimeMillis();
 
+	/**
+	 * Runs TestFul in debug mode:
+	 * enables extended validity checks
+	 * and activates one executor only.
+	 */
 	public static final boolean DEBUG = false;
 
-	public static void parseCommandLine(Object config, String[] args, Class<?> launcher, String name) {
+	private static final String VERSION = "1.1.3";
+
+	public static void parseCommandLine(IConfig config, String[] args, Class<?> launcher, String name) {
 
 		CmdLineParser parser = new CmdLineParser(config);
 		try {
 			// parse the arguments.
 			parser.parseArgument(args);
+
+			config.validate();
+
 		} catch(CmdLineException e) {
 			testful.TestFul.printHeader(name);
 
 			System.err.println(e.getMessage());
 
 			System.err.println();
-			System.err.println("Usage: java " + launcher.getCanonicalName() + " [options...] arguments...");
+			System.err.println("Usage: java " + launcher.getName() + " [options...] arguments...");
 			parser.setUsageWidth(120);
 			parser.printUsage(System.err);
 			System.err.println();
 
 			// print option sample. This is useful some time
-			System.err.println("   Example: java " + launcher.getCanonicalName() + parser.printExample(org.kohsuke.args4j.ExampleMode.REQUIRED));
+			System.err.println("   Example: java " + launcher.getName() + parser.printExample(org.kohsuke.args4j.ExampleMode.REQUIRED));
 
 			System.exit(1);
 		}
 	}
 
 	public static void printHeader(String module) {
-		System.out.println("Testful" + (module == null ? "" : (" - " + module)));
-		System.out.println("Copyright 2010 - Matteo Miraz (miraz@elet.polimi.it)");
-		System.out.println();
+
+		System.out.println("Testful v. " + VERSION + (module != null ? " - " + module : "") + " - http://code.google.com/p/testful");
+		System.out.println("Copyright (c) 2010 - Matteo Miraz");
+		System.out.println("This program comes with ABSOLUTELY NO WARRANTY.");
+		System.out.println("This is free software, and you are welcome to redistribute it under certain conditions.");
+		System.out.println("For more information, read http://www.gnu.org/licenses/gpl-3.0.txt");
 		System.out.println();
 	}
 

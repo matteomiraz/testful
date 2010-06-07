@@ -1,3 +1,21 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful.model;
 
 import java.util.ArrayList;
@@ -8,10 +26,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
@@ -19,8 +37,8 @@ import java.util.logging.Logger;
 
 import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
-import testful.coverage.TestSizeInformation;
 import testful.coverage.TrackerDatum;
+import testful.model.MethodInformation.Kind;
 import testful.model.MethodInformation.ParameterInformation;
 import testful.runner.ClassFinder;
 import testful.runner.IRunner;
@@ -124,10 +142,10 @@ public class TestSplitter {
 				if(v != 0) return v;
 
 				float c1 = 0;
-				for(CoverageInformation cov : o1.getCoverage()) if(!(cov instanceof TestSizeInformation )) c1 += cov.getQuality();
+				for(CoverageInformation cov : o1.getCoverage()) c1 += cov.getQuality();
 
 				float c2 = 0;
-				for(CoverageInformation cov : o2.getCoverage()) if(!(cov instanceof TestSizeInformation )) c2 += cov.getQuality();
+				for(CoverageInformation cov : o2.getCoverage()) c2 += cov.getQuality();
 
 				if(c1 < c2) return -1;
 				else if(c1 > c2) return 1;
@@ -155,15 +173,20 @@ public class TestSplitter {
 	}
 
 	public static Test splitAndMerge(Test test) {
-		List<Test> res = split(true, test);
+		try {
+			List<Test> res = split(true, test);
 
-		SortedSet<Operation> set = new TreeSet<Operation>(orderComparator);
+			SortedSet<Operation> set = new TreeSet<Operation>(orderComparator);
 
-		for(Test t : res)
-			for(Operation op : t.getTest())
-				set.add(op);
+			for(Test t : res)
+				for(Operation op : t.getTest())
+					set.add(op);
 
-		return new Test(test.getCluster(), test.getReferenceFactory(), set.toArray(new Operation[set.size()]));
+			return new Test(test.getCluster(), test.getReferenceFactory(), set.toArray(new Operation[set.size()]));
+		} catch (Throwable e) {
+			logger.log(Level.WARNING, "Error during split and merge: " + e, e);
+			return test;
+		}
 	}
 
 	static class OperationPosition extends OperationInformation {
@@ -179,7 +202,12 @@ public class TestSplitter {
 
 		@Override
 		public String toString() {
-			return Integer.toString(position);
+			return "Operation #" + Integer.toString(position);
+		}
+
+		@Override
+		public OperationInformation clone() {
+			return this;
 		}
 
 	}
@@ -405,7 +433,7 @@ public class TestSplitter {
 		final Reference opTarget = op.getTarget();
 		final int opTargetId = opTarget != null ? opTarget.getId() : -1;
 
-		final Reference opThis = methodInfo.isMutator() ? op.getThis() : alias(op.getThis());
+		final Reference opThis = methodInfo.getType() == Kind.MUTATOR ? op.getThis() : alias(op.getThis());
 		final int opThisId = opThis != null ? opThis.getId() : -1;
 
 		final ParameterInformation[] paramsInfo = methodInfo.getParameters();
@@ -465,7 +493,7 @@ public class TestSplitter {
 		}
 
 		// 5. check if op is an observer and there is an equivalent operation
-		if(!splitObservers && !methodInfo.isMutator()) {
+		if(!splitObservers && methodInfo.getType() != Kind.MUTATOR) {
 			Set<Reference> deps = op.getUses();
 
 			Iterator<Operation> iter = newSet.descendingIterator();
@@ -557,12 +585,12 @@ public class TestSplitter {
 		}
 
 		if(splitObservers) {
-			if(methodInfo.isMutator())
+			if(methodInfo.getType() == Kind.MUTATOR)
 				operations[opThisId] = newSet;
 			else
 				emit(newSet);
 		} else {
-			if(methodInfo.isMutator() || opTarget == null || aliases[opTargetId] == null)
+			if(methodInfo.getType() == Kind.MUTATOR || opTarget == null || aliases[opTargetId] == null)
 				operations[opThisId] = newSet;
 		}
 
@@ -647,7 +675,7 @@ public class TestSplitter {
 		// update parameters
 		for(ParameterInformation paramInfo : paramsInfo) {
 			int paramRefId = paramsRef[paramInfo.getPosition()].getId();
-			if(paramInfo.isCaptured()) merge(opTargetId, paramRefId);
+			if(opTarget != null && paramInfo.isCaptured()) merge(opTargetId, paramRefId);
 			else if(paramInfo.isMutated()) operations[paramRefId].add(op);
 
 			for(ParameterInformation captured : paramInfo.getCaptureStateOf())

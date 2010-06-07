@@ -1,13 +1,14 @@
 package testful.mutation;
 
-import testful.model.FaultyExecutionException;
+import testful.model.faults.FaultyExecutionException;
+
 
 /**
  * Used for interrupting the execution of the test.
- * 
+ *
  * @author matteo
  */
-public class TestStoppedException extends FaultyExecutionException {
+public class TestStoppedException extends RuntimeException implements FaultyExecutionException  {
 
 	/** if set to true, stops the execution */
 	public static volatile boolean stop = false;

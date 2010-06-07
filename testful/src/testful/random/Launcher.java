@@ -1,3 +1,21 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful.random;
 
 import java.io.IOException;
@@ -10,7 +28,6 @@ import testful.TestFul;
 import testful.TestfulException;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
-import testful.coverage.whiteBox.AnalysisWhiteBox;
 import testful.model.Operation;
 import testful.model.ReferenceFactory;
 import testful.model.TestCluster;
@@ -20,7 +37,6 @@ import testful.runner.ClassFinderImpl;
 import testful.runner.RunnerPool;
 import testful.runner.TestfulClassLoader;
 import testful.utils.ElementManager;
-import testful.utils.Utils;
 
 public class Launcher {
 	protected static Logger logger = Logger.getLogger("testful.random");
@@ -52,7 +68,7 @@ public class Launcher {
 		ClassFinder finder;
 		TestCluster tc;
 		try {
-			finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
+			finder = new ClassFinderCaching(new ClassFinderImpl(config));
 			tc = new TestCluster(new TestfulClassLoader(finder), config);
 		} catch (RemoteException e) {
 			// never happens
@@ -65,18 +81,17 @@ public class Launcher {
 
 		ReferenceFactory refFactory = new ReferenceFactory(tc, config.getNumVarCut(), config.getNumVar());
 
-		AnalysisWhiteBox whiteAnalysis = AnalysisWhiteBox.read(config.getDirInstrumented(), config.getCut());
-		TrackerDatum[] data = Utils.readData(whiteAnalysis);
+		TrackerDatum[] data = new TrackerDatum[] { };
 
 		RandomTest rt = null;
 
 		logger.config("Using the " + config.getRandomType() + " algorithm");
 		switch(config.getRandomType()) {
 		case SIMPLE:
-			rt = new RandomTestSimple(config.isCache(), config.getLog(), finder, tc, refFactory, data);
+			rt = new RandomTestSimple(config.isCache(), config.getLog(), finder, tc, refFactory, config.getSeed(), data);
 			break;
 		case SPLIT:
-			rt = new RandomTestSplit(config.isCache(), config.getLog(), finder, tc, refFactory, data);
+			rt = new RandomTestSplit(config.isCache(), config.getLog(), finder, tc, refFactory, config.getSeed(), data);
 			break;
 		}
 

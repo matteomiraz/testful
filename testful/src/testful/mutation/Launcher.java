@@ -12,6 +12,8 @@ import java.util.zip.GZIPOutputStream;
 
 import testful.TestFul;
 import testful.coverage.CoverageInformation;
+import testful.coverage.fault.FaultInstrumenter;
+import testful.coverage.soot.Instrumenter;
 import testful.model.Test;
 import testful.model.TestCoverage;
 import testful.model.TestReader;
@@ -22,7 +24,6 @@ import testful.runner.Context;
 import testful.runner.IRunner;
 import testful.runner.RunnerPool;
 import testful.utils.ElementManager;
-import testful.utils.Instrumenter;
 
 public class Launcher {
 
@@ -52,10 +53,10 @@ public class Launcher {
 
 		ConfigHandler.track = config.isTrack();
 
-		Instrumenter.run(config, config.getGenMutant(), "mutant",
+		Instrumenter.run(config, config.getGenMutant(),
 				ExecutionStopper.singleton,
 				new MutatorFunctions(config),
-				BugFinder.singleton
+				FaultInstrumenter.singleton
 		);
 	}
 
@@ -67,7 +68,7 @@ public class Launcher {
 		try {
 			IRunner exec = RunnerPool.getRunnerPool();
 
-			ClassFinder finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirInstrumented(), config.getDirContracts(), config.getDirCompiled()));
+			ClassFinder finder = new ClassFinderCaching(new ClassFinderImpl(config));
 
 			MutationRunner mutationRunner = new MutationRunner(exec, finder, config.isReload());
 			mutationRunner.read(config.getArguments());

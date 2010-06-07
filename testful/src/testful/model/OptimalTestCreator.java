@@ -1,27 +1,34 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful.model;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.zip.GZIPOutputStream;
 
-import testful.TestFul;
 import testful.coverage.CoverageInformation;
-import testful.coverage.TestSizeInformation;
 import testful.utils.ElementManager;
 
 public class OptimalTestCreator {
+
+	private static final Logger logger = Logger.getLogger("testful.regression.OptimalTestCreator");
 
 	/**
 	 * stores the combined coverage obtained so far.
@@ -35,139 +42,113 @@ public class OptimalTestCreator {
 	 * Key: coverage criteria;
 	 * value: solutions
 	 */
-	private final Map<String, Set<TestCoverage>> optimal;
+	private final Set<TestCoverage> optimal;
 
 	public OptimalTestCreator() {
 		combinedCoverage = new ElementManager<String, CoverageInformation>();
-		optimal = new HashMap<String, Set<TestCoverage>>();
+		optimal = new HashSet<TestCoverage>();
 	}
 
 	/**
 	 * Updates optimal solutions and combined coverage
-	 * 
 	 * @param test the test with coverage
-	 * @return true if the test is "innovative" (achieves higher coverage
-	 *         criteria), false otherwise.
 	 */
-	public synchronized boolean update(TestCoverage test) {
+	public synchronized void update(TestCoverage test) {
+
+		/** the test cover something more than tests found so far */
 		boolean innovative = false;
 
+		// update the combined coverage & check if the test is innovative
 		for(CoverageInformation coverage : test.getCoverage()) {
-			if(coverage instanceof TestSizeInformation) continue;
 
-			String key = coverage.getKey();
-			CoverageInformation combined = combinedCoverage.get(key);
+			// get or create the combined coverage
+			CoverageInformation combined = combinedCoverage.get(coverage.getKey());
 			if(combined == null) {
 				combined = coverage.createEmpty();
 				combinedCoverage.put(combined);
 			}
 
-			innovative = innovative | update(test, coverage);
+			// update the combined coverage
+			if(!innovative) {
+				if(!combined.contains(coverage)) {
+					combined.merge(coverage);
+					innovative = true;
+				}
+			} else {
+				combined.merge(coverage);
+			}
 		}
 
-		return innovative;
-	}
-
-	private boolean update(TestCoverage test, CoverageInformation coverage) {
-		String key = coverage.getKey();
-		CoverageInformation combined = combinedCoverage.get(key);
-
-		// updates the optimal solutions
-		Set<TestCoverage> optimalSet = optimal.get(key);
-		if(optimalSet == null) {
-			optimalSet = new HashSet<TestCoverage>();
-			optimal.put(key, optimalSet);
-		}
-
-		// check if the solution is innovative (it contains new elements)
-		boolean innovative = !combined.contains(coverage);
-
-		// check if any pre-existent optimal solutions can be removed
+		// check if it is possible to remove some tests
 		Set<TestCoverage> toRemove = new HashSet<TestCoverage>();
-		for(TestCoverage t : optimalSet)
-			if(coverage.contains(t.getCoverage().get(key))) toRemove.add(t);
+		for(TestCoverage other : optimal) {
+			if(performsBetter(test, other))
+				toRemove.add(other);
+		}
 
-		if(innovative) // if the solution is innovative, update the combined coverage
-			combined.merge(coverage);
-		else {
-			// the not-innovative solution must be shorter than the sum of the replacing solutions
+		// if the test is not innovative, it should be shorter than to-be-removed tests
+		if(!innovative) {
 			int tot = 0;
 			for(TestCoverage t : toRemove)
 				tot += t.getTest().length;
 
-			if(test.getTest().length > tot) toRemove.clear();
+			if(test.getTest().length < tot) toRemove.clear();
 		}
 
-		for(TestCoverage t : toRemove)
-			optimalSet.remove(t);
 
-		if(innovative || !toRemove.isEmpty()) optimalSet.add(test);
+		// if the test is innovative
+		//    or if it is more efficient than the others
+		if(innovative || !toRemove.isEmpty()) {
+			for(TestCoverage t : toRemove)
+				optimal.remove(t);
 
-		return(innovative || !toRemove.isEmpty());
+			optimal.add(test);
+		}
 	}
 
-	public synchronized List<TestCoverage> get() {
-		List<TestCoverage> ret = new ArrayList<TestCoverage>();
+	/**
+	 * Checks if the test can replace the other test
+	 * (i.e., the other test does not cover any element not covered by the given test).
+	 * @param test the reference test
+	 * @param other the test that we want to remove
+	 * @return true if the other test can be removed
+	 */
+	private boolean performsBetter(TestCoverage test, TestCoverage other) {
+		for (CoverageInformation otherCov : other.getCoverage()) {
+			CoverageInformation thisCov = test.getCoverage().get(otherCov.getKey());
+			if(thisCov == null || !thisCov.contains(otherCov)) return false;
+		}
 
-		for(Entry<String, Set<TestCoverage>> entry : optimal.entrySet())
-			for(TestCoverage t : entry.getValue())
-				ret.add(t);
-
-		return ret;
+		return true;
 	}
 
-	public synchronized ElementManager<String, CoverageInformation> getCoverage() {
-		return combinedCoverage;
-	}
-
-	public synchronized Map<String, Set<TestCoverage>> getOptimal() {
+	public Collection<TestCoverage> get() {
 		return optimal;
 	}
 
-	public synchronized void write(Integer currentGeneration, long totInvocation, long time, File baseDir, Logger log) {
-		if(baseDir == null) return;
+	public ElementManager<String, CoverageInformation> getCoverage() {
+		return combinedCoverage;
+	}
 
-		for(Entry<String, Set<TestCoverage>> entry : optimal.entrySet()) {
-			try {
-				final File dir = new File(baseDir, "combined");
-
-				PrintWriter fw = new PrintWriter(TestFul.createFileWithBackup(dir, entry.getKey() + ".txt"));
-				CoverageInformation combinedInfo = combinedCoverage.get(entry.getKey());
-				fw.println("Combined coverage: " + combinedInfo.getQuality());
-				fw.println("Composed of " + entry.getValue().size() + " tests.");
-				fw.println();
-				fw.println(combinedInfo.toString());
-				fw.close();
-
-				if(!entry.getValue().isEmpty()) {
-					int i = 0;
-					TestCoverage[] parts = new TestCoverage[entry.getValue().size()];
-					for(TestCoverage t : entry.getValue())
-						parts[i++] = t;
-
-					ObjectOutput out = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream(TestFul.createFileWithBackup(dir, entry.getKey() + ".ser.gz"))));
-					out.writeObject(new Test(parts));
-					out.close();
-				}
-			} catch(Exception e) {
-				Logger.getLogger("testful.model").log(Level.WARNING, "Exception thrown while writing optimal tests: " + e.getMessage(), e);
-			}
-		}
-
+	public void log(Integer currentGeneration, long totInvocation, long time) {
 		StringBuilder sb = new StringBuilder("combinedCoverage ");
+
 		sb.append("inv=").append(totInvocation);
+
 		sb.append(";").append("time=").append(time);
+
 		if(currentGeneration != null) sb.append(";").append("gen=").append(currentGeneration);
 
-		for (Entry<String, Set<TestCoverage>> e : optimal.entrySet()) {
-			int tot = 0;
-			for(Test t : e.getValue())
-				tot += t.getTest().length;
+		sb.append(";").append("tests-num").append("=").append(optimal.size());
 
-			sb.append(";").append(e.getKey()).append("-cov").append("=").append(combinedCoverage.get(e.getKey()).getQuality());
-			sb.append(";").append(e.getKey()).append("-tests").append("=").append(e.getValue().size());
-			sb.append(";").append(e.getKey()).append("-length").append("=").append(tot);
-		}
-		log.finer(sb.toString());
+		int tot = 0;
+		for(Test t : optimal)
+			tot += t.getTest().length;
+		sb.append(";").append("tests-length").append("=").append(tot);
+
+		for (CoverageInformation cov : combinedCoverage)
+			sb.append(";").append(cov.getKey()).append("=").append(cov.getQuality());
+
+		logger.finer(sb.toString());
 	}
 }

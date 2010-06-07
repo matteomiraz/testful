@@ -1,8 +1,25 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project default="create_jars" name="TestFul">
+<project default="build" name="TestFul">
+	<!-- the current directory -->
+	<dirname file="build.xml" property="base"/>
 
-	<property name="artefacts" value="build" />
-	<property name="build" value="bin" />
+	<!-- the output directory -->
+	<property name="build" value="${base}/bin"/>
+
+	<!-- normal classes -->
+	<property name="source.classes" value="${base}/src"/>
+	<property name="build.classes" value="${build}/classes"/>
+	<property name="artifacts" value="${build}/artifacts"/>
+
+	<!-- tests -->
+	<property name="source.tests" value="${base}/tests"/>
+	<property name="build.tests" value="${build}/tests"/>
+
+	<!-- tests' cut -->
+	<property name="testCut" value="${base}/testCut"/>
+	<property name="testCut.source" value="${testCut}/src"/>
+	<property name="testCut.bin" value="${testCut}/bin"/>
+	<property name="testCut.instrumented" value="${testCut}/instrumented"/>
 
 	<!-- classes loaded using the TestfulClassLoader -->
 	<patternset id="testfulClassLoader">
@@ -22,14 +39,16 @@
 		<include name="org/jmlspecs/**/*.class" />
 		<include name="org/multijava/**/*.class" />
 
-		<include name="org/apache/commons/jexl/**" />
-		<include name="org/apache/commons/logging/**/*" />
+		<include name="org/apache/commons/jexl/**"/>
+		<include name="org/apache/commons/logging/**/*"/>
 
 		<include name="testful/utils/Cloner.class" />
 	</patternset>
 
 	<!-- classes needed for running tests -->
 	<patternset id="runner">
+		<include name="testful/TestFul*.class"/>
+
 		<include name="testful/coverage/TrackerDatum*.class"/>
 		<include name="testful/coverage/RunnerCaching*.class"/>
 
@@ -43,76 +62,73 @@
 
 	<!-- classes needed for generating and running tests -->
 	<patternset id="auto">
-		<patternset refid="runner" />
+		<patternset refid="runner"/>
 		<include name="testful/coverage/TestSizeInformation.clazz" />
 		<include name="testful/coverage/TestSizeInformation.class" />
-		<include name="testful/coverage/**/*.clazz" />
-		<include name="testful/coverage/CoverageExecutionManager*.class" />
-		<include name="testful/coverage/CoverageInformation*.class" />
-		<include name="testful/coverage/**/*Coverage*.class" />
-		<include name="testful/coverage/behavior/*.class" />
-		<include name="testful/coverage/bug/Bug.class" />
-		<include name="testful/coverage/whiteBox/*.class" />
-		<exclude name="testful/coverage/whiteBox/Factory*.class" />
-		<exclude name="testful/coverage/whiteBox/WhiteInstrumenter*.class" />
-		<include name="testful/model/**" />
+		<include name="testful/coverage/**/*.clazz"/>
+		<include name="testful/coverage/CoverageExecutionManager*.class"/>
+		<include name="testful/coverage/CoverageInformation*.class"/>
+		<include name="testful/coverage/**/*Coverage*.class"/>
+		<include name="testful/coverage/behavior/*.class"/>
+		<include name="testful/coverage/bug/Bug.class"/>
+		<include name="testful/coverage/whiteBox/*.class"/>
+		<exclude name="testful/coverage/whiteBox/Factory*.class"/>
+		<exclude name="testful/coverage/whiteBox/WhiteInstrumenter*.class"/>
+		<include name="testful/model/**"/>
 
-		<include name="testful/Config*.class" />
-		<include name="testful/IConfig*.class" />
+		<include name="testful/Config*.class"/>
+		<include name="testful/IConfig*.class"/>
 
-		<include name="testful/regression/*.class" />
+		<include name="testful/regression/*.class"/>
 
-		<include name="jmetal/base/Variable.*" />
-		<include name="ec/util/MersenneTwister*.class" />
+		<include name="jmetal/base/Variable.*"/>
+		<include name="ec/util/MersenneTwister*.class"/>
 
-		<include name="org/jmlspecs/jmlexec/**/*.clazz" />
-		<include name="org/jmlspecs/jmlrac/**/*.clazz" />
-		<include name="org/jmlspecs/jmlrac/runtime/**/*.class" />
-		<include name="org/jmlspecs/models/**/*.clazz" />
-		<include name="org/jmlspecs/models/**/*.clazz" />
-		<include name="org/jmlspecs/util/**/*.clazz" />
-
-		<include name="org/apache/commons/jexl/**/*" />
-		<include name="org/apache/commons/logging/**/*" />
-		<include name="org/jdom/**/*" />
+		<include name="org/apache/commons/jexl/**/*"/>
+		<include name="org/apache/commons/logging/**/*"/>
+		<include name="org/jdom/**/*"/>
 	</patternset>
 
 	<patternset id="soot">
-		<include name="autogen.class" />
-		<include name="procinfo.class" />
-		<include name="typeinfo.class" />
-		<include name="jas/**/*" />
-		<include name="jasmin/**/*" />
-		<include name="scm/**/*" />
-		<include name="java_cup/**/*" />
-		<include name="polyglot/**/*" />
-		<include name="ppg/**/*" />
-		<include name="beaver/**/*" />
-		<include name="soot/**/*" />
+		<include name="autogen.class"/>
+		<include name="procinfo.class"/>
+		<include name="typeinfo.class"/>
+		<include name="jas/**/*"/>
+		<include name="jasmin/**/*"/>
+		<include name="scm/**/*"/>
+		<include name="java_cup/**/*"/>
+		<include name="polyglot/**/*"/>
+		<include name="ppg/**/*"/>
+		<include name="beaver/**/*"/>
+		<include name="soot/**/*"/>
 	</patternset>
 
-	<!-- ================================= 
-          target: clean              
+	<!-- =================================
+          target: clean
          ================================= -->
 	<target name="clean" depends="" description="Clean all">
-		<delete dir="${artefacts}" />
-		<delete dir="${build}" />
-		<mkdir dir="${build}" />
+		<delete dir="${build}"/>
+		<mkdir dir="${build}"/>
+		<mkdir dir="${build.classes}"/>
+		<mkdir dir="${build.tests}"/>
+
+    	<delete dir="testCut/bin"/>
+    	<delete dir="testCut/instrumented"/>
 	</target>
 
-	<!-- ================================= 
-          target: create_jars              
+	<!-- =================================
+          target: build
          ================================= -->
-	<target name="create_jars" depends="create_instrumenter_jar,create_runner_jar,create_testful_jar,create_randomTest_jar" description="Creater executable jars">
+	<target name="build" depends="create_instrumenter_jar,create_runner_jar,create_testful_jar,create_randomTest_jar" description="Creater executable jars">
 	</target>
 
-	<!-- - - - - - - - - - - - - - - - - - 
-          target: unpack_libraries                      
+	<!-- - - - - - - - - - - - - - - - - -
+          target: unpack_libraries
          - - - - - - - - - - - - - - - - - -->
     <target name="unpack_libraries">
-		<mkdir dir="${build}"/>
+		<mkdir dir="${build.classes}"/>
 
-		<unjar dest="${build}" overwrite="false">
+		<unjar dest="${build.classes}" overwrite="false">
 			<patternset>
 				<exclude name="META-INF/*.MF" />
 			</patternset>
@@ -122,43 +138,43 @@
 		</unjar>
     </target>
 
-	<!-- - - - - - - - - - - - - - - - - - 
-          target: really_compile                      
+	<!-- - - - - - - - - - - - - - - - - -
+          target: really_compile
          - - - - - - - - - - - - - - - - - -->
     <target name="really_compile">
-		<javac srcdir="src" destdir="${build}" optimize="true" debug="true" source="6" target="6" >
+		<javac srcdir="${source.classes}" destdir="${build.classes}" optimize="true" debug="true" source="6" target="6" >
 			<classpath>
 				<fileset file="lib/*.jar" />
 			</classpath>
 		</javac>
 
-		<copy todir="${build}">
-			<fileset dir="${build}">
-				<patternset refid="testfulClassLoader" />
+		<copy todir="${build.classes}">
+			<fileset dir="${build.classes}" >
+				<patternset refid="testfulClassLoader"/>
 			</fileset>
 			<mapper type="glob" from="*.class" to="*.clazz" />
 		</copy>
     </target>
 
-	
-	<!-- ================================= 
-          target: compile              
+
+	<!-- =================================
+          target: compile
          ================================= -->
 	<target name="compile" depends="unpack_libraries,really_compile" description="Compile classes">
 	</target>
 
-	<!-- ================================= 
-          target: create_instrumenter_jar              
+	<!-- =================================
+          target: create_instrumenter_jar
          ================================= -->
 	<target name="create_instrumenter_jar" depends="compile" description="Crete runnable jar for instrumenter">
-		<mkdir dir="${artefacts}" />
-		<jar destfile="${artefacts}/instrumenter.jar" filesetmanifest="mergewithoutmain">
+		<mkdir dir="${artifacts}"/>
+		<jar destfile="${artifacts}/instrumenter.jar" filesetmanifest="mergewithoutmain">
 			<manifest>
-				<attribute name="Built-By" value="${user.name}" />
-				<attribute name="Main-Class" value="testful.coverage.Launcher" />
-				<attribute name="Class-Path" value="." />
+				<attribute name="Built-By" value="${user.name}"/>
+				<attribute name="Main-Class" value="testful.coverage.Launcher"/>
+				<attribute name="Class-Path" value="."/>
 			</manifest>
-			<fileset dir="${build}">
+			<fileset dir="${build.classes}">
 				<include name="testful/coverage/**/*.class"/>
 				<include name="testful/model/**/*.class"/>
 				<include name="testful/utils/**/*.class"/>
@@ -167,17 +183,16 @@
 				<include name="testful/TestFul.class"/>
 				<include name="testful/TestFul$*.class"/>
 				<include name="testful/TestfulException.class"/>
-				
+
+				<include name="testful/IConfig.class"/>
 				<include name="testful/IConfigProject*.class"/>
 				<include name="testful/ConfigProject.class"/>
 				<include name="testful/IConfigCut*.class"/>
 				<include name="testful/ConfigCut.class"/>
-				
 
 				<include name="org/apache/commons/jexl/**/*.class"/>
 				<include name="org/apache/commons/logging/**/*.class"/>
 				<include name="org/jdom/**/*.class"/>
-				<include name="org/jmlspecs/jmlrac/runtime/**/*.class"/>
 				<include name="org/kohsuke/args4j/**/*"/>
 				<patternset refid="soot"/>
 
@@ -185,35 +200,35 @@
 		</jar>
 	</target>
 
-	<!-- ================================= 
-          target: create_runner_jar              
+	<!-- =================================
+          target: create_runner_jar
          ================================= -->
 	<target name="create_runner_jar" depends="compile" description="Crete the runner">
-		<mkdir dir="${artefacts}"/>
-		<jar destfile="${artefacts}/runner.jar" filesetmanifest="mergewithoutmain">
+		<mkdir dir="${artifacts}"/>
+		<jar destfile="${artifacts}/runner.jar" filesetmanifest="mergewithoutmain">
 			<manifest>
 				<attribute name="Built-By" value="${user.name}"/>
 				<attribute name="Main-Class" value="testful.runner.Launcher"/>
 				<attribute name="Class-Path" value="."/>
 			</manifest>
-			<fileset dir="${build}">
+			<fileset dir="${build.classes}">
 				<patternset refid="runner"/>
 			</fileset>
 		</jar>
 	</target>
 
-	<!-- ================================= 
-          target: create_junitCreator_jar              
+	<!-- =================================
+          target: create_junitCreator_jar
          ================================= -->
 	<target name="create_junitCreator_jar" depends="compile" description="Crete the runner">
-		<mkdir dir="${artefacts}"/>
-		<jar destfile="${artefacts}/junitCreator.jar" filesetmanifest="mergewithoutmain">
+		<mkdir dir="${artifacts}"/>
+		<jar destfile="${artifacts}/junitCreator.jar" filesetmanifest="mergewithoutmain">
 			<manifest>
 				<attribute name="Built-By" value="${user.name}"/>
 				<attribute name="Main-Class" value="testful.regression.JUnitTestGenerator"/>
 				<attribute name="Class-Path" value="."/>
 			</manifest>
-			<fileset dir="${build}">
+			<fileset dir="${build.classes}">
 				<patternset refid="runner"/>
 				<include name="jmetal/base/Variable.class"/>
 				<include name="testful/model/**/*.class"/>
@@ -222,18 +237,18 @@
 		</jar>
 	</target>
 
-	<!-- ================================= 
-          target: create_randomTest_jar              
+	<!-- =================================
+          target: create_randomTest_jar
          ================================= -->
 	<target name="create_randomTest_jar" depends="compile" description="Crete runnable jar for random testing">
-		<mkdir dir="${artefacts}"/>
-		<jar destfile="${artefacts}/randomTest.jar" filesetmanifest="mergewithoutmain" compress="true" index="true">
+		<mkdir dir="${artifacts}"/>
+		<jar destfile="${artifacts}/randomTest.jar" filesetmanifest="mergewithoutmain" compress="true" index="true">
 			<manifest>
 				<attribute name="Built-By" value="${user.name}"/>
 				<attribute name="Main-Class" value="testful.random.Launcher"/>
 				<attribute name="Class-Path" value="."/>
 			</manifest>
-			<fileset dir="${build}">
+			<fileset dir="${build.classes}">
 				<patternset>
 					<patternset refid="auto"/>
 					<include name="testful/random/**/*.class"/>
@@ -242,24 +257,23 @@
 		</jar>
 	</target>
 
-	<!-- ================================= 
-          target: create_testful_jar              
+	<!-- =================================
+          target: create_testful_jar
          ================================= -->
 	<target name="create_testful_jar" depends="compile" description="Crete runnable jar for testful">
-		<mkdir dir="${artefacts}"/>
-		<jar destfile="${artefacts}/testful.jar" filesetmanifest="mergewithoutmain">
+		<mkdir dir="${artifacts}"/>
+		<jar destfile="${artifacts}/testful.jar" filesetmanifest="mergewithoutmain">
 			<manifest>
 				<attribute name="Built-By" value="${user.name}"/>
-				<attribute name="Main-Class" value="testful.evolutionary.jMetal.Launcher"/>
+				<attribute name="Main-Class" value="testful.evolutionary.Launcher"/>
 				<attribute name="Class-Path" value="."/>
 			</manifest>
-			<fileset dir="${build}">
+			<fileset dir="${build.classes}">
 				<patternset>
 					<patternset refid="auto"/>
 					<include name="jmetal/base/**/*.class"/>
 					<include name="jmetal/util/**/*.class"/>
-					<include name="testful/evolutionary/*.class"/>
-					<include name="testful/evolutionary/jMetal/**/*.class"/>
+					<include name="testful/evolutionary/**/*.class"/>
 					<include name="testful/random/**/*.class"/>
 				</patternset>
 			</fileset>
@@ -293,16 +307,16 @@
           target: javadoc              
          ================================= -->
 	<target name="javadoc" depends="compile" description="Create the javadoc">
-		<mkdir dir="${artefacts}"/>
+		<mkdir dir="${artifacts}"/>
 		<javadoc
-    	           destdir="${artefacts}/docs/api"
+    	           destdir="${artifacts}/docs/api"
     	           author="true"
     	           version="true"
     	           use="true"
     	           windowtitle="Test API">
 
 			<classpath>
-				<dirset dir="${build}"/>
+				<dirset dir="${build.classes}"/>
 			</classpath>
 
 			<fileset dir="src" defaultexcludes="yes">
@@ -311,28 +325,159 @@
 
 			<doctitle>
 				<![CDATA[<h1>TestFul's JavaDoc</h1>]]></doctitle>
-		<bottom>
-			<![CDATA[<i>Copyright &#169; 2009 Matteo Miraz.</i>
-		<a rel="license" href="http://creativecommons.org/licenses/by-sa/2.5/it/">
-			<img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-sa/2.5/it/80x15.png" />
-		</a>
-		<br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/2.5/it/">Creative Commons Attribution-Share Alike 2.5 Italy License</a>.]]></bottom>
-	<tag name="testful.classloader" scope="all" description="ClassLoader of this class:" />
-	<group packages="testful.model" title="Test Model" />
-	<group packages="testful.coverage" title="Coverage" />
-	<group packages="testful.random" title="Random Test" />
-	<group packages="testful.evolutionary" title="Evolutionary Test" />
-	<group packages="testful.runner" title="Generic Test Runner" />
-	<group packages="testful.mutation" title="Mutation Testing" />
-	<group packages="testful.regression" title="Regression Testing" />
-	<link href="http://java.sun.com/javase/6/docs/api/" />
-	<link href="http://commons.apache.org/jexl/apidocs-1.0/" />
-	<link href="http://commons.apache.org/logging/apidocs/" />
-	<link href="http://www.sable.mcgill.ca/soot/doc/" />
-	<link href="http://www.jdom.org/docs/apidocs/" />
-	<link href="https://args4j.dev.java.net/nonav/maven/apidocs/" />
-	<link href="https://jaxb.dev.java.net/nonav/jaxb20-pfd/api/" />
-	<link href="http://www.cs.gmu.edu/~eclab/projects/ecj/docs/classdocs/" />
-</javadoc>
-</target>
+			<bottom>
+				<![CDATA[<i>Copyright &#169; 2010 Matteo Miraz - <a href="http://code.google.com/p/testful/">TestFul</a>.</i>
+				<a rel="license" href="http://creativecommons.org/licenses/by-sa/2.5/it/">
+					<img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-sa/2.5/it/80x15.png" />
+				</a>
+				<br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/2.5/it/">Creative Commons Attribution-Share Alike 2.5 Italy License</a>.]]>
+			</bottom>
+			<tag name="testful.classloader" scope="all" description="ClassLoader of this class:"/>
+			<group packages="testful.model"			title="Test Model"/>
+			<group packages="testful.coverage"		title="Coverage"/>
+			<group packages="testful.random"		title="Random Test"/>
+			<group packages="testful.evolutionary"	title="Evolutionary Test"/>
+			<group packages="testful.runner"		title="Generic Test Runner"/>
+			<group packages="testful.mutation"		title="Mutation Testing"/>
+			<group packages="testful.regression"	title="Regression Testing"/>
+			<link href="http://java.sun.com/javase/6/docs/api/"/>
+			<link href="http://commons.apache.org/jexl/apidocs-1.0/"/>
+			<link href="http://commons.apache.org/logging/apidocs/"/>
+			<link href="http://www.sable.mcgill.ca/soot/doc/"/>
+			<link href="http://www.jdom.org/docs/apidocs/"/>
+			<link href="https://args4j.dev.java.net/nonav/maven/apidocs/"/>
+			<link href="https://jaxb.dev.java.net/nonav/jaxb20-pfd/api/"/>
+			<link href="http://www.cs.gmu.edu/~eclab/projects/ecj/docs/classdocs/"/>
+		</javadoc>
+	</target>
+
+	<!-- - - - - - - - - - - - - - - - - -
+          target: Compile testCut
+          description: compile classes used by tests as CUT (in testCut)
+         - - - - - - - - - - - - - - - - - -->
+    <target name="test.cut.compile" depends="create_instrumenter_jar" >
+    	<mkdir dir="${testCut.bin}" />
+		<javac srcdir="${testCut.source}" destdir="${testCut.bin}" optimize="false" debug="true" source="1.4" target="1.4" />
+    </target>
+
+	<!-- - - - - - - - - - - - - - - - - -
+          target: Instrument testCut
+          description: Instrument the classes used by tests as CUT (in testCut)
+         - - - - - - - - - - - - - - - - - -->
+    <target name="test.cut.instrument" depends="create_instrumenter_jar, test.cut.compile" description="instrument the tests' cut">
+    	<delete dir="${base}/testCut/instrumented" />
+    	<java jar="${artifacts}/instrumenter.jar" fork="true">
+    		<arg line="-dir ${testCut} dummy.WhiteSample dummy.Simple dummy.StateMachine dummy.Instrumenter1 apache.Fraction"/>
+    	</java>
+	</target>
+
+	<!-- =================================
+          target: test
+         ================================= -->
+    <target name="test" depends="test.cut.instrument" description="run jUnit tests">
+		<javac srcdir="${base}/tests" destdir="${build.tests}" classpath="${build.classes}" optimize="false" debug="true" />
+
+		<junit printsummary="on" dir="${base}" fork="true">
+			<classpath>
+				<pathelement path="${build.tests}"/>
+				<pathelement path="${build.classes}"/>
+			</classpath>
+			<test name="testful.AllTests"/>
+		</junit>
+
+    </target>
+
+	<!-- cobertura -->
+	<property name="cobertura.dir" value="${base}/../ext-tools/cobertura" />
+	<path id="cobertura.classpath">
+	    <fileset dir="${cobertura.dir}">
+	        <include name="cobertura.jar" />
+	        <include name="lib/**/*.jar" />
+	    </fileset>
+	</path>
+	<taskdef classpathref="cobertura.classpath" resource="tasks.properties" />
+
+	<!-- =================================
+          target: Run tests and collect code coverage
+         ================================= -->
+	<target name="test.coverage" description="Run tests and collect code coverage">
+		<delete file="cobertura.ser" />
+
+		<property name="build.cobertura" value="${build}/cobertura"/>
+
+		<path id="instrumented.classpath">
+			<path refid="cobertura.classpath"/>
+			<pathelement path="${build.tests}"/>
+			<pathelement path="${build.cobertura}"/>
+			<pathelement path="${build.classes}"/>
+		</path>
+
+		<!-- recompile in debug mode -->
+		<delete dir="${build.cobertura}"/>
+		<mkdir dir="${build.cobertura}"/>
+		<javac srcdir="${source.classes}" destdir="${build.cobertura}" optimize="false" debug="true" source="6" target="6" >
+			<classpath>
+				<fileset file="lib/*.jar"/>
+			</classpath>
+		</javac>
+
+		<!-- instrument -->
+		<cobertura-instrument todir="${build.cobertura}">
+		    <fileset dir="${build.cobertura}">
+		        <include name="testful/**/*.class"/>
+		    </fileset>
+		</cobertura-instrument>
+
+		<!-- unpack jars -->
+		<unjar dest="${build.cobertura}" overwrite="false">
+			<patternset>
+				<exclude name="META-INF/*.MF"/>
+			</patternset>
+			<fileset file="lib/*.jar">
+				<exclude name="*src*.jar"/>
+			</fileset>
+		</unjar>
+
+		<!-- create .clazzes -->
+		<copy todir="${build.cobertura}">
+			<fileset dir="${build.cobertura}" >
+				<patternset refid="testfulClassLoader"/>
+			</fileset>
+			<mapper type="glob" from="*.class" to="*.clazz"/>
+		</copy>
+
+		<!-- compile tests -->
+		<javac srcdir="${source.tests}" destdir="${build.tests}" classpathref="instrumented.classpath" optimize="false" debug="true" />
+
+		<!-- compile tests' cut & instrument them -->
+    	<mkdir dir="${base}/testCut/bin" />
+    	<delete dir="${base}/testCut/instrumented" />
+		<javac srcdir="${testCut.source}" destdir="${testCut.bin}" optimize="false" debug="true" source="1.4" target="1.4"  />
+
+		<java classname="testful.coverage.Launcher" fork="true" classpathref="instrumented.classpath">
+			<arg line="-dir ${testCut} -cut dummy.Simple"/>
+		</java>
+		<java classname="testful.coverage.Launcher" fork="true" classpathref="instrumented.classpath">
+			<arg line="-dir ${testCut} -cut dummy.StateMachine"/>
+		</java>
+		<java classname="testful.coverage.Launcher" fork="true" classpathref="instrumented.classpath">
+			<arg line="-dir ${testCut} -cut dummy.Instrumenter1"/>
+		</java>
+		<java classname="testful.coverage.Launcher" fork="true" classpathref="instrumented.classpath">
+			<arg line="-dir ${testCut} -cut dummy.WhiteSample"/>
+		</java>
+		<java classname="testful.coverage.Launcher" fork="true" classpathref="instrumented.classpath">
+			<arg line="-dir ${testCut} -cut apache.Fraction"/>
+		</java>
+
+		<!-- run jUnit tests -->
+		<junit printsummary="on" dir="${base}" fork="true" >
+			<classpath refid="instrumented.classpath"/>
+			<test name="testful.AllTests"/>
+		</junit>
+
+		<mkdir dir="${build}/coverage"/>
+	    <cobertura-report srcdir="src" destdir="${build}/coverage"/>
+	</target>
+
 </project>

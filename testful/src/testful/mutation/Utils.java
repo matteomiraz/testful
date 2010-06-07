@@ -1,16 +1,7 @@
 package testful.mutation;
 
-import org.jmlspecs.jmlrac.runtime.JMLAssertionError;
-import org.jmlspecs.jmlrac.runtime.JMLEntryPreconditionError;
-import org.jmlspecs.jmlrac.runtime.JMLInternalPreconditionError;
-import org.jmlspecs.jmlrac.runtime.JMLInvariantError;
-import org.jmlspecs.jmlrac.runtime.JMLPostconditionError;
+import testful.model.faults.FaultyExecutionException;
 
-import testful.model.ExceptionRaisedException;
-import testful.model.FaultyExecutionException;
-import testful.model.InternalPreConditionViolationException;
-import testful.model.InvariantViolationException;
-import testful.model.PostConditionViolationException;
 
 /**
  * Just a bunch of useful methods
@@ -40,13 +31,12 @@ public class Utils {
 		return className.replace('_', '.').replaceAll("\\.\\.", "_");
 	}
 
-
 	/**
 	 * ABS ZPush: if value is zero, throws a postconditionViolation Exception
 	 * (i.e., the mutant is killed)
 	 */
 	public static final void zpush(int value) {
-		if(value == 0) throw new PostConditionViolationException("ZPush Mutation", null);
+		if(value == 0) throw new ZPushException();
 	}
 
 	/**
@@ -54,7 +44,7 @@ public class Utils {
 	 * (i.e., the mutant is killed)
 	 */
 	public static final void zpush(long value) {
-		if(value == 0) throw new PostConditionViolationException("ZPush Mutation", null);
+		if(value == 0) throw new ZPushException();
 	}
 
 	/**
@@ -62,7 +52,7 @@ public class Utils {
 	 * (i.e., the mutant is killed)
 	 */
 	public static final void zpush(float value) {
-		if(value == 0) throw new PostConditionViolationException("ZPush Mutation", null);
+		if(value == 0) throw new ZPushException();
 	}
 
 	/**
@@ -70,34 +60,12 @@ public class Utils {
 	 * (i.e., the mutant is killed)
 	 */
 	public static final void zpush(double value) {
-		if(value == 0) throw new PostConditionViolationException("ZPush Mutation", null);
+		if(value == 0) throw new ZPushException();
 	}
 
-	/**
-	 * Converts the exception into a testful exception.
-	 * 
-	 * @param exc the exception thrown
-	 * @param hasContracts true if the class has contracts
-	 * @throws Throwable this method always throws an exception, either a testful
-	 *           one or a plain one.
-	 */
-	public static void processException(Throwable exc, boolean hasContracts) throws Throwable {
+	public static class ZPushException extends RuntimeException implements FaultyExecutionException {
 
-		if(!hasContracts) return;
+		private static final long serialVersionUID = 3739209292146438050L;
 
-		// nested call..
-		if(exc instanceof FaultyExecutionException) throw (FaultyExecutionException) exc;
-
-		Throwable fault;
-		if(!(exc instanceof JMLAssertionError)) fault = exc; // it's a user-defined exception in a class with contracts: it's ok!
-		else if(exc instanceof JMLEntryPreconditionError) fault = exc; // it's a precondition violation: throwing the exception
-		else  if(exc instanceof JMLInternalPreconditionError) fault = new InternalPreConditionViolationException(exc.getMessage(), exc);
-		else if(exc instanceof JMLPostconditionError) fault = new PostConditionViolationException(exc.getMessage(), exc);
-		else if(exc instanceof JMLInvariantError) fault = new InvariantViolationException(exc.getMessage(), exc);
-		else if(exc instanceof JMLAssertionError) fault = new ExceptionRaisedException(exc.getMessage(), exc);
-		else fault = new ExceptionRaisedException(exc);
-
-		throw fault;
 	}
-
 }

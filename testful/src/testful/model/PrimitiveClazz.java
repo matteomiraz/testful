@@ -1,7 +1,26 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful.model;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 public final class PrimitiveClazz extends Clazz {
@@ -152,7 +171,7 @@ public final class PrimitiveClazz extends Clazz {
 
 	/**
 	 * Create a primitive Class
-	 * 
+	 *
 	 * @param cluster : the test cluster
 	 * @param type : the Class type (e.g., Integer)
 	 */
@@ -263,7 +282,7 @@ public final class PrimitiveClazz extends Clazz {
 
 	@Override
 	void calculateAssignableTo() throws ClassNotFoundException {
-		Set<Clazz> builder = new HashSet<Clazz>();
+		Set<Clazz> builder = new TreeSet<Clazz>();
 
 		// process primitive types (equivalent primitive types are stored in assignableTo)
 		for(Clazz clazz : assignableTo)
@@ -297,6 +316,12 @@ public final class PrimitiveClazz extends Clazz {
 		assignableTo = builder.toArray(new Clazz[builder.size()]);
 	}
 
+	/**
+	 * Analyze the set of classes, and make sure that each primitive type
+	 * is present in its class version (e.g., java.lang.Boolean) and not in
+	 * its primitive version (e.g., boolean).
+	 * @param set the set of classes to analze
+	 */
 	public static void refine(Set<Clazz> set) {
 		Set<PrimitiveClazz> toRemove = new HashSet<PrimitiveClazz>();
 		Set<PrimitiveClazz> toAdd = new HashSet<PrimitiveClazz>();
@@ -344,11 +369,6 @@ public final class PrimitiveClazz extends Clazz {
 
 		logger.warning("Cannot perform the conversion for type: " + object.getClass().getCanonicalName());
 		return null;
-	}
-
-	@Override
-	public int hashCode() {
-		return super.hashCode() * 31 + realType.hashCode();
 	}
 
 	@Override

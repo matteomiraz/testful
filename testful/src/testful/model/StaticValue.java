@@ -1,3 +1,21 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful.model;
 
 import java.io.Serializable;
@@ -5,13 +23,13 @@ import java.lang.reflect.Field;
 
 /**
  * StaticValues render constants declared in classes.
- * 
+ *
  * @author matteo
  */
-public class StaticValue implements Serializable {
+public class StaticValue implements Serializable, Comparable<StaticValue> {
 
 	private static final long serialVersionUID = 2915220460472722096L;
-	
+
 	/** type of the field (e.g. Class Foo { int field; } => int ) */
 	private final Clazz type;
 	/** the class that declares the field (e.g. Class Foo { int field; } => Foo ) */
@@ -30,7 +48,7 @@ public class StaticValue implements Serializable {
 
 	/**
 	 * Returns the type of the field (e.g., Class Foo { int field; } => int ).
-	 * 
+	 *
 	 * @return the type of the field
 	 */
 	public Clazz getType() {
@@ -40,7 +58,7 @@ public class StaticValue implements Serializable {
 	/**
 	 * Returns the class declaring the field (e.g. Class Foo { int field; } => Foo
 	 * )
-	 * 
+	 *
 	 * @return the class declaring the field
 	 */
 	public Clazz getDeclaringClass() {
@@ -49,7 +67,7 @@ public class StaticValue implements Serializable {
 
 	/**
 	 * Returns the name of the field (e.g. Class Foo { int field; } => "field" )
-	 * 
+	 *
 	 * @return the name of the field
 	 */
 	public String getName() {
@@ -58,7 +76,7 @@ public class StaticValue implements Serializable {
 
 	/**
 	 * Returns the field using the java reflection API
-	 * 
+	 *
 	 * @return the "Field" object
 	 */
 	public Field toField() {
@@ -99,5 +117,13 @@ public class StaticValue implements Serializable {
 	@Override
 	public String toString() {
 		return declaringClass.getClassName() + "." + name;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Comparable#compareTo(java.lang.Object)
+	 */
+	@Override
+	public int compareTo(StaticValue o) {
+		return name.compareTo(o.name);
 	}
 }

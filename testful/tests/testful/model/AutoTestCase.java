@@ -1,7 +1,27 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
 package testful.model;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -20,12 +40,22 @@ import ec.util.MersenneTwisterFast;
  */
 public abstract class AutoTestCase extends GenericTestCase {
 
-	protected abstract List<Test> perform(Test test) throws Exception;
+	protected abstract Collection<? extends Test> perform(Test test) throws Exception;
 
 	protected String[] getCuts() {
 		return new String[] {
 				"dummy.Simple",
+				"apache.Fraction"
 		};
+	}
+
+	@Override
+	protected void setUp() throws Exception {
+		super.setUp();
+
+		for(String cut : getCuts())
+			getCoverage(createRandomTest(cut, 1000, 17l));
+
 	}
 
 	public void testSetup() throws Exception {
@@ -38,14 +68,13 @@ public abstract class AutoTestCase extends GenericTestCase {
 			MersenneTwisterFast r = new MersenneTwisterFast(37);
 			for(int n = 1; n < 1000; n++) {
 				System.out.printf("%5.1f%% ", n/10.0);
-				autoTest(cut, 1000+r.nextInt(1000), r.nextLong());
+				autoTest(cut, 100+r.nextInt(1900), r.nextLong());
 			}
 		}
 	}
 
-
 	protected void check(Test t, Operation[][] expected) throws Exception {
-		List<Test> tests = perform(t);
+		Collection<? extends Test> tests = perform(t);
 
 		System.out.println("original:");
 		for(Operation o : t.getTest()) {
@@ -66,8 +95,10 @@ public abstract class AutoTestCase extends GenericTestCase {
 		assertEquals("Wrong number of results", expected.length, tests.size());
 
 		Operation[][] actual = new Operation[tests.size()][];
-		for(int i = 0; i < actual.length; i++)
-			actual[i] = tests.get(i).getTest();
+		{
+			int i = 0;
+			for(Test t1 : tests) actual[i++] = t1.getTest();
+		}
 
 		Arrays.sort(expected, dummyTestComparator);
 		Arrays.sort(actual, dummyTestComparator);
@@ -129,12 +160,12 @@ public abstract class AutoTestCase extends GenericTestCase {
 		checkSetup(origCov);
 
 		long minStart = System.nanoTime();
-		List<Test> res = perform(orig);
+		Collection<? extends Test> res = perform(orig);
 		long minStop = System.nanoTime();
 
 		List<ElementManager<String, CoverageInformation>> partsCov = new ArrayList<ElementManager<String,CoverageInformation>>();
 		ElementManager<String, CoverageInformation> combinedCov;
-		if(res.size() == 1) partsCov.add(combinedCov = getCoverage(res.get(0)));
+		if(res.size() == 1) partsCov.add(combinedCov = getCoverage(res.iterator().next()));
 		else {
 			combinedCov = new ElementManager<String, CoverageInformation>();
 

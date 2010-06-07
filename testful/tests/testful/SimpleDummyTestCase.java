@@ -1,16 +1,37 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful;
 
 import testful.model.Clazz;
 import testful.model.Constructorz;
 import testful.model.Methodz;
 import testful.model.Reference;
-import testful.model.ReferenceFactory;
-import testful.model.TestCluster;
-import testful.runner.TestfulClassLoader;
 
-public class SimpleDummyTestCase extends GenericTestCase {
-	protected TestCluster cluster;
-	protected ReferenceFactory refFactory;
+public class SimpleDummyTestCase extends SingleClassTestCase {
+
+	/* (non-Javadoc)
+	 * @see testful.SingleClassTestCase#getClassUnderTest()
+	 */
+	@Override
+	protected String getClassUnderTest() {
+		return "dummy.Simple";
+	}
 
 	/** dummy.Simple instance */
 	protected Reference c0, c1, c2, c3;
@@ -33,21 +54,11 @@ public class SimpleDummyTestCase extends GenericTestCase {
 	protected void setUp() throws Exception {
 		super.setUp();
 
-		ConfigCut config = new ConfigCut(GenericTestCase.config);
-		config.setCut("dummy.Simple");
-		cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
-		refFactory = new ReferenceFactory(cluster, 4, 4);
-
-		Clazz cut = cluster.getCut();
-
 		Clazz iClazz = null;
-		Clazz[] cl = cluster.getCluster();
-		for(Clazz clazz : cl) {
-			if("java.lang.Integer".equals(clazz.getClassName())) {
-				iClazz = clazz;
-				break;
-			}
+		for(Clazz clazz : cluster.getCluster()) {
+			if("java.lang.Integer".equals(clazz.getClassName())) iClazz = clazz;
 		}
+		assertNotNull(iClazz);
 
 		i0 = refFactory.getReferences(iClazz)[0];
 		i1 = refFactory.getReferences(iClazz)[1];

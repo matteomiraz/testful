@@ -21,13 +21,13 @@ import soot.jimple.NopStmt;
 import soot.jimple.Stmt;
 import soot.util.Chain;
 import testful.IConfigProject;
-import testful.utils.Skip;
-import testful.utils.Instrumenter.UnifiedInstrumentator;
+import testful.coverage.soot.Instrumenter.UnifiedInstrumentator;
+import testful.coverage.soot.Skip;
 
 /**
  * Instruments the class, forcing the termination of the execution when a flag
  * is set to true.
- * 
+ *
  * @author matteo
  */
 public class ExecutionStopper implements UnifiedInstrumentator {
@@ -54,13 +54,11 @@ public class ExecutionStopper implements UnifiedInstrumentator {
 	@Override
 	public void preprocess(SootClass sClass) { }
 
+	/* (non-Javadoc)
+	 * @see testful.coverage.soot.Instrumenter.UnifiedInstrumentator#init(soot.Body, soot.Body, soot.util.Chain)
+	 */
 	@Override
-	public void init(Chain<Unit> newUnits, Body newBody, Body oldBody, boolean classWithContracts, boolean contractMethod) {
-		if(classWithContracts) {
-			previous = null;
-			return;
-		}
-
+	public void init(Body oldBody, Body newBody, Chain<Unit> newUnits) {
 		previous = new ArrayList<Unit>();
 
 		exc = Jimple.v().newLocal("__stopper_exc__", stoppedExceptionType);
@@ -102,5 +100,5 @@ public class ExecutionStopper implements UnifiedInstrumentator {
 	public void exceptional(Chain<Unit> newUnits, Local exc) { }
 
 	@Override
-	public void done(IConfigProject config, String cutName) { }
+	public void done(IConfigProject config) { }
 }

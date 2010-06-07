@@ -1,7 +1,9 @@
 syntax: glob
-
 *~
-./.metadata/
-*/bin/
-*/build/
-*/run/
+cobertura.ser
+
+syntax: regexp
+^.metadata$
+/bin/
+^testful/testCut/bin$
+^testful/testCut/instrumented$

@@ -1,3 +1,21 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful.runner;
 
 import java.io.Serializable;
@@ -26,12 +44,6 @@ import testful.utils.ElementManager;
 import testful.utils.ElementWithKey;
 
 public class RunnerPool implements IRunner, ITestRepository {
-
-	/** Number of threads to start:
-	 * if &lt; 0, start one thread for each core;
-	 * if equals to 0, do not start any thread;
-	 * if greater than 0, start exactly n threads */
-	private static final int NCPU = -1;
 
 	/** maximum number of jobs that the executor pool allows to queue */
 	private static final int MAX_BUFFER = 25;
@@ -83,11 +95,13 @@ public class RunnerPool implements IRunner, ITestRepository {
 		}
 
 		Remote remote = null;
-		if(registry != null) try {
-			remote = UnicastRemoteObject.exportObject(this, 0);
-		} catch(RemoteException e) {
-			logger.log(Level.WARNING, "Distributed evaluation disabled", e);
-			remote = null;
+		if(registry != null) {
+			try {
+				remote = UnicastRemoteObject.exportObject(this, 0);
+			} catch(RemoteException e) {
+				logger.log(Level.WARNING, "Distributed evaluation disabled", e);
+				remote = null;
+			}
 		}
 
 		try {
@@ -116,7 +130,7 @@ public class RunnerPool implements IRunner, ITestRepository {
 	public void startLocalWorkers() {
 		if (!localWorkersStarted) {
 			try {
-				WorkerManager wm = new WorkerManager(NCPU, 0);
+				WorkerManager wm = new WorkerManager(TestFul.DEBUG ? 1 : -1, 0);
 				wm.addTestRepository(this);
 				localWorkersStarted = true;
 			} catch (RemoteException e) {

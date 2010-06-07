@@ -1,3 +1,21 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful.model;
 
 import java.io.Serializable;
@@ -12,12 +30,15 @@ import java.util.logging.Logger;
 import jmetal.base.Variable;
 import testful.utils.ElementManager;
 import ec.util.MersenneTwisterFast;
-
 public abstract class Operation implements Serializable, Cloneable, Variable {
 
 	private static final long serialVersionUID = -4200667624940186523L;
 
-	protected Operation() { }
+	protected final int hashCode;
+
+	protected Operation(int hashCode) {
+		this.hashCode = hashCode;
+	}
 
 	private ElementManager<String, OperationInformation> infos;
 
@@ -28,6 +49,7 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 
 	public OperationInformation removeInfo(String key) {
 		if(infos == null || key == null) return null;
+
 		OperationInformation ret = infos.remove(key);
 		if(infos.isEmpty()) infos = null;
 		return ret;
@@ -47,21 +69,23 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 	@Override
 	public abstract String toString();
 
+	/**
+	 * Returns the hash of the current Operation.
+	 * Other parts of Testful requires that the hash code calculus is deterministic
+	 * (i.e., it does not depend on random variation such as the location in memory, like the
+	 * Object.hashCode).<br/>
+	 * Each subclass must calculate its hash code in the constructor, and set the hashCode property.
+	 */
 	@Override
-	public abstract int hashCode();
+	public final int hashCode() {
+		return hashCode;
+	}
 
 	@Override
 	public abstract boolean equals(Object o);
 
 	@Override
-	public Operation clone() {
-		try {
-			return (Operation) super.clone();
-		} catch(CloneNotSupportedException e) {
-			e.printStackTrace();
-			return this;
-		}
-	}
+	public abstract Operation clone();
 
 	protected static final transient Set<Reference> emptyRefsSet = new HashSet<Reference>();
 
@@ -186,7 +210,7 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 
 	/**
 	 * Adapts the operation on cluster and refFactory
-	 * 
+	 *
 	 * @return the new operation
 	 */
 	public abstract Operation adapt(TestCluster cluster, ReferenceFactory refFactory);

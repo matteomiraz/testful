@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="build" name="TestFul">
+
+  <!-- ================================= 
+       target: clean              
+       description: Clean all projects
+       ================================= -->
+  <target name="clean" depends="" description="Clean all projects">
+    <ant dir="testful" antfile="build.xml" target="clean"/>
+  </target>
+
+  <!-- ================================= 
+       target: build
+       description: Build all projects
+       ================================= -->
+  <target name="build" description="Build all projects">
+    <ant dir="testful" antfile="build.xml" target="build"/>
+  </target>
+
+  <!-- ================================= 
+       target: test
+       description: Run jUnit tests on all projects
+       Note: You must have junit.jar and ant-junit.jar available.
+             We suggest to put both of them in ANT_HOME/lib.
+             (Otherwise you can do not put either in ANT_HOME/lib, 
+              and instead include their locations in your 
+              CLASSPATH environment variable.)
+       ================================= -->
+  <target name="test" description="Test all projects">
+    <ant dir="testful" antfile="build.xml" target="test"/>
+  </target>
+
+  <!-- =================================
+       target: Run tests and collect code coverage
+       ================================= -->
+  <target name="test.coverage" description="Run tests and collect code coverage">
+    <ant dir="testful" antfile="build.xml" target="test.coverage"/>
+  </target>
+
+</project>

@@ -1,3 +1,21 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful.coverage.whiteBox;
 
 import java.lang.reflect.Array;
@@ -35,8 +53,6 @@ public class TrackerWhiteBox extends Tracker {
 		return tracker;
 	}
 
-	private WhiteBoxData whiteData;
-
 	private TrackerWhiteBox() {
 		reset();
 	}
@@ -45,19 +61,8 @@ public class TrackerWhiteBox extends Tracker {
 	public ElementManager<String, CoverageInformation> getCoverage() {
 		ElementManager<String, CoverageInformation> ret = new ElementManager<String, CoverageInformation>();
 
-		if(whiteData == null || !whiteData.hasContracts()) {
-			ret.put(new CoverageBasicBlocks(CoverageBasicBlocks.KEY_CODE, CoverageBasicBlocks.NAME_CODE, covBlocks));
-
-			ret.put(new CoverageConditions(CoverageConditions.KEY_CODE, CoverageConditions.NAME_CODE, covConditions));
-
-		} else {
-			ret.put(new CoverageBasicBlocks(CoverageBasicBlocks.KEY_CODE, CoverageBasicBlocks.NAME_CODE, whiteData.getBlocksCode(covBlocks)));
-			ret.put(new CoverageBasicBlocks(CoverageBasicBlocks.KEY_CONTRACT, CoverageBasicBlocks.NAME_CONTRACT, whiteData.getBlocksContract(covBlocks)));
-
-			ret.put(new CoverageConditions(CoverageConditions.KEY_CODE, CoverageConditions.NAME_CODE, whiteData.getConditionsCode(covConditions)));
-			ret.put(new CoverageConditions(CoverageConditions.KEY_CONTRACT, CoverageConditions.NAME_CONTRACT, whiteData.getConditionsContract(covConditions)));
-		}
-
+		ret.put(new CoverageBasicBlocks(CoverageBasicBlocks.KEY, CoverageBasicBlocks.NAME, covBlocks));
+		ret.put(new CoverageBranch(CoverageBranch.KEY, CoverageBranch.NAME, covBranches));
 		ret.put(new CoverageDataFlow(defUse));
 		ret.put(new CoverageDefExp(defExpo));
 
@@ -70,10 +75,7 @@ public class TrackerWhiteBox extends Tracker {
 	@Override
 	public void reset() {
 		covBlocks = new BitSet();
-		covConditions = new BitSet();
-
-		whiteData = (WhiteBoxData) Tracker.getDatum(WhiteBoxData.KEY);
-
+		covBranches = new BitSet();
 		stack = new LinkedList<Integer>();
 		callNum = new HashMap<Integer, Integer>();
 
@@ -99,7 +101,7 @@ public class TrackerWhiteBox extends Tracker {
 
 	// ----------------------- Condition coverage  -------------------------------
 	/** condition coverage */
-	private BitSet covConditions;
+	private BitSet covBranches;
 
 	/** id of the target; -1 if no target */
 	private int condTargetId;
@@ -116,7 +118,7 @@ public class TrackerWhiteBox extends Tracker {
 	 * @param branchId the id of the executed branch
 	 */
 	public void trackBranch(int branchId) {
-		covConditions.set(branchId);
+		covBranches.set(branchId);
 	}
 
 	/**

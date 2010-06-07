@@ -1,31 +1,63 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
 package testful.model;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import testful.ConfigCut;
 import testful.GenericTestCase;
+import testful.regression.TestSimplifier;
+import testful.runner.Context;
 import testful.runner.TestfulClassLoader;
 
 /**
  * @author matteo
- *
  */
 public class TestSimpifierTestCase extends AutoTestCase {
 
 	@Override
 	protected List<Test> perform(Test test) throws Exception {
-		TestSimplifier s = new TestSimplifier(getFinder());
+		OperationResult.insert(test.getTest());
 
-		List<Test> res = new ArrayList<Test>(1);
-		res.add(s.analyze(test));
-		return res;
+		Context<Operation[], TestExecutionManager> ctx = TestExecutionManager.getContext(getFinder(), test);
+		ctx.setStopOnBug(false);
+		ctx.setRecycleClassLoader(true);
+		Operation[] ops = getExec().execute(ctx).get();
+		for (int i = 0; i < ops.length; i++) {
+			ops[i] = ops[i].adapt(test.getCluster(), test.getReferenceFactory());
+		}
+
+		System.out.println(new Test(test.getCluster(), test.getReferenceFactory(), ops));
+
+		TestSimplifier s = new TestSimplifier();
+		Test r = s.process(new Test(test.getCluster(), test.getReferenceFactory(), ops));
+
+		return Arrays.asList(r);
 	}
 
 	public void testSimple1() throws Exception {
 		ConfigCut config = new ConfigCut(GenericTestCase.config);
 		config.setCut("dummy.Simple");
 		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
+
 		ReferenceFactory refFactory = new ReferenceFactory(cluster, 4, 4);
 
 		Clazz cut = cluster.getCut();

@@ -1,3 +1,21 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful.model.xml;
 
 import java.util.ArrayList;
@@ -10,15 +28,12 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(namespace = "http://home.dei.polimi.it/miraz/testful", name = "parameter")
-public class XmlParameter {
+@XmlType(namespace = "http://testful.sourceforge.net/schema/1.2/testful.xsd", name = "parameter")
+public class XmlParameter implements Comparable<XmlParameter> {
 
 	@XmlAttribute(required = true)
 	protected String type;
 
-	@XmlAttribute()
-	protected boolean array;
-	
 	@XmlAttribute
 	protected Boolean mutated;
 
@@ -63,14 +78,6 @@ public class XmlParameter {
 	public void setExposedByReturn(Boolean value) {
 		exposedByReturn = value;
 	}
-	
-	public boolean isArray() {
-		return array;
-	}
-	
-	public void setArray(boolean array) {
-		this.array = array;
-	}
 
 	public Boolean isCaptured() {
 		return captured;
@@ -99,5 +106,36 @@ public class XmlParameter {
 	public List<Extra> getExtra() {
 		if(extra == null) extra = new ArrayList<Extra>();
 		return extra;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Comparable#compareTo(java.lang.Object)
+	 */
+	@Override
+	public int compareTo(XmlParameter o) {
+		return type.compareTo(o.type);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return type;
+	}
+
+	public static XmlParameter create(Class<?> param, final Class<?> returnType) {
+		XmlParameter xmlParam = testful.model.xml.ObjectFactory.factory.createParameter();
+
+		xmlParam.setType(param.getName());
+		xmlParam.setCaptured(!param.isPrimitive());
+		xmlParam.setMutated(!param.isPrimitive());
+
+		if(returnType == null) xmlParam.setExposedByReturn(false);
+		else xmlParam.setExposedByReturn(!param.isPrimitive() && !returnType.isPrimitive());
+
+		xmlParam.setExchangeStateWith("");
+
+		return xmlParam;
 	}
 }

@@ -1,7 +1,9 @@
 package testful.model;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import testful.ConfigCut;
 import testful.GenericTestCase;
@@ -63,8 +65,12 @@ public class ExecutorTestCase extends GenericTestCase {
 				new Invoke(f0, f1, divide, new Reference[] { i0 })
 		};
 		Test t2 = new Test(cluster, refFactory, ops2);
+
 		ElementManager<String, CoverageInformation> cov2 = getCoverage(t2);
 
-		checkTestFailed(t1, cov1, Arrays.asList(t2), Arrays.asList(cov2), cov2);
+		List<ElementManager<String, CoverageInformation>> listCov2 = new ArrayList<ElementManager<String,CoverageInformation>>();
+		listCov2.add(cov2);
+
+		checkTestFailed(t1, cov1, Arrays.asList(t2), listCov2, cov2);
 	}
 }

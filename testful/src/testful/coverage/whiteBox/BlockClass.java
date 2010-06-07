@@ -1,17 +1,94 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2010  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful.coverage.whiteBox;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.Map.Entry;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+
+import testful.TestFul;
 
 public class BlockClass extends Block implements Iterable<Block> {
 
 	private static final long serialVersionUID = 6039856116509927723L;
+
+	private static final Logger logger = Logger.getLogger("testful.coverage.whiteBox");
+
+	private static final String FILE_SUFFIX = ".wgz";
+
+	@SuppressWarnings("unused") // for the DEBUG
+	public static BlockClass read(File classFile) {
+		ObjectInput oi = null;
+
+		String classFileName = classFile.getName();
+		if(TestFul.DEBUG && !classFileName.endsWith(".class")) logger.warning("The class file does not ends with .class " + classFile);
+
+		final File file = new File(classFile.getParentFile(), classFileName.substring(0, classFileName.length()-6) + FILE_SUFFIX);
+		try {
+			oi = new ObjectInputStream(new GZIPInputStream(new FileInputStream(file)));
+			return (BlockClass) oi.readObject();
+		} catch(Exception e) {
+			logger.log(Level.WARNING, "Exception while reading the file " + file.getAbsolutePath() + ": " + e.toString(), e);
+			return null;
+		} finally {
+			if(oi != null) {
+				try {
+					oi.close();
+				} catch(IOException e) {
+				}
+			}
+		}
+	}
+
+	public void write(File baseDir) {
+		ObjectOutput oo = null;
+		try {
+			final File file = new File(baseDir, name.replace('.', File.separatorChar) + FILE_SUFFIX);
+			oo = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream(file)));
+			oo.writeObject(this);
+		} catch(IOException e) {
+			Logger.getLogger("testful.coverage.whitebox").log(Level.WARNING, "Cannot write the white box data file: " + e.getMessage(), e);
+		} finally {
+			if(oo != null)
+				try {
+					oo.close();
+				} catch(IOException e) {
+				}
+		}
+	}
+
 
 	private static final boolean printLocalData = true;
 
@@ -20,17 +97,15 @@ public class BlockClass extends Block implements Iterable<Block> {
 
 	private final Set<BlockFunctionEntry> methods;
 
-	final BitSet blocksCode, blocksContract;
-	final BitSet conditionsCode, conditionsContract;
+	final BitSet blocks;
+	final BitSet branches;
 
 	public BlockClass(String name, Set<Data> fields) {
 		this.name = name;
 		this.fields = fields;
 		methods = new HashSet<BlockFunctionEntry>();
-		blocksCode = new BitSet();
-		blocksContract = new BitSet();
-		conditionsCode = new BitSet();
-		conditionsContract = new BitSet();
+		blocks = new BitSet();
+		branches = new BitSet();
 	}
 
 	public String getName() {
@@ -49,20 +124,12 @@ public class BlockClass extends Block implements Iterable<Block> {
 		methods.add(m);
 	}
 
-	public BitSet getBlocksCode() {
-		return blocksCode;
+	public BitSet getBlocks() {
+		return blocks;
 	}
 
-	public BitSet getBlocksContract() {
-		return blocksContract;
-	}
-
-	public BitSet getConditionsContract() {
-		return conditionsContract;
-	}
-
-	public BitSet getConditionsCode() {
-		return conditionsCode;
+	public BitSet getBranches() {
+		return branches;
 	}
 
 	@Override
