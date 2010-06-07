@@ -1,6 +1,6 @@
 /*
  * TestFul - http://code.google.com/p/testful/
- * Copyright (C) 2010  Matteo Miraz
+ * Copyright (C) 2010 Matteo Miraz
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,84 +19,28 @@
 package testful.coverage.whiteBox;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
-public class AnalysisWhiteBox implements Serializable {
+import testful.runner.ClassData;
 
-	private static final long serialVersionUID = -8517242673275381964L;
-
-	private static final String FILE_SUFFIX = ".wb.gz";
-	private static final Logger logger = Logger.getLogger("testful.coverage.whiteBox");
-
-	public static AnalysisWhiteBox read(File baseDir, String className) {
-		ObjectInput oi = null;
-		final File file = getFile(baseDir, className);
-		try {
-			oi = new ObjectInputStream(new GZIPInputStream(new FileInputStream(file)));
-			return (AnalysisWhiteBox) oi.readObject();
-		} catch(Exception e) {
-			logger.log(Level.WARNING, "Exception while reading the file " + file.getAbsolutePath() + ": " + e.toString(), e);
-			return null;
-		} finally {
-			if(oi != null)
-				try {
-					oi.close();
-				} catch(IOException e) {
-				}
-		}
-	}
-
-	public void write(File baseDir, String className) {
-		ObjectOutput oo = null;
-		try {
-			oo = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream(getFile(baseDir, className))));
-			oo.writeObject(this);
-		} catch(IOException e) {
-			Logger.getLogger("testful.coverage.whitebox").log(Level.WARNING, "Cannot write the white box data file: " + e.getMessage(), e);
-		} finally {
-			if(oo != null)
-				try {
-					oo.close();
-				} catch(IOException e) {
-				}
-		}
-	}
-
-	private static File getFile(File baseDir, String className) {
-		return new File(baseDir, className.replace('.', File.separatorChar) + AnalysisWhiteBox.FILE_SUFFIX);
-	}
-
-	private final Map<String, BlockClass> classes;
-
-	public AnalysisWhiteBox() {
-		classes = new HashMap<String, BlockClass>();
-	}
-
-	public void addClass(BlockClass bClass) {
-		classes.put(bClass.getName(), bClass);
-	}
-
-	public BlockClass getBlockClass(String className) {
-		return classes.get(className);
-	}
+/**
+ * TODO describe me!
+ * @author matteo
+ */
+public class WhiteBoxAnalysisData implements ClassData {
+	private final Map<String, BlockClass> classes = new HashMap<String, BlockClass>();
 
 	@Override
-	public AnalysisWhiteBox clone() throws CloneNotSupportedException {
-		return (AnalysisWhiteBox) super.clone();
+	public void load(String className, File classFile) {
+		BlockClass bClass = BlockClass.read(classFile);
+		if(bClass == null) return;
+
+		classes.put(bClass.getName(), bClass);
+		conditionBlocks = null;
+		mapBlockCondition = null;
+		mapBranchCondition = null;
 	}
 
 	private transient BitSet conditionBlocks;
@@ -171,5 +115,4 @@ public class AnalysisWhiteBox implements Serializable {
 
 		return mapBranchCondition.get(branchId);
 	}
-
 }

@@ -145,6 +145,6 @@ public class FaultInstrumenter implements UnifiedInstrumentator {
 	}
 
 	@Override
-	public void done(IConfigProject config, String cutName) {
+	public void done(IConfigProject config) {
 	}
 }

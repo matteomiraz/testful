@@ -181,6 +181,7 @@
 				<include name="testful/TestFul$*.class"/>
 				<include name="testful/TestfulException.class"/>
 
+				<include name="testful/IConfig.class"/>
 				<include name="testful/IConfigProject*.class"/>
 				<include name="testful/ConfigProject.class"/>
 				<include name="testful/IConfigCut*.class"/>
@@ -340,19 +341,7 @@
     <target name="test.cut.instrument" depends="create_instrumenter_jar, test.cut.compile" description="instrument the tests' cut">
     	<delete dir="${base}/testCut/instrumented" />
     	<java jar="${artifacts}/instrumenter.jar" fork="true">
-    		<arg line="-dir ${testCut} -cut dummy.Simple"/>
-    	</java>
-    	<java jar="${artifacts}/instrumenter.jar" fork="true">
-    		<arg line="-dir ${testCut} -cut dummy.StateMachine"/>
-		</java>
-    	<java jar="${artifacts}/instrumenter.jar" fork="true">
-    		<arg line="-dir ${testCut} -cut dummy.Instrumenter1"/>
-		</java>
-    	<java jar="${artifacts}/instrumenter.jar" fork="true">
-    		<arg line="-dir ${testCut} -cut dummy.WhiteSample"/>
-		</java>
-    	<java jar="${artifacts}/instrumenter.jar" fork="true">
-    		<arg line="-dir ${testCut} -cut apache.Fraction"/>
+    		<arg line="-dir ${testCut} dummy.WhiteSample dummy.Simple dummy.StateMachine dummy.Instrumenter1 apache.Fraction"/>
     	</java>
 	</target>
 

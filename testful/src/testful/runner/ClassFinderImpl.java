@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,8 +43,9 @@ public class ClassFinderImpl implements ClassFinder {
 	private static Logger logger = Logger.getLogger("testful.executor.classloader");
 	private static final ClassLoader classLoader = ClassFinderImpl.class.getClassLoader();
 
-	private final File[] where;
 	private final String key;
+	private final File[] where;
+	private final Collection<ClassData> data = new ArrayList<ClassData>();
 
 	public ClassFinderImpl(IConfigProject config) {
 		this(config.getDirInstrumented(), config.getDirCompiled());
@@ -59,6 +62,10 @@ public class ClassFinderImpl implements ClassFinder {
 		}
 	}
 
+	public void addClassData(ClassData d) {
+		data.add(d);
+	}
+
 	@Override
 	public String getKey() throws RemoteException {
 		return key;
@@ -71,14 +78,15 @@ public class ClassFinderImpl implements ClassFinder {
 		// try looking in the where class directories
 		{
 			try {
-				File w = searchClassFile(name);
-				byte[] ret = ByteReader.readBytes(w);
-				if(ret != null) {
-					logger.finer("(" + key + ") serving class " + name + " from " + w);
-					return ret;
-				}
+				File classFile = searchClassFile(name);
+				byte[] ret = ByteReader.readBytes(classFile);
+				logger.finer("(" + key + ") serving class " + name + " from " + classFile);
+
+				for (ClassData datum : data)
+					datum.load(name, classFile);
+
+				return ret;
 			} catch(IOException e) {
-				// logger.warning("(" + key + ") " + "cannot load class " + name + " from " + w + ": " + e.getMessage());
 			}
 		}
 
@@ -123,4 +131,6 @@ public class ClassFinderImpl implements ClassFinder {
 
 		throw new FileNotFoundException("cannot find class " + name);
 	}
+
+
 }

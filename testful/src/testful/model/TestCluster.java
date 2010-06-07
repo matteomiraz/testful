@@ -24,7 +24,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -307,15 +306,6 @@ public class TestCluster implements Serializable {
 
 			return false;
 		}
-	}
-
-	public Collection<String> getClassesToInstrument() {
-		Collection<String> ret = new TreeSet<String>();
-
-		ret.add(cut.getClassName());
-		ret.addAll(xml.get(cut.getClassName()).getInstrument());
-
-		return ret;
 	}
 
 	/**

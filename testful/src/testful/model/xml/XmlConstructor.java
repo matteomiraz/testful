@@ -38,7 +38,7 @@ public class XmlConstructor implements Comparable<XmlConstructor> {
 	protected List<XmlParameter> parameter;
 
 	@XmlAttribute(required=false)
-	public boolean skip = false;
+	public Boolean skip = false;
 
 	@XmlElement
 	protected List<Extra> extra;

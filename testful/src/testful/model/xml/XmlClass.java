@@ -47,16 +47,11 @@ import testful.IConfigProject;
  * @author matteo
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(namespace = "http://testful.sourceforge.net/schema/1.2/testful.xsd", name = "class", propOrder = { "cluster", "instrument", "constructor", "method", "extra" })
+@XmlType(namespace = "http://testful.sourceforge.net/schema/1.2/testful.xsd", name = "class", propOrder = { "cluster", "constructor", "method", "extra" })
 @XmlRootElement(name = "class", namespace = "http://testful.sourceforge.net/schema/1.2/testful.xsd")
 public class XmlClass {
 
 	private static final Logger logger = Logger.getLogger("testful.model.xml");
-
-	/** other classes to instrument when the current class is being tested */
-	@XmlElementWrapper(name="instrument", required=false, nillable=false)
-	@XmlElement(name="class")
-	protected SortedSet<String> instrument;
 
 	/** when the current class is included in the test cluster, include also these classes */
 	@XmlElementWrapper(name="cluster", required=false, nillable=false)
@@ -127,36 +122,6 @@ public class XmlClass {
 			xmlClass.addMethod(XmlMethod.create(meth));
 
 		return xmlClass;
-	}
-
-	/**
-	 * Returns the list of classes to be instrumented (and creates it if it is null).
-	 * @return the list of classes to instrument.
-	 */
-	public Collection<String> getInstrument() {
-		if(instrument == null) {
-			// property instrument was not specified
-			instrument = new TreeSet<String>();
-		}
-		return instrument;
-	}
-
-	/**
-	 * Add a class to the list of classes to instrument
-	 * @param className a class to be instrumented
-	 */
-	public void addInstrument(String className) {
-		if(instrument == null)  instrument = new TreeSet<String>();
-		instrument.add(className);
-	}
-
-	/**
-	 * Remove a class from the list of classes to instrument
-	 * @param className the class to remove
-	 */
-	public void removeInstrument(String className) {
-		if(instrument == null)  instrument = new TreeSet<String>();
-		instrument.remove(className);
 	}
 
 	/**

@@ -20,9 +20,9 @@ package testful.coverage.soot;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -103,9 +103,8 @@ public class Instrumenter {
 		/**
 		 * This method is called at the end of the processing (after analyzing all classes' methods)
 		 * @param config the configuration (directories)
-		 * @param cutName the name of the class under test
 		 */
-		public void done(IConfigProject config, String cutName);
+		public void done(IConfigProject config);
 	}
 
 	private static final Logger logger = Logger.getLogger("testful.instrumenter");
@@ -116,7 +115,7 @@ public class Instrumenter {
 	private static final boolean nopEliminator = true;
 	private static final boolean finalWriter   = logger.isLoggable(Level.FINEST);
 
-	public static void prepare(IConfigProject config, Collection<String> toInstrument) {
+	public static void prepare(IConfigProject config, List<String> toInstrument) {
 		String[] SOOT_CONF = new String[] { "-validate", "--keep-line-number", "--xml-attributes", "-f", "c", "-output-dir", config.getDirInstrumented().getAbsolutePath() };
 
 		if(System.getProperty("sun.boot.class.path") == null) {
@@ -145,7 +144,7 @@ public class Instrumenter {
 	}
 
 	@SuppressWarnings("unused")
-	public static void run(IConfigProject config, Collection<String> toInstrument, String cutName, UnifiedInstrumentator ... instrumenters) {
+	public static void run(IConfigProject config, List<String> toInstrument, UnifiedInstrumentator ... instrumenters) {
 
 		TestfulInstrumenter instr = null;
 
@@ -202,7 +201,7 @@ public class Instrumenter {
 		SootMain.singleton.run();
 
 		if(instrumenter)
-			instr.done(config, cutName);
+			instr.done(config);
 	}
 
 	private static class TestfulInstrumenter extends BodyTransformer {
@@ -223,9 +222,9 @@ public class Instrumenter {
 
 		private final UnifiedInstrumentator[] instrumenters;
 
-		public void done(IConfigProject config, String cutName) {
+		public void done(IConfigProject config) {
 			for(UnifiedInstrumentator instr : instrumenters)
-				instr.done(config, cutName);
+				instr.done(config);
 		}
 
 		/**

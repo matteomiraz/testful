@@ -44,7 +44,6 @@ import jmetal.util.JMException;
 import jmetal.util.PseudoRandom;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
-import testful.coverage.whiteBox.AnalysisWhiteBox;
 import testful.coverage.whiteBox.Condition;
 import testful.coverage.whiteBox.ConditionTargetDatum;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
@@ -426,8 +425,6 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 	}
 
 	private Set<TestWithScore> addSearchScore(Collection<TestCoverage> tests, BitSet execConds) {
-		final AnalysisWhiteBox whiteAnalysis = problem.getWhiteAnalysis();
-
 		Set<TestWithScore> ret = new TreeSet<TestWithScore>();
 
 		for(TestCoverage t : tests) {
@@ -436,7 +433,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			CoverageBasicBlocks bbCov;
 
 			bbCov = (CoverageBasicBlocks) t.getCoverage().get(CoverageBasicBlocks.KEY);
-			if(bbCov != null) cond.or(whiteAnalysis.getReachableBranches(bbCov.getCoverage()));
+			if(bbCov != null) cond.or(problem.getWhiteAnalysis().getReachableBranches(bbCov.getCoverage()));
 
 			cond.andNot(execConds);
 
@@ -450,7 +447,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 				//TBD: consider defs & uses
 				// score type, fields/var/params
-				Condition c = whiteAnalysis.getConditionFromBranch(branchId);
+				Condition c = problem.getWhiteAnalysis().getConditionFromBranch(branchId);
 
 				DataUse u = c.getUse1();
 				if(u != null) {

@@ -32,7 +32,7 @@ import testful.IConfigGeneration;
 import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
-import testful.coverage.whiteBox.AnalysisWhiteBox;
+import testful.coverage.whiteBox.WhiteBoxAnalysisData;
 import testful.model.Operation;
 import testful.model.ReferenceFactory;
 import testful.model.Test;
@@ -59,7 +59,7 @@ public class TestfulProblem implements Serializable {
 	private final ClassFinderCaching finder;
 	private final TestCluster cluster;
 	private final ReferenceFactory refFactory;
-	private final AnalysisWhiteBox whiteAnalysis;
+	private final WhiteBoxAnalysisData whiteAnalysis;
 	private final TrackerDatum[] data;
 	private final boolean reload;
 
@@ -69,12 +69,17 @@ public class TestfulProblem implements Serializable {
 	public TestfulProblem(IConfigGeneration config) throws ClassNotFoundException {
 		try {
 			reload = config.isReload();
-			finder = new ClassFinderCaching(new ClassFinderImpl(config));
+
+			final ClassFinderImpl finderImpl = new ClassFinderImpl(config);
+			whiteAnalysis = new WhiteBoxAnalysisData();
+			finderImpl.addClassData(whiteAnalysis);
+
+			finder = new ClassFinderCaching(finderImpl);
 			TestfulClassLoader tcl = new TestfulClassLoader(finder);
+
 			cluster = new TestCluster(tcl, config);
 			cluster.clearCache();
 
-			whiteAnalysis = AnalysisWhiteBox.read(config.getDirInstrumented(), config.getCut());
 			data = new TrackerDatum[0];//TODO: Utils.readData(whiteAnalysis);
 
 			refFactory = new ReferenceFactory(cluster, config.getNumVarCut(), config.getNumVar());
@@ -127,7 +132,7 @@ public class TestfulProblem implements Serializable {
 		return new Test(cluster, refFactory, ops.toArray(new Operation[ops.size()]));
 	}
 
-	public AnalysisWhiteBox getWhiteAnalysis() {
+	public WhiteBoxAnalysisData getWhiteAnalysis() {
 		return whiteAnalysis;
 	}
 
