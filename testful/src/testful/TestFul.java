@@ -48,12 +48,15 @@ public class TestFul {
 
 	private static final String VERSION = "1.1.3";
 
-	public static void parseCommandLine(Object config, String[] args, Class<?> launcher, String name) {
+	public static void parseCommandLine(IConfig config, String[] args, Class<?> launcher, String name) {
 
 		CmdLineParser parser = new CmdLineParser(config);
 		try {
 			// parse the arguments.
 			parser.parseArgument(args);
+
+			config.validate();
+
 		} catch(CmdLineException e) {
 			testful.TestFul.printHeader(name);
 

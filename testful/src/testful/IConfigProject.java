@@ -32,7 +32,7 @@ import org.kohsuke.args4j.Option;
  * </ul>
  * @author matteo
  */
-public interface IConfigProject {
+public interface IConfigProject extends IConfig {
 
 	/**
 	 * Returns the base directory (e.g. $HOME/workspace/project/ )

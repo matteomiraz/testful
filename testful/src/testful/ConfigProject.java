@@ -20,6 +20,8 @@ package testful;
 
 import java.io.File;
 
+import org.kohsuke.args4j.CmdLineException;
+
 /**
  * Stores the configuration of the project being tested.
  *
@@ -168,5 +170,13 @@ public class ConfigProject implements IConfigProject.Args4j {
 	@Override
 	public LogLevel getLogLevel() {
 		return logLevel;
+	}
+
+	/* (non-Javadoc)
+	 * @see testful.IConfig#validate()
+	 */
+	@Override
+	public void validate() throws CmdLineException {
+		// everything is ok!
 	}
 }

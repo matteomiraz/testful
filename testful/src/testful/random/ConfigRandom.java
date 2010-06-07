@@ -21,6 +21,7 @@ package testful.random;
 import java.io.File;
 import java.util.List;
 
+import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.Option;
 
 import testful.ConfigGeneration;
@@ -254,5 +255,13 @@ public class ConfigRandom implements IConfigRandom, IConfigRunner.Args4j, IConfi
 	@Override
 	public void setLogLevel(LogLevel logLevel) {
 		configGenerator.setLogLevel(logLevel);
+	}
+
+	/* (non-Javadoc)
+	 * @see testful.IConfig#validate()
+	 */
+	@Override
+	public void validate() throws CmdLineException {
+		// everything is ok!
 	}
 }

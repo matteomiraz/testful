@@ -21,6 +21,7 @@ package testful.evolutionary;
 import java.io.File;
 import java.util.List;
 
+import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.Option;
 
 import testful.ConfigGeneration;
@@ -331,5 +332,13 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	@Override
 	public boolean isSimplify() {
 		return !noSimplify;
+	}
+
+	/* (non-Javadoc)
+	 * @see testful.IConfig#validate()
+	 */
+	@Override
+	public void validate() throws CmdLineException {
+		// everything is ok!
 	}
 }
