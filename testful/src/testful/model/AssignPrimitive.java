@@ -34,7 +34,7 @@ public class AssignPrimitive extends Operation {
 	private final Serializable value;
 
 	public AssignPrimitive(Reference ref, Serializable value) {
-		super();
+		super((ref != null ? ref.hashCode() * 29 : 0) + value.hashCode());
 
 		if(TestFul.DEBUG) {
 			if(ref == null) {
@@ -103,17 +103,13 @@ public class AssignPrimitive extends Operation {
 	}
 
 	@Override
-	public int hashCode() {
-		return (ref != null ? ref.hashCode() * 31 : 0) + (value != null ? value.hashCode() : 0);
-	}
-
-	@Override
 	public boolean equals(Object obj) {
 		if(this == obj) return true;
 		if(obj == null) return false;
 		if(!(obj instanceof AssignPrimitive)) return false;
 
 		AssignPrimitive other = (AssignPrimitive) obj;
+		if(hashCode != other.hashCode) return false;
 		return (ref == null ? other.ref == null : ref.equals(other.ref)) &&
 		(value == null ? other.value == null : value.equals(other.value));
 	}

@@ -34,7 +34,11 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 
 	private static final long serialVersionUID = -4200667624940186523L;
 
-	protected Operation() { }
+	protected final int hashCode;
+
+	protected Operation(int hashCode) {
+		this.hashCode = hashCode;
+	}
 
 	private ElementManager<String, OperationInformation> infos;
 
@@ -65,8 +69,17 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 	@Override
 	public abstract String toString();
 
+	/**
+	 * Returns the hash of the current Operation.
+	 * Other parts of Testful requires that the hash code calculus is deterministic
+	 * (i.e., it does not depend on random variation such as the location in memory, like the
+	 * Object.hashCode).<br/>
+	 * Each subclass must calculate its hash code in the constructor, and set the hashCode property.
+	 */
 	@Override
-	public abstract int hashCode();
+	public final int hashCode() {
+		return hashCode;
+	}
 
 	@Override
 	public abstract boolean equals(Object o);

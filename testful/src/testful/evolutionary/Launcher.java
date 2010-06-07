@@ -35,6 +35,7 @@ import jmetal.base.operator.localSearch.LocalSearch;
 import jmetal.base.operator.selection.BinaryTournament2;
 import jmetal.base.operator.selection.Selection;
 import jmetal.util.JMException;
+import jmetal.util.PseudoRandom;
 import testful.IUpdate.Callback;
 import testful.TestFul;
 import testful.TestfulException;
@@ -66,8 +67,6 @@ public class Launcher {
 
 		TestFul.setupLogging(config);
 
-		logger.config(TestFul.getProperties(config));
-
 		run(config);
 
 		System.exit(0);
@@ -81,6 +80,10 @@ public class Launcher {
 	 * @throws TestfulException if something goes wrong
 	 */
 	public static void run(IConfigEvolutionary config, Callback ... callBacks) throws TestfulException {
+		logger.config(TestFul.getProperties(config));
+
+		PseudoRandom.setupMersenneTwisterFast(config.getSeed());
+
 		RunnerPool.getRunnerPool().config(config);
 
 		if(config.getLog() != null && logger.isLoggable(Level.FINE)) {

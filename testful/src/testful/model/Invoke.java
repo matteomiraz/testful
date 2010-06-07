@@ -36,10 +36,14 @@ public class Invoke extends Operation {
 	private final Methodz method;
 	private final Reference[] params;
 
-	public Invoke(Reference return1, Reference this1, Methodz method, Reference[] params) {
-		super();
-		_return = return1;
-		_this = this1;
+	public Invoke(Reference _return, Reference _this, Methodz method, Reference[] params) {
+		super(37 * 37 * 37 * ((_return == null) ? 0 : _return.hashCode()) +
+				37 * 37 * ((_this == null) ? 0 : _this.hashCode()) +
+				37 * method.hashCode() +
+				Arrays.hashCode(params));
+
+		this._return = _return;
+		this._this = _this;
 		this.method = method;
 		this.params = params;
 	}
@@ -112,17 +116,6 @@ public class Invoke extends Operation {
 		}
 
 		return ret + _this + "." + method.getName() + "(" + (pars != null ? pars.toString() : "") + ")";
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((_return == null) ? 0 : _return.hashCode());
-		result = prime * result + ((_this == null) ? 0 : _this.hashCode());
-		result = prime * result + method.hashCode();
-		result = prime * result + Arrays.hashCode(params);
-		return result;
 	}
 
 	@Override

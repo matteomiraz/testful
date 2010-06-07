@@ -23,61 +23,50 @@ import testful.model.Constructorz;
 import testful.model.Methodz;
 import testful.model.Reference;
 
-public class SimpleDummyTestCase extends SingleClassTestCase {
+public class ApacheFractionTestCase extends SingleClassTestCase {
+	protected Reference[] ints, doubles;
+
+	protected Constructorz cns_double_int;
+
+	protected Methodz divide_Fraction;
 
 	/* (non-Javadoc)
 	 * @see testful.SingleClassTestCase#getClassUnderTest()
 	 */
 	@Override
 	protected String getClassUnderTest() {
-		return "dummy.Simple";
+		return "apache.Fraction";
 	}
-
-	protected Reference c0, c1, c2, c3;
-	protected Reference i0, i1, i2, i3;
-
-	protected Constructorz cns;
-
-	protected Methodz mInc;
-	protected Methodz mDec;
-	protected Methodz oStatus;
-	protected Methodz wModulo;
-	protected Methodz oAbs;
 
 	@Override
 	protected void setUp() throws Exception {
 		super.setUp();
 
 		Clazz iClazz = null;
-		for(Clazz clazz : cluster.getCluster()) {
+		Clazz dClazz = null;
+		Clazz[] cl = cluster.getCluster();
+		for(Clazz clazz : cl) {
 			if("java.lang.Integer".equals(clazz.getClassName())) iClazz = clazz;
+			if("java.lang.Double".equals(clazz.getClassName())) dClazz = clazz;
 		}
 		assertNotNull(iClazz);
+		assertNotNull(dClazz);
 
-		i0 = refFactory.getReferences(iClazz)[0];
-		i1 = refFactory.getReferences(iClazz)[1];
-		i2 = refFactory.getReferences(iClazz)[2];
-		i3 = refFactory.getReferences(iClazz)[3];
+		cuts = refFactory.getReferences(cut);
+		ints = refFactory.getReferences(iClazz);
+		doubles = refFactory.getReferences(dClazz);
 
-		c0 = refFactory.getReferences(cut)[0];
-		c1 = refFactory.getReferences(cut)[1];
-		c2 = refFactory.getReferences(cut)[2];
-		c3 = refFactory.getReferences(cut)[3];
-
-		cns = cut.getConstructors()[0];
-
-		mInc = null;
-		mDec = null;
-		oStatus = null;
-		wModulo = null;
-		oAbs = null;
-		for(Methodz m : cut.getMethods()) {
-			if("mInc".equals(m.getName())) mInc = m;
-			if("mDec".equals(m.getName())) mDec = m;
-			if("oStatus".equals(m.getName())) oStatus = m;
-			if("wModulo".equals(m.getName())) wModulo = m;
-			if("oAbs".equals(m.getName())) oAbs = m;
+		cns_double_int = null;
+		for (Constructorz cns : cut.getConstructors()) {
+			if(checkParameters(cns.getParameterTypes(), dClazz, iClazz)) cns_double_int = cns;
 		}
+		assertNotNull(cns_double_int);
+
+		divide_Fraction = null;
+		for(Methodz m : cut.getMethods()) {
+			if(checkMethod(m, "divide", cut)) divide_Fraction = m;
+		}
+		assertNotNull(divide_Fraction);
 	}
 
 	@Override
@@ -87,23 +76,12 @@ public class SimpleDummyTestCase extends SingleClassTestCase {
 		cluster = null;
 		refFactory = null;
 
-		cns      = null;
-		mInc     = null;
-		mDec     = null;
-		oStatus  = null;
-		wModulo  = null;
-		oAbs     = null;
+		cuts = null;
+		ints = null;
+		doubles = null;
 
-		i0 = null;
-		i1 = null;
-		i2 = null;
-		i3 = null;
+		cns_double_int = null;
 
-		c0 = null;
-		c1 = null;
-		c2 = null;
-		c3 = null;
+		divide_Fraction = null;
 	}
-
-
 }

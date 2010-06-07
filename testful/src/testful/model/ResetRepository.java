@@ -32,12 +32,7 @@ public final class ResetRepository extends Operation {
 	public static final ResetRepository singleton = new ResetRepository();
 
 	private ResetRepository() {
-		super();
-	}
-
-	@Override
-	public int hashCode() {
-		return 31;
+		super(41);
 	}
 
 	@Override

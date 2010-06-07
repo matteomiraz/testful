@@ -138,6 +138,8 @@ public class TestfulProblem implements Serializable {
 	 * @param tests the tests to add
 	 */
 	public void addReserve(TestSuite tests){
+		if(tests == null) return;
+
 		reserve.add(tests);
 	}
 
@@ -146,6 +148,8 @@ public class TestfulProblem implements Serializable {
 	 * @param test the test to add
 	 */
 	public void addReserve(TestCoverage test){
+		if(test == null) return;
+
 		reserve.add(test);
 	}
 

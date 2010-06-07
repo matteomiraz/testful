@@ -33,7 +33,7 @@ public class AssignConstant extends Operation {
 	private final StaticValue staticValue;
 
 	public AssignConstant(Reference ref, StaticValue staticValue) {
-		super();
+		super((ref != null ? 23 * ref.hashCode() : 0) + (staticValue == null ? 0 : staticValue.hashCode()));
 
 		if(TestFul.DEBUG) {
 			if(ref == null) {
@@ -87,11 +87,6 @@ public class AssignConstant extends Operation {
 		if(staticValue == null) return ref + " = null";
 		else if(ref.getClazz() instanceof PrimitiveClazz) return ref + " = " + ((PrimitiveClazz) ref.getClazz()).getCast() + staticValue;
 		else return ref + " = " + staticValue;
-	}
-
-	@Override
-	public int hashCode() {
-		return (ref != null ? 31 * ref.hashCode() : 0) + (staticValue == null ? 0 : staticValue.hashCode());
 	}
 
 	@Override

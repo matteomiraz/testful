@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful;
 
 import java.io.File;
@@ -40,6 +39,11 @@ public class TestFul {
 
 	public static final long runId = System.currentTimeMillis();
 
+	/**
+	 * Runs TestFul in debug mode:
+	 * enables extended validity checks
+	 * and activates one executor only.
+	 */
 	public static final boolean DEBUG = false;
 
 	private static final String VERSION = "1.1.3";

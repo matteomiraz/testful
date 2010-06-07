@@ -24,15 +24,17 @@ import java.util.BitSet;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jmetal.base.Solution;
@@ -72,7 +74,7 @@ import ec.util.MersenneTwisterFast;
  */
 public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
-	private static final Logger logger = Logger.getLogger("testful.evolutionary");
+	private static final Logger logger = Logger.getLogger("testful.evolutionary.localSearch");
 
 	private final AtomicInteger localSearchId = new AtomicInteger(0);
 
@@ -210,7 +212,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 		final ElementManager<String, CoverageInformation> covs = problem.evaluate(test.test, data).get();
 		CoverageConditionTarget covCondOrig = (CoverageConditionTarget)covs.get(KEY);
 
-		logger.info("Selected branch: " + branchId + " (score: " + test.score.getQuality() + ")");
+		logger.info("Selected branch: " + branchId + " (score: " + test.score.getQuality() + " length: " + test.test.getTest().length + ")");
 
 		logger.fine("coverageLocalSearch " + localSearchId + " branch=" + branchId + ";iter=" + 0 + ";cov=" + covCondOrig.getQuality() + ";distance=" + covCondOrig + ";len=" + test.test.getTest().length);
 
@@ -238,15 +240,14 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			if(covCond.getQuality() < covCondOrig.getQuality()) continue;
 			if(covCond.getQuality() == covCondOrig.getQuality() && ops.size() >= opsOrig.size()) continue;
 
+			logger.info("Branch " + branchId + " score: " + covCond.getQuality() + " length: " + ops.size());
 			opsOrig = ops;
 			covCondOrig = covCond;
 
 			if(covCond.getQuality() == Float.POSITIVE_INFINITY) {
 
 				logger.info("Branch " + branchId + " hit");
-
 				attempts.remove(branchId);
-
 				return ops;
 			}
 		}
@@ -363,7 +364,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 	private TestWithScore getBest(Set<TestWithScore> testScore) {
 
 		BranchScore max = null;
-		Set<TestWithScore> maxSet = new HashSet<TestWithScore>();
+		SortedSet<TestWithScore> maxSet = new TreeSet<TestWithScore>();
 
 		for(TestWithScore t : testScore) {
 			if(max == null) {
@@ -385,7 +386,21 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 		if(maxSet.isEmpty()) return null;
 
 		TestWithScore[] ret = maxSet.toArray(new TestWithScore[maxSet.size()]);
-		return ret[random.nextInt(ret.length)];
+
+		if(logger.isLoggable(Level.FINEST)) {
+			StringBuilder sb = new StringBuilder("Tests with maximum score:\n");
+
+			for (int i = 0; i < ret.length; i++) {
+				sb.append("Test # ").append(i).append(" - ").append(ret[i].score.toString()).append("\n");
+				sb.append(ret[i].test.toString()).append("\n");
+			}
+
+			logger.finest(sb.toString());
+		}
+
+		final int nextInt = random.nextInt(ret.length);
+		logger.finest("Selected test #" + nextInt + " (out of " + ret.length + ")");
+		return ret[nextInt];
 
 	}
 
@@ -413,7 +428,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 	private Set<TestWithScore> addSearchScore(Collection<TestCoverage> tests, BitSet execConds) {
 		final AnalysisWhiteBox whiteAnalysis = problem.getWhiteAnalysis();
 
-		Set<TestWithScore> ret = new HashSet<TestWithScore>();
+		Set<TestWithScore> ret = new TreeSet<TestWithScore>();
 
 		for(TestCoverage t : tests) {
 
@@ -473,6 +488,17 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			}
 		}
 
+		if(logger.isLoggable(Level.FINEST)) {
+			StringBuilder sb = new StringBuilder("Candidate tests:\n");
+
+			for (TestWithScore t : ret) {
+				sb.append("Test ").append(t.score.toString()).append("\n");
+				sb.append(t.test.toString()).append("\n");
+			}
+
+			logger.finest(sb.toString());
+		}
+
 		return ret;
 	}
 
@@ -501,7 +527,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 		@Override
 		public String toString() {
-			return quality + "\t" + branchId;
+			return "[branch:" + branchId + "] quality: " + quality;
 		}
 
 		@Override
@@ -535,7 +561,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 		}
 	}
 
-	private static class TestWithScore {
+	private static class TestWithScore implements Comparable<TestWithScore> {
 		final TestCoverage test;
 		final BranchScore score;
 
@@ -571,6 +597,27 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 		@Override
 		public String toString() {
 			return score.branchId + ": " + score.quality;
+		}
+
+		/* (non-Javadoc)
+		 * @see java.lang.Comparable#compareTo(java.lang.Object)
+		 */
+		@Override
+		public int compareTo(TestWithScore o) {
+			if(score.branchId != o.score.branchId) return score.branchId - o.score.branchId;
+
+			if(score.quality > o.score.quality) return 1;
+			else if(score.quality < o.score.quality) return -1;
+
+			if(test.getTest().length != o.test.getTest().length) return test.getTest().length - o.test.getTest().length;
+
+			if(test.hashCode() == o.test.hashCode()) {
+				logger.finer("Same Tests! " +
+						"\n T1 " + score + " hash:" + test.hashCode() + " \n" + test +
+						"\n T2 " + o.score + " hash:" + o.test.hashCode() + " \n" + o.test);
+			}
+
+			return test.hashCode() - o.test.hashCode();
 		}
 	}
 

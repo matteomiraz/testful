@@ -143,6 +143,12 @@ public class Test implements Serializable {
 		}
 	}
 
+	/**
+	 * Calculate the hash of the current test.
+	 * Other parts of Testful requires that the hash code calculus is deterministic
+	 * (i.e., it does not depend on random variation such as the location in memory, like the
+	 * Object.hashCode).
+	 */
 	@Override
 	public int hashCode() {
 		return hashCode;

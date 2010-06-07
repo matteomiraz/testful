@@ -31,18 +31,10 @@ public class Reference implements Serializable, Comparable<Reference> {
 	/** The id of the reference */
 	private final int id;
 
-	private final int hashCode;
-
 	Reference(Clazz clazz, int pos, int id) {
 		this.clazz = clazz;
 		this.pos = pos;
 		this.id = id;
-
-		int result = 1;
-		result = 31 * result + clazz.hashCode();
-		result = 31 * result + id;
-		result = 31 * result + pos;
-		hashCode = result;
 	}
 
 	public Clazz getClazz() {
@@ -64,7 +56,7 @@ public class Reference implements Serializable, Comparable<Reference> {
 
 	@Override
 	public int hashCode() {
-		return hashCode;
+		return id * 31;
 	}
 
 	@Override

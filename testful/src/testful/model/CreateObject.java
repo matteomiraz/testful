@@ -36,7 +36,9 @@ public class CreateObject extends Operation {
 	private final Reference[] params;
 
 	public CreateObject(Reference ref, Constructorz constructor, Reference[] params) {
-		super();
+		super(31*31*(ref == null ? 0 : ref.hashCode()) +
+				31 * constructor.hashCode() +
+				Arrays.hashCode(params));
 		this.ref = ref;
 		this.constructor = constructor;
 		this.params = params;
@@ -101,16 +103,6 @@ public class CreateObject extends Operation {
 			return ref + " = " + ((PrimitiveClazz) ref.getClazz()).getCast() + " new " + constructor.getClazz().getClassName() + "(" + (pars != null ? pars.toString() : "") + ")";
 		else
 			return ref + " = new " + constructor.getClazz().getClassName() + "(" + (pars != null ? pars.toString() : "") + ")";
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((ref == null) ? 0 : ref.hashCode());
-		result = prime * result + constructor.hashCode();
-		result = prime * result + Arrays.hashCode(params);
-		return result;
 	}
 
 	@Override

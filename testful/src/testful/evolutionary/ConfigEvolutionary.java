@@ -62,7 +62,7 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	@Option(required = false, name = "-useCpuTime", usage = "Use CPU time instead of wall-clock time")
 	private boolean useCpuTime;
 
-	@Option(required = false, name =" -seed", usage = "Set the seed of the random number generator")
+	@Option(required = false, name ="-seed", usage = "Set the seed of the random number generator")
 	private long seed = System.currentTimeMillis();
 
 	@Override

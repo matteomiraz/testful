@@ -372,11 +372,6 @@ public final class PrimitiveClazz extends Clazz {
 	}
 
 	@Override
-	public int hashCode() {
-		return super.hashCode() * 31 + realType.hashCode();
-	}
-
-	@Override
 	public boolean equals(Object obj) {
 		if(this == obj) return true;
 		if(!super.equals(obj)) return false;
