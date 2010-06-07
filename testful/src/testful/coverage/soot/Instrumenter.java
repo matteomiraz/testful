@@ -86,14 +86,6 @@ public class Instrumenter {
 		public void processPost(Chain<Unit> newUnits, Stmt op);
 
 		/**
-		 * Do something after an operation throwing an exception
-		 * @param newUnits the chain that will be emitted
-		 * @param op the operation being analyzed
-		 * @param exception the exception being thrown
-		 */
-		public void processPostExc(Chain<Unit> newUnits, Stmt op, Local exception);
-
-		/**
 		 * If the method throws an exception, it is caught and handled in this block (before re-throwing it)
 		 * @param newUnits the chain that will be emitted
 		 * @param exc the exception is stored in this local (do not modify it)
@@ -353,12 +345,6 @@ public class Instrumenter {
 				final Unit nopPost = Jimple.v().newNopStmt();
 				nopPost.addTag(new StringTag("nopPost"));
 
-				Unit nopPostExc = null;
-				if(stmt.containsInvokeExpr()) {
-					nopPostExc = Jimple.v().newNopStmt();
-					nopPost.addTag(new StringTag("nopPostExc"));
-				}
-
 				final Unit nopAfter = Jimple.v().newNopStmt();
 				nopAfter.addTag(new StringTag("nopAfter"));
 				stop.put(stmt, nopAfter);
@@ -387,19 +373,6 @@ public class Instrumenter {
 					if(stmt.containsInvokeExpr())
 						newUnits.add(Jimple.v().newGotoStmt(nopPost));
 					newUnits.add(nopOrig2);
-				}
-
-				// postprocess exceptional
-				if(nopPostExc != null) {
-					newUnits.add(nopPostExc);
-
-					newUnits.add(Jimple.v().newIdentityStmt(exc, Jimple.v().newCaughtExceptionRef()));
-					for(UnifiedInstrumentator i : instrumenters)
-						i.processPostExc(newUnits, stmt, exc);
-
-					newUnits.add(Jimple.v().newThrowStmt(exc));
-
-					newTraps.add(Jimple.v().newTrap(throwableClass, nopOrig1, nopOrig2, nopPostExc));
 				}
 
 				// postprocess

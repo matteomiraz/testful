@@ -186,11 +186,6 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 	}
 
 	@Override
-	public void processPostExc(Chain<Unit> newUnits, Stmt op, Local exception) {
-		analyzer.processPostExc(newUnits, op);
-	}
-
-	@Override
 	public void exceptional(Chain<Unit> newUnits, Local exc) {
 		analyzer.exceptional(newUnits, exc);
 	}
@@ -878,9 +873,6 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				if(!SootUtils.isAssignable(exceptionClass, exc) || SootUtils.isAssignable(runtimeExceptionClass, exc))
 					uncheckedExceptionHandlers.add(t);
 			}
-		}
-
-		public void processPostExc(Chain<Unit> newUnits, Stmt stmt) {
 		}
 
 		public void processPost(Chain<Unit> newUnits, Stmt stmt) {
