@@ -150,8 +150,15 @@ public class MutationExecutionManager extends ExecutionManager<MutationCoverage>
 			mutationField.set(null, -1);
 			TestStoppedException.stop = false;
 			super.reallyExecute(stopOnBug);
-			final BitSet executedMutants = (BitSet) executedMutantsField.get(null);
-			logger.fine("Got live mutants on " + className + ": " + executedMutants.cardinality() + "/" + maxMutations);
+
+			BitSet executedMutants;
+			try {
+				executedMutants = (BitSet) executedMutantsField.get(null);
+				logger.fine("Got executed mutants on " + className + ": " + executedMutants.cardinality() + "/" + maxMutations);
+			} catch (Throwable e1) {
+				executedMutants = null;
+				logger.log(Level.FINE, "Cannot retrieve the list of executed mutants: " + e1, e1);
+			}
 
 			BitSet notExecutedMutants = new BitSet();
 			if(executedMutants == null) notExecutedMutants.set(1, maxMutations + 1);
