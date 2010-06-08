@@ -31,6 +31,7 @@ import testful.utils.ElementWithKey;
 public class TestfulClassLoader extends ClassLoader implements ElementWithKey<String> {
 
 	private static final ClassLoader superClassLoader = TestfulClassLoader.class.getClassLoader();
+
 	/** for these classes, use always the system classloader */
 	private static final String[] SYSTEM_CLASSES = {
 		"testful.coverage.TrackerDatum"
@@ -39,13 +40,7 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 	/** for these classes force to use the testful classloader */
 	private static final String[] TESTFUL_CLASSES = {
 		"testful.utils.Cloner",
-		"testful.model.TestExecutionManager",
-		"testful.mutation.MutationExecutionManager",
-		"testful.mutation.MutationExecutionManagerSingle",
-		"testful.mutation.MutationExecutionManagerSingle$TestThread",
-		"testful.mutation.MutationExecutionData",
-		"testful.mutation.MutationCoverage",
-		"testful.mutation.MutationCoverageSingle"
+		"testful.model.TestExecutionManager"
 	};
 
 	/** for these packages force to use the testful classloader */

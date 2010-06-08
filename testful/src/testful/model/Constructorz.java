@@ -37,6 +37,9 @@ public class Constructorz implements Serializable, Comparable<Constructorz> {
 	private final MethodInformation info;
 	private final String fullConstructorName;
 
+	/** The maximum execution time (in milliseconds) */
+	private final int maxExecutionTime;
+
 	private transient Constructor<?> constructor = null;
 
 	Constructorz(TestCluster cluster, Constructor<?> c, XmlConstructor xml) {
@@ -45,6 +48,7 @@ public class Constructorz implements Serializable, Comparable<Constructorz> {
 
 		constructor = c;
 		fullConstructorName = c.toGenericString();
+		maxExecutionTime = xml.getMaxExecTime();
 
 		List<XmlParameter> paramsXml = xml.getParameter();
 		ParameterInformation[] paramsInfo = new ParameterInformation[paramsXml.size()];
@@ -98,6 +102,14 @@ public class Constructorz implements Serializable, Comparable<Constructorz> {
 
 	public Clazz[] getParameterTypes() {
 		return params;
+	}
+
+	/**
+	 * Returns the maximum execution time (in milliseconds)
+	 * @return the maximum execution time (in milliseconds)
+	 */
+	public int getMaxExecutionTime() {
+		return maxExecutionTime;
 	}
 
 	@Override

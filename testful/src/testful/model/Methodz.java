@@ -43,6 +43,9 @@ public class Methodz implements Serializable, Comparable<Methodz> {
 	private final Clazz returnType;
 	private final boolean isStatic;
 
+	/** The maximum execution time (in milliseconds) */
+	private final int maxExecutionTime;
+
 	private final String fullMethodName;
 
 	private transient Method method = null;
@@ -63,6 +66,7 @@ public class Methodz implements Serializable, Comparable<Methodz> {
 
 		method = m;
 		isStatic = Modifier.isStatic(method.getModifiers());
+		maxExecutionTime = xml.getMaxExecTime();
 
 		List<XmlParameter> paramsXml = xml.getParameter();
 		ParameterInformation[] paramsInfo = new ParameterInformation[paramsXml.size()];
@@ -125,6 +129,14 @@ public class Methodz implements Serializable, Comparable<Methodz> {
 
 	public boolean isStatic() {
 		return isStatic;
+	}
+
+	/**
+	 * Returns the maximum execution time (in milliseconds)
+	 * @return the maximum execution time (in milliseconds)
+	 */
+	public int getMaxExecutionTime() {
+		return maxExecutionTime;
 	}
 
 	@Override

@@ -52,7 +52,6 @@ public class ApacheFractionTestCase extends SingleClassTestCase {
 		assertNotNull(iClazz);
 		assertNotNull(dClazz);
 
-		cuts = refFactory.getReferences(cut);
 		ints = refFactory.getReferences(iClazz);
 		doubles = refFactory.getReferences(dClazz);
 

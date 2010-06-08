@@ -341,7 +341,7 @@
     <target name="test.cut.instrument" depends="create_instrumenter_jar, test.cut.compile" description="instrument the tests' cut">
     	<delete dir="${base}/testCut/instrumented" />
     	<java jar="${artifacts}/instrumenter.jar" fork="true">
-    		<arg line="-dir ${testCut} dummy.WhiteSample dummy.Simple dummy.StateMachine apache.Fraction"/>
+    		<arg line="-dir ${testCut} dummy.WhiteSample dummy.Simple dummy.StateMachine apache.Fraction test.Stopped"/>
     	</java>
 	</target>
 
@@ -444,7 +444,7 @@
 
 		<!-- Instrument classes used in jUnit -->
 		<java classname="testful.coverage.Launcher" fork="true" classpathref="instrumented.classpath">
-    		<arg line="-dir ${testCut} dummy.WhiteSample dummy.Simple dummy.StateMachine apache.Fraction"/>
+    		<arg line="-dir ${testCut} dummy.WhiteSample dummy.Simple dummy.StateMachine apache.Fraction test.Stopped"/>
 		</java>
 
 		<!-- run jUnit tests -->

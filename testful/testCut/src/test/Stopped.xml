@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:class xmlns:ns2="http://testful.sourceforge.net/schema/1.2/testful.xsd">
+    <constructor maxExecTime="10000" />
+    <method kind="mutator" exposeState="false" maxExecTime="100" name="longMethod1"/>
+    <method kind="mutator" exposeState="false" maxExecTime="100" name="longMethod2"/>
+    <method kind="mutator" exposeState="false" maxExecTime="100" name="longMethod3"/>
+    <method kind="mutator" exposeState="false" maxExecTime="100" name="longMethod4"/>
+    <method kind="mutator" exposeState="false" maxExecTime="100" name="longMethod5"/>
+</ns2:class>

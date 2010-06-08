@@ -1,17 +1,17 @@
 /*
  * TestFul - http://code.google.com/p/testful/
  * Copyright (C) 2010  Matteo Miraz
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -27,23 +27,23 @@ import testful.utils.Cloner;
 
 /**
  * Embodies the execution environment of the test. Manages the supply of
- * information at run-time to trackers, the test execution, and the retrival of
+ * information at run-time to trackers, the test execution, and the retrieval of
  * coverage information.<br/>
  * The execution manager itself (i.e., this abstract class) is loaded by the system
- * classloader, but subclasses must be loaded using the test's class loader (instance
- * of the TestfulClassLoader). When one is creating an istance, he must specify the
+ * class-loader, but subclasses must be loaded using the test's class loader (instance
+ * of the TestfulClassLoader). When one is creating an instance, he must specify the
  * executor to use and (optionally) the <b>tracker data</b>. Then it is possible
  * to execute the test and retrieve the results by invoking the method execute,
- * and specifying whether or not the exeuction must stop as soon as a bug is
+ * and specifying whether or not the execution must stop as soon as a bug is
  * revealed. This method performs the following operations:
  * <ol>
  * <li>invoke the setup method</li>
- * <li>if the classloader is a new one (never used before), invoke the warmup
+ * <li>if the class-loader is a new one (never used before), invoke the warm-up
  * method</li>
  * <li>invoke the reallyExecute() method, which really execute the test</li>
  * <li>invoke the getResult method, and return the result</li>
  * </ol>
- * 
+ *
  * @author matteo
  * @param <T> The type of the collected coverage information
  */
@@ -78,7 +78,7 @@ public abstract class ExecutionManager<T extends Serializable> {
 		this.classLoader = (TestfulClassLoader) loader;
 
 		try {
-			Class<?> cloner = loader.loadClass(Cloner.class.getCanonicalName());
+			Class<?> cloner = loader.loadClass(Cloner.class.getName());
 			Method deserialize = cloner.getMethod("deserialize", byte[].class, boolean.class);
 
 			// Setup the executor
@@ -114,7 +114,6 @@ public abstract class ExecutionManager<T extends Serializable> {
 	 * <li>invoke the execute() method, which really execute the test</li>
 	 * <li>invoke the getResult method, and return the result</li>
 	 * </ol>
-	 * 
 	 * @param stopOnBug if true the execution will stop as soon as the first bug
 	 *          is revealed
 	 * @return the desired result
@@ -149,14 +148,12 @@ public abstract class ExecutionManager<T extends Serializable> {
 
 	/**
 	 * Collect the results of the test execution
-	 * 
 	 * @return the collected coverage information
 	 */
 	protected abstract T getResult();
 
 	/**
 	 * really execute the test, measuring the execution time.
-	 * 
 	 * @param stopOnBug specify if the execution should stop at the first bug
 	 *          revealed
 	 * @throws ClassNotFoundException if some class has not been found

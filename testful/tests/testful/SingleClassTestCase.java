@@ -60,6 +60,7 @@ public abstract class SingleClassTestCase extends GenericTestCase {
 		refFactory = new ReferenceFactory(cluster, 4, 4);
 
 		cut = cluster.getCut();
+		cuts = refFactory.getReferences(cut);
 	}
 
 	/* (non-Javadoc)

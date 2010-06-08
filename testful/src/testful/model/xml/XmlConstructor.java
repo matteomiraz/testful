@@ -40,12 +40,33 @@ public class XmlConstructor implements Comparable<XmlConstructor> {
 	@XmlAttribute(required=false)
 	public Boolean skip = false;
 
+	/** Maximum execution time (in milliseconds) */
+	@XmlAttribute(required=false)
+	public Integer maxExecTime = XmlMethod.MAX_EXEC_TIME;
+
 	@XmlElement
 	protected List<Extra> extra;
 
 	public List<XmlParameter> getParameter() {
 		if(parameter == null) parameter = new ArrayList<XmlParameter>();
 		return parameter;
+	}
+
+	/**
+	 * Returns the maximum execution time (in milliseconds)
+	 * @return the maximum execution time (in milliseconds)
+	 */
+	public int getMaxExecTime() {
+		if(maxExecTime == null) return XmlMethod.MAX_EXEC_TIME;
+		return maxExecTime;
+	}
+
+	/**
+	 * Sets the maximum execution time (in milliseconds)
+	 * @param maxExecTime the maximum execution time (in milliseconds)
+	 */
+	public void setMaxExecTime(Integer maxExecTime) {
+		this.maxExecTime = maxExecTime;
 	}
 
 	public List<Extra> getExtra() {

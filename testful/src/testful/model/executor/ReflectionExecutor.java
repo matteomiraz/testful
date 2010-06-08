@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import testful.coverage.stopper.Stopper;
+import testful.coverage.stopper.TestStoppedException;
 import testful.model.AssignConstant;
 import testful.model.AssignPrimitive;
 import testful.model.Clazz;
@@ -132,14 +134,31 @@ public class ReflectionExecutor implements Executor {
 		/** Number of valid operations that reveal faults */
 		int nFaulty = 0;
 
+		final Stopper stopper = new Stopper();
+
 		for(Operation op : test) {
+
+			final Integer maxExecTime;
+			if(op instanceof CreateObject) maxExecTime = ((CreateObject)op).getConstructor().getMaxExecutionTime();
+			else if (op instanceof Invoke) maxExecTime = ((Invoke)op).getMethod().getMaxExecutionTime();
+			else maxExecTime = null;
+
 			try {
 				if(logger.isLoggable(Level.FINEST)) {
 					logger.finest(toString());
 					logger.finest("Executing " + op);
 				}
 
-				perform(op);
+				if(maxExecTime != null) stopper.start(maxExecTime);
+
+				if(op instanceof AssignPrimitive) assignPrimitive((AssignPrimitive) op);
+				else if(op instanceof AssignConstant) assignConstant((AssignConstant) op);
+				else if(op instanceof CreateObject) createObject((CreateObject) op);
+				else if(op instanceof Invoke) invoke((Invoke) op);
+				else if(op instanceof ResetRepository) reset((ResetRepository) op);
+				else logger.warning("Unknown operation: " + op.getClass().getCanonicalName() + " - " + op);
+
+				if(maxExecTime != null) stopper.stop();
 
 				nValid++;
 
@@ -151,10 +170,14 @@ public class ReflectionExecutor implements Executor {
 					nPre++;
 
 				} else if(e instanceof FaultyExecutionException) {
+
+					if(e instanceof TestStoppedException) {
+						stopper.stop();
+					} else {
+						faults.put(op, (FaultyExecutionException) e);
+					}
+
 					nFaulty++;
-
-					faults.put(op, (FaultyExecutionException) e);
-
 					if(stopOnBug) break;
 
 					// reset the repository
@@ -163,6 +186,8 @@ public class ReflectionExecutor implements Executor {
 				}
 			}
 		}
+
+		stopper.done();
 
 		if(logger.isLoggable(Level.FINEST))
 			logger.finest(toString());
@@ -175,7 +200,6 @@ public class ReflectionExecutor implements Executor {
 
 		return faults.size();
 	}
-
 
 	/**
 	 * Returns the object with the given type at the given position. Returns NULL
@@ -232,16 +256,6 @@ public class ReflectionExecutor implements Executor {
 
 			throw new TestfulInternalException.Impl(e);
 		}
-	}
-
-	private void perform(Operation op) throws Throwable {
-
-		if(op instanceof AssignPrimitive) assignPrimitive((AssignPrimitive) op);
-		else if(op instanceof AssignConstant) assignConstant((AssignConstant) op);
-		else if(op instanceof CreateObject) createObject((CreateObject) op);
-		else if(op instanceof Invoke) invoke((Invoke) op);
-		else if(op instanceof ResetRepository) reset((ResetRepository) op);
-		else logger.warning("Unknown operation: " + op.getClass().getCanonicalName() + " - " + op);
 	}
 
 	private void reset(ResetRepository op) {
