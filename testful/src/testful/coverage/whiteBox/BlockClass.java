@@ -90,7 +90,7 @@ public class BlockClass extends Block implements Iterable<Block> {
 	}
 
 
-	private static final boolean printLocalData = true;
+	private static final boolean printLocalData = false;
 
 	private final String name;
 	private final Set<Data> fields;
@@ -192,9 +192,6 @@ public class BlockClass extends Block implements Iterable<Block> {
 	}
 
 	public void performDataFlowAnalysis() {
-
-		final Logger logger = Logger.getLogger("testful.coverage.instrumenter.whitebox");
-
 		int iter = 0;
 		boolean run = true;
 
@@ -205,7 +202,7 @@ public class BlockClass extends Block implements Iterable<Block> {
 				run |= b.updateData();
 
 			long end = System.currentTimeMillis();
-			logger.info("DataFlow iteration: " + iter++ + " " + (end - start) + " ms");
+			logger.info("class " + name + " - DataFlow iteration: " + iter++ + " " + (end - start) + " ms");
 		}
 	}
 
@@ -298,7 +295,6 @@ public class BlockClass extends Block implements Iterable<Block> {
 		return sb.toString();
 	}
 
-	@SuppressWarnings("unused")
 	private void printDataAnalysis(Block b, StringBuilder sb) {
 		//				sb.append("\\ninDefs:");
 		//				BitSet bs = b.getIn();

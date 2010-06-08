@@ -1,6 +1,6 @@
-package dummy;
+package test.instrumenter;
 
-public class Instrumenter1 {
+public class Catches {
 
 	public int emptyCatch(Object o) {
 		try {
@@ -8,6 +8,15 @@ public class Instrumenter1 {
 		} catch (Exception e) {
 			return -1;
 		}
+	}
+
+	public void twoCatches(Object o) {
+		try {
+			o.wait();
+		} catch (Exception e) {
+			o.toString();
+		}
+		o.hashCode();
 	}
 
 	public int moreCatches(Object o) {

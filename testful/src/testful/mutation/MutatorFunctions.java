@@ -274,9 +274,6 @@ public class MutatorFunctions implements UnifiedInstrumentator {
 	}
 
 	@Override
-	public void processPostExc(Chain<Unit> newUnits, Stmt op, Local exception) { }
-
-	@Override
 	public void exceptional(Chain<Unit> newUnits, Local exc) { }
 
 	@Override

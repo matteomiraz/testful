@@ -86,14 +86,6 @@ public class Instrumenter {
 		public void processPost(Chain<Unit> newUnits, Stmt op);
 
 		/**
-		 * Do something after an operation throwing an exception
-		 * @param newUnits the chain that will be emitted
-		 * @param op the operation being analyzed
-		 * @param exception the exception being thrown
-		 */
-		public void processPostExc(Chain<Unit> newUnits, Stmt op, Local exception);
-
-		/**
 		 * If the method throws an exception, it is caught and handled in this block (before re-throwing it)
 		 * @param newUnits the chain that will be emitted
 		 * @param exc the exception is stored in this local (do not modify it)
@@ -109,11 +101,13 @@ public class Instrumenter {
 
 	private static final Logger logger = Logger.getLogger("testful.instrumenter");
 
-	private static final boolean preWriter     = logger.isLoggable(Level.FINEST);
+	private static final boolean preWriter     = false;
 	private static final boolean instrumenter  = true;
-	private static final boolean postWriter    = logger.isLoggable(Level.FINER);
+	private static final boolean postWriter    = false;
+	private static final boolean postValidator = false;
 	private static final boolean nopEliminator = true;
-	private static final boolean finalWriter   = logger.isLoggable(Level.FINEST);
+	private static final boolean finalWriter   = false;
+	private static final boolean finalValidator= false;
 
 	public static void prepare(IConfigProject config, List<String> toInstrument) {
 		String[] SOOT_CONF = new String[] { "-validate", "--keep-line-number", "--xml-attributes", "-f", "c", "-output-dir", config.getDirInstrumented().getAbsolutePath() };
@@ -159,7 +153,7 @@ public class Instrumenter {
 		}
 
 		String last = null;
-		if(preWriter) {
+		if(logger.isLoggable(Level.FINER) || preWriter) {
 			String newPhase = "jtp.preWriter";
 			PackManager.v().getPack("jtp").add(new Transform(newPhase, JimpleWriter.singleton));
 			last = newPhase;
@@ -174,11 +168,19 @@ public class Instrumenter {
 			last = newPhase;
 		}
 
-		if(postWriter) {
+		if(logger.isLoggable(Level.FINE) || postWriter) {
 			String newPhase = "jtp.postWriter";
 			logger.fine("Enabled phase: " + newPhase);
 			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(JimpleWriter.singleton)));
 			else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, ActiveBodyTransformer.v(JimpleWriter.singleton)), last);
+			last = newPhase;
+		}
+
+		if(logger.isLoggable(Level.FINE) || postValidator) {
+			String newPhase = "jtp.postValidator";
+			logger.fine("Enabled phase: " + newPhase);
+			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(BodyValidator.singleton)));
+			else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, ActiveBodyTransformer.v(BodyValidator.singleton)), last);
 			last = newPhase;
 		}
 
@@ -190,11 +192,19 @@ public class Instrumenter {
 			last = newPhase;
 		}
 
-		if(finalWriter) {
+		if(logger.isLoggable(Level.FINEST) || finalWriter) {
 			String newPhase = "jtp.finalWriter";
 			logger.fine("Enabled phase: " + newPhase);
 			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(JimpleWriter.singleton)));
 			else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, ActiveBodyTransformer.v(JimpleWriter.singleton)), last);
+			last = newPhase;
+		}
+
+		if(logger.isLoggable(Level.FINEST) || finalValidator) {
+			String newPhase = "jtp.finalValidator";
+			logger.fine("Enabled phase: " + newPhase);
+			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(BodyValidator.singleton)));
+			else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, ActiveBodyTransformer.v(BodyValidator.singleton)), last);
 			last = newPhase;
 		}
 
@@ -255,7 +265,6 @@ public class Instrumenter {
 			final JimpleBody newBody = Jimple.v().newBody(method);
 			method.setActiveBody(newBody);
 			final PatchingChain<Unit> newUnits = newBody.getUnits();
-			final Chain<Trap> newTraps = newBody.getTraps();
 			newBody.getLocals().addAll(oldBody.getLocals());
 
 			final Local exc = Jimple.v().newLocal("__throwable_exc__", throwableClass.getType());
@@ -277,24 +286,29 @@ public class Instrumenter {
 			//
 			// :NOP_BEGIN ( try { )
 			//
+			// ---- the operation is NOT an identity statement ----
 			// :NOP_PRE
-			//   tracking code
-			// :NOP_ORIG_1
-			//# try {
+			// :NOP_PRE_TRACK
+			//   tracking code pre
+			// :NOP_ORIG
 			//   original code
-			//   goto NOP_POST
-			//# } catch (Throwable e) -> NOP_POST_EXC
-			// :NOP_ORIG_2
-			//# :NOP_POST_EXC
-			//#   tracking code
-			//#  throw exception
-			// :NOP_POST
+			// :NOP_POST_TRACK
+			//   tracking code post
+			// :NOP_AFTER
+			//
+			// ---- the operation IS an identity statement ----
+			// :NOP_PRE
+			// :NOP_ORIG
+			//   original code
+			// :NOP_PRE_TRACK
+			//   tracking code
+			// :NOP_POST_TRACK
 			//   tracking code
 			// :NOP_AFTER
 			//
-			// :NOP_END ( } catch(Throwable) { )
+			// :NOP_END ( } catch(Throwable exc) { )
 			//   exceptional tracker code
-			//
+			//   throw exc
 
 			// --------------------------------------------------------------------------
 			// initial method code (@this=this, params, superCall)
@@ -307,9 +321,6 @@ public class Instrumenter {
 			int nParams = method.getParameterCount();
 			for(int i = 0; i < nParams; i++)
 				newUnits.add(oldStmtIt.next());
-
-			// skip super call
-			if(SootMethod.constructorName.equals(methodName)) newUnits.add(oldStmtIt.next());
 
 			// --------------------------------------------------------------------------
 			// initialization
@@ -344,68 +355,51 @@ public class Instrumenter {
 				start.put(stmt, nopPre);
 				newUnits.add(nopPre);
 
-				final Unit nopOrig1 = Jimple.v().newNopStmt();
-				nopOrig1.addTag(new StringTag("nopOrig1"));
+				final Unit nopPreTrack = Jimple.v().newNopStmt();
+				nopPreTrack.addTag(new StringTag("nopPreTrack"));
 
-				final Unit nopOrig2 = Jimple.v().newNopStmt();
-				nopOrig2.addTag(new StringTag("nopOrig2"));
+				final Unit nopOrig = Jimple.v().newNopStmt();
+				nopOrig.addTag(new StringTag("nopOrig"));
 
-				final Unit nopPost = Jimple.v().newNopStmt();
-				nopPost.addTag(new StringTag("nopPost"));
-
-				Unit nopPostExc = null;
-				if(stmt.containsInvokeExpr()) {
-					nopPostExc = Jimple.v().newNopStmt();
-					nopPost.addTag(new StringTag("nopPostExc"));
-				}
+				final Unit nopPostTrack = Jimple.v().newNopStmt();
+				nopPostTrack.addTag(new StringTag("nopPostTrack"));
 
 				final Unit nopAfter = Jimple.v().newNopStmt();
 				nopAfter.addTag(new StringTag("nopAfter"));
 				stop.put(stmt, nopAfter);
 
-				// process!
-
-
 				if(stmt instanceof IdentityStmt) {
-					newUnits.add(nopOrig1);
+
+					// insert original stmt
+					newUnits.add(nopOrig);
 					newUnits.add((Stmt) stmt.clone());
-					newUnits.add(nopOrig2);
 
-					Unit nopPre2 = Jimple.v().newNopStmt();
-					nopPre2.addTag(new StringTag("nopPre2"));
-					newUnits.add(nopPre2);
-				}
-
-				// preprocess
-				for(UnifiedInstrumentator i : instrumenters)
-					i.processPre(newUnits, stmt);
-
-				// insert original stmt
-				if(!(stmt instanceof IdentityStmt)) {
-					newUnits.add(nopOrig1);
-					newUnits.add((Stmt) stmt.clone());
-					if(stmt.containsInvokeExpr())
-						newUnits.add(Jimple.v().newGotoStmt(nopPost));
-					newUnits.add(nopOrig2);
-				}
-
-				// postprocess exceptional
-				if(nopPostExc != null) {
-					newUnits.add(nopPostExc);
-
-					newUnits.add(Jimple.v().newIdentityStmt(exc, Jimple.v().newCaughtExceptionRef()));
+					// preprocess
+					newUnits.add(nopPreTrack);
 					for(UnifiedInstrumentator i : instrumenters)
-						i.processPostExc(newUnits, stmt, exc);
+						i.processPre(newUnits, stmt);
 
-					newUnits.add(Jimple.v().newThrowStmt(exc));
+					// postprocess
+					newUnits.add(nopPostTrack);
+					for(UnifiedInstrumentator i : instrumenters)
+						i.processPost(newUnits, stmt);
 
-					newTraps.add(Jimple.v().newTrap(throwableClass, nopOrig1, nopOrig2, nopPostExc));
+				} else {
+
+					// preprocess
+					newUnits.add(nopPreTrack);
+					for(UnifiedInstrumentator i : instrumenters)
+						i.processPre(newUnits, stmt);
+
+					// insert original stmt
+					newUnits.add(nopOrig);
+					newUnits.add((Stmt) stmt.clone());
+
+					// postprocess
+					newUnits.add(nopPostTrack);
+					for(UnifiedInstrumentator i : instrumenters)
+						i.processPost(newUnits, stmt);
 				}
-
-				// postprocess
-				newUnits.add(nopPost);
-				for(UnifiedInstrumentator i : instrumenters)
-					i.processPost(newUnits, stmt);
 
 				newUnits.add(nopAfter);
 			}
@@ -413,23 +407,6 @@ public class Instrumenter {
 			final Unit nopMethodEnd = Jimple.v().newNopStmt();
 			nopMethodEnd.addTag(new StringTag("nopMethodEnd"));
 			newUnits.add(nopMethodEnd);
-
-			// --------------------------------------------------------------------------
-			// Exceptional tracking activities
-			// --------------------------------------------------------------------------
-			final Unit nopCatchBegin = Jimple.v().newNopStmt();
-			nopCatchBegin.addTag(new StringTag("nopCatchPre"));
-			newUnits.add(nopCatchBegin);
-			newUnits.add(Jimple.v().newIdentityStmt(exc, Jimple.v().newCaughtExceptionRef()));
-			// update the traps
-			newBody.getTraps().add(Jimple.v().newTrap(throwableClass, nopMethodBegin, nopMethodEnd, nopCatchBegin));
-			for(UnifiedInstrumentator i : instrumenters)
-				i.exceptional(newUnits, exc);
-			// The last istruction of the handler is "throw exc"
-			newUnits.add(Jimple.v().newThrowStmt(exc));
-			final Unit nopPost = Jimple.v().newNopStmt();
-			nopPost.addTag(new StringTag("nopCatchAfter"));
-			newUnits.add(nopPost);
 
 			// Fix jumps (goto, if, switch)
 			for(Unit unit : newUnits) {
@@ -471,8 +448,26 @@ public class Instrumenter {
 				final Unit newEnd = stop.get(trap.getEndUnit());
 				final Unit newHandler = start.get(trap.getHandlerUnit());
 
-				newTraps.add(Jimple.v().newTrap(trap.getException(), newBegin, newEnd, newHandler));
+				newBody.getTraps().add(Jimple.v().newTrap(trap.getException(), newBegin, newEnd, newHandler));
 			}
+
+
+			// --------------------------------------------------------------------------
+			// Exceptional tracking activities
+			// --------------------------------------------------------------------------
+			final Unit nopCatchBegin = Jimple.v().newNopStmt();
+			nopCatchBegin.addTag(new StringTag("nopCatchPre"));
+			newUnits.add(nopCatchBegin);
+			newUnits.add(Jimple.v().newIdentityStmt(exc, Jimple.v().newCaughtExceptionRef()));
+			// update the traps
+			newBody.getTraps().add(Jimple.v().newTrap(throwableClass, nopMethodBegin, nopMethodEnd, nopCatchBegin));
+			for(UnifiedInstrumentator i : instrumenters)
+				i.exceptional(newUnits, exc);
+			// The last istruction of the handler is "throw exc"
+			newUnits.add(Jimple.v().newThrowStmt(exc));
+			final Unit nopPost = Jimple.v().newNopStmt();
+			nopPost.addTag(new StringTag("nopCatchAfter"));
+			newUnits.add(nopPost);
 		}
 	}
 }
