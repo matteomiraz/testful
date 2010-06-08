@@ -341,14 +341,23 @@
     <target name="test.cut.instrument" depends="create_instrumenter_jar, test.cut.compile" description="instrument the tests' cut">
     	<delete dir="${base}/testCut/instrumented" />
     	<java jar="${artifacts}/instrumenter.jar" fork="true">
-    		<arg line="-dir ${testCut} dummy.WhiteSample dummy.Simple dummy.StateMachine dummy.Instrumenter1 apache.Fraction"/>
+    		<arg line="-dir ${testCut} dummy.WhiteSample dummy.Simple dummy.StateMachine apache.Fraction"/>
     	</java>
 	</target>
 
 	<!-- =================================
+          target: test.instrumenter
+         ================================= -->
+    <target name="test.instrumenter" depends="create_instrumenter_jar, test.cut.compile" description="Test the instrumentation facility">
+    	<java jar="${artifacts}/instrumenter.jar" fork="true" failonerror="true">
+    		<arg line="-dir ${testCut} dummy.Instrumenter1 dummy.Instrumenter2 dummy.Instrumenter3"/>
+    	</java>
+    </target>
+
+	<!-- =================================
           target: test
          ================================= -->
-    <target name="test" depends="test.cut.instrument" description="run jUnit tests">
+    <target name="test" depends="test.instrumenter, test.cut.instrument" description="run jUnit tests">
 		<javac srcdir="${base}/tests" destdir="${build.tests}" classpath="${build.classes}" optimize="false" debug="true" />
 
 		<junit printsummary="on" dir="${base}" fork="true">
@@ -429,19 +438,7 @@
 		<javac srcdir="${testCut.source}" destdir="${testCut.bin}" optimize="false" debug="true" source="1.4" target="1.4"  />
 
 		<java classname="testful.coverage.Launcher" fork="true" classpathref="instrumented.classpath">
-			<arg line="-dir ${testCut} -cut dummy.Simple"/>
-		</java>
-		<java classname="testful.coverage.Launcher" fork="true" classpathref="instrumented.classpath">
-			<arg line="-dir ${testCut} -cut dummy.StateMachine"/>
-		</java>
-		<java classname="testful.coverage.Launcher" fork="true" classpathref="instrumented.classpath">
-			<arg line="-dir ${testCut} -cut dummy.Instrumenter1"/>
-		</java>
-		<java classname="testful.coverage.Launcher" fork="true" classpathref="instrumented.classpath">
-			<arg line="-dir ${testCut} -cut dummy.WhiteSample"/>
-		</java>
-		<java classname="testful.coverage.Launcher" fork="true" classpathref="instrumented.classpath">
-			<arg line="-dir ${testCut} -cut apache.Fraction"/>
+    		<arg line="-dir ${testCut} dummy.WhiteSample dummy.Simple dummy.StateMachine apache.Fraction"/>
 		</java>
 
 		<!-- run jUnit tests -->

@@ -62,6 +62,8 @@ import soot.jimple.ArrayRef;
 import soot.jimple.AssignStmt;
 import soot.jimple.ConditionExpr;
 import soot.jimple.DoubleConstant;
+import soot.jimple.EnterMonitorStmt;
+import soot.jimple.ExitMonitorStmt;
 import soot.jimple.FieldRef;
 import soot.jimple.FloatConstant;
 import soot.jimple.GotoStmt;
@@ -165,10 +167,6 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		newBody.getLocals().add(localTmpDouble2);
 
 		analyzer = new Analyzer(newUnits, clazz, newBody, newBody.getTraps(), oldBody.getTraps());
-
-		//TBD: gli array!!!!
-
-		//TODO: configurazioni ( defs e nulls)
 	}
 
 	@Override
@@ -310,7 +308,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			else if(op instanceof IdentityStmt)
 				process(newUnits, (IdentityStmt) op);
 			else if(op instanceof InvokeStmt)
-				; // do nothing
+				; // nothing to do
 			else if(op instanceof IfStmt)
 				process(newUnits, (IfStmt) op);
 			else if(op instanceof LookupSwitchStmt)
@@ -325,6 +323,10 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				process(newUnits, (ReturnVoidStmt) op);
 			else if(op instanceof ThrowStmt)
 				process(newUnits, (ThrowStmt) op);
+			else if(op instanceof EnterMonitorStmt)
+				; // nothing to do
+			else if(op instanceof ExitMonitorStmt)
+				; // nothing to do
 			else
 				logger.warning("cannot analyze " + op + " (" + op.getClass().getCanonicalName() + ")");
 		}

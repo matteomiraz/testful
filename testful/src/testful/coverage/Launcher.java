@@ -59,6 +59,48 @@ public class Launcher {
 		@Argument(required = false, multiValued = true, usage = "Instrument these classes")
 		private List<String> classes = new ArrayList<String>();
 
+		/**
+		 * @param project instrument the whole project
+		 */
+		public void setProject(boolean project) {
+			this.project = project;
+		}
+
+		/**
+		 * @return true if instruments the whole project
+		 */
+		public boolean isProject() {
+			return project;
+		}
+
+		/**
+		 * @param file sets the file that contains the list of the class to instrument
+		 */
+		public void setFile(File file) {
+			this.file = file;
+		}
+
+		/**
+		 * @return the file that contains the list of the class to instrument
+		 */
+		public File getFile() {
+			return file;
+		}
+
+		/**
+		 * @param className the name of the class to instrument
+		 */
+		public void addClasses(String className) {
+			classes.add(className);
+		}
+
+		/**
+		 * @return the list of the classes to instrument
+		 */
+		public List<String> getClasses() {
+			return classes;
+		}
+
 		/* (non-Javadoc)
 		 * @see testful.ConfigProject#validate()
 		 */

@@ -286,24 +286,29 @@ public class Instrumenter {
 			//
 			// :NOP_BEGIN ( try { )
 			//
+			// ---- the operation is NOT an identity statement ----
 			// :NOP_PRE
-			//   tracking code
-			// :NOP_ORIG_1
-			//# try {
+			// :NOP_PRE_TRACK
+			//   tracking code pre
+			// :NOP_ORIG
 			//   original code
-			//   goto NOP_POST
-			//# } catch (Throwable e) -> NOP_POST_EXC
-			// :NOP_ORIG_2
-			//# :NOP_POST_EXC
-			//#   tracking code
-			//#  throw exception
-			// :NOP_POST
+			// :NOP_POST_TRACK
+			//   tracking code post
+			// :NOP_AFTER
+			//
+			// ---- the operation IS an identity statement ----
+			// :NOP_PRE
+			// :NOP_ORIG
+			//   original code
+			// :NOP_PRE_TRACK
+			//   tracking code
+			// :NOP_POST_TRACK
 			//   tracking code
 			// :NOP_AFTER
 			//
-			// :NOP_END ( } catch(Throwable) { )
+			// :NOP_END ( } catch(Throwable exc) { )
 			//   exceptional tracker code
-			//
+			//   throw exc
 
 			// --------------------------------------------------------------------------
 			// initial method code (@this=this, params, superCall)
@@ -316,9 +321,6 @@ public class Instrumenter {
 			int nParams = method.getParameterCount();
 			for(int i = 0; i < nParams; i++)
 				newUnits.add(oldStmtIt.next());
-
-			// skip super call
-			if(SootMethod.constructorName.equals(methodName)) newUnits.add(oldStmtIt.next());
 
 			// --------------------------------------------------------------------------
 			// initialization
@@ -353,49 +355,51 @@ public class Instrumenter {
 				start.put(stmt, nopPre);
 				newUnits.add(nopPre);
 
-				final Unit nopOrig1 = Jimple.v().newNopStmt();
-				nopOrig1.addTag(new StringTag("nopOrig1"));
+				final Unit nopPreTrack = Jimple.v().newNopStmt();
+				nopPreTrack.addTag(new StringTag("nopPreTrack"));
 
-				final Unit nopOrig2 = Jimple.v().newNopStmt();
-				nopOrig2.addTag(new StringTag("nopOrig2"));
+				final Unit nopOrig = Jimple.v().newNopStmt();
+				nopOrig.addTag(new StringTag("nopOrig"));
 
-				final Unit nopPost = Jimple.v().newNopStmt();
-				nopPost.addTag(new StringTag("nopPost"));
+				final Unit nopPostTrack = Jimple.v().newNopStmt();
+				nopPostTrack.addTag(new StringTag("nopPostTrack"));
 
 				final Unit nopAfter = Jimple.v().newNopStmt();
 				nopAfter.addTag(new StringTag("nopAfter"));
 				stop.put(stmt, nopAfter);
 
-				// process!
-
-
 				if(stmt instanceof IdentityStmt) {
-					newUnits.add(nopOrig1);
+
+					// insert original stmt
+					newUnits.add(nopOrig);
 					newUnits.add((Stmt) stmt.clone());
-					newUnits.add(nopOrig2);
 
-					Unit nopPre2 = Jimple.v().newNopStmt();
-					nopPre2.addTag(new StringTag("nopPre2"));
-					newUnits.add(nopPre2);
-				}
+					// preprocess
+					newUnits.add(nopPreTrack);
+					for(UnifiedInstrumentator i : instrumenters)
+						i.processPre(newUnits, stmt);
 
-				// preprocess
-				for(UnifiedInstrumentator i : instrumenters)
-					i.processPre(newUnits, stmt);
+					// postprocess
+					newUnits.add(nopPostTrack);
+					for(UnifiedInstrumentator i : instrumenters)
+						i.processPost(newUnits, stmt);
 
-				// insert original stmt
-				if(!(stmt instanceof IdentityStmt)) {
-					newUnits.add(nopOrig1);
+				} else {
+
+					// preprocess
+					newUnits.add(nopPreTrack);
+					for(UnifiedInstrumentator i : instrumenters)
+						i.processPre(newUnits, stmt);
+
+					// insert original stmt
+					newUnits.add(nopOrig);
 					newUnits.add((Stmt) stmt.clone());
-					if(stmt.containsInvokeExpr())
-						newUnits.add(Jimple.v().newGotoStmt(nopPost));
-					newUnits.add(nopOrig2);
-				}
 
-				// postprocess
-				newUnits.add(nopPost);
-				for(UnifiedInstrumentator i : instrumenters)
-					i.processPost(newUnits, stmt);
+					// postprocess
+					newUnits.add(nopPostTrack);
+					for(UnifiedInstrumentator i : instrumenters)
+						i.processPost(newUnits, stmt);
+				}
 
 				newUnits.add(nopAfter);
 			}
