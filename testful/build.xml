@@ -350,7 +350,7 @@
          ================================= -->
     <target name="test.instrumenter" depends="create_instrumenter_jar, test.cut.compile" description="Test the instrumentation facility">
     	<java jar="${artifacts}/instrumenter.jar" fork="true" failonerror="true">
-    		<arg line="-dir ${testCut} dummy.Instrumenter1 dummy.Instrumenter2 dummy.Instrumenter3"/>
+    		<arg line="-dir ${testCut} test.instrumenter.Catches test.instrumenter.Super test.instrumenter.Synchronized"/>
     	</java>
     </target>
 
@@ -437,6 +437,12 @@
     	<delete dir="${base}/testCut/instrumented" />
 		<javac srcdir="${testCut.source}" destdir="${testCut.bin}" optimize="false" debug="true" source="1.4" target="1.4"  />
 
+		<!-- test instrumenter -->
+		<java classname="testful.coverage.Launcher" fork="true" classpathref="instrumented.classpath">
+			<arg line="-dir ${testCut} test.instrumenter.Catches test.instrumenter.Super test.instrumenter.Synchronized"/>
+		</java>
+
+		<!-- Instrument classes used in jUnit -->
 		<java classname="testful.coverage.Launcher" fork="true" classpathref="instrumented.classpath">
     		<arg line="-dir ${testCut} dummy.WhiteSample dummy.Simple dummy.StateMachine apache.Fraction"/>
 		</java>

@@ -1,6 +1,6 @@
-package dummy;
+package test.instrumenter;
 
-public class Instrumenter1 {
+public class Catches {
 
 	public int emptyCatch(Object o) {
 		try {

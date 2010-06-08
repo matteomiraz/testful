@@ -1,6 +1,6 @@
-package dummy;
+package test.instrumenter;
 
-public class Instrumenter2 {
+public class Synchronized {
 
 	public void sync1(Object o) {
 		synchronized (o) {
