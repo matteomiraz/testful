@@ -101,11 +101,13 @@ public class Instrumenter {
 
 	private static final Logger logger = Logger.getLogger("testful.instrumenter");
 
-	private static final boolean preWriter     = logger.isLoggable(Level.FINEST);
+	private static final boolean preWriter     = false;
 	private static final boolean instrumenter  = true;
-	private static final boolean postWriter    = logger.isLoggable(Level.FINER);
+	private static final boolean postWriter    = false;
+	private static final boolean postValidator = false;
 	private static final boolean nopEliminator = true;
-	private static final boolean finalWriter   = logger.isLoggable(Level.FINEST);
+	private static final boolean finalWriter   = false;
+	private static final boolean finalValidator= false;
 
 	public static void prepare(IConfigProject config, List<String> toInstrument) {
 		String[] SOOT_CONF = new String[] { "-validate", "--keep-line-number", "--xml-attributes", "-f", "c", "-output-dir", config.getDirInstrumented().getAbsolutePath() };
@@ -151,7 +153,7 @@ public class Instrumenter {
 		}
 
 		String last = null;
-		if(preWriter) {
+		if(logger.isLoggable(Level.FINER) || preWriter) {
 			String newPhase = "jtp.preWriter";
 			PackManager.v().getPack("jtp").add(new Transform(newPhase, JimpleWriter.singleton));
 			last = newPhase;
@@ -166,11 +168,19 @@ public class Instrumenter {
 			last = newPhase;
 		}
 
-		if(postWriter) {
+		if(logger.isLoggable(Level.FINE) || postWriter) {
 			String newPhase = "jtp.postWriter";
 			logger.fine("Enabled phase: " + newPhase);
 			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(JimpleWriter.singleton)));
 			else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, ActiveBodyTransformer.v(JimpleWriter.singleton)), last);
+			last = newPhase;
+		}
+
+		if(logger.isLoggable(Level.FINE) || postValidator) {
+			String newPhase = "jtp.postValidator";
+			logger.fine("Enabled phase: " + newPhase);
+			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(BodyValidator.singleton)));
+			else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, ActiveBodyTransformer.v(BodyValidator.singleton)), last);
 			last = newPhase;
 		}
 
@@ -182,11 +192,19 @@ public class Instrumenter {
 			last = newPhase;
 		}
 
-		if(finalWriter) {
+		if(logger.isLoggable(Level.FINEST) || finalWriter) {
 			String newPhase = "jtp.finalWriter";
 			logger.fine("Enabled phase: " + newPhase);
 			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(JimpleWriter.singleton)));
 			else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, ActiveBodyTransformer.v(JimpleWriter.singleton)), last);
+			last = newPhase;
+		}
+
+		if(logger.isLoggable(Level.FINEST) || finalValidator) {
+			String newPhase = "jtp.finalValidator";
+			logger.fine("Enabled phase: " + newPhase);
+			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(BodyValidator.singleton)));
+			else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, ActiveBodyTransformer.v(BodyValidator.singleton)), last);
 			last = newPhase;
 		}
 
@@ -247,7 +265,6 @@ public class Instrumenter {
 			final JimpleBody newBody = Jimple.v().newBody(method);
 			method.setActiveBody(newBody);
 			final PatchingChain<Unit> newUnits = newBody.getUnits();
-			final Chain<Trap> newTraps = newBody.getTraps();
 			newBody.getLocals().addAll(oldBody.getLocals());
 
 			final Local exc = Jimple.v().newLocal("__throwable_exc__", throwableClass.getType());
@@ -387,23 +404,6 @@ public class Instrumenter {
 			nopMethodEnd.addTag(new StringTag("nopMethodEnd"));
 			newUnits.add(nopMethodEnd);
 
-			// --------------------------------------------------------------------------
-			// Exceptional tracking activities
-			// --------------------------------------------------------------------------
-			final Unit nopCatchBegin = Jimple.v().newNopStmt();
-			nopCatchBegin.addTag(new StringTag("nopCatchPre"));
-			newUnits.add(nopCatchBegin);
-			newUnits.add(Jimple.v().newIdentityStmt(exc, Jimple.v().newCaughtExceptionRef()));
-			// update the traps
-			newBody.getTraps().add(Jimple.v().newTrap(throwableClass, nopMethodBegin, nopMethodEnd, nopCatchBegin));
-			for(UnifiedInstrumentator i : instrumenters)
-				i.exceptional(newUnits, exc);
-			// The last istruction of the handler is "throw exc"
-			newUnits.add(Jimple.v().newThrowStmt(exc));
-			final Unit nopPost = Jimple.v().newNopStmt();
-			nopPost.addTag(new StringTag("nopCatchAfter"));
-			newUnits.add(nopPost);
-
 			// Fix jumps (goto, if, switch)
 			for(Unit unit : newUnits) {
 				if(unit instanceof GotoStmt) {
@@ -444,8 +444,26 @@ public class Instrumenter {
 				final Unit newEnd = stop.get(trap.getEndUnit());
 				final Unit newHandler = start.get(trap.getHandlerUnit());
 
-				newTraps.add(Jimple.v().newTrap(trap.getException(), newBegin, newEnd, newHandler));
+				newBody.getTraps().add(Jimple.v().newTrap(trap.getException(), newBegin, newEnd, newHandler));
 			}
+
+
+			// --------------------------------------------------------------------------
+			// Exceptional tracking activities
+			// --------------------------------------------------------------------------
+			final Unit nopCatchBegin = Jimple.v().newNopStmt();
+			nopCatchBegin.addTag(new StringTag("nopCatchPre"));
+			newUnits.add(nopCatchBegin);
+			newUnits.add(Jimple.v().newIdentityStmt(exc, Jimple.v().newCaughtExceptionRef()));
+			// update the traps
+			newBody.getTraps().add(Jimple.v().newTrap(throwableClass, nopMethodBegin, nopMethodEnd, nopCatchBegin));
+			for(UnifiedInstrumentator i : instrumenters)
+				i.exceptional(newUnits, exc);
+			// The last istruction of the handler is "throw exc"
+			newUnits.add(Jimple.v().newThrowStmt(exc));
+			final Unit nopPost = Jimple.v().newNopStmt();
+			nopPost.addTag(new StringTag("nopCatchAfter"));
+			newUnits.add(nopPost);
 		}
 	}
 }

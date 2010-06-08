@@ -10,6 +10,15 @@ public class Instrumenter1 {
 		}
 	}
 
+	public void twoCatches(Object o) {
+		try {
+			o.wait();
+		} catch (Exception e) {
+			o.toString();
+		}
+		o.hashCode();
+	}
+
 	public int moreCatches(Object o) {
 		int ret = 0;
 

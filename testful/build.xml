@@ -329,9 +329,9 @@
           target: Compile testCut
           description: compile classes used by tests as CUT (in testCut)
          - - - - - - - - - - - - - - - - - -->
-    <target name="test.cut.compile" depends="create_instrumenter_jar" >
-    	<mkdir dir="${testCut.bin}" />
-		<javac srcdir="${testCut.source}" destdir="${testCut.bin}" optimize="false" debug="true" source="1.4" target="1.4" />
+    <target name="test.cut.compile">
+    	<mkdir dir="${testCut.bin}"/>
+    	<javac srcdir="${testCut.source}" destdir="${testCut.bin}" optimize="false" debug="true" source="1.4" target="1.4"/>
     </target>
 
 	<!-- - - - - - - - - - - - - - - - - -
