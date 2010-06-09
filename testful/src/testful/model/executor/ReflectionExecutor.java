@@ -60,6 +60,9 @@ import testful.runner.TestfulClassLoader;
 public class ReflectionExecutor implements Executor {
 
 	private static final Logger logger = Logger.getLogger("testful.model.ReflectionExecutor");
+	private static final boolean LOGGER_FINE   = logger.isLoggable(Level.FINE);
+	private static final boolean LOGGER_FINER  = logger.isLoggable(Level.FINER);
+	private static final boolean LOGGER_FINEST = logger.isLoggable(Level.FINEST);
 
 	private static final long serialVersionUID = -1696826206324780022L;
 
@@ -106,7 +109,7 @@ public class ReflectionExecutor implements Executor {
 		Clazz cut = cluster.getCut();
 		cut.toJavaClass();
 
-		if(logger.isLoggable(Level.FINER)) {
+		if(LOGGER_FINER) {
 			StringBuilder sb = new StringBuilder();
 
 			sb.append("Cluster: \n").append(cluster.toString()).append("\n---\n");
@@ -137,12 +140,19 @@ public class ReflectionExecutor implements Executor {
 			else maxExecTime = null;
 
 			try {
-				if(logger.isLoggable(Level.FINEST)) {
+				if(LOGGER_FINEST) {
 					logger.finest(toString());
 					logger.finest("Executing " + op);
 				}
 
-				if(maxExecTime != null) stopper.start(maxExecTime);
+				final long start;
+				if(maxExecTime != null) {
+					stopper.start(maxExecTime);
+					if(LOGGER_FINER) start = System.nanoTime();
+					else start = -1;
+				} else {
+					start = -1;
+				}
 
 				if(op instanceof AssignPrimitive) assignPrimitive((AssignPrimitive) op);
 				else if(op instanceof AssignConstant) assignConstant((AssignConstant) op);
@@ -152,6 +162,16 @@ public class ReflectionExecutor implements Executor {
 				else logger.warning("Unknown operation: " + op.getClass().getCanonicalName() + " - " + op);
 
 				nValid++;
+				if(start > 0) {
+					float length = (System.nanoTime() - start) / 1000000.0f;
+
+					final String name;
+					if(op instanceof CreateObject) name = ((CreateObject)op).getConstructor().getFullConstructorName();
+					else if(op instanceof Invoke) name = ((Invoke)op).getMethod().getFullMethodName();
+					else name = "";
+
+					logger.finer(String.format("OpExecution %.3f ms (%5.2f%%) %s", length, (100 * length / maxExecTime), name));
+				}
 
 			} catch(Throwable e) {
 				if (e instanceof TestfulInternalException) {
@@ -176,14 +196,14 @@ public class ReflectionExecutor implements Executor {
 
 		stopper.done();
 
-		if(logger.isLoggable(Level.FINEST))
-			logger.finest(toString());
+		if(LOGGER_FINEST) logger.finest(toString());
 
-		logger.fine(String.format("STATS ops invalid invalid%% valid valid%% faulty faulty%% -- %d %d %.2f %d %.2f %d %.2f",
-				test.length,
-				nPre, (nPre*100.0/test.length),
-				nValid, (nValid*100.0/test.length),
-				nFaulty, (nFaulty*100.0/test.length)));
+		if(LOGGER_FINE)
+			logger.fine(String.format("STATS ops invalid invalid%% valid valid%% faulty faulty%% -- %d %d %.2f %d %.2f %d %.2f",
+					test.length,
+					nPre, (nPre*100.0/test.length),
+					nValid, (nValid*100.0/test.length),
+					nFaulty, (nFaulty*100.0/test.length)));
 
 		return nFaulty;
 	}
@@ -206,8 +226,7 @@ public class ReflectionExecutor implements Executor {
 			// something very strange happens!
 			logger.log(Level.WARNING, "Reflection error in get(" + objRef + "): " + e.getMessage(), e);
 
-			if(logger.isLoggable(Level.FINEST)) {
-
+			if(LOGGER_FINEST) {
 				StringBuilder sb = new StringBuilder();
 
 				sb.append("Ref: ").append(objRef.getClazz()).append(" :: ").append(objRef.getPos()).append(" (").append(objRef.getId()).append(")\n");
@@ -229,7 +248,7 @@ public class ReflectionExecutor implements Executor {
 		} catch(Throwable e) {
 			logger.log(Level.WARNING, "Reflection error in set(" + objRef + "=" + value + "): " + e.getMessage(), e);
 
-			if(logger.isLoggable(Level.FINEST)) {
+			if(LOGGER_FINEST) {
 				StringBuilder sb = new StringBuilder();
 
 				sb.append("Ref: ").append(objRef.getClazz()).append(" :: ").append(objRef.getPos()).append(" (").append(objRef.getId()).append(")\n");
