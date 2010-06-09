@@ -32,22 +32,24 @@ public final class Stopper {
 
 	private static final Logger logger = Logger.getLogger("testful.coverage.stopper");
 
-	/** When idle, wait on this object */
-	private final Object idle = new Object();
+	/** Milliseconds between two kills */
+	private static final int KILL_WAIT = 50;
 
-	/** When counting the time before killing the execution of an operation, wait on this object */
+	/** Standard waiting time if IDLE */
+	private static final int IDLE_WAIT = 10000;
+
+	/** wait and synchronize on this object */
 	private final Object wait = new Object();
 
 	/** if greater than zero, indicates when kill the worker (in mill-second, as reported by System.currentTimeMillis()) */
 	private long endOfTheWorld = -1;
 
-	/** The stopper is waiting (on wait) until this timestamp */
+	/** If greater than zero, it is waiting until this milliseconds */
 	private long waiting = -1;
 
-	private boolean running;
+	private boolean running = true;
 
 	public Stopper() {
-		running = true;
 		final Thread controlled = Thread.currentThread();
 
 		final Thread thread = new Thread(new Runnable() {
@@ -57,30 +59,28 @@ public final class Stopper {
 					while(running) {
 						long end;
 
-						// wait for an operation
-						if((end = endOfTheWorld) < 0) {
-							synchronized (idle) {
-								if((end = endOfTheWorld) < 0) {
-									idle.wait(10000);
-									end = endOfTheWorld;
-								}
-							}
+						// read the end of the world
+						synchronized (wait) {
+							end = endOfTheWorld;
 						}
 
-						if(end > 0) {
-							long delta = end - System.currentTimeMillis();
+						final long curr = System.currentTimeMillis();
 
-							if(delta <= 0) { // KILL!
+						final long delta;
+						if(end > 0) delta = end - curr;
+						else delta = IDLE_WAIT;
+
+						if(delta <= 0) { // KILL!
+							synchronized (wait) {
 								logger.fine("Killing controlled thread");
 								TestStoppedException.kill();
 								controlled.interrupt();
-								endOfTheWorld = System.currentTimeMillis() + 50;
-
-							} else { // Wait
+								endOfTheWorld = curr + KILL_WAIT;
+							}
+						} else { // Wait
+							synchronized (wait) {
 								waiting = end;
-								synchronized (wait) {
-									wait.wait(delta);
-								}
+								wait.wait(delta);
 								waiting = -1;
 							}
 						}
@@ -113,17 +113,13 @@ public final class Stopper {
 		if(TestFul.DEBUG && endOfTheWorld > 0)
 			logger.log(Level.WARNING, "The Stopper is already running", new IllegalStateException("The end is scheduled for " + endOfTheWorld));
 
-		endOfTheWorld = System.currentTimeMillis() + maxExecTime;
-		TestStoppedException.dontKill();
+		final long _endOfTheWorld = System.currentTimeMillis() + maxExecTime;
 
-		synchronized (idle) {
-			idle.notify();
-		}
+		synchronized (wait) {
+			endOfTheWorld = _endOfTheWorld;
+			TestStoppedException.dontKill();
 
-		if(waiting > endOfTheWorld) {
-			synchronized (wait) {
-				wait.notify();
-			}
+			if(waiting > _endOfTheWorld) wait.notify();
 		}
 	}
 
@@ -131,8 +127,10 @@ public final class Stopper {
 	 * Stops the timer: the Stopper does not try to kill the execution of any operation.
 	 */
 	public void stop() {
-		endOfTheWorld = -1;
-		TestStoppedException.dontKill();
+		synchronized (wait) {
+			endOfTheWorld = -1;
+			TestStoppedException.dontKill();
+		}
 	}
 
 	/**
@@ -140,14 +138,10 @@ public final class Stopper {
 	 * Note: after invoking this method, the instance is no longer usable
 	 */
 	public void done() {
-		endOfTheWorld = -1;
-		running = false;
-
-		synchronized (idle) {
-			idle.notify();
-		}
-
 		synchronized (wait) {
+			endOfTheWorld = -1;
+			running = false;
+
 			wait.notify();
 		}
 	}
