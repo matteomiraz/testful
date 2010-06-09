@@ -19,6 +19,8 @@
 package testful.coverage;
 
 import testful.SingleClassTestCase;
+import testful.coverage.fault.FaultsCoverage;
+import testful.coverage.stopper.TestStoppedException;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
 import testful.model.Constructorz;
 import testful.model.CreateObject;
@@ -101,8 +103,12 @@ public class StopperTestCase extends SingleClassTestCase {
 		});
 
 		ElementManager<String, CoverageInformation> covs = getCoverage(t);
-		CoverageInformation bb = covs.get(CoverageBasicBlocks.KEY);
-		assertEquals(5.0f, bb.getQuality());
+		assertEquals(5.0f, covs.get(CoverageBasicBlocks.KEY).getQuality());
+
+		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(faults);
+		assertEquals(1.0f, faults.getQuality());
+		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
 	}
 
 	public void testLongMethod2() throws Exception {
@@ -112,8 +118,12 @@ public class StopperTestCase extends SingleClassTestCase {
 		});
 
 		ElementManager<String, CoverageInformation> covs = getCoverage(t);
-		CoverageInformation bb = covs.get(CoverageBasicBlocks.KEY);
-		assertEquals(5.0f, bb.getQuality());
+		assertEquals(5.0f, covs.get(CoverageBasicBlocks.KEY).getQuality());
+
+		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(faults);
+		assertEquals(1.0f, faults.getQuality());
+		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
 	}
 
 	public void testLongMethod3() throws Exception {
@@ -123,8 +133,12 @@ public class StopperTestCase extends SingleClassTestCase {
 		});
 
 		ElementManager<String, CoverageInformation> covs = getCoverage(t);
-		CoverageInformation bb = covs.get(CoverageBasicBlocks.KEY);
-		assertEquals(5.0f, bb.getQuality());
+		assertEquals(5.0f, covs.get(CoverageBasicBlocks.KEY).getQuality());
+
+		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(faults);
+		assertEquals(1.0f, faults.getQuality());
+		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
 	}
 
 	public void testLongMethod4() throws Exception {
@@ -134,8 +148,12 @@ public class StopperTestCase extends SingleClassTestCase {
 		});
 
 		ElementManager<String, CoverageInformation> covs = getCoverage(t);
-		CoverageInformation bb = covs.get(CoverageBasicBlocks.KEY);
-		assertEquals(5.0f, bb.getQuality());
+		assertEquals(5.0f, covs.get(CoverageBasicBlocks.KEY).getQuality());
+
+		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(faults);
+		assertEquals(1.0f, faults.getQuality());
+		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
 	}
 
 	public void testLongMethod5() throws Exception {
@@ -145,7 +163,11 @@ public class StopperTestCase extends SingleClassTestCase {
 		});
 
 		ElementManager<String, CoverageInformation> covs = getCoverage(t);
-		CoverageInformation bb = covs.get(CoverageBasicBlocks.KEY);
-		assertEquals(7.0f, bb.getQuality());
+		assertEquals(7.0f, covs.get(CoverageBasicBlocks.KEY).getQuality());
+
+		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(faults);
+		assertEquals(1.0f, faults.getQuality());
+		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
 	}
 }

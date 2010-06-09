@@ -2,18 +2,16 @@ package test;
 
 public class Stopped {
 
-	private static final int TIME = 2000;
+	private static final int TIME = 5000;
 
-	public Stopped() {
-	}
+	public Stopped() { }
 
-	private void doSomething() { /* This code is never executed */ }
+	private void dontDoSomething() { System.err.println("This code is never executed"); }
 
 	public void longMethod1() {
 		try {
 			Thread.sleep(TIME);
 		} catch (InterruptedException e) {
-			doSomething();
 		}
 	}
 
@@ -22,16 +20,16 @@ public class Stopped {
 			Thread.sleep(TIME);
 		} catch (InterruptedException e) {
 		}
-		doSomething();
+		dontDoSomething();
 	}
 
 	public void longMethod3() {
 		try {
 			Thread.sleep(TIME);
 		} catch (InterruptedException e) {
-			doSomething();
+			dontDoSomething();
 		}
-		doSomething();
+		dontDoSomething();
 	}
 
 	public void longMethod4() {
@@ -39,7 +37,7 @@ public class Stopped {
 			try {
 				Thread.sleep(TIME);
 			} catch (Exception e) {
-				doSomething();
+				dontDoSomething();
 			}
 		}
 	}
@@ -49,17 +47,17 @@ public class Stopped {
 
 			try {
 				Thread.sleep(TIME);
-				doSomething();
+				dontDoSomething();
 			} catch (Exception e) {
-				doSomething();
+				dontDoSomething();
 			}
 
 			Thread.sleep(TIME);
 
-			doSomething();
+			dontDoSomething();
 		} catch (Exception e) {
-			doSomething();
+			dontDoSomething();
 		}
-		doSomething();
+		dontDoSomething();
 	}
 }

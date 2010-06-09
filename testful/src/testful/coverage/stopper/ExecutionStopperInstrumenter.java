@@ -30,6 +30,9 @@ import soot.Unit;
 import soot.jimple.GotoStmt;
 import soot.jimple.IfStmt;
 import soot.jimple.Jimple;
+import soot.jimple.RetStmt;
+import soot.jimple.ReturnStmt;
+import soot.jimple.ReturnVoidStmt;
 import soot.jimple.Stmt;
 import soot.util.Chain;
 import testful.IConfigProject;
@@ -68,8 +71,6 @@ public class ExecutionStopperInstrumenter implements UnifiedInstrumentator {
 
 	@Override
 	public void processPre(Chain<Unit> newUnits, Stmt op) {
-		if(previous == null) return;
-
 		if(op.hasTag(Skip.NAME)) return;
 
 		previous.add(op);
@@ -78,7 +79,8 @@ public class ExecutionStopperInstrumenter implements UnifiedInstrumentator {
 		if(op instanceof GotoStmt) target = ((GotoStmt) op).getTarget();
 		else if(op instanceof IfStmt) target = ((IfStmt) op).getTarget();
 
-		if(op.containsInvokeExpr() || (target != null && previous.contains(target)))
+		if((op instanceof RetStmt || op instanceof ReturnStmt || op instanceof ReturnVoidStmt) ||
+				op.containsInvokeExpr() || (target != null && previous.contains(target)))
 			newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newStaticInvokeExpr(checkRef)));
 	}
 

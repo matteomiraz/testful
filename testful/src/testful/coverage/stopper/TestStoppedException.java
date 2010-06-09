@@ -30,12 +30,12 @@ public class TestStoppedException extends RuntimeException implements FaultyExec
 	private static final long serialVersionUID = -7939628914571439861L;
 
 	/** if set to true, stops the execution */
-	private static volatile boolean stop = false;
+	private static volatile boolean kill = false;
 
 	private static TestStoppedException singleton = null;
 
 	public static void check() {
-		if(stop) {
+		if(kill) {
 			if(singleton == null)
 				singleton = new TestStoppedException();
 
@@ -43,12 +43,12 @@ public class TestStoppedException extends RuntimeException implements FaultyExec
 		}
 	}
 
-	public static void stop() {
-		TestStoppedException.stop = true;
+	public static void kill() {
+		TestStoppedException.kill = true;
 	}
 
-	public static void start() {
-		TestStoppedException.stop = false;
+	public static void dontKill() {
+		TestStoppedException.kill = false;
 		singleton = null;
 	}
 

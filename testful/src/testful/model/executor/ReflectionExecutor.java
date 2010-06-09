@@ -23,13 +23,10 @@ import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.coverage.stopper.Stopper;
-import testful.coverage.stopper.TestStoppedException;
 import testful.model.AssignConstant;
 import testful.model.AssignPrimitive;
 import testful.model.Clazz;
@@ -78,9 +75,6 @@ public class ReflectionExecutor implements Executor {
 	/** The internal object repository */
 	private transient Object[] repository;
 
-	/** the set of faults */
-	private transient Map<Operation, FaultyExecutionException> faults;
-
 	public ReflectionExecutor(Test test) {
 		cluster = test.getCluster();
 		repositoryType = test.getReferenceFactory().getReferences();
@@ -125,7 +119,6 @@ public class ReflectionExecutor implements Executor {
 		}
 
 		repository = new Object[repositoryType.length];
-		faults = new HashMap<Operation, FaultyExecutionException>();
 
 		/** Number of invalid operations: precondition errors */
 		int nPre = 0;
@@ -158,8 +151,6 @@ public class ReflectionExecutor implements Executor {
 				else if(op instanceof ResetRepository) reset((ResetRepository) op);
 				else logger.warning("Unknown operation: " + op.getClass().getCanonicalName() + " - " + op);
 
-				if(maxExecTime != null) stopper.stop();
-
 				nValid++;
 
 			} catch(Throwable e) {
@@ -171,12 +162,6 @@ public class ReflectionExecutor implements Executor {
 
 				} else if(e instanceof FaultyExecutionException) {
 
-					if(e instanceof TestStoppedException) {
-						stopper.stop();
-					} else {
-						faults.put(op, (FaultyExecutionException) e);
-					}
-
 					nFaulty++;
 					if(stopOnBug) break;
 
@@ -184,6 +169,8 @@ public class ReflectionExecutor implements Executor {
 					for(int i = 0; i < repository.length; i++)
 						repository[i] = null;
 				}
+			} finally {
+				stopper.stop();
 			}
 		}
 
@@ -198,7 +185,7 @@ public class ReflectionExecutor implements Executor {
 				nValid, (nValid*100.0/test.length),
 				nFaulty, (nFaulty*100.0/test.length)));
 
-		return faults.size();
+		return nFaulty;
 	}
 
 	/**

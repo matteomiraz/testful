@@ -18,6 +18,10 @@
 
 package testful.coverage.stopper;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import testful.TestFul;
 
 /**
  * Ensure that third-party code terminates within a given threshold.
@@ -25,6 +29,8 @@ package testful.coverage.stopper;
  * @author matteo
  */
 public final class Stopper {
+
+	private static final Logger logger = Logger.getLogger("testful.coverage.stopper");
 
 	/** When idle, wait on this object */
 	private final Object idle = new Object();
@@ -65,7 +71,8 @@ public final class Stopper {
 							long delta = end - System.currentTimeMillis();
 
 							if(delta <= 0) { // KILL!
-								TestStoppedException.stop();
+								logger.fine("Killing controlled thread");
+								TestStoppedException.kill();
 								controlled.interrupt();
 								endOfTheWorld = System.currentTimeMillis() + 50;
 
@@ -79,9 +86,11 @@ public final class Stopper {
 						}
 
 					}
+					logger.finer("Stopper thread has finished its job.");
 				} catch (InterruptedException e) {
+					logger.log(Level.FINE, "Stopper thread has been interrupted", e);
 					running = false;
-					TestStoppedException.stop();
+					TestStoppedException.kill();
 					controlled.interrupt();
 				}
 			}
@@ -96,12 +105,16 @@ public final class Stopper {
 	 * Start the timer: in maxExecTime milliseconds kills the execution of the operation.
 	 * @param maxExecTime the amount of time to wait before killing the execution of the operation
 	 */
+	@SuppressWarnings("unused")
 	public void start(int maxExecTime) {
 
 		if(!running) throw new IllegalStateException("The Stopper is not running");
 
+		if(TestFul.DEBUG && endOfTheWorld > 0)
+			logger.log(Level.WARNING, "The Stopper is already running", new IllegalStateException("The end is scheduled for " + endOfTheWorld));
+
 		endOfTheWorld = System.currentTimeMillis() + maxExecTime;
-		TestStoppedException.start();
+		TestStoppedException.dontKill();
 
 		synchronized (idle) {
 			idle.notify();
@@ -119,6 +132,7 @@ public final class Stopper {
 	 */
 	public void stop() {
 		endOfTheWorld = -1;
+		TestStoppedException.dontKill();
 	}
 
 	/**

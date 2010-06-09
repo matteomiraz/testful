@@ -60,14 +60,12 @@
 	<!-- classes needed for generating and running tests -->
 	<patternset id="auto">
 		<patternset refid="runner"/>
-		<include name="testful/coverage/TestSizeInformation.clazz" />
-		<include name="testful/coverage/TestSizeInformation.class" />
 		<include name="testful/coverage/**/*.clazz"/>
 		<include name="testful/coverage/CoverageExecutionManager*.class"/>
 		<include name="testful/coverage/CoverageInformation*.class"/>
 		<include name="testful/coverage/**/*Coverage*.class"/>
 		<include name="testful/coverage/behavior/*.class"/>
-		<include name="testful/coverage/bug/Bug.class"/>
+		<include name="testful/coverage/fault/Fault.class"/>
 		<include name="testful/coverage/whiteBox/*.class"/>
 		<exclude name="testful/coverage/whiteBox/Factory*.class"/>
 		<exclude name="testful/coverage/whiteBox/WhiteInstrumenter*.class"/>
@@ -116,7 +114,7 @@
 	<!-- =================================
           target: build
          ================================= -->
-	<target name="build" depends="create_instrumenter_jar,create_runner_jar,create_testful_jar,create_randomTest_jar" description="Creater executable jars">
+	<target name="build" depends="build.instrumenter,build.runner,build.testful,build.randomTest" description="Creater executable jars">
 	</target>
 
 	<!-- - - - - - - - - - - - - - - - - -
@@ -161,9 +159,9 @@
 	</target>
 
 	<!-- =================================
-          target: create_instrumenter_jar
+          target: build.instrumenter
          ================================= -->
-	<target name="create_instrumenter_jar" depends="compile" description="Crete runnable jar for instrumenter">
+	<target name="build.instrumenter" depends="compile" description="Crete runnable jar for instrumenter">
 		<mkdir dir="${artifacts}"/>
 		<jar destfile="${artifacts}/instrumenter.jar" filesetmanifest="mergewithoutmain">
 			<manifest>
@@ -198,9 +196,9 @@
 	</target>
 
 	<!-- =================================
-          target: create_runner_jar
+          target: build.runner
          ================================= -->
-	<target name="create_runner_jar" depends="compile" description="Crete the runner">
+	<target name="build.runner" depends="compile" description="Crete the runner">
 		<mkdir dir="${artifacts}"/>
 		<jar destfile="${artifacts}/runner.jar" filesetmanifest="mergewithoutmain">
 			<manifest>
@@ -215,9 +213,9 @@
 	</target>
 
 	<!-- =================================
-          target: create_junitCreator_jar
+          target: build.junitCreator
          ================================= -->
-	<target name="create_junitCreator_jar" depends="compile" description="Crete the runner">
+	<target name="build.junitCreator" depends="compile" description="Crete the runner">
 		<mkdir dir="${artifacts}"/>
 		<jar destfile="${artifacts}/junitCreator.jar" filesetmanifest="mergewithoutmain">
 			<manifest>
@@ -235,9 +233,9 @@
 	</target>
 
 	<!-- =================================
-          target: create_randomTest_jar
+          target: build.randomTest
          ================================= -->
-	<target name="create_randomTest_jar" depends="compile" description="Crete runnable jar for random testing">
+	<target name="build.randomTest" depends="compile" description="Crete runnable jar for random testing">
 		<mkdir dir="${artifacts}"/>
 		<jar destfile="${artifacts}/randomTest.jar" filesetmanifest="mergewithoutmain" compress="true" index="true">
 			<manifest>
@@ -255,9 +253,9 @@
 	</target>
 
 	<!-- =================================
-          target: create_testful_jar
+          target: build.testful
          ================================= -->
-	<target name="create_testful_jar" depends="compile" description="Crete runnable jar for testful">
+	<target name="build.testful" depends="compile" description="Crete runnable jar for testful">
 		<mkdir dir="${artifacts}"/>
 		<jar destfile="${artifacts}/testful.jar" filesetmanifest="mergewithoutmain">
 			<manifest>
@@ -338,7 +336,7 @@
           target: Instrument testCut
           description: Instrument the classes used by tests as CUT (in testCut)
          - - - - - - - - - - - - - - - - - -->
-    <target name="test.cut.instrument" depends="create_instrumenter_jar, test.cut.compile" description="instrument the tests' cut">
+    <target name="test.cut.instrument" depends="build.instrumenter, test.cut.compile" description="instrument the tests' cut">
     	<delete dir="${base}/testCut/instrumented" />
     	<java jar="${artifacts}/instrumenter.jar" fork="true">
     		<arg line="-dir ${testCut} dummy.WhiteSample dummy.Simple dummy.StateMachine apache.Fraction test.Stopped"/>
@@ -348,7 +346,7 @@
 	<!-- =================================
           target: test.instrumenter
          ================================= -->
-    <target name="test.instrumenter" depends="create_instrumenter_jar, test.cut.compile" description="Test the instrumentation facility">
+    <target name="test.instrumenter" depends="build.instrumenter, test.cut.compile" description="Test the instrumentation facility">
     	<java jar="${artifacts}/instrumenter.jar" fork="true" failonerror="true">
     		<arg line="-dir ${testCut} test.instrumenter.Catches test.instrumenter.Super test.instrumenter.Synchronized"/>
     	</java>

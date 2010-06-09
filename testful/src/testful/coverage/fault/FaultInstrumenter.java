@@ -106,16 +106,16 @@ public class FaultInstrumenter implements UnifiedInstrumentator {
 		final Unit processFault = Jimple.v().newNopStmt();
 
 		// The last operation: jump here if the exception is not a fault!
-		final Unit notAbug = Jimple.v().newNopStmt();
+		final Unit notFault = Jimple.v().newNopStmt();
 
-		// if the exception has the fault marker, it is a bug!
+		// if the exception has the fault marker, it is a fault!
 		newUnits.add(Jimple.v().newAssignStmt(boolTmp, Jimple.v().newInstanceOfExpr(exc, faultyException.getType())));
 		newUnits.add(Jimple.v().newIfStmt(Jimple.v().newEqExpr(boolTmp, IntConstant.v(1)), processFault));
 
-		// if the exception has been declared as thrown, it is not a bug!
+		// if the exception has been declared as thrown, it is not a fault!
 		for (SootClass declaredException : body.getMethod().getExceptions()) {
 			newUnits.add(Jimple.v().newAssignStmt(boolTmp, Jimple.v().newInstanceOfExpr(exc, declaredException.getType())));
-			newUnits.add(Jimple.v().newIfStmt(Jimple.v().newEqExpr(boolTmp, IntConstant.v(1)), notAbug));
+			newUnits.add(Jimple.v().newIfStmt(Jimple.v().newEqExpr(boolTmp, IntConstant.v(1)), notFault));
 		}
 
 		// Last chance: if is a NullPointerException, check if a parameter is null, otherwise process the fault
@@ -127,7 +127,7 @@ public class FaultInstrumenter implements UnifiedInstrumentator {
 		for(int i = 0; i < nParams; i++) {
 			// if param is a reference, insert "if(param == null) goto :notAbug"
 			if(body.getMethod().getParameterType(i) instanceof RefLikeType) {
-				newUnits.add(Jimple.v().newIfStmt(Jimple.v().newEqExpr(body.getParameterLocal(i), NullConstant.v()), notAbug));
+				newUnits.add(Jimple.v().newIfStmt(Jimple.v().newEqExpr(body.getParameterLocal(i), NullConstant.v()), notFault));
 			}
 		}
 		newUnits.add(Jimple.v().newGotoStmt(processFault));
@@ -138,7 +138,7 @@ public class FaultInstrumenter implements UnifiedInstrumentator {
 		newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newStaticInvokeExpr(trackerProcess.makeRef(), exc)));
 
 		// final nop
-		newUnits.add(notAbug);
+		newUnits.add(notFault);
 	}
 
 	@Override
