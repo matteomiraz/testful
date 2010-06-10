@@ -51,19 +51,15 @@ import ec.util.MersenneTwisterFast;
  */
 public abstract class GenericTestCase  extends TestCase {
 
-	static {
+	public static IConfigProject getConfig() {
 		ConfigProject tmp = new ConfigProject();
 		tmp.setDirBase(new File("testCut"));
-		config = tmp;
+		tmp.setQuiet(true);
+		return tmp;
 	}
-	public final static IConfigProject config;
 
-	private static ClassFinder finder = null;
 	public static ClassFinder getFinder() throws RemoteException {
-		if(finder == null)
-			finder = new ClassFinderCaching(new ClassFinderImpl(config));
-
-		return finder;
+		return new ClassFinderCaching(new ClassFinderImpl(getConfig()));
 	}
 
 	protected static final TestFailedException SETUP = new TestFailedException("Please setup correctly your system!");
@@ -178,7 +174,7 @@ public abstract class GenericTestCase  extends TestCase {
 	public static Test createRandomTest(String cut, int lenght, long seed) throws RemoteException, ClassNotFoundException, TestfulException {
 		MersenneTwisterFast random = new MersenneTwisterFast(seed);
 
-		ConfigCut testfulConfig = new ConfigCut(config);
+		ConfigCut testfulConfig = new ConfigCut(getConfig());
 		testfulConfig.setCut(cut);
 
 		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), testfulConfig);

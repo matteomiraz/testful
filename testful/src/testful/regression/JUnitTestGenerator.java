@@ -568,6 +568,8 @@ public class JUnitTestGenerator extends TestReader {
 			finder = new ClassFinderCaching(new ClassFinderImpl(config));
 		} catch (RemoteException e) {
 			// never happens
+			logger.log(Level.WARNING, "Remote exception (should never happen): " + e.toString(), e);
+			System.exit(1);
 		}
 
 		JUnitTestGenerator gen = new JUnitTestGenerator(config.getDirGeneratedTests());

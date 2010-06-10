@@ -137,7 +137,7 @@ public class TestFul {
 		}
 	};
 
-	public static void setupLogging(IConfigProject config ) {
+	public static void setupLogging(IConfigProject config) {
 		setupLogging(config.getLog(), config.getLogLevel().getLoggingLevel(), config.isQuiet());
 	}
 

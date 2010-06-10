@@ -154,6 +154,11 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	}
 
 	@Override
+	public List<File> getLibraries() {
+		return configGenerator.getLibraries();
+	}
+
+	@Override
 	public File getDirGeneratedTests() {
 		return configGenerator.getDirGeneratedTests();
 	}
@@ -220,6 +225,11 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	@Override
 	public void setDirCompiled(File dirCompiled) {
 		configGenerator.setDirCompiled(dirCompiled);
+	}
+
+	@Override
+	public void addLibrary(File library) {
+		configGenerator.addLibrary(library);
 	}
 
 	@Override

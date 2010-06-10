@@ -57,18 +57,22 @@ public final class Stopper {
 			public void run() {
 				try {
 					while(running) {
-						long end;
 
+						long end;
 						// read the end of the world
 						synchronized (wait) {
 							end = endOfTheWorld;
 						}
 
 						final long curr = System.currentTimeMillis();
-
 						final long delta;
-						if(end > 0) delta = end - curr;
-						else delta = IDLE_WAIT;
+
+						if(end > 0) {
+							delta = end - curr;
+						} else {
+							delta = IDLE_WAIT;
+							end = curr + IDLE_WAIT;
+						}
 
 						if(delta <= 0) { // KILL!
 							synchronized (wait) {

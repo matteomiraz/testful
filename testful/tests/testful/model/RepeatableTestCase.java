@@ -150,11 +150,6 @@ public class RepeatableTestCase extends ApacheFractionTestCase {
 	public void testHashCodeLong() throws Exception {
 		Test t1 = GenericTestCase.createRandomTest("apache.Fraction", 100, 12012010l);
 
-		Operation[] t = t1.getTest();
-		for (int i = 0; i < t.length; i++) {
-			System.out.println("assertEquals(" + t[i].hashCode() + ", t1.getTest()[" +  i + "].hashCode());");
-		}
-
 		assertEquals( 1941218910, t1.getTest()[ 0].hashCode());
 		assertEquals(       7192, t1.getTest()[ 1].hashCode());
 		assertEquals( -445177790, t1.getTest()[ 2].hashCode());

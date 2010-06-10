@@ -54,7 +54,7 @@ public abstract class SingleClassTestCase extends GenericTestCase {
 	protected void setUp() throws Exception {
 		super.setUp();
 
-		ConfigCut config = new ConfigCut(GenericTestCase.config);
+		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut(getClassUnderTest());
 		cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
 		refFactory = new ReferenceFactory(cluster, 4, 4);

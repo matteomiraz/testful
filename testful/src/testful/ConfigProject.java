@@ -19,6 +19,8 @@
 package testful;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.kohsuke.args4j.CmdLineException;
 
@@ -38,6 +40,9 @@ public class ConfigProject implements IConfigProject.Args4j {
 	/** directory with classes compiled by the user */
 	private File dirCompiled;
 
+	/** the list of the libraries (both jar files and class directories) */
+	private List<File> libraries;
+
 	/** directory with classes instrumented */
 	private File dirInstrumented;
 
@@ -55,6 +60,7 @@ public class ConfigProject implements IConfigProject.Args4j {
 
 		dirSource = new File("src");
 		dirCompiled = new File("bin");
+		libraries = new ArrayList<File>();
 		dirInstrumented = new File("instrumented");
 	}
 
@@ -63,6 +69,8 @@ public class ConfigProject implements IConfigProject.Args4j {
 
 		dirSource = config.getDirSource();
 		dirCompiled = config.getDirCompiled();
+		libraries = new ArrayList<File>();
+		libraries.addAll(config.getLibraries());
 		dirInstrumented = config.getDirInstrumented();
 	}
 
@@ -116,6 +124,32 @@ public class ConfigProject implements IConfigProject.Args4j {
 	@Override
 	public void setDirCompiled(File dirVanilla) {
 		dirCompiled = dirVanilla;
+	}
+
+	/* (non-Javadoc)
+	 * @see testful.IConfigProject#getDirLibraries()
+	 */
+	@Override
+	public List<File> getLibraries() {
+		return libraries;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see testful.IConfigProject.Args4j#addDirLibrary(java.io.File)
+	 */
+	@Override
+	public void addLibrary(File library) {
+		if(!library.isAbsolute()) library = new File(dirBase, library.getPath()).getAbsoluteFile();
+		libraries.add(library);
+	}
+
+	/**
+	 * Sets the list of the libraries (both jar files and class directories)
+	 * @param dirLibraries the list of the libraries (both jar files and class directories)
+	 */
+	public void setLibraries(List<File> dirLibraries) {
+		libraries = dirLibraries;
 	}
 
 	/* (non-Javadoc)

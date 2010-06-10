@@ -65,7 +65,7 @@ public class ControlFlowCoverageTestCase extends GenericTestCase {
 
 	@Override
 	protected void setUp() throws Exception {
-		ConfigCut config = new ConfigCut(GenericTestCase.config);
+		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("dummy.WhiteSample");
 		cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
 		refFactory = new ReferenceFactory(cluster, 2, 1);

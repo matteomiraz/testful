@@ -80,9 +80,10 @@ public class TestfulProblem implements Serializable {
 			cluster = new TestCluster(tcl, config);
 			cluster.clearCache();
 
-			data = new TrackerDatum[0];//TODO: Utils.readData(whiteAnalysis);
+			data = new TrackerDatum[0];
 
 			refFactory = new ReferenceFactory(cluster, config.getNumVarCut(), config.getNumVar());
+
 		} catch (RemoteException e) {
 			// never happens
 			logger.log(Level.WARNING, "Remote exception (should never happen): " + e.toString(), e);

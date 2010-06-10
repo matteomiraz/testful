@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.regression;
 
 import java.rmi.RemoteException;
@@ -78,22 +77,27 @@ public class Replay extends TestReader {
 
 		RunnerPool.getRunnerPool().startLocalWorkers();
 
-		Replay replay = new Replay(config, config.exitOnBug);
-		replay.read(config.tests);
-
+		try {
+			Replay replay = new Replay(config, config.exitOnBug);
+			replay.read(config.tests);
+		} catch (ClassNotFoundException e) {
+			System.exit(1);
+		}
 
 		System.exit(0);
 	}
 
-	public Replay(IConfigProject config, boolean exitOnBug) {
+	public Replay(IConfigProject config, boolean exitOnBug) throws ClassNotFoundException {
 		this.exitOnBug = exitOnBug;
 
 		executor = RunnerPool.getRunnerPool();
 
 		try {
 			finder = new ClassFinderCaching(new ClassFinderImpl(config));
-		} catch(RemoteException e) {
-			// never happens!
+		} catch (RemoteException e) {
+			// never happens
+			logger.log(Level.WARNING, "Remote exception (should never happen): " + e.toString(), e);
+			throw new ClassNotFoundException("Cannot contact the remote class loading facility", e);
 		}
 	}
 

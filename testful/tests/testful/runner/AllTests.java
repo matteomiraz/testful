@@ -18,21 +18,21 @@
 
 package testful.runner;
 
-import java.net.URL;
-
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 /**
- * Manages some data associated with a class.
- * It intercepts when a class is read from disk, and allows one to perform some additional activity
- * (e.g., load some analysis related to the class being loaded).
+ * Tests for the testful runner
  * @author matteo
  */
-public interface ClassData {
+public class AllTests {
 
-	/**
-	 * Notifies that a class is being loaded
-	 * @param className the name of the class
-	 * @param classFile the file (.class) that contains the bytecode of the class
-	 */
-	public void load(String className, URL classFile);
+	public static Test suite() {
+		TestSuite suite = new TestSuite(AllTests.class.getName());
+		//$JUnit-BEGIN$
+		suite.addTestSuite(ClassFinderTestCase.class);
+		//$JUnit-END$
+		return suite;
+	}
+
 }

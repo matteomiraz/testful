@@ -30,11 +30,13 @@ import junit.textui.TestRunner;
 public class AllTests {
 
 	public static Test suite() {
+		TestFul.setupLogging(GenericTestCase.getConfig());
+
 		TestSuite suite = new TestSuite("Test for testful.model");
 
 		suite.addTest(testful.model.AllTests.suite());
 		suite.addTest(testful.coverage.AllTests.suite());
-
+		suite.addTest(testful.runner.AllTests.suite());
 		return suite;
 	}
 

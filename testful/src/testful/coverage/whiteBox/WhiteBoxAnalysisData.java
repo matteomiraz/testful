@@ -18,7 +18,7 @@
 
 package testful.coverage.whiteBox;
 
-import java.io.File;
+import java.net.URL;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,8 +33,8 @@ public class WhiteBoxAnalysisData implements ClassData {
 	private final Map<String, BlockClass> classes = new HashMap<String, BlockClass>();
 
 	@Override
-	public void load(String className, File classFile) {
-		BlockClass bClass = BlockClass.read(classFile);
+	public void load(String className, URL classURL) {
+		BlockClass bClass = BlockClass.read(classURL);
 		if(bClass == null) return;
 
 		classes.put(bClass.getName(), bClass);

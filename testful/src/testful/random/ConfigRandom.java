@@ -113,6 +113,11 @@ public class ConfigRandom implements IConfigRandom, IConfigRunner.Args4j, IConfi
 	}
 
 	@Override
+	public List<File> getLibraries() {
+		return configGenerator.getLibraries();
+	}
+
+	@Override
 	public File getDirGeneratedTests() {
 		return configGenerator.getDirGeneratedTests();
 	}
@@ -170,6 +175,11 @@ public class ConfigRandom implements IConfigRandom, IConfigRunner.Args4j, IConfi
 	@Override
 	public void setDirCompiled(File dirCompiled) {
 		configGenerator.setDirCompiled(dirCompiled);
+	}
+
+	@Override
+	public void addLibrary(File library) {
+		configGenerator.addLibrary(library);
 	}
 
 	@Override

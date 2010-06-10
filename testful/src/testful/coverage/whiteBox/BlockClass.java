@@ -26,6 +26,7 @@ import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.net.URL;
 import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -49,13 +50,17 @@ public class BlockClass extends Block implements Iterable<Block> {
 	private static final String FILE_SUFFIX = ".wgz";
 
 	@SuppressWarnings("unused") // for the DEBUG
-	public static BlockClass read(File classFile) {
+	public static BlockClass read(URL classURL) {
 		ObjectInput oi = null;
 
-		String classFileName = classFile.getName();
-		if(TestFul.DEBUG && !classFileName.endsWith(".class")) logger.warning("The class file does not ends with .class " + classFile);
+		final String str = classURL.toString();
+		int i = str.lastIndexOf('/');
+		String pre = str.substring(0, i+1);
+		String classFileName = str.substring(i+1);
 
-		final File file = new File(classFile.getParentFile(), classFileName.substring(0, classFileName.length()-6) + FILE_SUFFIX);
+		if(TestFul.DEBUG && !classFileName.endsWith(".class")) logger.warning("The class file does not ends with .class " + classURL);
+
+		final File file = new File(pre, classFileName.substring(0, classFileName.length()-6) + FILE_SUFFIX);
 		try {
 			oi = new ObjectInputStream(new GZIPInputStream(new FileInputStream(file)));
 			return (BlockClass) oi.readObject();

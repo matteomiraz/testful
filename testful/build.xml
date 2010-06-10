@@ -358,6 +358,7 @@
 		<javac srcdir="${base}/tests" destdir="${build.tests}" classpath="${build.classes}" optimize="false" debug="true" />
 
 		<junit printsummary="on" dir="${base}" fork="true">
+			<formatter type="brief" usefile="false" />
 			<classpath>
 				<pathelement path="${build.tests}"/>
 				<pathelement path="${build.classes}"/>

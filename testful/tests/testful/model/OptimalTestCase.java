@@ -1,17 +1,17 @@
 /*
  * TestFul - http://code.google.com/p/testful/
  * Copyright (C) 2010  Matteo Miraz
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -43,10 +43,10 @@ public class OptimalTestCase extends SimpleDummyTestCase {
 
 		opt.update(tc1);
 
-		StringBuilder msg = new StringBuilder();
-		for (Test t : opt.get())
-			printTest(msg, "", t, null);
-		System.out.println(msg.toString());
+		// StringBuilder msg = new StringBuilder();
+		// for (Test t : opt.get())
+		//   printTest(msg, "", t, null);
+		// System.out.println(msg.toString());
 
 		assertEquals(1, opt.get().size());
 		assertEquals(tc1, opt.get().iterator().next());

@@ -122,9 +122,11 @@ public class Instrumenter {
 		String params[] = new String[SOOT_CONF.length + 2 + toInstrument.size()];
 
 		params[0] = "-cp";
-		params[1] = config.getDirCompiled().getAbsolutePath()
-		+ File.pathSeparator + System.getProperty("java.class.path")
-		+ File.pathSeparator + System.getProperty("sun.boot.class.path");
+		params[1] = config.getDirCompiled().getAbsolutePath();
+		for (File l : config.getLibraries())
+			params[1] += File.pathSeparator + l.getAbsolutePath();
+		params[1] += File.pathSeparator + System.getProperty("java.class.path");
+		params[1] += File.pathSeparator + System.getProperty("sun.boot.class.path");
 
 		int i = 2;
 		for(String s : SOOT_CONF)
