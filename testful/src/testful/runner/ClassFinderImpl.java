@@ -87,8 +87,11 @@ public class ClassFinderImpl implements ClassFinder {
 					datum.load(name, classURL);
 
 				return ret;
-			} catch(IOException e) {
+			} catch(FileNotFoundException e) {
 				// not found
+			} catch(IOException e) {
+				// this should not happen!
+				logger.log(Level.WARNING, "I/O error: " + e, e);
 			}
 		}
 
@@ -108,8 +111,9 @@ public class ClassFinderImpl implements ClassFinder {
 			}
 		}
 
-		logger.warning("(" + key + ") " + "cannot find class " + name);
-		throw new ClassNotFoundException("cannot find class " + name);
+		final String msg = "cannot find class " + name;
+		logger.warning("(" + key + ") " + msg);
+		throw new ClassNotFoundException(msg);
 	}
 
 	/**
@@ -163,6 +167,6 @@ public class ClassFinderImpl implements ClassFinder {
 			}
 		}
 
-		throw new FileNotFoundException("cannot find class " + name);
+		throw new FileNotFoundException();
 	}
 }

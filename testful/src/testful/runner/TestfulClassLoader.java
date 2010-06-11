@@ -21,6 +21,8 @@ package testful.runner;
 import java.rmi.RemoteException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import testful.utils.ElementWithKey;
 
@@ -29,6 +31,8 @@ import testful.utils.ElementWithKey;
  * @author matteo
  */
 public class TestfulClassLoader extends ClassLoader implements ElementWithKey<String> {
+
+	private static Logger logger = Logger.getLogger("testful.executor");
 
 	private static final ClassLoader superClassLoader = TestfulClassLoader.class.getClassLoader();
 
@@ -51,14 +55,14 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 	};
 
 	public static boolean canUseSystemClassLoader(String name) {
+		for(String forbid : TESTFUL_CLASSES)
+			if(name.equals(forbid)) return false;
+
 		for(String allow : SYSTEM_CLASSES)
 			if(name.equals(allow)) return true;
 
 		for(String forbid : TESTFUL_PACKAGES)
 			if(name.startsWith(forbid)) return false;
-
-		for(String forbid : TESTFUL_CLASSES)
-			if(name.equals(forbid)) return false;
 
 		return true;
 	}
@@ -104,7 +108,10 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 			loaded.add(name);
 			return c;
 		} catch(RemoteException e) {
-			throw new ClassNotFoundException("Cannot retrieve the class " + name, e);
+			final ClassNotFoundException exc = new ClassNotFoundException("Cannot retrieve the class " + name, e);
+			logger.log(Level.WARNING, exc.getMessage(), exc);
+			e.printStackTrace();
+			throw exc;
 		}
 	}
 
