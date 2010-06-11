@@ -19,7 +19,6 @@
 package testful.coverage.whiteBox;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -60,12 +59,12 @@ public class BlockClass extends Block implements Iterable<Block> {
 
 		if(TestFul.DEBUG && !classFileName.endsWith(".class")) logger.warning("The class file does not ends with .class " + classURL);
 
-		final File file = new File(pre, classFileName.substring(0, classFileName.length()-6) + FILE_SUFFIX);
+		final String url = pre + classFileName.substring(0, classFileName.length()-6) + FILE_SUFFIX;
 		try {
-			oi = new ObjectInputStream(new GZIPInputStream(new FileInputStream(file)));
+			oi = new ObjectInputStream(new GZIPInputStream(new URL(url).openStream()));
 			return (BlockClass) oi.readObject();
 		} catch(Exception e) {
-			logger.log(Level.WARNING, "Exception while reading the file " + file.getAbsolutePath() + ": " + e.toString(), e);
+			logger.log(Level.WARNING, "Exception while reading " + url + ": " + e.toString(), e);
 			return null;
 		} finally {
 			if(oi != null) {
