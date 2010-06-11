@@ -160,8 +160,11 @@ public class TestCluster implements Serializable {
 
 			XmlClass xmlClass = xml.get(clazz.getClassName());
 			if(xmlClass != null) {
-				for(String aux : xmlClass.getCluster())
-					toDo.add(getRegistry().getClazz(this.classLoader.loadClass(aux)));
+				for(String aux : xmlClass.getCluster()) {
+					final Clazz clusterClazz = getRegistry().getClazz(this.classLoader.loadClass(aux));
+					if(!clusterBuilder.contains(clusterClazz))
+						toDo.add(clusterClazz);
+				}
 			}
 		}
 

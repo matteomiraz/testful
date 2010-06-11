@@ -108,9 +108,10 @@ public class XmlClass {
 
 			if(xmlMeth != null && !xmlMeth.isSkip()
 					&& !returnType.isArray() // ISSUE #1: if you need array support, vote here: http://code.google.com/p/testful/issues/detail?id=1
+					&& !returnType.equals(c)
 					&& returnType != Void.TYPE && !returnType.isPrimitive()) {
 
-				logger.fine("Including " + returnType.getName() + " to the test cluster");
+				logger.fine("Including " + returnType.getName() + " in the test cluster");
 				xmlClass.getCluster().add(returnType.getName());
 			}
 		}

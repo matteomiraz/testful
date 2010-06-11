@@ -1,17 +1,17 @@
 /*
  * TestFul - http://code.google.com/p/testful/
  * Copyright (C) 2010  Matteo Miraz
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -28,22 +28,22 @@ import testful.model.faults.FaultyExecutionException;
  * Represents a fault of the system.
  * It is automatically derivable from the {@link FaultyExecutionException}.
  * Faults with same message and same source (the stack trace) are assumed to be the same (they are equal).
- * 
+ *
  * @author matteo
  */
 public class Fault implements Serializable {
 
 	private static final long serialVersionUID = 7235014552766544190L;
 
-	private StackTraceElement[] stackTrace;
 	private String msg;
+	private StackTraceElement[] stackTrace;
 	private FaultyExecutionException fault;
 
 	/**
 	 * Creates a fault from the {@link FaultyExecutionException} and the
 	 * base element of the stack trace. The latter is the element of the stack trace
 	 * that called the System Under Test.
-	 * 
+	 *
 	 * @param exc The exception thrown
 	 * @param base the element to consider as the base of stack trace
 	 */
@@ -52,7 +52,6 @@ public class Fault implements Serializable {
 		stackTrace = processStackTrace(exc, base);
 		msg = exc.getMessage();
 	}
-
 
 	private StackTraceElement[] processStackTrace(FaultyExecutionException cause, StackTraceElement base) {
 		StackTraceElement[] stackTrace = cause.getStackTrace();

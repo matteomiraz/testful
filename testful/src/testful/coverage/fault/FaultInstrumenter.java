@@ -57,7 +57,8 @@ public class FaultInstrumenter implements UnifiedInstrumentator {
 	public static final FaultInstrumenter singleton = new FaultInstrumenter();
 
 	private final SootClass trackerClass;
-	private final SootMethod trackerProcess;
+	private final SootMethod trackerProcessFaulty;
+	private final SootMethod trackerProcessException;
 
 	private final SootClass faultyException;
 	private final SootClass nullPointerException;
@@ -68,7 +69,8 @@ public class FaultInstrumenter implements UnifiedInstrumentator {
 		final String COVERAGE_TRACKER = FaultTracker.class.getCanonicalName();
 		Scene.v().loadClassAndSupport(COVERAGE_TRACKER);
 		trackerClass = Scene.v().getSootClass(COVERAGE_TRACKER);
-		trackerProcess = trackerClass.getMethodByName("process");
+		trackerProcessFaulty = trackerClass.getMethodByName("processFaulty");
+		trackerProcessException = trackerClass.getMethodByName("processException");
 
 		final String FAULTY_EXCEPTION = FaultyExecutionException.class.getCanonicalName();
 		Scene.v().loadClassAndSupport(FAULTY_EXCEPTION);
@@ -105,6 +107,9 @@ public class FaultInstrumenter implements UnifiedInstrumentator {
 		// Process fault: jump here if the exception is a fault!
 		final Unit processFault = Jimple.v().newNopStmt();
 
+		// Process exception: jump here if the exception is unexpected!
+		final Unit processException = Jimple.v().newNopStmt();
+
 		// The last operation: jump here if the exception is not a fault!
 		final Unit notFault = Jimple.v().newNopStmt();
 
@@ -120,7 +125,7 @@ public class FaultInstrumenter implements UnifiedInstrumentator {
 
 		// Last chance: if is a NullPointerException, check if a parameter is null, otherwise process the fault
 		newUnits.add(Jimple.v().newAssignStmt(boolTmp, Jimple.v().newInstanceOfExpr(exc, nullPointerException.getType())));
-		newUnits.add(Jimple.v().newIfStmt(Jimple.v().newEqExpr(boolTmp, IntConstant.v(0)), processFault));
+		newUnits.add(Jimple.v().newIfStmt(Jimple.v().newEqExpr(boolTmp, IntConstant.v(0)), processException));
 
 		// check if one of the parameters is null
 		int nParams = body.getMethod().getParameterCount();
@@ -130,12 +135,17 @@ public class FaultInstrumenter implements UnifiedInstrumentator {
 				newUnits.add(Jimple.v().newIfStmt(Jimple.v().newEqExpr(body.getParameterLocal(i), NullConstant.v()), notFault));
 			}
 		}
-		newUnits.add(Jimple.v().newGotoStmt(processFault));
+		newUnits.add(Jimple.v().newGotoStmt(processException));
 
 
 		// process the fault
 		newUnits.add(processFault);
-		newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newStaticInvokeExpr(trackerProcess.makeRef(), exc)));
+		newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newStaticInvokeExpr(trackerProcessFaulty.makeRef(), exc)));
+		newUnits.add(Jimple.v().newGotoStmt(notFault));
+
+		// process the exception
+		newUnits.add(processException);
+		newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newStaticInvokeExpr(trackerProcessException.makeRef(), exc)));
 
 		// final nop
 		newUnits.add(notFault);

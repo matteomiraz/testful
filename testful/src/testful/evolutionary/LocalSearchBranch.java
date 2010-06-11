@@ -239,7 +239,6 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			if(covCond.getQuality() < covCondOrig.getQuality()) continue;
 			if(covCond.getQuality() == covCondOrig.getQuality() && ops.size() >= opsOrig.size()) continue;
 
-			logger.info("Branch " + branchId + " score: " + covCond.getQuality() + " length: " + ops.size());
 			opsOrig = ops;
 			covCondOrig = covCond;
 

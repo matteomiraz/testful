@@ -43,6 +43,11 @@ import testful.model.TestCluster;
 import testful.runner.TestfulClassLoader;
 import testful.utils.ElementManager;
 
+
+/**
+ * Test for the control-flow coverage tracking functionality
+ * @author matteo
+ */
 public class ControlFlowCoverageTestCase extends GenericTestCase {
 
 	private TestCluster cluster;

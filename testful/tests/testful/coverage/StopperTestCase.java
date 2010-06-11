@@ -32,7 +32,7 @@ import testful.model.Test;
 import testful.utils.ElementManager;
 
 /**
- * TODO describe me!
+ * Test for the stopper functionality
  * @author matteo
  */
 public class StopperTestCase extends SingleClassTestCase {
@@ -42,7 +42,7 @@ public class StopperTestCase extends SingleClassTestCase {
 	 */
 	@Override
 	protected String getClassUnderTest() {
-		return "test.Stopped";
+		return "test.coverage.Stopped";
 	}
 
 	protected Constructorz cns;
