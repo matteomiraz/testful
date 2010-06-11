@@ -423,11 +423,11 @@ public class JUnitTestGenerator extends TestReader {
 					case EXCEPTIONAL:
 						out.println("\t\ttry {");
 						out.println("\t\t\t" + op + ";");
-						out.println("\t\t\tfail(\"Expecting a " + opResult.getException() + "\");");
-						out.println("\t\t} catch(" + opResult.getException().getClass().getCanonicalName() + " e) {");
+						out.println("\t\t\tfail(\"Expecting a " + opResult.getExcClassName() + "\");");
+						out.println("\t\t} catch(" + opResult.getExcClassName() + " e) {");
 
-						if(opResult.getException().getMessage() != null)
-							out.println("\t\t\tassertEquals(\"" + opResult.getException().getMessage() + "\", e.getMessage());");
+						if(opResult.getExcMessage() != null)
+							out.println("\t\t\tassertEquals(\"" + opResult.getExcMessage() + "\", e.getMessage());");
 
 						if(op instanceof Invoke)
 							generateAssertions("\t\t\t", out, opResult.getObject(), null, ((Invoke)op).getThis().toString());

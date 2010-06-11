@@ -18,14 +18,11 @@
 
 package testful.coverage;
 
-import testful.SingleClassTestCase;
 import testful.coverage.fault.FaultsCoverage;
 import testful.coverage.stopper.TestStoppedException;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
-import testful.model.Constructorz;
 import testful.model.CreateObject;
 import testful.model.Invoke;
-import testful.model.Methodz;
 import testful.model.Operation;
 import testful.model.Reference;
 import testful.model.Test;
@@ -35,66 +32,7 @@ import testful.utils.ElementManager;
  * Test for the stopper functionality
  * @author matteo
  */
-public class StopperTestCase extends SingleClassTestCase {
-
-	/* (non-Javadoc)
-	 * @see testful.SingleClassTestCase#getClassUnderTest()
-	 */
-	@Override
-	protected String getClassUnderTest() {
-		return "test.coverage.Stopped";
-	}
-
-	protected Constructorz cns;
-
-	protected Methodz longMethod1;
-	protected Methodz longMethod2;
-	protected Methodz longMethod3;
-	protected Methodz longMethod4;
-	protected Methodz longMethod5;
-
-	/* (non-Javadoc)
-	 * @see testful.SingleClassTestCase#setUp()
-	 */
-	@Override
-	protected void setUp() throws Exception {
-		super.setUp();
-
-		cns = cut.getConstructors()[0];
-
-		longMethod1 = null;
-		longMethod2 = null;
-		longMethod3 = null;
-		longMethod4 = null;
-		longMethod5 = null;
-		for(Methodz m : cut.getMethods()) {
-			if(checkMethod(m, "longMethod1")) longMethod1 = m;
-			if(checkMethod(m, "longMethod2")) longMethod2 = m;
-			if(checkMethod(m, "longMethod3")) longMethod3 = m;
-			if(checkMethod(m, "longMethod4")) longMethod4 = m;
-			if(checkMethod(m, "longMethod5")) longMethod5 = m;
-		}
-		assertNotNull(longMethod1);
-		assertNotNull(longMethod2);
-		assertNotNull(longMethod3);
-		assertNotNull(longMethod4);
-		assertNotNull(longMethod5);
-	}
-
-	/* (non-Javadoc)
-	 * @see testful.SingleClassTestCase#tearDown()
-	 */
-	@Override
-	protected void tearDown() throws Exception {
-		super.tearDown();
-
-		cns = null;
-		longMethod1 = null;
-		longMethod2 = null;
-		longMethod3 = null;
-		longMethod4 = null;
-		longMethod5 = null;
-	}
+public class StopperTestCase extends testful.StopperTestCase {
 
 	public void testLongMethod1() throws Exception {
 		Test t = new Test(cluster, refFactory, new Operation[] {

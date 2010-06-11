@@ -51,4 +51,28 @@ public class UnexpectedExceptionException extends Exception implements FaultyExe
 	public String toString() {
 		return "[" + exceptionName + "] " + message;
 	}
+
+	/**
+	 * Checks if an exception is to be considered a failure
+	 * @param exc The exception thrown
+	 * @param declaredExceptions the exceptions that the method declares to thrown
+	 * @param parameters the parameters given to the method
+	 * @return true if the exception is to be considered a failure
+	 */
+	public static boolean check(Throwable exc, Class<?>[] declaredExceptions, Object[] parameters) {
+		if(!(exc instanceof RuntimeException)) return false;
+
+		final Class<? extends Throwable> excClass = exc.getClass();
+		for (Class<?> d : declaredExceptions) {
+			if(d.isAssignableFrom(excClass)) return false;
+		}
+
+		if(exc instanceof NullPointerException) {
+			for (Object p : parameters) {
+				if(p == null) return false;
+			}
+		}
+
+		return true;
+	}
 }

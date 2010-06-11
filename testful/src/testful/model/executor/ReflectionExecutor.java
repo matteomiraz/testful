@@ -26,6 +26,7 @@ import java.lang.reflect.Method;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import testful.coverage.fault.UnexpectedExceptionException;
 import testful.coverage.stopper.Stopper;
 import testful.model.AssignConstant;
 import testful.model.AssignPrimitive;
@@ -423,6 +424,11 @@ public class ReflectionExecutor implements Executor {
 			if(exc instanceof PreconditionViolationException) {
 				if(opRes != null) opRes.setPreconditionError();
 				throw exc;
+			}
+
+			// Recreate faulty exceptions
+			if(UnexpectedExceptionException.check(exc, m.getExceptionTypes(), args)) {
+				exc = new UnexpectedExceptionException(exc);
 			}
 
 			if(exc instanceof FaultyExecutionException) {

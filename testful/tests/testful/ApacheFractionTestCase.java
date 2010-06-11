@@ -23,6 +23,10 @@ import testful.model.Constructorz;
 import testful.model.Methodz;
 import testful.model.Reference;
 
+/**
+ * Stub for the apache.Fraction class
+ * @author matteo
+ */
 public class ApacheFractionTestCase extends SingleClassTestCase {
 	protected Reference[] ints, doubles;
 

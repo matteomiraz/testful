@@ -35,7 +35,9 @@ public class AllTests {
 		suite.addTestSuite(RepeatableTestCase.class);
 
 		suite.addTestSuite(OptimalTestCase.class);
-		suite.addTestSuite(TestExecutionManagerTestCase.class);
+		suite.addTestSuite(TestExecutionManagerSimpleTestCase.class);
+		suite.addTestSuite(TestExecutionManagerFaultyTestCase.class);
+		suite.addTestSuite(TestExecutionManagerStopperTestCase.class);
 		//$JUnit-END$
 
 		return suite;

@@ -32,9 +32,11 @@ import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
 import testful.model.Operation;
+import testful.model.OperationResult;
 import testful.model.ReferenceFactory;
 import testful.model.Test;
 import testful.model.TestCluster;
+import testful.model.TestExecutionManager;
 import testful.runner.ClassFinder;
 import testful.runner.ClassFinderCaching;
 import testful.runner.ClassFinderImpl;
@@ -170,6 +172,17 @@ public abstract class GenericTestCase  extends TestCase {
 
 		return coverage;
 	}
+
+	protected static Operation[] getOpResult(Test test) throws RemoteException, InterruptedException, ExecutionException {
+		OperationResult.insert(test.getTest());
+		Context<Operation[], TestExecutionManager> ctx = TestExecutionManager.getContext(getFinder(), test);
+		ctx.setStopOnBug(false);
+		Future<Operation[]> result = getExec().execute(ctx);
+
+		return result.get();
+	}
+
+
 
 	public static Test createRandomTest(String cut, int lenght, long seed) throws RemoteException, ClassNotFoundException, TestfulException {
 		MersenneTwisterFast random = new MersenneTwisterFast(seed);
