@@ -1,21 +1,20 @@
 /*
  * TestFul - http://code.google.com/p/testful/
  * Copyright (C) 2010  Matteo Miraz
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 package testful.runner;
 
@@ -28,8 +27,8 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -39,11 +38,33 @@ import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
 import testful.model.Test;
-import testful.model.TestSplitter;
+import testful.model.transformation.ReferenceSorter;
+import testful.model.transformation.RemoveInvalidOperationsStatic;
+import testful.model.transformation.RemoveUselessDefs;
+import testful.model.transformation.Reorganizer;
+import testful.model.transformation.SingleStaticAssignment;
+import testful.model.transformation.Splitter;
+import testful.model.transformation.TestTransformation;
+import testful.model.transformation.TestTransformationPipeline;
 import testful.utils.Cloner;
 import testful.utils.ElementManager;
 
 public class RunnerCaching implements IRunner{
+
+	private static final TestTransformation prepare = new TestTransformationPipeline(
+			RemoveUselessDefs.singleton,
+			RemoveInvalidOperationsStatic.singleton,
+			SingleStaticAssignment.singleton
+	);
+
+	private static final TestTransformation postprocess = new TestTransformationPipeline(
+			RemoveUselessDefs.singleton,
+			RemoveInvalidOperationsStatic.singleton,
+			SingleStaticAssignment.singleton,
+			RemoveUselessDefs.singleton,
+			Reorganizer.singleton,
+			ReferenceSorter.singleton
+	);
 
 	private boolean enabled;
 
@@ -83,8 +104,6 @@ public class RunnerCaching implements IRunner{
 	}
 
 	private long timeSplit = 0;
-	private long timeReorganize = 0;
-	private long timeReferenceSort = 0;
 	private long timePrepare = 0;
 	private long timePostProcess = 0;
 
@@ -102,12 +121,12 @@ public class RunnerCaching implements IRunner{
 		origJobs++;
 
 		long start = System.nanoTime();
-		test = test.removeUselessDefs().removeInvalidOperations().getSSA();
+		test = prepare.perform(test);
 		long stop = System.nanoTime();
 		timePrepare += (stop-start);
 
 		start = System.nanoTime();
-		List<Test> parts = TestSplitter.split(false, test);
+		List<Test> parts = Splitter.split(false, test);
 		stop = System.nanoTime();
 		timeSplit += (stop-start);
 
@@ -152,19 +171,10 @@ public class RunnerCaching implements IRunner{
 
 	private void execute(ClassFinder finder, boolean reloadClasses, Test test, TrackerDatum[] data, CachingFuture ret) {
 		long start = System.nanoTime();
-		test = test.removeUselessDefs().removeInvalidOperations().getSSA().removeUselessDefs();
+
+		test = postprocess.perform(test);
 		long stop = System.nanoTime();
 		timePostProcess += (stop-start);
-
-		start = System.nanoTime();
-		test = test.reorganize();
-		stop = System.nanoTime();
-		timeReorganize += (stop-start);
-
-		start = System.nanoTime();
-		test = test.sortReferences();
-		stop = System.nanoTime();
-		timeReferenceSort += (stop-start);
 
 		start = System.nanoTime();
 
@@ -227,9 +237,7 @@ public class RunnerCaching implements IRunner{
 			+ "time mgmt:"
 			+ " pre: " + timePrepare/10000/100.0 + "ms"
 			+ " split: " + timeSplit/10000/100.0 + "ms"
-			+ " post: " + timePostProcess/10000/100.0 + "ms"
-			+ " reorg: " + timeReorganize/10000/100.0 + "ms"
-			+ " rSort: " + timeReferenceSort/10000/100.0 + "ms";
+			+ " post: " + timePostProcess/10000/100.0 + "ms";
 
 
 		ret += "\n    " ;
@@ -258,8 +266,6 @@ public class RunnerCaching implements IRunner{
 		timeSplit = 0;
 		timePrepare = 0;
 		timePostProcess = 0;
-		timeReorganize = 0;
-		timeReferenceSort = 0;
 		timeTot = 0;
 		timeDisk = 0;
 		timeMiss = 0;

@@ -16,23 +16,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package testful.model;
+package testful.regression;
 
 import java.util.Arrays;
 import java.util.List;
 
-import testful.ConfigCut;
-import testful.GenericTestCase;
-import testful.regression.TestSimplifier;
+import testful.model.CreateObject;
+import testful.model.Invoke;
+import testful.model.Operation;
+import testful.model.OperationResult;
+import testful.model.Reference;
+import testful.model.Test;
+import testful.model.TestExecutionManager;
 import testful.runner.Context;
-import testful.runner.TestfulClassLoader;
+import testful.testCut.DummySimpleTestCase;
 
 /**
  * @author matteo
  */
-public class TestSimpifierTestCase extends AutoTestCase {
+public class TestSimpifierDummySimpleTestCase extends DummySimpleTestCase {
 
-	@Override
 	protected List<Test> perform(Test test) throws Exception {
 		OperationResult.insert(test.getTest());
 
@@ -44,8 +47,6 @@ public class TestSimpifierTestCase extends AutoTestCase {
 			ops[i] = ops[i].adapt(test.getCluster(), test.getReferenceFactory());
 		}
 
-		//System.out.println(new Test(test.getCluster(), test.getReferenceFactory(), ops));
-
 		TestSimplifier s = new TestSimplifier();
 		Test r = s.process(new Test(test.getCluster(), test.getReferenceFactory(), ops));
 
@@ -53,36 +54,19 @@ public class TestSimpifierTestCase extends AutoTestCase {
 	}
 
 	public void testSimple1() throws Exception {
-		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
-		config.setCut("dummy.Simple");
-		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
-
-		ReferenceFactory refFactory = new ReferenceFactory(cluster, 4, 4);
-
-		Clazz cut = cluster.getCut();
-
-		Reference c0 = refFactory.getReferences(cut)[0];
-
-		Constructorz cns = cut.getConstructors()[0];
-
-		Methodz mInc = null;
-		for(Methodz m : cut.getMethods()) {
-			if("mInc".equals(m.getName())) mInc = m;
-		}
-
 
 		Test test = new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new Invoke(null, c0, mInc, new Reference[] { })
+				new CreateObject(cuts[0], cns, new Reference[] { }),
+				new Invoke(null, cuts[0], mInc, new Reference[] { })
 		});
 
 		Operation[][] expected = {
 				{
-					new CreateObject(c0, cns, new Reference[] { }),
-					new Invoke(null, c0, mInc, new Reference[] { })
+					new CreateObject(cuts[0], cns, new Reference[] { }),
+					new Invoke(null, cuts[0], mInc, new Reference[] { })
 				}
 		};
 
-		check(test, expected);
+		check(test, perform(test), expected);
 	}
 }

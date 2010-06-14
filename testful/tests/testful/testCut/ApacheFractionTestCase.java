@@ -16,8 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package testful;
+package testful.testCut;
 
+import testful.SingleClassTestCase;
 import testful.model.Clazz;
 import testful.model.Constructorz;
 import testful.model.Methodz;

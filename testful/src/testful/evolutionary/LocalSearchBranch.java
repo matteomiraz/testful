@@ -58,7 +58,7 @@ import testful.model.ReferenceFactory;
 import testful.model.Test;
 import testful.model.TestCluster;
 import testful.model.TestCoverage;
-import testful.model.TestSplitter;
+import testful.model.transformation.Splitter;
 import testful.utils.ElementManager;
 import ec.util.MersenneTwisterFast;
 
@@ -403,7 +403,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 	}
 
 	private Set<TestCoverage> evalParts(Solution<Operation> solution) throws InterruptedException, ExecutionException {
-		List<Test> parts = TestSplitter.split(true, problem.getTest(solution.getDecisionVariables().variables_));
+		List<Test> parts = Splitter.split(true, problem.getTest(solution.getDecisionVariables().variables_));
 		int size = parts.size();
 
 		List<Future<ElementManager<String, CoverageInformation>>> futures = new ArrayList<Future<ElementManager<String, CoverageInformation>>>(size);

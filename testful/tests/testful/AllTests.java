@@ -32,10 +32,11 @@ public class AllTests {
 	public static Test suite() {
 		TestFul.setupLogging(GenericTestCase.getConfig());
 
-		TestSuite suite = new TestSuite("Test for testful.model");
+		TestSuite suite = new TestSuite("Test for Testful");
 
 		suite.addTest(testful.model.AllTests.suite());
 		suite.addTest(testful.coverage.AllTests.suite());
+		suite.addTest(testful.regression.AllTests.suite());
 		suite.addTest(testful.runner.AllTests.suite());
 		return suite;
 	}

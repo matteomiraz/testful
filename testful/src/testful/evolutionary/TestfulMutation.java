@@ -28,7 +28,7 @@ import testful.model.Operation;
 import testful.model.ReferenceFactory;
 import testful.model.Test;
 import testful.model.TestCluster;
-import testful.model.TestSplitter;
+import testful.model.transformation.Splitter;
 import ec.util.MersenneTwisterFast;
 
 /**
@@ -72,7 +72,7 @@ public class TestfulMutation extends Mutation<Operation> {
 
 		if(probSimplify > 0 && random.nextBoolean(probSimplify)) {
 			// remove all useless operations
-			Test t = TestSplitter.splitAndMerge(problem.getTest(repr));
+			Test t = Splitter.splitAndMerge(problem.getTest(repr));
 
 			repr.clear();
 			for(Operation operation : t.getTest())

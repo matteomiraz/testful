@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package testful.model;
+package testful.model.transformation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,8 +38,24 @@ import java.util.logging.Logger;
 import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
+import testful.model.AssignConstant;
+import testful.model.AssignPrimitive;
+import testful.model.Clazz;
+import testful.model.CreateObject;
+import testful.model.Invoke;
+import testful.model.MethodInformation;
 import testful.model.MethodInformation.Kind;
 import testful.model.MethodInformation.ParameterInformation;
+import testful.model.Operation;
+import testful.model.OperationPosition;
+import testful.model.OptimalTestCreator;
+import testful.model.PrimitiveClazz;
+import testful.model.Reference;
+import testful.model.ReferenceFactory;
+import testful.model.ResetRepository;
+import testful.model.Test;
+import testful.model.TestCluster;
+import testful.model.TestCoverage;
 import testful.runner.ClassFinder;
 import testful.runner.IRunner;
 import testful.runner.RunnerPool;
@@ -51,7 +67,7 @@ import testful.utils.ElementManager;
  * @author matteo
  */
 @SuppressWarnings("unchecked")
-public class TestSplitter {
+public class Splitter {
 
 	private static Logger logger = Logger.getLogger("testful.model");
 
@@ -67,12 +83,12 @@ public class TestSplitter {
 
 	public static List<Test> split(boolean splitObservers, Test t) {
 
-		final Test test = t.removeUselessDefs();
+		final Test test = RemoveUselessDefs.singleton.perform(t);
 
 		test.ensureNoDuplicateOps();
 
 		final List<Test> res = new ArrayList<Test>();
-		TestSplitter splitter = new TestSplitter(splitObservers, test.getCluster(), test.getReferenceFactory(), new Listener() {
+		Splitter splitter = new Splitter(splitObservers, test.getCluster(), test.getReferenceFactory(), new Listener() {
 			@Override
 			public void notify(TestCluster cluster, ReferenceFactory refFactory, Operation[] ops) { res.add(new Test(test.getCluster(), test.getReferenceFactory(), ops)); }
 		});
@@ -188,29 +204,6 @@ public class TestSplitter {
 		}
 	}
 
-	static class OperationPosition extends OperationInformation {
-		private static final long serialVersionUID = 3664462416048405563L;
-
-		static String KEY = "OperationPosition";
-		final int position;
-
-		public OperationPosition(int position) {
-			super(KEY);
-			this.position = position;
-		}
-
-		@Override
-		public String toString() {
-			return "Operation #" + Integer.toString(position);
-		}
-
-		@Override
-		public OperationInformation clone() {
-			return this;
-		}
-
-	}
-
 	private int position = 0;
 
 	private static final Comparator<Operation> orderComparator = new Comparator<Operation>() {
@@ -270,7 +263,7 @@ public class TestSplitter {
 	 */
 	private final Operation[] aliasesOp;
 
-	public TestSplitter(boolean splitObservers, TestCluster cluster, ReferenceFactory refFactory) {
+	public Splitter(boolean splitObservers, TestCluster cluster, ReferenceFactory refFactory) {
 		this.splitObservers = splitObservers;
 		this.cluster = cluster;
 		this.refFactory = refFactory;
@@ -300,7 +293,7 @@ public class TestSplitter {
 		}
 	}
 
-	public TestSplitter(boolean splitObservers, TestCluster cluster, ReferenceFactory refFactory, Listener ... listener) {
+	public Splitter(boolean splitObservers, TestCluster cluster, ReferenceFactory refFactory, Listener ... listener) {
 		this(splitObservers, cluster, refFactory);
 
 		if(listener != null) for(Listener l : listener)

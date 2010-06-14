@@ -18,14 +18,14 @@
 
 package testful.model;
 
-import testful.StopperTestCase;
+import testful.testCut.TestCoverageStoppedTestCase;
 
 /**
  * Test for the test execution manager (which collects the OperationResult of tests).
  * Uses the test.coverage.Stopped class.
  * @author matteo
  */
-public class TestExecutionManagerStopperTestCase extends StopperTestCase {
+public class TestExecutionManagerStopperTestCase extends TestCoverageStoppedTestCase {
 
 	public void testLongMethod1() throws Exception {
 		Test t = new Test(cluster, refFactory, new Operation[] {

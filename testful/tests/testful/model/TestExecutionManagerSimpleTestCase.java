@@ -18,14 +18,14 @@
 
 package testful.model;
 
-import testful.SimpleDummyTestCase;
+import testful.testCut.DummySimpleTestCase;
 
 /**
  * Test for the test execution manager (which collects the OperationResult of tests).
  * Uses the dummy.Simple class.
  * @author matteo
  */
-public class TestExecutionManagerSimpleTestCase extends SimpleDummyTestCase {
+public class TestExecutionManagerSimpleTestCase extends DummySimpleTestCase {
 
 	@Override
 	protected void setUp() throws Exception {
@@ -40,8 +40,8 @@ public class TestExecutionManagerSimpleTestCase extends SimpleDummyTestCase {
 	public void testSimple1() throws Exception {
 
 		Test test = new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new Invoke(null, c0, mInc, new Reference[] { })
+				new CreateObject(cuts[0], cns, new Reference[] { }),
+				new Invoke(null, cuts[0], mInc, new Reference[] { })
 		});
 
 		Operation[] testOperations = getOpResult(test);
@@ -57,8 +57,8 @@ public class TestExecutionManagerSimpleTestCase extends SimpleDummyTestCase {
 	public void testSimple2() throws Exception {
 
 		Test test = new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new Invoke(null, c0, mInc, new Reference[] { })
+				new CreateObject(cuts[0], cns, new Reference[] { }),
+				new Invoke(null, cuts[0], mInc, new Reference[] { })
 		});
 
 		Operation[] ops = getOpResult(test);

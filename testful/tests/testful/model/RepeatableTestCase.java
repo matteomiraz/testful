@@ -18,8 +18,8 @@
 
 package testful.model;
 
-import testful.ApacheFractionTestCase;
 import testful.GenericTestCase;
+import testful.testCut.ApacheFractionTestCase;
 
 /**
  * Ensures that Testful has a repeatable behavior

@@ -29,20 +29,20 @@ import testful.model.Operation;
 import testful.model.ReferenceFactory;
 import testful.model.Test;
 import testful.model.TestCluster;
-import testful.model.TestSplitter;
-import testful.model.TestSplitter.Listener;
+import testful.model.transformation.Splitter;
+import testful.model.transformation.Splitter.Listener;
 import testful.runner.ClassFinder;
 import testful.utils.ElementManager;
 import testful.utils.SimpleEntry;
 
 public class RandomTestSplit extends RandomTest {
 
-	private final TestSplitter simplifier;
+	private final Splitter simplifier;
 
 	public RandomTestSplit(boolean enableCache, File logDirectory, ClassFinder finder, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
 		super(enableCache, logDirectory, finder, cluster, refFactory, seed, data);
 
-		simplifier = new TestSplitter(true, cluster, refFactory);
+		simplifier = new Splitter(true, cluster, refFactory);
 	}
 
 	@Override

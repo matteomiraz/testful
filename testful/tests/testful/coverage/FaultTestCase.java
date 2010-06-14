@@ -30,7 +30,7 @@ import testful.utils.ElementManager;
  * Test for the fault detection functionality
  * @author matteo
  */
-public class FaultTestCase extends testful.FaultTestCase {
+public class FaultTestCase extends testful.testCut.TestCoverageFaultTestCase {
 
 	public void testA() throws Exception {
 		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cluster, refFactory, new Operation[] {

@@ -16,34 +16,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package testful.model;
+package testful.model.transformation;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import java.util.ArrayList;
+import java.util.List;
+
+import testful.AutoTestCase;
+import testful.GenericTestCase;
+import testful.coverage.TrackerDatum;
+import testful.model.Test;
+import testful.model.transformation.Splitter;
 
 /**
- * Runs all tests within the testful.model package
  * @author matteo
+ *
  */
-public class AllTests {
+public class Splitter_splitAndMinimizeAutoTestCase extends AutoTestCase {
 
-	public static Test suite() {
-		TestSuite suite = new TestSuite(AllTests.class.getName());
+	@Override
+	protected List<Test> perform(Test test) throws Exception {
+		TrackerDatum[] data = new TrackerDatum[] { };
 
-		suite.addTest(testful.model.transformation.AllTests.suite());
+		Test min = Splitter.splitAndMinimize(test, GenericTestCase.getFinder(), data);
 
-		//$JUnit-BEGIN$
-		suite.addTestSuite(TestClusterTestCase.class);
-		suite.addTestSuite(RepeatableTestCase.class);
-
-		suite.addTestSuite(OptimalTestCase.class);
-		suite.addTestSuite(TestExecutionManagerSimpleTestCase.class);
-		suite.addTestSuite(TestExecutionManagerFaultyTestCase.class);
-		suite.addTestSuite(TestExecutionManagerStopperTestCase.class);
-
-		suite.addTestSuite(TestReorganizerTestCase_Simple.class);
-		//$JUnit-END$
-
-		return suite;
+		List<Test> res = new ArrayList<Test>(1);
+		res.add(min);
+		return res;
 	}
 }

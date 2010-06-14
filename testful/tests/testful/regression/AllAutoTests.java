@@ -1,6 +1,6 @@
 /*
  * TestFul - http://code.google.com/p/testful/
- * Copyright (C) 2010  Matteo Miraz
+ * Copyright (C) 2010 Matteo Miraz
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,21 +16,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+package testful.regression;
 
-package testful.model;
-
-import java.util.ArrayList;
-import java.util.List;
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 /**
  * @author matteo
  */
-public class Test_removeInvalidOperationsTestCase extends AutoTestCase {
+public class AllAutoTests {
 
-	@Override
-	protected List<Test> perform(Test test) throws Exception {
-		List<Test> ret = new ArrayList<Test>(1);
-		ret.add(test.removeInvalidOperations());
-		return ret;
+	public static Test suite() {
+		TestSuite suite = new TestSuite(AllAutoTests.class.getName());
+		//$JUnit-BEGIN$
+		suite.addTestSuite(TestReducerAutoTestCase.class);
+		suite.addTestSuite(TestSimpifierAutoTestCase.class);
+		//$JUnit-END$
+		return suite;
 	}
+
 }

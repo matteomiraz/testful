@@ -16,28 +16,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package testful.model;
+package testful.model.transformation;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import testful.GenericTestCase;
-import testful.coverage.TrackerDatum;
+import testful.AutoTestCase;
+import testful.model.Test;
+import testful.model.transformation.Splitter;
 
 /**
  * @author matteo
  *
  */
-public class TestSplitter_splitAndMinimizeTestCase extends AutoTestCase {
+public class Splitter_splitObserverAutoTestCase extends AutoTestCase {
 
 	@Override
 	protected List<Test> perform(Test test) throws Exception {
-		TrackerDatum[] data = new TrackerDatum[] { };
-
-		Test min = TestSplitter.splitAndMinimize(test, GenericTestCase.getFinder(), data);
-
-		List<Test> res = new ArrayList<Test>(1);
-		res.add(min);
-		return res;
+		return Splitter.split(true, test);
 	}
 }

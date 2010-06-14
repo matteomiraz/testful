@@ -16,8 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package testful;
+package testful.testCut;
 
+import testful.SingleClassTestCase;
 import testful.model.Constructorz;
 import testful.model.Methodz;
 
@@ -25,7 +26,7 @@ import testful.model.Methodz;
  * Stub for the test.coverage.Stopped class
  * @author matteo
  */
-public abstract class StopperTestCase extends SingleClassTestCase {
+public abstract class TestCoverageStoppedTestCase extends SingleClassTestCase {
 
 	@Override
 	protected String getClassUnderTest() {

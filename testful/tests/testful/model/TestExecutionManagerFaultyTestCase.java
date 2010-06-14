@@ -18,14 +18,14 @@
 
 package testful.model;
 
-import testful.FaultTestCase;
+import testful.testCut.TestCoverageFaultTestCase;
 
 /**
  * Test for the test execution manager (which collects the OperationResult of tests).
  * Uses the test.coverage.Fault class.
  * @author matteo
  */
-public class TestExecutionManagerFaultyTestCase extends FaultTestCase {
+public class TestExecutionManagerFaultyTestCase extends TestCoverageFaultTestCase {
 
 	public void testA() throws Exception {
 		Test test = new Test(cluster, refFactory, new Operation[] {

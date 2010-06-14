@@ -22,6 +22,7 @@ import java.io.File;
 import java.rmi.RemoteException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -182,8 +183,6 @@ public abstract class GenericTestCase  extends TestCase {
 		return result.get();
 	}
 
-
-
 	public static Test createRandomTest(String cut, int lenght, long seed) throws RemoteException, ClassNotFoundException, TestfulException {
 		MersenneTwisterFast random = new MersenneTwisterFast(seed);
 
@@ -200,4 +199,49 @@ public abstract class GenericTestCase  extends TestCase {
 		Test t = new Test(cluster, refFactory, ops);
 		return t;
 	}
+
+
+	protected void check(Test original, Collection<? extends Test> tests, Operation[][] expected) throws Exception {
+		//System.out.println("original:");
+		//for(Operation o : original.getTest()) {
+		//	final OperationInformation info = o.getInfo(OperationPosition.KEY);
+		//	System.out.println((info!=null?info:"") + "\t" + o);
+		//}
+		//System.out.println("---");
+
+		//System.out.println("Modified: " + tests.size());
+		//for(Test t1 : tests) {
+		//	for(Operation o : t1.getTest()) {
+		//		final OperationInformation info = o.getInfo(OperationPosition.KEY);
+		//		System.out.println((info!=null?info:"") + "\t" + o);
+		//	}
+		//	System.out.println("---");
+		//}
+
+		assertEquals("Wrong number of results", expected.length, tests.size());
+
+		Operation[][] actual = new Operation[tests.size()][];
+		{
+			int i = 0;
+			for(Test t1 : tests) actual[i++] = t1.getTest();
+		}
+
+		Arrays.sort(expected, dummyTestComparator);
+		Arrays.sort(actual, dummyTestComparator);
+
+		for(int i = 0; i < expected.length; i++) {
+			assertEquals("Test " + i + ": wrong result size", expected[i].length, actual[i].length);
+			for(int j = 0; j < expected[i].length; j++)
+				assertEquals("Test " + i + ": Mismatch in operation " + j, expected[i][j], actual[i][j]);
+		}
+	}
+
+	private static final Comparator<Operation[]> dummyTestComparator = new Comparator<Operation[]>() {
+		@Override
+		public int compare(Operation[] o1, Operation[] o2) {
+			if(o1.length != o2.length) return o1.length - o2.length;
+
+			return Arrays.hashCode(o1) - Arrays.hashCode(o2);
+		}
+	};
 }

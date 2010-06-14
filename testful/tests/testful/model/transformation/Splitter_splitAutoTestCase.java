@@ -16,23 +16,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package testful.model;
+package testful.model.transformation;
 
 import java.util.List;
 
+import testful.AutoTestCase;
 import testful.ConfigCut;
 import testful.GenericTestCase;
+import testful.model.AssignPrimitive;
+import testful.model.Clazz;
+import testful.model.Constructorz;
+import testful.model.CreateObject;
+import testful.model.Invoke;
+import testful.model.Methodz;
+import testful.model.Operation;
+import testful.model.Reference;
+import testful.model.ReferenceFactory;
+import testful.model.Test;
+import testful.model.TestCluster;
+import testful.model.transformation.Splitter;
 import testful.runner.TestfulClassLoader;
 
 /**
  * @author matteo
  *
  */
-public class TestSplitter_splitTestCase extends AutoTestCase {
+public class Splitter_splitAutoTestCase extends AutoTestCase {
 
 	@Override
 	protected List<Test> perform(Test test) throws Exception {
-		return TestSplitter.split(false, test);
+		return Splitter.split(false, test);
 	}
 
 	public void testHardStatemachine1() throws Exception {
@@ -135,7 +148,7 @@ public class TestSplitter_splitTestCase extends AutoTestCase {
 				}
 		};
 
-		check(t, expected);
+		check(t, perform(t), expected);
 	}
 
 	public void testHardStatemachine2() throws Exception {
@@ -193,7 +206,7 @@ public class TestSplitter_splitTestCase extends AutoTestCase {
 				}
 		};
 
-		check(t, expected);
+		check(t, perform(t), expected);
 	}
 
 	public void testHardStatemachine3() throws Exception {
@@ -271,7 +284,7 @@ public class TestSplitter_splitTestCase extends AutoTestCase {
 				}
 		};
 
-		check(t, expected);
+		check(t, perform(t), expected);
 	}
 
 	public void testHardStatemachine4() throws Exception {
@@ -355,7 +368,7 @@ public class TestSplitter_splitTestCase extends AutoTestCase {
 				}
 		};
 
-		check(t, expected);
+		check(t, perform(t), expected);
 	}
 
 
@@ -424,7 +437,7 @@ public class TestSplitter_splitTestCase extends AutoTestCase {
 				}
 		};
 
-		check(t, expected);
+		check(t, perform(t), expected);
 	}
 
 	public void testHardStatemachine6() throws Exception {
@@ -509,6 +522,6 @@ public class TestSplitter_splitTestCase extends AutoTestCase {
 				}
 		};
 
-		check(t, expected);
+		check(t, perform(t), expected);
 	}
 }

@@ -32,7 +32,7 @@ import testful.utils.ElementManager;
  * Test for the stopper functionality
  * @author matteo
  */
-public class StopperTestCase extends testful.StopperTestCase {
+public class StopperTestCase extends testful.testCut.TestCoverageStoppedTestCase {
 
 	public void testLongMethod1() throws Exception {
 		Test t = new Test(cluster, refFactory, new Operation[] {

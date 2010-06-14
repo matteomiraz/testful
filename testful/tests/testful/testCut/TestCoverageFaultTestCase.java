@@ -16,8 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package testful;
+package testful.testCut;
 
+import testful.SingleClassTestCase;
 import testful.model.Clazz;
 import testful.model.Constructorz;
 import testful.model.Methodz;
@@ -27,7 +28,7 @@ import testful.model.Reference;
  * Stub for the test.coverage.Fault class
  * @author matteo
  */
-public abstract class FaultTestCase extends SingleClassTestCase {
+public abstract class TestCoverageFaultTestCase extends SingleClassTestCase {
 
 	@Override
 	protected String getClassUnderTest() {

@@ -16,14 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package testful;
+package testful.testCut;
 
+import testful.SingleClassTestCase;
 import testful.model.Clazz;
 import testful.model.Constructorz;
 import testful.model.Methodz;
 import testful.model.Reference;
 
-public class SimpleDummyTestCase extends SingleClassTestCase {
+public class DummySimpleTestCase extends SingleClassTestCase {
 
 	/* (non-Javadoc)
 	 * @see testful.SingleClassTestCase#getClassUnderTest()
@@ -33,8 +34,9 @@ public class SimpleDummyTestCase extends SingleClassTestCase {
 		return "dummy.Simple";
 	}
 
-	protected Reference c0, c1, c2, c3;
-	protected Reference i0, i1, i2, i3;
+	protected Reference[] ints, objects;
+
+	protected Constructorz oCns;
 
 	protected Constructorz cns;
 
@@ -43,26 +45,29 @@ public class SimpleDummyTestCase extends SingleClassTestCase {
 	protected Methodz oStatus;
 	protected Methodz wModulo;
 	protected Methodz oAbs;
+	protected Methodz compare;
 
 	@Override
 	protected void setUp() throws Exception {
 		super.setUp();
 
 		Clazz iClazz = null;
+		Clazz oClazz = null;
 		for(Clazz clazz : cluster.getCluster()) {
 			if("java.lang.Integer".equals(clazz.getClassName())) iClazz = clazz;
+			if("java.lang.Object".equals(clazz.getClassName())) oClazz = clazz;
 		}
 		assertNotNull(iClazz);
+		assertNotNull(oClazz);
 
-		i0 = refFactory.getReferences(iClazz)[0];
-		i1 = refFactory.getReferences(iClazz)[1];
-		i2 = refFactory.getReferences(iClazz)[2];
-		i3 = refFactory.getReferences(iClazz)[3];
+		ints = refFactory.getReferences(iClazz);
+		objects = refFactory.getReferences(oClazz);
 
-		c0 = refFactory.getReferences(cut)[0];
-		c1 = refFactory.getReferences(cut)[1];
-		c2 = refFactory.getReferences(cut)[2];
-		c3 = refFactory.getReferences(cut)[3];
+		oCns = null;
+		for (Constructorz c : oClazz.getConstructors()) {
+			if(c.getParameterTypes().length == 0) oCns = c;
+		}
+		assertNotNull(oCns);
 
 		cns = cut.getConstructors()[0];
 
@@ -71,39 +76,39 @@ public class SimpleDummyTestCase extends SingleClassTestCase {
 		oStatus = null;
 		wModulo = null;
 		oAbs = null;
+		compare = null;
 		for(Methodz m : cut.getMethods()) {
 			if("mInc".equals(m.getName())) mInc = m;
 			if("mDec".equals(m.getName())) mDec = m;
 			if("oStatus".equals(m.getName())) oStatus = m;
 			if("wModulo".equals(m.getName())) wModulo = m;
 			if("oAbs".equals(m.getName())) oAbs = m;
+			if("compare".equals(m.getName())) compare = m;
 		}
+		assertNotNull(mInc);
+		assertNotNull(mDec);
+		assertNotNull(oStatus);
+		assertNotNull(wModulo);
+		assertNotNull(oAbs);
+		assertNotNull(compare);
 	}
 
 	@Override
 	protected void tearDown() throws Exception {
 		super.tearDown();
 
-		cluster = null;
-		refFactory = null;
+		ints = null;
+		objects = null;
+
+		oCns = null;
 
 		cns      = null;
+
 		mInc     = null;
 		mDec     = null;
 		oStatus  = null;
 		wModulo  = null;
 		oAbs     = null;
-
-		i0 = null;
-		i1 = null;
-		i2 = null;
-		i3 = null;
-
-		c0 = null;
-		c1 = null;
-		c2 = null;
-		c3 = null;
+		compare  = null;
 	}
-
-
 }

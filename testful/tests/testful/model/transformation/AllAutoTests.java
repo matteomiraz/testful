@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package testful.model;
+package testful.model.transformation;
 
 import junit.framework.Test;
 import junit.framework.TestResult;
@@ -24,7 +24,7 @@ import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
 /**
- * TODO describe me!
+ * All automatic tests
  * @author matteo
  */
 public class AllAutoTests {
@@ -32,23 +32,16 @@ public class AllAutoTests {
 	public static Test suite() {
 		TestSuite suite = new TestSuite(AllAutoTests.class.getName());
 		//$JUnit-BEGIN$
-
-		suite.addTestSuite(Test_sortRerefencesTestCase.class);
-
-		suite.addTestSuite(Test_removeInvalidOperationsTestCase.class);
-		suite.addTestSuite(Test_getSSATestCase.class);
-		suite.addTestSuite(Test_removeUselessDefsTestCase.class);
-		suite.addTestSuite(Test_reorganizerSortSplitTestCase.class);
-		suite.addTestSuite(Test_reorganizerSplitTestCase.class);
-		suite.addTestSuite(Test_reorganizerTestCase.class);
-		suite.addTestSuite(TestReducerTestCase.class);
-		suite.addTestSuite(TestSimpifierTestCase.class);
-		suite.addTestSuite(TestSplitter_splitAndMinimizeTestCase.class);
-		suite.addTestSuite(TestSplitter_splitMergeTestCase.class);
-		suite.addTestSuite(TestSplitter_splitObserverTestCase.class);
-		suite.addTestSuite(TestSplitter_splitTestCase.class);
-
-
+		suite.addTestSuite(Splitter_splitAndMinimizeAutoTestCase.class);
+		suite.addTestSuite(Splitter_splitAutoTestCase.class);
+		suite.addTestSuite(RemoveInvalidOperationsStaticAutoTestCase.class);
+		suite.addTestSuite(RemoveUselessDefsAutoTestCase.class);
+		suite.addTestSuite(TestReorganizerAutoTestCase.class);
+		suite.addTestSuite(TestSplitter_splitMergeAutoTestCase.class);
+		suite.addTestSuite(RunnerCachingPrepareAutoTestCase.class);
+		suite.addTestSuite(Splitter_splitObserverAutoTestCase.class);
+		suite.addTestSuite(ReferenceSorterAutoTestCase.class);
+		suite.addTestSuite(TestReferenceSorterAutoTestCase.class);
 		//$JUnit-END$
 		return suite;
 	}
@@ -57,7 +50,7 @@ public class AllAutoTests {
 		TestRunner runner = new TestRunner();
 		TestResult result = runner.doRun(suite(), false);
 
-		if (! result.wasSuccessful())
+		if (!result.wasSuccessful())
 			System.exit(1);
 	}
 }

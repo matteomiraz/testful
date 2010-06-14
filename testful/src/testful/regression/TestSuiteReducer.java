@@ -47,7 +47,14 @@ import testful.model.Test;
 import testful.model.TestCoverage;
 import testful.model.TestExecutionManager;
 import testful.model.TestReader;
-import testful.model.TestSplitter;
+import testful.model.transformation.ReferenceSorter;
+import testful.model.transformation.RemoveInvalidOperationsStatic;
+import testful.model.transformation.RemoveUselessDefs;
+import testful.model.transformation.Reorganizer;
+import testful.model.transformation.SingleStaticAssignment;
+import testful.model.transformation.Splitter;
+import testful.model.transformation.TestTransformation;
+import testful.model.transformation.TestTransformationPipeline;
 import testful.runner.ClassFinder;
 import testful.runner.ClassFinderCaching;
 import testful.runner.ClassFinderImpl;
@@ -64,6 +71,8 @@ public class TestSuiteReducer {
 	private static final Logger logger = Logger.getLogger("testful.regression");
 
 	private static final TestSimplifier simplifier = new TestSimplifier();
+
+	private static final TestTransformation transform = new TestTransformationPipeline(RemoveUselessDefs.singleton, RemoveInvalidOperationsStatic.singleton, SingleStaticAssignment.singleton);
 
 	private final OptimalTestCreator optimal = new OptimalTestCreator();
 	private final ClassFinder finder;
@@ -103,33 +112,33 @@ public class TestSuiteReducer {
 				logger.finer("Simplified in:\n"+test);
 
 			try {
-				test = test.removeUselessDefs().removeInvalidOperations().getSSA();
+				test = transform.perform(test);
 			} catch (Exception e) {
 				logger.log(Level.WARNING, "Unexpected exception: " + e,  e);
 			}
 
-			final List<Test> parts = TestSplitter.split(false, test);
+			final List<Test> parts = Splitter.split(false, test);
 			logger.fine("Identified " + parts.size() + "parts");
 
 			for (Test part : parts) {
 				if(logger.isLoggable(Level.FINER)) logger.finer("Part:\n" + part);
 
-				part = part.removeUselessDefs();
+				part = RemoveUselessDefs.singleton.perform(part);
 				if(logger.isLoggable(Level.FINER)) logger.finer("Part - without useless defs:\n" + part);
 
-				part = part.removeInvalidOperations();
+				part = RemoveInvalidOperationsStatic.singleton.perform(part);
 				if(logger.isLoggable(Level.FINER)) logger.finer("Part - statically simplified:\n" + part);
 
-				part = part.getSSA();
+				part = SingleStaticAssignment.singleton.perform(part);
 				if(logger.isLoggable(Level.FINER)) logger.finer("Part - SSA:\n" + part);
 
-				part = part.removeUselessDefs();
+				part = RemoveUselessDefs.singleton.perform(part);
 				if(logger.isLoggable(Level.FINER)) logger.finer("Part - without useless defs:\n" + part);
 
-				part = part.reorganize();
+				part = Reorganizer.singleton.perform(part);
 				if(logger.isLoggable(Level.FINER)) logger.finer("Part - reorganized:\n" + part);
 
-				part = part.sortReferences();
+				part = ReferenceSorter.singleton.perform(part);
 				if(logger.isLoggable(Level.FINER)) logger.finer("Part - sorted:\n" + part);
 
 				// calculate the coverage for the test

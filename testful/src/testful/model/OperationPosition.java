@@ -18,32 +18,29 @@
 
 package testful.model;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
 /**
- * Runs all tests within the testful.model package
+ * Memorize the ordinal position of an operation in a test
  * @author matteo
  */
-public class AllTests {
+public class OperationPosition extends OperationInformation {
+	private static final long serialVersionUID = 3664462416048405563L;
 
-	public static Test suite() {
-		TestSuite suite = new TestSuite(AllTests.class.getName());
+	public static String KEY = "OperationPosition";
+	public final int position;
 
-		suite.addTest(testful.model.transformation.AllTests.suite());
-
-		//$JUnit-BEGIN$
-		suite.addTestSuite(TestClusterTestCase.class);
-		suite.addTestSuite(RepeatableTestCase.class);
-
-		suite.addTestSuite(OptimalTestCase.class);
-		suite.addTestSuite(TestExecutionManagerSimpleTestCase.class);
-		suite.addTestSuite(TestExecutionManagerFaultyTestCase.class);
-		suite.addTestSuite(TestExecutionManagerStopperTestCase.class);
-
-		suite.addTestSuite(TestReorganizerTestCase_Simple.class);
-		//$JUnit-END$
-
-		return suite;
+	public OperationPosition(int position) {
+		super(KEY);
+		this.position = position;
 	}
+
+	@Override
+	public String toString() {
+		return "Operation #" + Integer.toString(position);
+	}
+
+	@Override
+	public OperationInformation clone() {
+		return this;
+	}
+
 }
