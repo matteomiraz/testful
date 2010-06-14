@@ -49,6 +49,23 @@ public class StopperTestCase extends testful.StopperTestCase {
 		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
 	}
 
+	public void testLongMethod1b() throws Exception {
+		Test t = new Test(cluster, refFactory, new Operation[] {
+				new CreateObject(cuts[0], cns, new Reference[] { }),
+				new Invoke(null, cuts[0], longMethod1, new Reference[] { } ),
+				new CreateObject(cuts[0], cns, new Reference[] { }),
+				new Invoke(null, cuts[0], execute, new Reference[] { })
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t);
+		assertEquals(8.0f, covs.get(CoverageBasicBlocks.KEY).getQuality());
+
+		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(faults);
+		assertEquals(1.0f, faults.getQuality());
+		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
+	}
+
 	public void testLongMethod2() throws Exception {
 		Test t = new Test(cluster, refFactory, new Operation[] {
 				new CreateObject(cuts[0], cns, new Reference[] { }),
@@ -57,6 +74,23 @@ public class StopperTestCase extends testful.StopperTestCase {
 
 		ElementManager<String, CoverageInformation> covs = getCoverage(t);
 		assertEquals(5.0f, covs.get(CoverageBasicBlocks.KEY).getQuality());
+
+		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(faults);
+		assertEquals(1.0f, faults.getQuality());
+		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
+	}
+
+	public void testLongMethod2b() throws Exception {
+		Test t = new Test(cluster, refFactory, new Operation[] {
+				new CreateObject(cuts[0], cns, new Reference[] { }),
+				new Invoke(null, cuts[0], longMethod2, new Reference[] { } ),
+				new CreateObject(cuts[0], cns, new Reference[] { }),
+				new Invoke(null, cuts[0], execute, new Reference[] { })
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t);
+		assertEquals(8.0f, covs.get(CoverageBasicBlocks.KEY).getQuality());
 
 		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
 		assertNotNull(faults);
@@ -79,6 +113,23 @@ public class StopperTestCase extends testful.StopperTestCase {
 		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
 	}
 
+	public void testLongMethod3b() throws Exception {
+		Test t = new Test(cluster, refFactory, new Operation[] {
+				new CreateObject(cuts[0], cns, new Reference[] { }),
+				new Invoke(null, cuts[0], longMethod3, new Reference[] { } ),
+				new CreateObject(cuts[0], cns, new Reference[] { }),
+				new Invoke(null, cuts[0], execute, new Reference[] { })
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t);
+		assertEquals(8.0f, covs.get(CoverageBasicBlocks.KEY).getQuality());
+
+		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(faults);
+		assertEquals(1.0f, faults.getQuality());
+		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
+	}
+
 	public void testLongMethod4() throws Exception {
 		Test t = new Test(cluster, refFactory, new Operation[] {
 				new CreateObject(cuts[0], cns, new Reference[] { }),
@@ -94,6 +145,23 @@ public class StopperTestCase extends testful.StopperTestCase {
 		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
 	}
 
+	public void testLongMethod4b() throws Exception {
+		Test t = new Test(cluster, refFactory, new Operation[] {
+				new CreateObject(cuts[0], cns, new Reference[] { }),
+				new Invoke(null, cuts[0], longMethod4, new Reference[] { } ),
+				new CreateObject(cuts[0], cns, new Reference[] { }),
+				new Invoke(null, cuts[0], execute, new Reference[] { })
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t);
+		assertEquals(8.0f, covs.get(CoverageBasicBlocks.KEY).getQuality());
+
+		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(faults);
+		assertEquals(1.0f, faults.getQuality());
+		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
+	}
+
 	public void testLongMethod5() throws Exception {
 		Test t = new Test(cluster, refFactory, new Operation[] {
 				new CreateObject(cuts[0], cns, new Reference[] { }),
@@ -102,6 +170,23 @@ public class StopperTestCase extends testful.StopperTestCase {
 
 		ElementManager<String, CoverageInformation> covs = getCoverage(t);
 		assertEquals(7.0f, covs.get(CoverageBasicBlocks.KEY).getQuality());
+
+		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(faults);
+		assertEquals(1.0f, faults.getQuality());
+		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
+	}
+
+	public void testLongMethod5b() throws Exception {
+		Test t = new Test(cluster, refFactory, new Operation[] {
+				new CreateObject(cuts[0], cns, new Reference[] { }),
+				new Invoke(null, cuts[0], longMethod5, new Reference[] { } ),
+				new CreateObject(cuts[0], cns, new Reference[] { }),
+				new Invoke(null, cuts[0], execute, new Reference[] { })
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t);
+		assertEquals(10.0f, covs.get(CoverageBasicBlocks.KEY).getQuality());
 
 		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
 		assertNotNull(faults);

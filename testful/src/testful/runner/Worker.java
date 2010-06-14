@@ -61,9 +61,6 @@ public class Worker extends Thread {
 				} catch(Exception e) {
 					workerManager.putException(ctx, e, cl);
 				}
-
-				if(Thread.interrupted())
-					logger.finer("Worker " + getName() + " was interrupted");
 			}
 		} catch(RemoteException e) {
 			logger.warning("Worker " + getName() + " interrupted: " + e.getMessage());

@@ -34,6 +34,7 @@ public abstract class StopperTestCase extends SingleClassTestCase {
 
 	protected Constructorz cns;
 
+	protected Methodz execute;
 	protected Methodz longMethod1;
 	protected Methodz longMethod2;
 	protected Methodz longMethod3;
@@ -46,18 +47,21 @@ public abstract class StopperTestCase extends SingleClassTestCase {
 
 		cns = cut.getConstructors()[0];
 
+		execute = null;
 		longMethod1 = null;
 		longMethod2 = null;
 		longMethod3 = null;
 		longMethod4 = null;
 		longMethod5 = null;
 		for(Methodz m : cut.getMethods()) {
+			if(checkMethod(m, "execute"))     execute = m;
 			if(checkMethod(m, "longMethod1")) longMethod1 = m;
 			if(checkMethod(m, "longMethod2")) longMethod2 = m;
 			if(checkMethod(m, "longMethod3")) longMethod3 = m;
 			if(checkMethod(m, "longMethod4")) longMethod4 = m;
 			if(checkMethod(m, "longMethod5")) longMethod5 = m;
 		}
+		assertNotNull(execute);
 		assertNotNull(longMethod1);
 		assertNotNull(longMethod2);
 		assertNotNull(longMethod3);
@@ -70,6 +74,7 @@ public abstract class StopperTestCase extends SingleClassTestCase {
 		super.tearDown();
 
 		cns = null;
+		execute = null;
 		longMethod1 = null;
 		longMethod2 = null;
 		longMethod3 = null;

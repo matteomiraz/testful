@@ -30,7 +30,7 @@ public class RunnerCaching_testPreparation extends AutoTestCase {
 
 	@Override
 	protected List<Test> perform(Test test) throws Exception {
-		test = test.removeUselessDefs().simplify().getSSA();
+		test = test.removeUselessDefs().removeInvalidOperations().getSSA();
 
 		List<Test> ret = new LinkedList<Test>();
 		List<Test> parts = TestSplitter.split(false, test);
@@ -41,7 +41,7 @@ public class RunnerCaching_testPreparation extends AutoTestCase {
 				p = p.removeUselessDefs();
 				System.out.println("--- removeUseless ---");
 				System.out.println(p);
-				p = p.simplify();
+				p = p.removeInvalidOperations();
 				System.out.println("--- simplify ---");
 				System.out.println(p);
 				p = p.getSSA();
@@ -61,7 +61,7 @@ public class RunnerCaching_testPreparation extends AutoTestCase {
 			}
 			
 			p = p.removeUselessDefs();
-			p = p.simplify();
+			p = p.removeInvalidOperations();
 			p = p.getSSA();
 			p = p.removeUselessDefs();
 			p = p.reorganize();

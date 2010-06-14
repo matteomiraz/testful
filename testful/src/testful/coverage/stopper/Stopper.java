@@ -58,41 +58,34 @@ public final class Stopper {
 				try {
 					while(running) {
 
-						long end;
-						// read the end of the world
-						synchronized (wait) {
-							end = endOfTheWorld;
-						}
-
 						final long curr = System.currentTimeMillis();
-						final long delta;
+						synchronized (wait) {
 
-						if(end > 0) {
-							delta = end - curr;
-						} else {
-							delta = IDLE_WAIT;
-							end = curr + IDLE_WAIT;
-						}
+							final long end, delta;
+							if(endOfTheWorld > 0) {
+								end = endOfTheWorld;
+								delta = end - curr;
+							} else {
+								end = curr + IDLE_WAIT;
+								delta = IDLE_WAIT;
+							}
 
-						if(delta <= 0) { // KILL!
-							synchronized (wait) {
+							if(delta <= 0) { // KILL!
 								logger.fine("Killing controlled thread");
 								TestStoppedException.kill();
 								controlled.interrupt();
 								endOfTheWorld = curr + KILL_WAIT;
-							}
-						} else { // Wait
-							synchronized (wait) {
+
+							} else { // Wait
 								waiting = end;
 								wait.wait(delta);
 								waiting = -1;
 							}
 						}
-
 					}
 					logger.finer("Stopper thread has finished its job.");
 				} catch (InterruptedException e) {
-					logger.log(Level.FINE, "Stopper thread has been interrupted", e);
+					logger.log(Level.FINER, "Stopper thread has been interrupted", e);
 					running = false;
 					TestStoppedException.kill();
 					controlled.interrupt();
@@ -143,8 +136,8 @@ public final class Stopper {
 	 */
 	public void done() {
 		synchronized (wait) {
-			endOfTheWorld = -1;
 			running = false;
+			stop();
 
 			wait.notify();
 		}

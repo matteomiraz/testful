@@ -1,17 +1,17 @@
 /*
  * TestFul - http://code.google.com/p/testful/
  * Copyright (C) 2010  Matteo Miraz
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -47,7 +47,7 @@ import testful.utils.ElementManager;
 
 /**
  * Splits a test into smaller tests.
- * 
+ *
  * @author matteo
  */
 @SuppressWarnings("unchecked")
@@ -66,20 +66,19 @@ public class TestSplitter {
 	}
 
 	public static List<Test> split(boolean splitObservers, Test t) {
-		final List<Test> res = new ArrayList<Test>();
 
 		final Test test = t.removeUselessDefs();
 
 		test.ensureNoDuplicateOps();
 
+		final List<Test> res = new ArrayList<Test>();
 		TestSplitter splitter = new TestSplitter(splitObservers, test.getCluster(), test.getReferenceFactory(), new Listener() {
 			@Override
 			public void notify(TestCluster cluster, ReferenceFactory refFactory, Operation[] ops) { res.add(new Test(test.getCluster(), test.getReferenceFactory(), ops)); }
 		});
 
-		Operation[] ops = test.getTest();
-		for(int i = 0; i < ops.length; i++)
-			splitter.analyze(ops[i]);
+		for (Operation op : test.getTest())
+			splitter.analyze(op);
 
 		splitter.flush();
 
@@ -407,7 +406,7 @@ public class TestSplitter {
 	 * analyzes an operation. Notice that the algorithm relies on the
 	 * sequenceNumber, so be sure that if an operation B comes after an operation
 	 * A, B.seqNumber > a.seqNumber.
-	 * 
+	 *
 	 * @param op the opreration to analyze
 	 */
 	public void analyze(Operation op) {

@@ -102,7 +102,7 @@ public class RunnerCaching implements IRunner{
 		origJobs++;
 
 		long start = System.nanoTime();
-		test = test.removeUselessDefs().simplify().getSSA();
+		test = test.removeUselessDefs().removeInvalidOperations().getSSA();
 		long stop = System.nanoTime();
 		timePrepare += (stop-start);
 
@@ -152,7 +152,7 @@ public class RunnerCaching implements IRunner{
 
 	private void execute(ClassFinder finder, boolean reloadClasses, Test test, TrackerDatum[] data, CachingFuture ret) {
 		long start = System.nanoTime();
-		test = test.removeUselessDefs().simplify().getSSA().removeUselessDefs();
+		test = test.removeUselessDefs().removeInvalidOperations().getSSA().removeUselessDefs();
 		long stop = System.nanoTime();
 		timePostProcess += (stop-start);
 

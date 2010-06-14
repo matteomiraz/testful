@@ -1,17 +1,17 @@
 /*
  * TestFul - http://code.google.com/p/testful/
  * Copyright (C) 2010  Matteo Miraz
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -40,11 +40,20 @@ import ec.util.MersenneTwisterFast;
  */
 public abstract class AutoTestCase extends GenericTestCase {
 
+	private static final int ITERATIONS = 10;
+
+	/** Performs an extensive random testing session */
+	private static final boolean EXTENSIVE_TEST = false;
+
 	protected abstract Collection<? extends Test> perform(Test test) throws Exception;
 
 	protected String[] getCuts() {
 		return new String[] {
 				"dummy.Simple",
+				"dummy.StateMachine",
+				"dummy.WhiteSample",
+				"test.coverage.Fault",
+				// "test.coverage.Stopped",
 				"apache.Fraction"
 		};
 	}
@@ -53,6 +62,7 @@ public abstract class AutoTestCase extends GenericTestCase {
 	protected void setUp() throws Exception {
 		super.setUp();
 
+		// ensure that static initializers are executed
 		for(String cut : getCuts())
 			getCoverage(createRandomTest(cut, 1000, 17l));
 
@@ -66,9 +76,20 @@ public abstract class AutoTestCase extends GenericTestCase {
 	public void testAllRnd() throws Exception {
 		for(String cut : getCuts()) {
 			MersenneTwisterFast r = new MersenneTwisterFast(37);
-			for(int n = 1; n < 1000; n++) {
-				System.out.printf("%5.1f%% ", n/10.0);
-				autoTest(cut, 100+r.nextInt(1900), r.nextLong());
+			for(int n = 1; n < ITERATIONS; n++) {
+				final int size = 49+r.nextInt(950);
+				final long seed = r.nextLong();
+
+				if(EXTENSIVE_TEST) {
+					for (int i = 1; i < size; i++) {
+						System.out.printf("%3.0f%% - %5.1f%%", 100.0*n/ITERATIONS, 100.0*i/size);
+						autoTest(cut, i, seed);
+					}
+
+				} else {
+					System.out.printf("%5.1f%% ", 100.0*n/ITERATIONS);
+					autoTest(cut, size, seed);
+				}
 			}
 		}
 	}
@@ -119,7 +140,7 @@ public abstract class AutoTestCase extends GenericTestCase {
 	};
 
 	protected boolean autoTest(String cut, int size, long seed) throws Exception {
-		System.out.print("Testing " + cut + " with " + size + " operations with seed: " + seed);
+		System.out.print("[" + this.getClass().getCanonicalName() + "] on " + cut + " size:" + size + " seed:" + seed);
 		System.out.flush();
 
 		Test orig = createRandomTest(cut, size, seed);

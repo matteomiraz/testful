@@ -2,17 +2,27 @@ package test.coverage;
 
 public class Stopped {
 
-	private static final int TIME = 5000;
+	private static final int TIME = 20000;
 
 	public Stopped() { }
 
-	private void dontDoSomething() { System.err.println("This code is never executed"); }
+	// this is executed!
+	public void execute() {
+		try {
+			Thread.sleep(10);
+		} catch (InterruptedException e) {
+			// never happens!
+			e.printStackTrace();
+		}
+
+	}
+
+	private void dontDoSomething() { new Exception("This code is never executed").printStackTrace(); }
 
 	public void longMethod1() {
-		try {
-			Thread.sleep(TIME);
-		} catch (InterruptedException e) {
-		}
+		long i = 0;
+		while(i < i+1) i++;
+		dontDoSomething();
 	}
 
 	public void longMethod2() {

@@ -35,8 +35,8 @@ public class TestStoppedException extends RuntimeException implements FaultyExec
 	private static TestStoppedException singleton = null;
 
 	public static void check() {
-		if(kill) {
-			if(singleton == null)
+		if (kill) {
+			if (singleton == null)
 				singleton = new TestStoppedException();
 
 			throw singleton;

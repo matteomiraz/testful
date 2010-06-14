@@ -44,7 +44,7 @@ public class TestSimpifierTestCase extends AutoTestCase {
 			ops[i] = ops[i].adapt(test.getCluster(), test.getReferenceFactory());
 		}
 
-		System.out.println(new Test(test.getCluster(), test.getReferenceFactory(), ops));
+		//System.out.println(new Test(test.getCluster(), test.getReferenceFactory(), ops));
 
 		TestSimplifier s = new TestSimplifier();
 		Test r = s.process(new Test(test.getCluster(), test.getReferenceFactory(), ops));

@@ -133,69 +133,77 @@ public class ReflectionExecutor implements Executor {
 
 		final Stopper stopper = new Stopper();
 
-		for(Operation op : test) {
+		try {
+			for(Operation op : test) {
+				final Integer maxExecTime;
+				if(op instanceof CreateObject) maxExecTime = ((CreateObject)op).getConstructor().getMaxExecutionTime();
+				else if (op instanceof Invoke) maxExecTime = ((Invoke)op).getMethod().getMaxExecutionTime();
+				else maxExecTime = null;
 
-			final Integer maxExecTime;
-			if(op instanceof CreateObject) maxExecTime = ((CreateObject)op).getConstructor().getMaxExecutionTime();
-			else if (op instanceof Invoke) maxExecTime = ((Invoke)op).getMethod().getMaxExecutionTime();
-			else maxExecTime = null;
+				try {
+					if(LOGGER_FINEST) {
+						logger.finest(toString());
+						logger.finest("Executing " + op);
+					}
 
-			try {
-				if(LOGGER_FINEST) {
-					logger.finest(toString());
-					logger.finest("Executing " + op);
+					final long start;
+					if(maxExecTime != null) {
+						stopper.start(maxExecTime);
+						if(LOGGER_FINER) start = System.nanoTime();
+						else start = -1;
+					} else {
+						start = -1;
+					}
+
+					if(op instanceof AssignPrimitive) assignPrimitive((AssignPrimitive) op);
+					else if(op instanceof AssignConstant) assignConstant((AssignConstant) op);
+					else if(op instanceof CreateObject) createObject((CreateObject) op);
+					else if(op instanceof Invoke) invoke((Invoke) op);
+					else if(op instanceof ResetRepository) reset((ResetRepository) op);
+					else logger.warning("Unknown operation: " + op.getClass().getCanonicalName() + " - " + op);
+
+					nValid++;
+
+					if(LOGGER_FINER) {
+						float length = (System.nanoTime() - start) / 1000000.0f;
+
+						final String name;
+						if(op instanceof CreateObject) name = ((CreateObject)op).getConstructor().getFullConstructorName();
+						else if(op instanceof Invoke) name = ((Invoke)op).getMethod().getFullMethodName();
+						else name = "";
+
+						logger.finer(String.format("OpExecution %.3f ms (%5.2f%%) %s", length, (100 * length / maxExecTime), name));
+					}
+
+				} catch(Throwable e) {
+					if (e instanceof TestfulInternalException) {
+						// discard the exception and go ahead
+
+					} else if(e instanceof PreconditionViolationException) {
+						nPre++;
+
+					} else if(e instanceof FaultyExecutionException) {
+
+						nFaulty++;
+						if(stopOnBug) break;
+
+						// reset the repository
+						for(int i = 0; i < repository.length; i++)
+							repository[i] = null;
+					}
+				} finally {
+					if(maxExecTime != null) {
+						stopper.stop();
+						if(Thread.interrupted())
+							logger.finest("Clean the thread interrupted status");
+					}
 				}
-
-				final long start;
-				if(maxExecTime != null) {
-					stopper.start(maxExecTime);
-					if(LOGGER_FINER) start = System.nanoTime();
-					else start = -1;
-				} else {
-					start = -1;
-				}
-
-				if(op instanceof AssignPrimitive) assignPrimitive((AssignPrimitive) op);
-				else if(op instanceof AssignConstant) assignConstant((AssignConstant) op);
-				else if(op instanceof CreateObject) createObject((CreateObject) op);
-				else if(op instanceof Invoke) invoke((Invoke) op);
-				else if(op instanceof ResetRepository) reset((ResetRepository) op);
-				else logger.warning("Unknown operation: " + op.getClass().getCanonicalName() + " - " + op);
-
-				nValid++;
-				if(start > 0) {
-					float length = (System.nanoTime() - start) / 1000000.0f;
-
-					final String name;
-					if(op instanceof CreateObject) name = ((CreateObject)op).getConstructor().getFullConstructorName();
-					else if(op instanceof Invoke) name = ((Invoke)op).getMethod().getFullMethodName();
-					else name = "";
-
-					logger.finer(String.format("OpExecution %.3f ms (%5.2f%%) %s", length, (100 * length / maxExecTime), name));
-				}
-
-			} catch(Throwable e) {
-				if (e instanceof TestfulInternalException) {
-					// discard the exception and go ahead
-
-				} else if(e instanceof PreconditionViolationException) {
-					nPre++;
-
-				} else if(e instanceof FaultyExecutionException) {
-
-					nFaulty++;
-					if(stopOnBug) break;
-
-					// reset the repository
-					for(int i = 0; i < repository.length; i++)
-						repository[i] = null;
-				}
-			} finally {
-				stopper.stop();
 			}
+
+		} finally {
+			stopper.done();
 		}
 
-		stopper.done();
 
 		if(LOGGER_FINEST) logger.finest(toString());
 

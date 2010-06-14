@@ -178,26 +178,6 @@ public class Test implements Serializable {
 	}
 
 	/**
-	 * Split the test into its independent parts (identified by ResetRepository
-	 * operation)
-	 *
-	 * @return the collection of independent tests
-	 */
-	public Collection<Test> split() {
-		Collection<Test> ret = new ArrayList<Test>();
-
-		List<Operation> ops = new ArrayList<Operation>();
-		for(Operation op : test)
-			if(op instanceof ResetRepository) {
-				if(!ops.isEmpty()) ret.add(new Test(cluster, refFactory, ops.toArray(new Operation[ops.size()])));
-			} else ops.add(op);
-
-		if(!ops.isEmpty()) ret.add(new Test(cluster, refFactory, ops.toArray(new Operation[ops.size()])));
-
-		return ret;
-	}
-
-	/**
 	 * Returns an equivalent copy of the test, in which useless operations are modified,
 	 * removing useless assignments.<br>
 	 * For example, the operation <code>target = foo.bar()</code> is modified in
@@ -269,7 +249,7 @@ public class Test implements Serializable {
 	 * Returns a simplified copy of the test, removing invalid operations (statically analyzed)
 	 * @return a simplified copy of the test
 	 */
-	public Test simplify() {
+	public Test removeInvalidOperations() {
 		List<Operation> ops = new ArrayList<Operation>(test.length);
 		Reference[] refs = getReferenceFactory().getReferences();
 
@@ -304,9 +284,9 @@ public class Test implements Serializable {
 			} else if(op instanceof CreateObject) {
 				CreateObject co = (CreateObject) op;
 
-				if(!simplifyIsInvokable(co.getConstructor().getParameterTypes(), co.getParams(), initialized)) continue;
+				if(!checkInitializated(co.getConstructor().getParameterTypes(), co.getParams(), initialized)) continue;
 
-				simplifyAddNullRef(ops, co.getParams(), initialized, initializedNull);
+				initializeToNull(ops, co.getParams(), initialized, initializedNull);
 
 				if(co.getTarget() != null)
 					initialized[co.getTarget().getId()] = true;
@@ -316,11 +296,11 @@ public class Test implements Serializable {
 			} else if(op instanceof Invoke) {
 				Invoke in = (Invoke) op;
 
-				if(!simplifyIsInvokable(in.getMethod().getParameterTypes(), in.getParams(), initialized)) continue;
+				if(!checkInitializated(in.getMethod().getParameterTypes(), in.getParams(), initialized)) continue;
 
 				if(in.getThis() != null && !initialized[in.getThis().getId()]) continue;
 
-				simplifyAddNullRef(ops, in.getParams(), initialized, initializedNull);
+				initializeToNull(ops, in.getParams(), initialized, initializedNull);
 
 				if(in.getTarget() != null)
 					initialized[in.getTarget().getId()] = true;
@@ -339,7 +319,7 @@ public class Test implements Serializable {
 	}
 
 	/** checks if all the parameters has been initialized */
-	private boolean simplifyIsInvokable(Clazz[] paramsType, Reference[] params, boolean[] initialized) {
+	private static boolean checkInitializated(Clazz[] paramsType, Reference[] params, boolean[] initialized) {
 		for(int i = 0; i < paramsType.length; i++)
 			if(paramsType[i] instanceof PrimitiveClazz && // the parameter is primitive
 					!((PrimitiveClazz) paramsType[i]).isClass() && // and the method uses the primitive version
@@ -350,7 +330,7 @@ public class Test implements Serializable {
 	}
 
 	/** if a reference is used as parameter, but it is not initialized, insert ref = null */
-	private void simplifyAddNullRef(List<Operation> ops, Reference[] params, boolean[] initialized, boolean[] nullInitialized) {
+	private static void initializeToNull(List<Operation> ops, Reference[] params, boolean[] initialized, boolean[] nullInitialized) {
 		for(int i = 0; i < params.length; i++) {
 			if(!initialized[params[i].getId()] &&
 					!nullInitialized[params[i].getId()]) {
@@ -458,7 +438,7 @@ public class Test implements Serializable {
 		Operation[] ops = getTest().clone();
 
 		// for each class, stores unused references
-		Map<Clazz, Queue<Reference>> freeRefs = sortReferencesGetFreeRefs();
+		Map<Clazz, Queue<Reference>> freeRefs = sortReferencesGetFreeRefs(cluster, refFactory);
 
 		int numRefs = getReferenceFactory().getReferences().length;
 
@@ -483,7 +463,7 @@ public class Test implements Serializable {
 				ops[i] = new Invoke(sortReferences(refs, freeRefs, o.getTarget()), sortReferences(refs, freeRefs, o.getThis()), o.getMethod(), sortReferences(refs, freeRefs, o.getParams()));
 
 			} else if(ops[i] instanceof ResetRepository) {
-				freeRefs = sortReferencesGetFreeRefs();
+				freeRefs = sortReferencesGetFreeRefs(cluster, refFactory);
 				refs = new Reference[numRefs];
 
 			}
@@ -492,12 +472,12 @@ public class Test implements Serializable {
 		return new Test(getCluster(), getReferenceFactory(), ops);
 	}
 
-	private Map<Clazz, Queue<Reference>> sortReferencesGetFreeRefs() {
+	private static Map<Clazz, Queue<Reference>> sortReferencesGetFreeRefs(TestCluster cluster, ReferenceFactory refFactory) {
 		Map<Clazz, Queue<Reference>> freeRefs = new HashMap<Clazz, Queue<Reference>>();
-		for(Clazz c : getCluster().getCluster()) {
+		for(Clazz c : cluster.getCluster()) {
 			c = c.getReferenceClazz();
 
-			final Reference[] refs = getReferenceFactory().getReferences(c);
+			final Reference[] refs = refFactory.getReferences(c);
 
 			if(refs != null) {
 				Queue<Reference> q = new LinkedList<Reference>();

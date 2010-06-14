@@ -103,7 +103,7 @@ public class TestSuiteReducer {
 				logger.finer("Simplified in:\n"+test);
 
 			try {
-				test = test.removeUselessDefs().simplify().getSSA();
+				test = test.removeUselessDefs().removeInvalidOperations().getSSA();
 			} catch (Exception e) {
 				logger.log(Level.WARNING, "Unexpected exception: " + e,  e);
 			}
@@ -117,7 +117,7 @@ public class TestSuiteReducer {
 				part = part.removeUselessDefs();
 				if(logger.isLoggable(Level.FINER)) logger.finer("Part - without useless defs:\n" + part);
 
-				part = part.simplify();
+				part = part.removeInvalidOperations();
 				if(logger.isLoggable(Level.FINER)) logger.finer("Part - statically simplified:\n" + part);
 
 				part = part.getSSA();
