@@ -44,7 +44,8 @@ public class TestExecutionManagerSimpleTestCase extends DummySimpleTestCase {
 				new Invoke(null, cuts[0], mInc, new Reference[] { })
 		});
 
-		Operation[] testOperations = getOpResult(test);
+		OperationResult.insert(test.getTest());
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
@@ -61,12 +62,14 @@ public class TestExecutionManagerSimpleTestCase extends DummySimpleTestCase {
 				new Invoke(null, cuts[0], mInc, new Reference[] { })
 		});
 
-		Operation[] ops = getOpResult(test);
+		OperationResult.insert(test.getTest());
+		Operation[] ops = TestExecutionManager.execute(getFinder(), test);
 		for (int i = 0; i < ops.length; i++)
 			ops[i] = ops[i].adapt(cluster, refFactory);
 		Test test2 = new Test(cluster, refFactory, ops);
 
-		Operation[] testOperations = getOpResult(test2);
+		OperationResult.insert(test2.getTest());
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test2);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);

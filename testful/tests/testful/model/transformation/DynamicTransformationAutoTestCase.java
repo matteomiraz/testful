@@ -16,9 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package testful.regression;
+package testful.model.transformation;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 import testful.AutoTestCase;
@@ -30,16 +30,19 @@ import testful.model.TestExecutionManager;
 /**
  * @author matteo
  */
-public class TestSimpifierAutoTestCase extends AutoTestCase {
+public class DynamicTransformationAutoTestCase extends AutoTestCase {
 
 	@Override
 	protected List<Test> perform(Test test) throws Exception {
+		List<Test> ret = new ArrayList<Test>(1);
+
 		OperationResult.insert(test.getTest());
 		Operation[] ops = TestExecutionManager.execute(getFinder(), test);
+		test = new Test(test.getCluster(), test.getReferenceFactory(), ops);
+		final Test mod = DynamicTransformation.singleton.perform(test);
+		OperationResult.remove(mod);
 
-		TestSimplifier s = new TestSimplifier();
-		Test r = s.process(new Test(test.getCluster(), test.getReferenceFactory(), ops));
-
-		return Arrays.asList(r);
+		ret.add(mod);
+		return ret;
 	}
 }

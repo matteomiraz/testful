@@ -586,7 +586,8 @@ public class JUnitTestGenerator extends TestReader {
 
 		for (TestCoverage test : simplify) {
 			try {
-				Operation[] op = TestExecutionManager.getOpStatus(finder, test);
+				OperationResult.insert(test.getTest());
+				Operation[] op = TestExecutionManager.execute(finder, test);
 				ret.add(new TestCoverage(new Test(test.getCluster(), test.getReferenceFactory(), op), test.getCoverage()));
 			} catch (Exception e) {
 				logger.log(Level.WARNING, "Cannot execute a test: " + e.getLocalizedMessage(), e);

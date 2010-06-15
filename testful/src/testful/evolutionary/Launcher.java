@@ -41,6 +41,7 @@ import testful.TestFul;
 import testful.TestfulException;
 import testful.coverage.TrackerDatum;
 import testful.model.Operation;
+import testful.model.OperationResult;
 import testful.model.Test;
 import testful.model.TestCoverage;
 import testful.model.TestExecutionManager;
@@ -162,14 +163,14 @@ public class Launcher {
 		List<TestCoverage> optimal = new ArrayList<TestCoverage>();
 		for (TestCoverage testCoverage : reducer.getOutput()) {
 			try {
-				Operation[] ops = TestExecutionManager.getOpStatus(testfulProblem.getFinder(), testCoverage);
+				OperationResult.insert(testCoverage.getTest());
+				Operation[] ops = TestExecutionManager.execute(testfulProblem.getFinder(), testCoverage);
 				optimal.add(new TestCoverage(new Test(testCoverage.getCluster(), testCoverage.getReferenceFactory(), ops), testCoverage.getCoverage()));
 			} catch (Exception e) {
 				logger.log(Level.WARNING, "Cannot execute the test: " + e.getLocalizedMessage(), e);
 				optimal.add(testCoverage);
 			}
 		}
-
 
 		/* convert tests to jUnit */
 		JUnitTestGenerator gen = new JUnitTestGenerator(config.getDirGeneratedTests());

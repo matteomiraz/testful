@@ -55,11 +55,11 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 	};
 
 	public static boolean canUseSystemClassLoader(String name) {
-		for(String forbid : TESTFUL_CLASSES)
-			if(name.equals(forbid)) return false;
-
 		for(String allow : SYSTEM_CLASSES)
 			if(name.equals(allow)) return true;
+
+		for(String forbid : TESTFUL_CLASSES)
+			if(name.equals(forbid)) return false;
 
 		for(String forbid : TESTFUL_PACKAGES)
 			if(name.startsWith(forbid)) return false;

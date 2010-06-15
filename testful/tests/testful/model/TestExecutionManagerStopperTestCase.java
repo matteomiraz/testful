@@ -33,7 +33,8 @@ public class TestExecutionManagerStopperTestCase extends TestCoverageStoppedTest
 				new Invoke(null, cuts[0], longMethod1, new Reference[] { } )
 		});
 
-		Operation[] testOperations = getOpResult(t);
+		OperationResult.insert(t.getTest());
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), t);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)t.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -50,7 +51,8 @@ public class TestExecutionManagerStopperTestCase extends TestCoverageStoppedTest
 		});
 
 
-		Operation[] testOperations = getOpResult(t);
+		OperationResult.insert(t.getTest());
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), t);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)t.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -66,7 +68,8 @@ public class TestExecutionManagerStopperTestCase extends TestCoverageStoppedTest
 				new Invoke(null, cuts[0], longMethod3, new Reference[] { } )
 		});
 
-		Operation[] testOperations = getOpResult(t);
+		OperationResult.insert(t.getTest());
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), t);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)t.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -82,7 +85,8 @@ public class TestExecutionManagerStopperTestCase extends TestCoverageStoppedTest
 				new Invoke(null, cuts[0], longMethod4, new Reference[] { } )
 		});
 
-		Operation[] testOperations = getOpResult(t);
+		OperationResult.insert(t.getTest());
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), t);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)t.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -98,7 +102,8 @@ public class TestExecutionManagerStopperTestCase extends TestCoverageStoppedTest
 				new Invoke(null, cuts[0], longMethod5, new Reference[] { } )
 		});
 
-		Operation[] testOperations = getOpResult(t);
+		OperationResult.insert(t.getTest());
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), t);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)t.getTest()[0].getInfo(OperationResult.KEY)).status);

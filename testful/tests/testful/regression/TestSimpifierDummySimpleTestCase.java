@@ -28,7 +28,6 @@ import testful.model.OperationResult;
 import testful.model.Reference;
 import testful.model.Test;
 import testful.model.TestExecutionManager;
-import testful.runner.Context;
 import testful.testCut.DummySimpleTestCase;
 
 /**
@@ -38,14 +37,7 @@ public class TestSimpifierDummySimpleTestCase extends DummySimpleTestCase {
 
 	protected List<Test> perform(Test test) throws Exception {
 		OperationResult.insert(test.getTest());
-
-		Context<Operation[], TestExecutionManager> ctx = TestExecutionManager.getContext(getFinder(), test);
-		ctx.setStopOnBug(false);
-		ctx.setRecycleClassLoader(true);
-		Operation[] ops = getExec().execute(ctx).get();
-		for (int i = 0; i < ops.length; i++) {
-			ops[i] = ops[i].adapt(test.getCluster(), test.getReferenceFactory());
-		}
+		Operation[] ops = TestExecutionManager.execute(getFinder(), test);
 
 		TestSimplifier s = new TestSimplifier();
 		Test r = s.process(new Test(test.getCluster(), test.getReferenceFactory(), ops));

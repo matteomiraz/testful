@@ -20,6 +20,8 @@ package testful.runner;
 
 import java.io.Serializable;
 
+import testful.model.Operation;
+
 /**
  * Interface for the test executor.<br/>
  * Classes implementing this interface must not execute directly the test, but
@@ -37,6 +39,14 @@ public interface Executor extends Serializable {
 	 * @throws ClassNotFoundException if there is any problem resolving classes
 	 */
 	public int execute(boolean stopOnBug) throws ClassNotFoundException;
+
+	/**
+	 * Returns the operations of the test.
+	 * If this method is invoked after the execution of the test,
+	 * each operation has the proper OperationInformation.
+	 * @return the operations of the test.
+	 */
+	public Operation[] getTest();
 
 	/**
 	 * Returns the length of the test

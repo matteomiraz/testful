@@ -30,8 +30,6 @@ public class AllTests {
 	public static Test suite() {
 		TestSuite suite = new TestSuite(AllTests.class.getName());
 
-		suite.addTest(testful.model.transformation.AllTests.suite());
-
 		//$JUnit-BEGIN$
 		suite.addTestSuite(TestClusterTestCase.class);
 		suite.addTestSuite(RepeatableTestCase.class);
@@ -43,6 +41,8 @@ public class AllTests {
 
 		suite.addTestSuite(TestReorganizerTestCase_Simple.class);
 		//$JUnit-END$
+
+		suite.addTest(testful.model.transformation.AllTests.suite());
 
 		return suite;
 	}

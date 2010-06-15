@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.model.executor;
 
 import java.io.Serializable;
@@ -90,6 +89,7 @@ public class ReflectionExecutor implements Executor {
 		return test.length;
 	}
 
+	@Override
 	public Operation[] getTest() {
 		return test;
 	}

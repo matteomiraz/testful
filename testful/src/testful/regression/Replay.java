@@ -21,7 +21,6 @@ package testful.regression;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,7 +39,6 @@ import testful.model.TestReader;
 import testful.runner.ClassFinder;
 import testful.runner.ClassFinderCaching;
 import testful.runner.ClassFinderImpl;
-import testful.runner.IRunner;
 import testful.runner.RunnerPool;
 
 /**
@@ -62,7 +60,6 @@ public class Replay extends TestReader {
 
 	private final boolean exitOnBug;
 
-	private IRunner executor;
 	private ClassFinder finder;
 
 	public static void main(String[] args) {
@@ -90,8 +87,6 @@ public class Replay extends TestReader {
 	public Replay(IConfigProject config, boolean exitOnBug) throws ClassNotFoundException {
 		this.exitOnBug = exitOnBug;
 
-		executor = RunnerPool.getRunnerPool();
-
 		try {
 			finder = new ClassFinderCaching(new ClassFinderImpl(config));
 		} catch (RemoteException e) {
@@ -102,13 +97,11 @@ public class Replay extends TestReader {
 	}
 
 	@Override
-	protected void read(String fileName, Test t) {
+	protected void read(String fileName, Test test) {
 		try {
-
 			logger.info("Replaying " + fileName);
-			Test test = new Test(t.getCluster(), t.getReferenceFactory(), t.getTest());
-			Future<Operation[]> future = executor.execute(TestExecutionManager.getContext(finder, test));
-			Operation[] operations = future.get();
+			OperationResult.insert(test.getTest());
+			Operation[] operations = TestExecutionManager.execute(finder, test);
 
 			for(Operation op : operations) {
 				OperationResult info = (OperationResult) op.getInfo(OperationResult.KEY);

@@ -1,21 +1,20 @@
 /*
  * TestFul - http://code.google.com/p/testful/
  * Copyright (C) 2010  Matteo Miraz
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 package testful.utils;
 
@@ -23,13 +22,12 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 
 /**
  * Manages a set of elements (&lt;T&gt;) with key (&lt;K&gt;). It allows one to
  * pick elements according to their key, easing certain type of operation.
- * 
  * @author matteo
  * @param <K> the type of the key
  * @param <T> the type of the element
@@ -48,7 +46,6 @@ public class ElementManager<K, T extends ElementWithKey<K>> implements Iterable<
 	 * Create an element manager using values in the given map.<br>
 	 * <b>Warning: the map will be captured and become state of the created
 	 * instance. DO NOT MODIFY THE MAP AFTER CALLING THIS CONSTRUCTOR!</b>
-	 * 
 	 * @param map the map
 	 */
 	public ElementManager(Map<K, T> map) {
@@ -57,13 +54,12 @@ public class ElementManager<K, T extends ElementWithKey<K>> implements Iterable<
 
 	/**
 	 * Create an element manager with the given elements
-	 * 
 	 * @param elems the element to put in the new element manager
 	 */
 	public ElementManager(T ... elems) {
 		map = new HashMap<K, T>(elems.length);
 
-		if(elems != null) 
+		if(elems != null)
 			for(T elem : elems)
 				put(elem);
 	}
@@ -72,7 +68,6 @@ public class ElementManager<K, T extends ElementWithKey<K>> implements Iterable<
 	 * Put an element in the element manager. If an element with the same key is
 	 * present, this method simply returns false without modifying the element
 	 * manager.
-	 * 
 	 * @param elem the element to put in the element manager
 	 * @return true if the element is inserted, false is there is already an
 	 *         element with the same key.
@@ -86,7 +81,6 @@ public class ElementManager<K, T extends ElementWithKey<K>> implements Iterable<
 	/**
 	 * Put an element in the element manager. If an element with the same key is
 	 * already present, it is removed.
-	 * 
 	 * @param elem the element to put in the element manager
 	 */
 	public void putAndReplace(T elem) {
@@ -95,7 +89,6 @@ public class ElementManager<K, T extends ElementWithKey<K>> implements Iterable<
 
 	/**
 	 * Get the element with the given key
-	 * 
 	 * @param key the key of the element to get.
 	 * @return an element
 	 */
@@ -105,7 +98,6 @@ public class ElementManager<K, T extends ElementWithKey<K>> implements Iterable<
 
 	/**
 	 * Remove the element with the given key
-	 * 
 	 * @param key the key of the element to remove
 	 * @return the removed element
 	 */
@@ -123,7 +115,6 @@ public class ElementManager<K, T extends ElementWithKey<K>> implements Iterable<
 
 	/**
 	 * Check if the element manager is empty
-	 * 
 	 * @return true if it does not contains any element
 	 */
 	public boolean isEmpty() {
@@ -132,7 +123,6 @@ public class ElementManager<K, T extends ElementWithKey<K>> implements Iterable<
 
 	/**
 	 * Returns the number of elements in this element manager
-	 * 
 	 * @return the number of elements
 	 */
 	public int size() {
@@ -164,7 +154,6 @@ public class ElementManager<K, T extends ElementWithKey<K>> implements Iterable<
 
 	/**
 	 * Get an empty iterator (i.e. an iterator without any element).
-	 * 
 	 * @param <T> the type of the iterator
 	 * @return an empty iterator
 	 */
@@ -185,7 +174,6 @@ public class ElementManager<K, T extends ElementWithKey<K>> implements Iterable<
 			public void remove() {
 				throw new UnsupportedOperationException();
 			}
-
 		};
 	}
 }

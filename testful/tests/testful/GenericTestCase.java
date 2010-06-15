@@ -33,11 +33,11 @@ import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
 import testful.model.Operation;
-import testful.model.OperationResult;
+import testful.model.OperationInformation;
+import testful.model.OperationPosition;
 import testful.model.ReferenceFactory;
 import testful.model.Test;
 import testful.model.TestCluster;
-import testful.model.TestExecutionManager;
 import testful.runner.ClassFinder;
 import testful.runner.ClassFinderCaching;
 import testful.runner.ClassFinderImpl;
@@ -52,7 +52,9 @@ import ec.util.MersenneTwisterFast;
  * @author matteo
  *
  */
-public abstract class GenericTestCase  extends TestCase {
+public abstract class GenericTestCase extends TestCase {
+
+	public static boolean PRINT = false;
 
 	public static IConfigProject getConfig() {
 		ConfigProject tmp = new ConfigProject();
@@ -87,6 +89,12 @@ public abstract class GenericTestCase  extends TestCase {
 				differentCovs = covs;
 			}
 		}
+	}
+
+	@Override
+	protected void setUp() throws Exception {
+		super.setUp();
+		getExec();
 	}
 
 	protected void checkTestFailed(Test orig, ElementManager<String, CoverageInformation> origCov, Collection<? extends Test> parts, List<ElementManager<String, CoverageInformation>> partsCov, ElementManager<String,CoverageInformation> combinedCov) throws TestFailedException {
@@ -174,15 +182,6 @@ public abstract class GenericTestCase  extends TestCase {
 		return coverage;
 	}
 
-	protected static Operation[] getOpResult(Test test) throws RemoteException, InterruptedException, ExecutionException {
-		OperationResult.insert(test.getTest());
-		Context<Operation[], TestExecutionManager> ctx = TestExecutionManager.getContext(getFinder(), test);
-		ctx.setStopOnBug(false);
-		Future<Operation[]> result = getExec().execute(ctx);
-
-		return result.get();
-	}
-
 	public static Test createRandomTest(String cut, int lenght, long seed) throws RemoteException, ClassNotFoundException, TestfulException {
 		MersenneTwisterFast random = new MersenneTwisterFast(seed);
 
@@ -202,21 +201,23 @@ public abstract class GenericTestCase  extends TestCase {
 
 
 	protected void check(Test original, Collection<? extends Test> tests, Operation[][] expected) throws Exception {
-		//System.out.println("original:");
-		//for(Operation o : original.getTest()) {
-		//	final OperationInformation info = o.getInfo(OperationPosition.KEY);
-		//	System.out.println((info!=null?info:"") + "\t" + o);
-		//}
-		//System.out.println("---");
+		if(PRINT) {
+			System.out.println("original:");
+			for(Operation o : original.getTest()) {
+				final OperationInformation info = o.getInfo(OperationPosition.KEY);
+				System.out.println((info!=null?info:"") + "\t" + o);
+			}
+			System.out.println("---");
 
-		//System.out.println("Modified: " + tests.size());
-		//for(Test t1 : tests) {
-		//	for(Operation o : t1.getTest()) {
-		//		final OperationInformation info = o.getInfo(OperationPosition.KEY);
-		//		System.out.println((info!=null?info:"") + "\t" + o);
-		//	}
-		//	System.out.println("---");
-		//}
+			System.out.println("Modified: " + tests.size());
+			for(Test t1 : tests) {
+				for(Operation o : t1.getTest()) {
+					final OperationInformation info = o.getInfo(OperationPosition.KEY);
+					System.out.println((info!=null?info:"") + "\t" + o);
+				}
+				System.out.println("---");
+			}
+		}
 
 		assertEquals("Wrong number of results", expected.length, tests.size());
 

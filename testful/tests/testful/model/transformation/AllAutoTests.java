@@ -32,6 +32,7 @@ public class AllAutoTests {
 	public static Test suite() {
 		TestSuite suite = new TestSuite(AllAutoTests.class.getName());
 		//$JUnit-BEGIN$
+		suite.addTestSuite(DynamicTransformationAutoTestCase.class);
 		suite.addTestSuite(Splitter_splitAndMinimizeAutoTestCase.class);
 		suite.addTestSuite(Splitter_splitAutoTestCase.class);
 		suite.addTestSuite(RemoveInvalidOperationsStaticAutoTestCase.class);

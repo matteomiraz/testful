@@ -34,7 +34,8 @@ public class TestExecutionManagerFaultyTestCase extends TestCoverageFaultTestCas
 				new Invoke(null, cuts[0], a, new Reference[] { objects[0] } )
 		});
 
-		Operation[] testOperations = getOpResult(test);
+		OperationResult.insert(test.getTest());
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test);
 		assertEquals(3, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -52,7 +53,8 @@ public class TestExecutionManagerFaultyTestCase extends TestCoverageFaultTestCas
 				new Invoke(null, cuts[0], a, new Reference[] { objects[0] } )
 		});
 
-		Operation[] testOperations = getOpResult(test);
+		OperationResult.insert(test.getTest());
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -69,7 +71,8 @@ public class TestExecutionManagerFaultyTestCase extends TestCoverageFaultTestCas
 				new Invoke(null, cuts[0], a1, new Reference[] { objects[0] } )
 		});
 
-		Operation[] testOperations = getOpResult(test);
+		OperationResult.insert(test.getTest());
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test);
 		assertEquals(3, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -87,7 +90,8 @@ public class TestExecutionManagerFaultyTestCase extends TestCoverageFaultTestCas
 				new Invoke(null, cuts[0], a1, new Reference[] { objects[0] } )
 		});
 
-		Operation[] testOperations = getOpResult(test);
+		OperationResult.insert(test.getTest());
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -104,7 +108,8 @@ public class TestExecutionManagerFaultyTestCase extends TestCoverageFaultTestCas
 				new Invoke(null, cuts[0], a2, new Reference[] { objects[0] } )
 		});
 
-		Operation[] testOperations = getOpResult(test);
+		OperationResult.insert(test.getTest());
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test);
 		assertEquals(3, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -122,7 +127,8 @@ public class TestExecutionManagerFaultyTestCase extends TestCoverageFaultTestCas
 				new Invoke(null, cuts[0], a2, new Reference[] { objects[0] } )
 		});
 
-		Operation[] testOperations = getOpResult(test);
+		OperationResult.insert(test.getTest());
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -138,7 +144,8 @@ public class TestExecutionManagerFaultyTestCase extends TestCoverageFaultTestCas
 				new Invoke(null, cuts[0], b , new Reference[] { } )
 		});
 
-		Operation[] testOperations = getOpResult(test);
+		OperationResult.insert(test.getTest());
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -154,7 +161,8 @@ public class TestExecutionManagerFaultyTestCase extends TestCoverageFaultTestCas
 				new Invoke(null, cuts[0], b1, new Reference[] { } )
 		});
 
-		Operation[] testOperations = getOpResult(test);
+		OperationResult.insert(test.getTest());
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -170,7 +178,8 @@ public class TestExecutionManagerFaultyTestCase extends TestCoverageFaultTestCas
 				new Invoke(null, cuts[0], c , new Reference[] { } )
 		});
 
-		Operation[] testOperations = getOpResult(test);
+		OperationResult.insert(test.getTest());
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -186,7 +195,8 @@ public class TestExecutionManagerFaultyTestCase extends TestCoverageFaultTestCas
 				new Invoke(null, cuts[0], c1, new Reference[] { } )
 		});
 
-		Operation[] testOperations = getOpResult(test);
+		OperationResult.insert(test.getTest());
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -202,7 +212,8 @@ public class TestExecutionManagerFaultyTestCase extends TestCoverageFaultTestCas
 				new Invoke(null, cuts[0], c2, new Reference[] { } )
 		});
 
-		Operation[] testOperations = getOpResult(test);
+		OperationResult.insert(test.getTest());
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -218,7 +229,8 @@ public class TestExecutionManagerFaultyTestCase extends TestCoverageFaultTestCas
 				new Invoke(null, cuts[0], d , new Reference[] { } )
 		});
 
-		Operation[] testOperations = getOpResult(test);
+		OperationResult.insert(test.getTest());
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -234,7 +246,8 @@ public class TestExecutionManagerFaultyTestCase extends TestCoverageFaultTestCas
 				new Invoke(null, cuts[0], e , new Reference[] { } )
 		});
 
-		Operation[] testOperations = getOpResult(test);
+		OperationResult.insert(test.getTest());
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -250,7 +263,8 @@ public class TestExecutionManagerFaultyTestCase extends TestCoverageFaultTestCas
 				new Invoke(null, cuts[0], e1, new Reference[] { } )
 		});
 
-		Operation[] testOperations = getOpResult(test);
+		OperationResult.insert(test.getTest());
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);

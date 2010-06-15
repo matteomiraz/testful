@@ -42,6 +42,7 @@ import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
 import testful.model.Operation;
+import testful.model.OperationResult;
 import testful.model.OptimalTestCreator;
 import testful.model.Test;
 import testful.model.TestCoverage;
@@ -105,7 +106,8 @@ public class TestSuiteReducer {
 			logger.finer("Original test:\n"+test);
 
 		try {
-			Operation[] ops = TestExecutionManager.getOpStatus(finder, test);
+			OperationResult.insert(test.getTest());
+			Operation[] ops = TestExecutionManager.execute(finder, test);
 			ops = simplifier.process(ops);
 			test = new Test(test.getCluster(), test.getReferenceFactory(), ops);
 			if(logger.isLoggable(Level.FINER))
