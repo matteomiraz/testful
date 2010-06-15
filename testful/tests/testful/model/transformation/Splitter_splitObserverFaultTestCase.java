@@ -20,6 +20,7 @@ package testful.model.transformation;
 
 import java.util.List;
 
+import testful.GenericTestCase;
 import testful.model.CreateObject;
 import testful.model.Invoke;
 import testful.model.Operation;
@@ -27,25 +28,22 @@ import testful.model.OperationResult;
 import testful.model.Reference;
 import testful.model.Test;
 import testful.model.TestExecutionManager;
-import testful.testCut.TestCoverageFaultTestCase;
+import testful.testCut.TestCoverageFaultCUT;
 
 /**
  * @author matteo
  *
  */
-public class Splitter_splitObserverFaultTestCase extends TestCoverageFaultTestCase {
+public class Splitter_splitObserverFaultTestCase extends GenericTestCase {
 
-
-	//	  java_lang_Integer_2 = (int) dummy_Simple_3.oStatus();
-	//	  java_lang_Object_2 = new dummy.Simple();
-
-	public void test01() throws Exception {
-		Test test = new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(objects[3], oCns, new Reference[] { }),	//1
-				new CreateObject(cuts[1], cCns, new Reference[] { }),		//2
-				new Invoke(null, cuts[1], c, new Reference[] { }),			//3 -> faulty
-				new CreateObject(cuts[1], cCns, new Reference[] { }),		//4
-				new Invoke(null, cuts[1], a, new Reference[] { objects[3]})	//5
+	public void testFault() throws Exception {
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		Test test = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.objects[3], cut.oCns, new Reference[] { }),		//1
+				new CreateObject(cut.cuts[1], cut.cCns, new Reference[] { }),			//2
+				new Invoke(null, cut.cuts[1], cut.c, new Reference[] { }),				//3 -> faulty
+				new CreateObject(cut.cuts[1], cut.cCns, new Reference[] { }),			//4
+				new Invoke(null, cut.cuts[1], cut.a, new Reference[] { cut.objects[3]})	//5
 		});
 
 		OperationResult.insert(test.getTest());
@@ -57,11 +55,11 @@ public class Splitter_splitObserverFaultTestCase extends TestCoverageFaultTestCa
 
 		check(test, tests, new Operation[][] {
 				{
-					new CreateObject(cuts[1], cCns, new Reference[] { }),		//2
-					new Invoke(null, cuts[1], c, new Reference[] { }),			//3
+					new CreateObject(cut.cuts[1], cut.cCns, new Reference[] { }),			//2
+					new Invoke(null, cut.cuts[1], cut.c, new Reference[] { }),				//3
 				}, {
-					new CreateObject(cuts[1], cCns, new Reference[] { }),		//4
-					new Invoke(null, cuts[1], a, new Reference[] { objects[3]})	//5
+					new CreateObject(cut.cuts[1], cut.cCns, new Reference[] { }),			//4
+					new Invoke(null, cut.cuts[1], cut.a, new Reference[] { cut.objects[3]})	//5
 				}
 		});
 	}

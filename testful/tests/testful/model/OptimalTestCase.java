@@ -18,20 +18,22 @@
 
 package testful.model;
 
+import testful.GenericTestCase;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
-import testful.testCut.DummySimpleTestCase;
+import testful.testCut.DummySimpleCUT;
 
-public class OptimalTestCase extends DummySimpleTestCase {
+public class OptimalTestCase extends GenericTestCase {
 
-	public void testOptimal1a() throws Exception {
-		Test t1 = new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cns, new Reference[] { })
+	public void testDummySimpleCUT1() throws Exception {
+		DummySimpleCUT cut = new DummySimpleCUT();
+		Test t1 = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { })
 		});
 		TestCoverage tc1 = new TestCoverage(t1, getCoverage(t1));
 
-		Test t2 = new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cns, new Reference[] { }),
-				new Invoke(null, cuts[0], mInc, new Reference[] { })
+		Test t2 = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.mInc, new Reference[] { })
 		});
 		TestCoverage tc2 = new TestCoverage(t2, getCoverage(t2));
 
@@ -41,11 +43,6 @@ public class OptimalTestCase extends DummySimpleTestCase {
 		assertEquals(0, opt.get().size());
 
 		opt.update(tc1);
-
-		// StringBuilder msg = new StringBuilder();
-		// for (Test t : opt.get())
-		//   printTest(msg, "", t, null);
-		// System.out.println(msg.toString());
 
 		assertEquals(1, opt.get().size());
 		assertEquals(tc1, opt.get().iterator().next());

@@ -21,6 +21,7 @@ package testful.regression;
 import java.util.Arrays;
 import java.util.List;
 
+import testful.GenericTestCase;
 import testful.model.CreateObject;
 import testful.model.Invoke;
 import testful.model.Operation;
@@ -28,12 +29,12 @@ import testful.model.OperationResult;
 import testful.model.Reference;
 import testful.model.Test;
 import testful.model.TestExecutionManager;
-import testful.testCut.DummySimpleTestCase;
+import testful.testCut.DummySimpleCUT;
 
 /**
  * @author matteo
  */
-public class TestSimpifierDummySimpleTestCase extends DummySimpleTestCase {
+public class TestSimpifierTestCase extends GenericTestCase {
 
 	protected List<Test> perform(Test test) throws Exception {
 		OperationResult.insert(test.getTest());
@@ -45,17 +46,17 @@ public class TestSimpifierDummySimpleTestCase extends DummySimpleTestCase {
 		return Arrays.asList(r);
 	}
 
-	public void testSimple1() throws Exception {
-
-		Test test = new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cns, new Reference[] { }),
-				new Invoke(null, cuts[0], mInc, new Reference[] { })
+	public void testSimpleDummy1() throws Exception {
+		DummySimpleCUT cut = new DummySimpleCUT();
+		Test test = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.mInc, new Reference[] { })
 		});
 
 		Operation[][] expected = {
 				{
-					new CreateObject(cuts[0], cns, new Reference[] { }),
-					new Invoke(null, cuts[0], mInc, new Reference[] { })
+					new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+					new Invoke(null, cut.cuts[0], cut.mInc, new Reference[] { })
 				}
 		};
 

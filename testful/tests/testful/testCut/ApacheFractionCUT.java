@@ -18,7 +18,7 @@
 
 package testful.testCut;
 
-import testful.SingleClassTestCase;
+import static junit.framework.Assert.assertNotNull;
 import testful.model.Clazz;
 import testful.model.Constructorz;
 import testful.model.Methodz;
@@ -28,31 +28,23 @@ import testful.model.Reference;
  * Stub for the apache.Fraction class
  * @author matteo
  */
-public class ApacheFractionTestCase extends SingleClassTestCase {
-	protected Reference[] ints, doubles;
+public class ApacheFractionCUT extends SingleTestCUT {
+	public final Reference[] ints, doubles;
 
-	protected Constructorz cns_double_int;
+	public final Constructorz cns_double_int;
 
-	protected Methodz divide_Fraction;
+	public final Methodz divide_Fraction;
 
-	/* (non-Javadoc)
-	 * @see testful.SingleClassTestCase#getClassUnderTest()
-	 */
-	@Override
-	protected String getClassUnderTest() {
-		return "apache.Fraction";
-	}
-
-	@Override
-	protected void setUp() throws Exception {
-		super.setUp();
+	public ApacheFractionCUT() throws Exception {
+		super("apache.Fraction");
 
 		Clazz iClazz = null;
 		Clazz dClazz = null;
-		Clazz[] cl = cluster.getCluster();
-		for(Clazz clazz : cl) {
-			if("java.lang.Integer".equals(clazz.getClassName())) iClazz = clazz;
-			if("java.lang.Double".equals(clazz.getClassName())) dClazz = clazz;
+		for (Clazz clazz : cluster.getCluster()) {
+			if ("java.lang.Integer".equals(clazz.getClassName()))
+				iClazz = clazz;
+			if ("java.lang.Double".equals(clazz.getClassName()))
+				dClazz = clazz;
 		}
 		assertNotNull(iClazz);
 		assertNotNull(dClazz);
@@ -60,32 +52,20 @@ public class ApacheFractionTestCase extends SingleClassTestCase {
 		ints = refFactory.getReferences(iClazz);
 		doubles = refFactory.getReferences(dClazz);
 
-		cns_double_int = null;
+		Constructorz _cns_double_int = null;
 		for (Constructorz cns : cut.getConstructors()) {
-			if(checkParameters(cns.getParameterTypes(), dClazz, iClazz)) cns_double_int = cns;
+			if (checkParameters(cns.getParameterTypes(), dClazz, iClazz))
+				_cns_double_int = cns;
 		}
-		assertNotNull(cns_double_int);
+		assertNotNull(_cns_double_int);
+		cns_double_int = _cns_double_int;
 
-		divide_Fraction = null;
-		for(Methodz m : cut.getMethods()) {
-			if(checkMethod(m, "divide", cut)) divide_Fraction = m;
+		Methodz _divide_Fraction = null;
+		for (Methodz m : cut.getMethods()) {
+			if (checkMethod(m, "divide", cut))
+				_divide_Fraction = m;
 		}
-		assertNotNull(divide_Fraction);
-	}
-
-	@Override
-	protected void tearDown() throws Exception {
-		super.tearDown();
-
-		cluster = null;
-		refFactory = null;
-
-		cuts = null;
-		ints = null;
-		doubles = null;
-
-		cns_double_int = null;
-
-		divide_Fraction = null;
+		assertNotNull(_divide_Fraction);
+		divide_Fraction = _divide_Fraction;
 	}
 }

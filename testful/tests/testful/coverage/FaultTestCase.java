@@ -18,25 +18,28 @@
 
 package testful.coverage;
 
+import testful.GenericTestCase;
 import testful.coverage.fault.FaultsCoverage;
 import testful.model.CreateObject;
 import testful.model.Invoke;
 import testful.model.Operation;
 import testful.model.Reference;
 import testful.model.Test;
+import testful.testCut.TestCoverageFaultCUT;
 import testful.utils.ElementManager;
 
 /**
  * Test for the fault detection functionality
  * @author matteo
  */
-public class FaultTestCase extends testful.testCut.TestCoverageFaultTestCase {
+public class FaultTestCase extends GenericTestCase {
 
 	public void testA() throws Exception {
-		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(objects[0], oCns, new Reference[] { }),
-				new CreateObject(cuts[0], cCns, new Reference[] { }),
-				new Invoke(null, cuts[0], a, new Reference[] { objects[0] } )
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.objects[0], cut.oCns, new Reference[] { }),
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.a, new Reference[] { cut.objects[0] } )
 		}));
 
 		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
@@ -44,9 +47,10 @@ public class FaultTestCase extends testful.testCut.TestCoverageFaultTestCase {
 	}
 
 	public void testANull() throws Exception {
-		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cCns, new Reference[] { }),
-				new Invoke(null, cuts[0], a, new Reference[] { objects[0] } )
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.a, new Reference[] { cut.objects[0] } )
 		}));
 
 		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
@@ -54,10 +58,11 @@ public class FaultTestCase extends testful.testCut.TestCoverageFaultTestCase {
 	}
 
 	public void testA1() throws Exception {
-		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(objects[0], oCns, new Reference[] { }),
-				new CreateObject(cuts[0], cCns, new Reference[] { }),
-				new Invoke(null, cuts[0], a1, new Reference[] { objects[0] } )
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.objects[0], cut.oCns, new Reference[] { }),
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.a1, new Reference[] { cut.objects[0] } )
 		}));
 
 		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
@@ -66,9 +71,10 @@ public class FaultTestCase extends testful.testCut.TestCoverageFaultTestCase {
 	}
 
 	public void testA1Null() throws Exception {
-		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cCns, new Reference[] { }),
-				new Invoke(null, cuts[0], a1, new Reference[] { objects[0] } )
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.a1, new Reference[] { cut.objects[0] } )
 		}));
 
 		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
@@ -76,10 +82,11 @@ public class FaultTestCase extends testful.testCut.TestCoverageFaultTestCase {
 	}
 
 	public void testA2() throws Exception {
-		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(objects[0], oCns, new Reference[] { }),
-				new CreateObject(cuts[0], cCns, new Reference[] { }),
-				new Invoke(null, cuts[0], a2, new Reference[] { objects[0] } )
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.objects[0], cut.oCns, new Reference[] { }),
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.a2, new Reference[] { cut.objects[0] } )
 		}));
 
 
@@ -88,9 +95,10 @@ public class FaultTestCase extends testful.testCut.TestCoverageFaultTestCase {
 	}
 
 	public void testA2Null() throws Exception {
-		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cCns, new Reference[] { }),
-				new Invoke(null, cuts[0], a2, new Reference[] { objects[0] } )
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.a2, new Reference[] { cut.objects[0] } )
 		}));
 
 		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
@@ -98,9 +106,10 @@ public class FaultTestCase extends testful.testCut.TestCoverageFaultTestCase {
 	}
 
 	public void testB() throws Exception {
-		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cCns, new Reference[] { }),
-				new Invoke(null, cuts[0], b , new Reference[] { } )
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.b , new Reference[] { } )
 		}));
 
 		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
@@ -109,9 +118,10 @@ public class FaultTestCase extends testful.testCut.TestCoverageFaultTestCase {
 	}
 
 	public void testB1() throws Exception {
-		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cCns, new Reference[] { }),
-				new Invoke(null, cuts[0], b1, new Reference[] { } )
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.b1, new Reference[] { } )
 		}));
 
 		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
@@ -119,9 +129,10 @@ public class FaultTestCase extends testful.testCut.TestCoverageFaultTestCase {
 	}
 
 	public void testC() throws Exception {
-		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cCns, new Reference[] { }),
-				new Invoke(null, cuts[0], c , new Reference[] { } )
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.c , new Reference[] { } )
 		}));
 
 		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
@@ -130,9 +141,10 @@ public class FaultTestCase extends testful.testCut.TestCoverageFaultTestCase {
 	}
 
 	public void testC1() throws Exception {
-		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cCns, new Reference[] { }),
-				new Invoke(null, cuts[0], c1, new Reference[] { } )
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.c1, new Reference[] { } )
 		}));
 
 		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
@@ -140,9 +152,10 @@ public class FaultTestCase extends testful.testCut.TestCoverageFaultTestCase {
 	}
 
 	public void testC2() throws Exception {
-		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cCns, new Reference[] { }),
-				new Invoke(null, cuts[0], c2, new Reference[] { } )
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.c2, new Reference[] { } )
 		}));
 
 		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
@@ -150,9 +163,10 @@ public class FaultTestCase extends testful.testCut.TestCoverageFaultTestCase {
 	}
 
 	public void testD() throws Exception {
-		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cCns, new Reference[] { }),
-				new Invoke(null, cuts[0], d , new Reference[] { } )
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.d , new Reference[] { } )
 		}));
 
 		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
@@ -160,9 +174,10 @@ public class FaultTestCase extends testful.testCut.TestCoverageFaultTestCase {
 	}
 
 	public void testE() throws Exception {
-		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cCns, new Reference[] { }),
-				new Invoke(null, cuts[0], e , new Reference[] { } )
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.e , new Reference[] { } )
 		}));
 
 		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
@@ -171,9 +186,10 @@ public class FaultTestCase extends testful.testCut.TestCoverageFaultTestCase {
 	}
 
 	public void testE1() throws Exception {
-		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cCns, new Reference[] { }),
-				new Invoke(null, cuts[0], e1, new Reference[] { } )
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.e1, new Reference[] { } )
 		}));
 
 		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);

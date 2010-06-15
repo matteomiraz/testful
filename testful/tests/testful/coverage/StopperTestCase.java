@@ -18,6 +18,7 @@
 
 package testful.coverage;
 
+import testful.GenericTestCase;
 import testful.coverage.fault.FaultsCoverage;
 import testful.coverage.stopper.TestStoppedException;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
@@ -26,18 +27,20 @@ import testful.model.Invoke;
 import testful.model.Operation;
 import testful.model.Reference;
 import testful.model.Test;
+import testful.testCut.TestCoverageStoppedCUT;
 import testful.utils.ElementManager;
 
 /**
  * Test for the stopper functionality
  * @author matteo
  */
-public class StopperTestCase extends testful.testCut.TestCoverageStoppedTestCase {
+public class StopperTestCase extends GenericTestCase {
 
 	public void testLongMethod1() throws Exception {
-		Test t = new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cns, new Reference[] { }),
-				new Invoke(null, cuts[0], longMethod1, new Reference[] { } )
+		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.longMethod1, new Reference[] { } )
 		});
 
 		ElementManager<String, CoverageInformation> covs = getCoverage(t);
@@ -50,11 +53,12 @@ public class StopperTestCase extends testful.testCut.TestCoverageStoppedTestCase
 	}
 
 	public void testLongMethod1b() throws Exception {
-		Test t = new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cns, new Reference[] { }),
-				new Invoke(null, cuts[0], longMethod1, new Reference[] { } ),
-				new CreateObject(cuts[0], cns, new Reference[] { }),
-				new Invoke(null, cuts[0], execute, new Reference[] { })
+		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.longMethod1, new Reference[] { } ),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.execute, new Reference[] { })
 		});
 
 		ElementManager<String, CoverageInformation> covs = getCoverage(t);
@@ -67,9 +71,10 @@ public class StopperTestCase extends testful.testCut.TestCoverageStoppedTestCase
 	}
 
 	public void testLongMethod2() throws Exception {
-		Test t = new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cns, new Reference[] { }),
-				new Invoke(null, cuts[0], longMethod2, new Reference[] { } )
+		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.longMethod2, new Reference[] { } )
 		});
 
 		ElementManager<String, CoverageInformation> covs = getCoverage(t);
@@ -82,11 +87,12 @@ public class StopperTestCase extends testful.testCut.TestCoverageStoppedTestCase
 	}
 
 	public void testLongMethod2b() throws Exception {
-		Test t = new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cns, new Reference[] { }),
-				new Invoke(null, cuts[0], longMethod2, new Reference[] { } ),
-				new CreateObject(cuts[0], cns, new Reference[] { }),
-				new Invoke(null, cuts[0], execute, new Reference[] { })
+		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.longMethod2, new Reference[] { } ),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.execute, new Reference[] { })
 		});
 
 		ElementManager<String, CoverageInformation> covs = getCoverage(t);
@@ -99,9 +105,10 @@ public class StopperTestCase extends testful.testCut.TestCoverageStoppedTestCase
 	}
 
 	public void testLongMethod3() throws Exception {
-		Test t = new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cns, new Reference[] { }),
-				new Invoke(null, cuts[0], longMethod3, new Reference[] { } )
+		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.longMethod3, new Reference[] { } )
 		});
 
 		ElementManager<String, CoverageInformation> covs = getCoverage(t);
@@ -114,11 +121,12 @@ public class StopperTestCase extends testful.testCut.TestCoverageStoppedTestCase
 	}
 
 	public void testLongMethod3b() throws Exception {
-		Test t = new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cns, new Reference[] { }),
-				new Invoke(null, cuts[0], longMethod3, new Reference[] { } ),
-				new CreateObject(cuts[0], cns, new Reference[] { }),
-				new Invoke(null, cuts[0], execute, new Reference[] { })
+		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.longMethod3, new Reference[] { } ),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.execute, new Reference[] { })
 		});
 
 		ElementManager<String, CoverageInformation> covs = getCoverage(t);
@@ -131,9 +139,10 @@ public class StopperTestCase extends testful.testCut.TestCoverageStoppedTestCase
 	}
 
 	public void testLongMethod4() throws Exception {
-		Test t = new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cns, new Reference[] { }),
-				new Invoke(null, cuts[0], longMethod4, new Reference[] { } )
+		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.longMethod4, new Reference[] { } )
 		});
 
 		ElementManager<String, CoverageInformation> covs = getCoverage(t);
@@ -146,11 +155,12 @@ public class StopperTestCase extends testful.testCut.TestCoverageStoppedTestCase
 	}
 
 	public void testLongMethod4b() throws Exception {
-		Test t = new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cns, new Reference[] { }),
-				new Invoke(null, cuts[0], longMethod4, new Reference[] { } ),
-				new CreateObject(cuts[0], cns, new Reference[] { }),
-				new Invoke(null, cuts[0], execute, new Reference[] { })
+		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.longMethod4, new Reference[] { } ),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.execute, new Reference[] { })
 		});
 
 		ElementManager<String, CoverageInformation> covs = getCoverage(t);
@@ -163,9 +173,10 @@ public class StopperTestCase extends testful.testCut.TestCoverageStoppedTestCase
 	}
 
 	public void testLongMethod5() throws Exception {
-		Test t = new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cns, new Reference[] { }),
-				new Invoke(null, cuts[0], longMethod5, new Reference[] { } )
+		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.longMethod5, new Reference[] { } )
 		});
 
 		ElementManager<String, CoverageInformation> covs = getCoverage(t);
@@ -178,11 +189,12 @@ public class StopperTestCase extends testful.testCut.TestCoverageStoppedTestCase
 	}
 
 	public void testLongMethod5b() throws Exception {
-		Test t = new Test(cluster, refFactory, new Operation[] {
-				new CreateObject(cuts[0], cns, new Reference[] { }),
-				new Invoke(null, cuts[0], longMethod5, new Reference[] { } ),
-				new CreateObject(cuts[0], cns, new Reference[] { }),
-				new Invoke(null, cuts[0], execute, new Reference[] { })
+		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.longMethod5, new Reference[] { } ),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.execute, new Reference[] { })
 		});
 
 		ElementManager<String, CoverageInformation> covs = getCoverage(t);

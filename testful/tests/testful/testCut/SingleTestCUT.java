@@ -16,8 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package testful;
+package testful.testCut;
 
+import junit.framework.Assert;
+import testful.ConfigCut;
+import testful.GenericTestCase;
 import testful.model.Clazz;
 import testful.model.Methodz;
 import testful.model.PrimitiveClazz;
@@ -30,49 +33,33 @@ import testful.runner.TestfulClassLoader;
  * TestCase tailored to a particular testCut class.
  * @author matteo
  */
-public abstract class SingleClassTestCase extends GenericTestCase {
-
-	/** Returns the name of the class under test */
-	protected abstract String getClassUnderTest();
+public abstract class SingleTestCUT {
 
 	/** The test cluster */
-	protected TestCluster cluster;
+	public final TestCluster cluster;
 
 	/** The reference factory*/
-	protected ReferenceFactory refFactory;
+	public final ReferenceFactory refFactory;
 
 	/** The class under test */
-	protected Clazz cut;
+	public final Clazz cut;
 
 	/** Contains references to the class under test */
-	protected Reference[] cuts;
+	public final Reference[] cuts;
 
-	/* (non-Javadoc)
-	 * @see junit.framework.TestCase#setUp()
-	 */
-	@Override
-	protected void setUp() throws Exception {
-		super.setUp();
+	protected SingleTestCUT(String cutName) throws Exception {
+		try {
+			ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
+			config.setCut(cutName);
+			cluster = new TestCluster(new TestfulClassLoader(GenericTestCase.getFinder()), config);
+			refFactory = new ReferenceFactory(cluster, 4, 4);
 
-		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
-		config.setCut(getClassUnderTest());
-		cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
-		refFactory = new ReferenceFactory(cluster, 4, 4);
-
-		cut = cluster.getCut();
-		cuts = refFactory.getReferences(cut);
-	}
-
-	/* (non-Javadoc)
-	 * @see junit.framework.TestCase#tearDown()
-	 */
-	@Override
-	protected void tearDown() throws Exception {
-		super.tearDown();
-
-		cluster = null;
-		refFactory = null;
-		cut = null;
+			cut = cluster.getCut();
+			cuts = refFactory.getReferences(cut);
+		} catch (Exception e) {
+			Assert.fail(e.getMessage());
+			throw e;
+		}
 	}
 
 	protected boolean checkMethod(Methodz m, String name, Clazz ... aParams) {

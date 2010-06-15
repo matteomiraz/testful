@@ -33,16 +33,17 @@ public class AllAutoTests {
 		TestSuite suite = new TestSuite(AllAutoTests.class.getName());
 		//$JUnit-BEGIN$
 		suite.addTestSuite(DynamicTransformationAutoTestCase.class);
-		suite.addTestSuite(Splitter_splitAndMinimizeAutoTestCase.class);
-		suite.addTestSuite(Splitter_splitAutoTestCase.class);
+		suite.addTestSuite(ReferenceSorterAutoTestCase.class);
 		suite.addTestSuite(RemoveInvalidOperationsStaticAutoTestCase.class);
+		suite.addTestSuite(TestReferenceSorterAutoTestCase.class);
+		suite.addTestSuite(Splitter_splitObserverAutoTestCase.class);
+		suite.addTest(AllTests.suite());
+		suite.addTestSuite(Splitter_splitAutoTestCase.class);
+		suite.addTestSuite(Splitter_splitAndMinimizeAutoTestCase.class);
+		suite.addTestSuite(TestSplitter_splitMergeAutoTestCase.class);
 		suite.addTestSuite(RemoveUselessDefsAutoTestCase.class);
 		suite.addTestSuite(TestReorganizerAutoTestCase.class);
-		suite.addTestSuite(TestSplitter_splitMergeAutoTestCase.class);
 		suite.addTestSuite(RunnerCachingPrepareAutoTestCase.class);
-		suite.addTestSuite(Splitter_splitObserverAutoTestCase.class);
-		suite.addTestSuite(ReferenceSorterAutoTestCase.class);
-		suite.addTestSuite(TestReferenceSorterAutoTestCase.class);
 		//$JUnit-END$
 		return suite;
 	}

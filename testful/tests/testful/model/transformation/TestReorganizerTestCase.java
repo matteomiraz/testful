@@ -16,31 +16,37 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package testful.model;
+package testful.model.transformation;
 
+import testful.GenericTestCase;
 import testful.coverage.CoverageInformation;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
 import testful.coverage.whiteBox.CoverageBranch;
+import testful.model.CreateObject;
+import testful.model.Invoke;
+import testful.model.Operation;
+import testful.model.Reference;
+import testful.model.Test;
 import testful.model.transformation.Reorganizer;
-import testful.testCut.DummySimpleTestCase;
+import testful.testCut.DummySimpleCUT;
 import testful.utils.ElementManager;
 
 /**
  * Tests for the TestReorganizer class
  * @author matteo
  */
-public class TestReorganizerTestCase_Simple extends DummySimpleTestCase {
+public class TestReorganizerTestCase extends GenericTestCase {
 
-	public void test01() throws Exception {
-
-		Test orig = new Test(cluster, refFactory, new Operation[] {
-				new Invoke(ints[1], cuts[3], oStatus, new Reference[]{ }),
-				new CreateObject(cuts[3], cns, new Reference[] { }),
-				new Invoke(ints[0], cuts[3], oAbs, new Reference[]{ }),
-				new CreateObject(objects[3], oCns, new Reference[]{ }),
-				new CreateObject(cuts[2], cns, new Reference[]{ }),
-				new Invoke(null, cuts[2], compare, new Reference[] { objects[3] }),
-				new Invoke(ints[2], cuts[2], oAbs, new Reference[] { })
+	public void testDummy01() throws Exception {
+		DummySimpleCUT cut = new DummySimpleCUT();
+		Test orig = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new Invoke(cut.ints[1], cut.cuts[3], cut.oStatus, new Reference[]{ }),
+				new CreateObject(cut.cuts[3], cut.cns, new Reference[] { }),
+				new Invoke(cut.ints[0], cut.cuts[3], cut.oAbs, new Reference[]{ }),
+				new CreateObject(cut.objects[3], cut.oCns, new Reference[]{ }),
+				new CreateObject(cut.cuts[2], cut.cns, new Reference[]{ }),
+				new Invoke(null, cut.cuts[2], cut.compare, new Reference[] { cut.objects[3] }),
+				new Invoke(cut.ints[2], cut.cuts[2], cut.oAbs, new Reference[] { })
 		});
 
 		Test modified = Reorganizer.singleton.perform(orig);
@@ -51,13 +57,13 @@ public class TestReorganizerTestCase_Simple extends DummySimpleTestCase {
 		assertEquals(4.0f, cov.get(CoverageBranch.KEY).getQuality());
 
 		Operation[] exp = new Operation[]{
-				new CreateObject(cuts[2], cns, new Reference[]{ }),
-				new CreateObject(objects[3], oCns, new Reference[]{ }),
-				new Invoke(ints[1], cuts[3], oStatus, new Reference[]{ }),
-				new CreateObject(cuts[3], cns, new Reference[] { }),
-				new Invoke(null, cuts[2], compare, new Reference[] { objects[3] }),
-				new Invoke(ints[2], cuts[2], oAbs, new Reference[] { }),
-				new Invoke(ints[0], cuts[3], oAbs, new Reference[]{ })
+				new CreateObject(cut.cuts[2], cut.cns, new Reference[]{ }),
+				new CreateObject(cut.objects[3], cut.oCns, new Reference[]{ }),
+				new Invoke(cut.ints[1], cut.cuts[3], cut.oStatus, new Reference[]{ }),
+				new CreateObject(cut.cuts[3], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[2], cut.compare, new Reference[] { cut.objects[3] }),
+				new Invoke(cut.ints[2], cut.cuts[2], cut.oAbs, new Reference[] { }),
+				new Invoke(cut.ints[0], cut.cuts[3], cut.oAbs, new Reference[]{ })
 		};
 
 		assertEquals(exp.length, modified.getTest().length);

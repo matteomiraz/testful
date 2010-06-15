@@ -19,16 +19,17 @@
 package testful.model;
 
 import testful.GenericTestCase;
-import testful.testCut.ApacheFractionTestCase;
+import testful.testCut.ApacheFractionCUT;
 
 /**
  * Ensures that Testful has a repeatable behavior
  * @author matteo
  */
-public class RepeatableTestCase extends ApacheFractionTestCase {
+public class RepeatableTestCase extends GenericTestCase {
 
-	public void testCluster() throws Exception {
-		String[] classes = cluster.getClasses();
+	public void testClusterApache() throws Exception {
+		ApacheFractionCUT cut = new ApacheFractionCUT();
+		String[] classes = cut.cluster.getClasses();
 
 		assertEquals(4, classes.length);
 		assertEquals("apache.Fraction", classes[0]);
@@ -38,7 +39,8 @@ public class RepeatableTestCase extends ApacheFractionTestCase {
 	}
 
 	public void testReferenceFactory() throws Exception {
-		Reference[] refs = refFactory.getReferences();
+		ApacheFractionCUT cut = new ApacheFractionCUT();
+		Reference[] refs = cut.refFactory.getReferences();
 
 		assertEquals(0, refs[0].getId());
 		assertEquals(0, refs[0].getPos());
@@ -133,11 +135,12 @@ public class RepeatableTestCase extends ApacheFractionTestCase {
 
 
 	public void testHashCodeFast() throws Exception {
-		Test t = new Test(cluster, refFactory, new Operation[] {
-				new AssignPrimitive(doubles[3], -0.4445457912686642),
-				new AssignPrimitive(ints[2], 5),
-				new CreateObject(cuts[0], cns_double_int, new Reference[] { doubles[3], ints[2] }),
-				new Invoke(null, cuts[0], divide_Fraction, new Reference[] { cuts[0] } )
+		ApacheFractionCUT cut = new ApacheFractionCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.doubles[3], -0.4445457912686642),
+				new AssignPrimitive(cut.ints[2], 5),
+				new CreateObject(cut.cuts[0], cut.cns_double_int, new Reference[] { cut.doubles[3], cut.ints[2] }),
+				new Invoke(null, cut.cuts[0], cut.divide_Fraction, new Reference[] { cut.cuts[0] } )
 		});
 
 		assertEquals(-1894196417, t.getTest()[0].hashCode());

@@ -31,6 +31,7 @@ public class AllTests {
 		TestSuite suite = new TestSuite(AllTests.class.getName());
 		//$JUnit-BEGIN$
 		suite.addTestSuite(Splitter_splitObserverFaultTestCase.class);
+		suite.addTestSuite(TestReorganizerTestCase.class);
 		//$JUnit-END$
 		return suite;
 	}
