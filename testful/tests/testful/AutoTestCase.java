@@ -38,7 +38,7 @@ import ec.util.MersenneTwisterFast;
  */
 public abstract class AutoTestCase extends GenericTestCase {
 
-	private static final int ITERATIONS = 10;
+	private static final int ITERATIONS = 100;
 
 	/** Performs an extensive random testing session */
 	private static final boolean EXTENSIVE_TEST = false;
@@ -80,7 +80,7 @@ public abstract class AutoTestCase extends GenericTestCase {
 
 				if(EXTENSIVE_TEST) {
 					for (int i = 1; i < size; i++) {
-						System.out.printf("%3.0f%% - %5.1f%%", 100.0*n/ITERATIONS, 100.0*i/size);
+						System.out.printf("%3.0f%% - %5.1f%% ", 100.0*n/ITERATIONS, 100.0*i/size);
 						autoTest(cut, i, seed);
 					}
 

@@ -30,7 +30,7 @@ public class AllTests {
 	public static Test suite() {
 		TestSuite suite = new TestSuite(AllTests.class.getName());
 		//$JUnit-BEGIN$
-		suite.addTestSuite(Splitter_splitObserverFaultTestCase.class);
+		suite.addTestSuite(Splitter_splitObserverTestCase.class);
 		suite.addTestSuite(TestReorganizerTestCase.class);
 		//$JUnit-END$
 		return suite;

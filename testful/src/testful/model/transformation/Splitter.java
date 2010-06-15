@@ -81,16 +81,17 @@ public class Splitter {
 		listener.add(l);
 	}
 
-	public static List<Test> split(boolean splitObservers, Test t) {
-
-		final Test test = RemoveUselessDefs.singleton.perform(t);
+	public static List<Test> split(boolean splitObservers, final Test test) {
 
 		test.ensureNoDuplicateOps();
 
 		final List<Test> res = new ArrayList<Test>();
 		Splitter splitter = new Splitter(splitObservers, test.getCluster(), test.getReferenceFactory(), new Listener() {
 			@Override
-			public void notify(TestCluster cluster, ReferenceFactory refFactory, Operation[] ops) { res.add(new Test(test.getCluster(), test.getReferenceFactory(), ops)); }
+			public void notify(TestCluster cluster, ReferenceFactory refFactory, Operation[] ops) {
+				Test t = RemoveUselessDefs.singleton.perform(new Test(test.getCluster(), test.getReferenceFactory(), ops));
+				res.add(t);
+			}
 		});
 
 		for (Operation op : test.getTest())
@@ -786,7 +787,7 @@ public class Splitter {
 	private boolean interesting(SortedSet<Operation> ops) {
 		for(Operation op : ops) {
 			if(op instanceof Invoke && ((Invoke) op).getThis().getClazz() == cluster.getCut()) return true;
-			if(op instanceof CreateObject && ((CreateObject) op).getTarget().getClazz() == cluster.getCut()) return true;
+			if(op instanceof CreateObject && ((CreateObject) op).getConstructor().getClazz() == cluster.getCut()) return true;
 			if(op instanceof AssignConstant && ((AssignConstant)op).getValue().getDeclaringClass() == cluster.getCut())  return true;
 		}
 		return false;
