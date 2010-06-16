@@ -183,11 +183,6 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	}
 
 	@Override
-	public boolean isCache() {
-		return configGenerator.isCache();
-	}
-
-	@Override
 	public int getNumVar() {
 		return configGenerator.getNumVar();
 	}
@@ -253,11 +248,6 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	@Override
 	public void setDirInstrumented(File dirInstrumented) {
 		configGenerator.setDirInstrumented(dirInstrumented);
-	}
-
-	@Override
-	public void setCache(boolean cache) {
-		configGenerator.setCache(cache);
 	}
 
 	@Override

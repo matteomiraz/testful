@@ -133,11 +133,6 @@ public class ConfigRandom implements IConfigRandom, IConfigRunner.Args4j, IConfi
 	}
 
 	@Override
-	public boolean isCache() {
-		return configGenerator.isCache();
-	}
-
-	@Override
 	public int getNumVar() {
 		return configGenerator.getNumVar();
 	}
@@ -195,11 +190,6 @@ public class ConfigRandom implements IConfigRandom, IConfigRunner.Args4j, IConfi
 	@Override
 	public void setDirInstrumented(File dirInstrumented) {
 		configGenerator.setDirInstrumented(dirInstrumented);
-	}
-
-	@Override
-	public void setCache(boolean cache) {
-		configGenerator.setCache(cache);
 	}
 
 	@Override

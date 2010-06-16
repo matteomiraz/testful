@@ -197,7 +197,7 @@ public class Launcher {
 
 		TrackerDatum[] data = new TrackerDatum[] { };
 
-		RandomTest rt = new RandomTestSplit(config.isCache(), config.getLog(), testfulProblem.getFinder() , testfulProblem.getCluster(), testfulProblem.getReferenceFactory(), config.getSeed(), data);
+		RandomTest rt = new RandomTestSplit(config.getLog(), testfulProblem.getFinder(), config.isReload(), testfulProblem.getCluster(), testfulProblem.getReferenceFactory(), config.getSeed(), data);
 
 		rt.test(smartTime * 1000);
 
