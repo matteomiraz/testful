@@ -18,23 +18,26 @@
 
 package testful.model.transformation;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import testful.AutoTestCase;
+import testful.model.OperationResult;
 import testful.model.Test;
-import testful.model.transformation.Reorganizer;
+import testful.model.TestExecutionManager;
 
 /**
  * @author matteo
- *
  */
-public class TestReorganizerAutoTestCase extends AutoTestCase {
+public class ReorganizerAutoTestCase extends AutoTestCase {
 
 	@Override
 	protected List<Test> perform(Test test) throws Exception {
-		List<Test> ret = new ArrayList<Test>(0);
-		ret.add(Reorganizer.singleton.perform(test));
-		return ret;
+		OperationResult.insert(test.getTest());
+		test = TestExecutionManager.executeTest(getFinder(), new Test(test.getCluster(), test.getReferenceFactory(), test.getTest()));
+
+		test = Reorganizer.singleton.perform(test);
+
+		return Arrays.asList(test);
 	}
 }

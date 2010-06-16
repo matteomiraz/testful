@@ -112,8 +112,10 @@ public class CreateObject extends Operation {
 		if(!(obj instanceof CreateObject)) return false;
 
 		CreateObject other = (CreateObject) obj;
-		return ref == null ? other.ref == null : ref.equals(other.ref)
-				&& constructor.equals(other.constructor) && Arrays.equals(params, other.params);
+
+		return (ref == null ? other.ref == null : ref.equals(other.ref)) &&
+		constructor.equals(other.constructor) &&
+		Arrays.equals(params, other.params);
 	}
 
 	@Override

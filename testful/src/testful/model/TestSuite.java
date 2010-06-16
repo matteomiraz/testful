@@ -44,10 +44,12 @@ public class TestSuite {
 
 		@Override
 		public int compare(Entry o1, Entry o2) {
+			if(o1 == o2) return 0;
+
 			if(o1.quality > o2.quality) return -1;
 			if(o1.quality < o2.quality) return +1;
 
-			return 0;
+			return 1;
 		}
 
 	});

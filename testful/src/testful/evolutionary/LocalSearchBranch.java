@@ -59,6 +59,7 @@ import testful.model.Test;
 import testful.model.TestCluster;
 import testful.model.TestCoverage;
 import testful.model.transformation.Splitter;
+import testful.model.transformation.SimplifierDynamic;
 import testful.utils.ElementManager;
 import ec.util.MersenneTwisterFast;
 
@@ -110,14 +111,13 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 		@Override
 		public int compare(BranchScore s1, BranchScore s2) {
-			if(s1 == null && s2 == null) return 0;
+			if(s1 == s2) return 0;
 			if(s1 == null) return  1;
 			if(s2 == null) return -1;
 
 			if(s1.getQuality() < s2.getQuality()) return -1;
 			if(s1.getQuality() > s2.getQuality()) return  1;
-			return 0;
-
+			return 1;
 		}
 	};
 
@@ -279,31 +279,52 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 					switch(((PrimitiveClazz) ap.getTarget().getClazz()).getType()) {
 					case BooleanClass:
 					case BooleanType:
+						if(value == null) {
+							value = random.nextBoolean();
+							break;
+						}
 						value = !((Boolean)value);
 						break;
 
 					case ByteClass:
 					case ByteType:
+						if(value == null) {
+							value = random.nextByte();
+							break;
+						}
 						value = (byte) (((Byte)value) + rand(random));
 						break;
 
 					case CharacterClass:
 					case CharacterType:
+						if(value == null) {
+							value = random.nextChar();
+							break;
+						}
 						value = (char) (((Character)value) + rand(random));
 						break;
 
 					case DoubleClass:
 					case DoubleType:
-
-						if(random.nextBoolean(.75)) {
-							value = ((Double)value) + random.nextGaussian();
-						} else {
+						if(value == null) {
 							value = random.nextDouble();
+							break;
 						}
+
+						if(random.nextBoolean(.75))
+							value = ((Double)value) + random.nextGaussian();
+						else
+							value = random.nextDouble();
+
 						break;
 
 					case FloatClass:
 					case FloatType:
+						if(value == null) {
+							value = random.nextFloat();
+							break;
+						}
+
 						if(random.nextBoolean(.75)) {
 							value = (float) (((Float)value) + random.nextGaussian());
 						} else {
@@ -313,16 +334,31 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 					case IntegerClass:
 					case IntegerType:
+						if(value == null) {
+							value = random.nextInt();
+							break;
+						}
+
 						value = (int) (((Integer)value) + rand(random) * (random.nextBoolean(.75) ? 1 : 1000));
 						break;
 
 					case LongClass:
 					case LongType:
+						if(value == null) {
+							value = random.nextLong();
+							break;
+						}
+
 						value = (long) (((Long)value) + rand(random) * (random.nextBoolean(.75) ? 1 : 1000));
 						break;
 
 					case ShortClass:
 					case ShortType:
+						if(value == null) {
+							value = random.nextShort();
+							break;
+						}
+
 						value = (short) (((Integer)value) + rand(random));
 						break;
 					}
@@ -403,7 +439,10 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 	}
 
 	private Set<TestCoverage> evalParts(Solution<Operation> solution) throws InterruptedException, ExecutionException {
-		List<Test> parts = Splitter.split(true, problem.getTest(solution.getDecisionVariables().variables_));
+		Test test = problem.getTest(solution.getDecisionVariables().variables_);
+		test = SimplifierDynamic.singleton.perform(problem.getFinder(), test);
+
+		List<Test> parts = Splitter.split(true, test);
 		int size = parts.size();
 
 		List<Future<ElementManager<String, CoverageInformation>>> futures = new ArrayList<Future<ElementManager<String, CoverageInformation>>>(size);

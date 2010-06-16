@@ -18,29 +18,23 @@
 
 package testful.model.transformation;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import testful.AutoTestCase;
 import testful.GenericTestCase;
-import testful.coverage.TrackerDatum;
 import testful.model.Test;
-import testful.model.transformation.Splitter;
 
 /**
  * @author matteo
- *
  */
 public class Splitter_splitAndMinimizeAutoTestCase extends AutoTestCase {
 
 	@Override
 	protected List<Test> perform(Test test) throws Exception {
-		TrackerDatum[] data = new TrackerDatum[] { };
 
-		Test min = Splitter.splitAndMinimize(test, GenericTestCase.getFinder(), data);
-
-		List<Test> res = new ArrayList<Test>(1);
-		res.add(min);
-		return res;
+		test = SimplifierDynamic.singleton.perform(getFinder(), test);
+		Test min = Splitter.splitAndMinimize(test, GenericTestCase.getFinder());
+		return Arrays.asList(min);
 	}
 }

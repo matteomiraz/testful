@@ -41,17 +41,15 @@ import testful.TestFul;
 import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
-import testful.model.Operation;
-import testful.model.OperationResult;
 import testful.model.OptimalTestCreator;
 import testful.model.Test;
 import testful.model.TestCoverage;
-import testful.model.TestExecutionManager;
 import testful.model.TestReader;
 import testful.model.transformation.ReferenceSorter;
-import testful.model.transformation.RemoveInvalidOperationsStatic;
 import testful.model.transformation.RemoveUselessDefs;
 import testful.model.transformation.Reorganizer;
+import testful.model.transformation.SimplifierDynamic;
+import testful.model.transformation.SimplifierStatic;
 import testful.model.transformation.SingleStaticAssignment;
 import testful.model.transformation.Splitter;
 import testful.model.transformation.TestTransformation;
@@ -65,15 +63,15 @@ import testful.utils.ElementManager;
 
 /**
  * Given a test suite for a class, tries to reduce it.
- *
  * @author matteo
  */
 public class TestSuiteReducer {
 	private static final Logger logger = Logger.getLogger("testful.regression");
 
-	private static final TestSimplifier simplifier = new TestSimplifier();
-
-	private static final TestTransformation transform = new TestTransformationPipeline(RemoveUselessDefs.singleton, RemoveInvalidOperationsStatic.singleton, SingleStaticAssignment.singleton);
+	private static final TestTransformation transform = new TestTransformationPipeline(
+			RemoveUselessDefs.singleton,
+			SimplifierStatic.singleton,
+			SingleStaticAssignment.singleton);
 
 	private final OptimalTestCreator optimal = new OptimalTestCreator();
 	private final ClassFinder finder;
@@ -106,14 +104,8 @@ public class TestSuiteReducer {
 			logger.finer("Original test:\n"+test);
 
 		try {
-			OperationResult.insert(test.getTest());
-			Operation[] ops = TestExecutionManager.execute(finder, test);
-			ops = simplifier.process(ops);
-			test = new Test(test.getCluster(), test.getReferenceFactory(), ops);
-			if(logger.isLoggable(Level.FINER))
-				logger.finer("Simplified in:\n"+test);
-
 			try {
+				test = SimplifierDynamic.singleton.perform(finder, test);
 				test = transform.perform(test);
 			} catch (Exception e) {
 				logger.log(Level.WARNING, "Unexpected exception: " + e,  e);
@@ -128,7 +120,7 @@ public class TestSuiteReducer {
 				part = RemoveUselessDefs.singleton.perform(part);
 				if(logger.isLoggable(Level.FINER)) logger.finer("Part - without useless defs:\n" + part);
 
-				part = RemoveInvalidOperationsStatic.singleton.perform(part);
+				part = SimplifierStatic.singleton.perform(part);
 				if(logger.isLoggable(Level.FINER)) logger.finer("Part - statically simplified:\n" + part);
 
 				part = SingleStaticAssignment.singleton.perform(part);
@@ -136,6 +128,8 @@ public class TestSuiteReducer {
 
 				part = RemoveUselessDefs.singleton.perform(part);
 				if(logger.isLoggable(Level.FINER)) logger.finer("Part - without useless defs:\n" + part);
+
+				part = SimplifierDynamic.singleton.perform(finder, part);
 
 				part = Reorganizer.singleton.perform(part);
 				if(logger.isLoggable(Level.FINER)) logger.finer("Part - reorganized:\n" + part);

@@ -126,7 +126,7 @@ public class SingleStaticAssignment implements TestTransformation {
 		if(ref == null) return null;
 
 		Reference newRef = convert.get(ref);
-		if(newRef == null) throw new NullPointerException("Running SSA on a test not valid (run simplify() )");
+		if(newRef == null) throw new NullPointerException("Running SSA on a test not valid (run SimplifierStatic )");
 		return newRef;
 	}
 

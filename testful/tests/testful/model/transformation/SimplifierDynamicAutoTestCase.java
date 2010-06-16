@@ -16,30 +16,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package testful.regression;
+package testful.model.transformation;
 
 import java.util.Arrays;
 import java.util.List;
 
 import testful.AutoTestCase;
-import testful.model.Operation;
-import testful.model.OperationResult;
 import testful.model.Test;
-import testful.model.TestExecutionManager;
 
 /**
  * @author matteo
  */
-public class TestSimpifierAutoTestCase extends AutoTestCase {
+public class SimplifierDynamicAutoTestCase extends AutoTestCase {
 
 	@Override
 	protected List<Test> perform(Test test) throws Exception {
-		OperationResult.insert(test.getTest());
-		Operation[] ops = TestExecutionManager.execute(getFinder(), test);
 
-		TestSimplifier s = new TestSimplifier();
-		Test r = s.process(new Test(test.getCluster(), test.getReferenceFactory(), ops));
+		test = SimplifierDynamic.singleton.perform(getFinder(), test);
 
-		return Arrays.asList(r);
+		return Arrays.asList(test);
 	}
 }

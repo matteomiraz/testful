@@ -34,6 +34,8 @@ import testful.model.AssignPrimitive;
 import testful.model.CreateObject;
 import testful.model.Invoke;
 import testful.model.Operation;
+import testful.model.OperationResult;
+import testful.model.OperationResult.Status;
 import testful.model.Reference;
 import testful.model.ResetRepository;
 import testful.model.StaticValue;
@@ -41,26 +43,35 @@ import testful.model.Test;
 
 /**
  * Reorganize a test, sorting the operations in a unique way (if possible).
- * Note that the test must do not contain any ambiguity:
- *
+ * The test must either do not contain any faulty operation or have operations annotated with
+ * the {@link OperationResult} information.
  * @author matteo
  */
 public class Reorganizer implements TestTransformation {
 
 	public static final Reorganizer singleton = new Reorganizer();
 
+	/**
+	 * Reorganize a test, sorting the operations in a unique way (if possible).
+	 * The test must either do not contain any faulty operation or have operations annotated with
+	 * the {@link OperationResult} information.
+	 */
 	@Override
 	public Test perform(Test t) {
-		final Operation[] test = t.getTest();
-
 		// contains the reversed clustered version of the test
 		LinkedList<ReorganizeOperationSet> builder = new LinkedList<ReorganizeOperationSet>();
 
-		for(Operation op : test)
-			reorganizeAdd(builder, op);
+		int n = 0;
+		for(Operation op : t.getTest()) {
+			final OperationResult result = (OperationResult) op.getInfo(OperationResult.KEY);
+			if(result == null || result.getStatus() != Status.PRECONDITION_ERROR) {
+				reorganizeAdd(builder, op);
+				n++;
+			}
+		}
 
 		int i = 0;
-		Operation[] newOps = new Operation[test.length];
+		Operation[] newOps = new Operation[n];
 		Iterator<ReorganizeOperationSet> iter = builder.descendingIterator();
 		while(iter.hasNext()) {
 			Collection<Operation> next = iter.next();
@@ -112,6 +123,7 @@ public class Reorganizer implements TestTransformation {
 		private static final long serialVersionUID = -6567096691463221075L;
 
 		private boolean containsResetRepository = false;
+		private boolean containsFaulty = false;
 
 		private final BitSet defs = new BitSet();
 		private final BitSet uses = new BitSet();
@@ -127,10 +139,13 @@ public class Reorganizer implements TestTransformation {
 
 			if(added) {
 
-				if(e instanceof ResetRepository)
+				if(e instanceof ResetRepository) {
 					containsResetRepository = true;
 
-				else {
+				} else {
+					final OperationResult opResult = (OperationResult) e.getInfo(OperationResult.KEY);
+					containsFaulty = opResult != null && opResult.getStatus() == Status.POSTCONDITION_ERROR;
+
 					defs.or(e.getDefsBitset());
 					uses.or(e.getUsesBitset());
 				}
@@ -141,6 +156,10 @@ public class Reorganizer implements TestTransformation {
 
 		public boolean isSwappable(Operation op) {
 			if(containsResetRepository || op instanceof ResetRepository)
+				return false;
+
+			final OperationResult opResult = (OperationResult) op.getInfo(OperationResult.KEY);
+			if(containsFaulty || (opResult != null && opResult.getStatus() == Status.POSTCONDITION_ERROR))
 				return false;
 
 			// check def-def or use-def
@@ -156,7 +175,6 @@ public class Reorganizer implements TestTransformation {
 
 			return true;
 		}
-
 	}
 
 	private static class ReorganizeOperationComparator implements Comparator<Operation> {
@@ -164,6 +182,8 @@ public class Reorganizer implements TestTransformation {
 
 		@Override
 		public int compare(Operation o1, Operation o2) {
+			if(o1 == o2) return 0;
+
 			String name1 = o1.getClass().getCanonicalName();
 			String name2 = o2.getClass().getCanonicalName();
 			int cmp = name1.compareTo(name2);
@@ -177,7 +197,9 @@ public class Reorganizer implements TestTransformation {
 				if(cmp != 0) return cmp;
 
 				cmp = compareFull(c1.getTarget(), c2.getTarget());
-				return cmp;
+				if(cmp != 0) return cmp;
+
+				return 1;
 
 			} else if(o1 instanceof AssignPrimitive) {
 				AssignPrimitive p1 = (AssignPrimitive) o1;
@@ -187,7 +209,9 @@ public class Reorganizer implements TestTransformation {
 				if(cmp != 0) return cmp;
 
 				cmp = compareFull(p1.getTarget(), p2.getTarget());
-				return cmp;
+				if(cmp != 0) return cmp;
+
+				return 1;
 
 			} else if(o1 instanceof CreateObject) {
 				CreateObject c1 = (CreateObject) o1;
@@ -205,7 +229,9 @@ public class Reorganizer implements TestTransformation {
 				if(cmp != 0) return cmp;
 
 				cmp = compareFull(c1.getParams(), c2.getParams());
-				return cmp;
+				if(cmp != 0) return cmp;
+
+				return 1;
 
 			} else if(o1 instanceof Invoke) {
 				Invoke i1 = (Invoke) o1;
@@ -231,10 +257,15 @@ public class Reorganizer implements TestTransformation {
 				if(cmp != 0) return cmp;
 
 				cmp = compareFull(i1.getParams(), i2.getParams());
-				return cmp;
+				if(cmp != 0) return cmp;
+
+				return 1;
 			}
 
-			return o1.toString().compareTo(o2.toString());
+			cmp = o1.toString().compareTo(o2.toString());
+			if(cmp != 0) return cmp;
+
+			return 1;
 		}
 
 		private int compare(final Reference[] params1, final Reference[] params2) {
@@ -308,6 +339,4 @@ public class Reorganizer implements TestTransformation {
 			return value1.toString().compareTo(value2.toString());
 		}
 	}
-
-
 }

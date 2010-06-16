@@ -18,23 +18,19 @@
 
 package testful.model.transformation;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import testful.AutoTestCase;
 import testful.model.Test;
-import testful.model.transformation.RemoveUselessDefs;
 
 /**
  * @author matteo
- *
  */
 public class RemoveUselessDefsAutoTestCase extends AutoTestCase {
 
 	@Override
 	protected List<Test> perform(Test test) throws Exception {
-		List<Test> ret = new ArrayList<Test>(1);
-		ret.add(RemoveUselessDefs.singleton.perform(test));
-		return ret;
+		return Arrays.asList(RemoveUselessDefs.singleton.perform(test));
 	}
 }

@@ -125,12 +125,20 @@ public class Invoke extends Operation {
 		if(!(obj instanceof Invoke)) return false;
 
 		Invoke other = (Invoke) obj;
-		return ((_return == null) ?
-				other._return == null :
-					_return.equals(other._return)) &&
-					((_this == null) ?
-							other._this == null :
-								_this.equals(other._this)) && method.equals(other.method) && Arrays.equals(params, other.params);
+
+		if(_return == null ) {
+			if(other._return != null) return false;
+		} else {
+			if(!_return.equals(other._return)) return false;
+		}
+
+		if(_this == null) {
+			if(other._this != null) return false;
+		} else {
+			if(!_this.equals(other._this)) return false;
+		}
+
+		return method.equals(other.method) && Arrays.equals(params, other.params);
 	}
 
 	@Override

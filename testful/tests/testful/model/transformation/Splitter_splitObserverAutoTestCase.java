@@ -21,9 +21,7 @@ package testful.model.transformation;
 import java.util.List;
 
 import testful.AutoTestCase;
-import testful.model.OperationResult;
 import testful.model.Test;
-import testful.model.TestExecutionManager;
 
 /**
  * @author matteo
@@ -33,10 +31,7 @@ public class Splitter_splitObserverAutoTestCase extends AutoTestCase {
 	@Override
 	protected List<Test> perform(Test test) throws Exception {
 
-		OperationResult.insert(test.getTest());
-		test = new Test(test.getCluster(), test.getReferenceFactory(), TestExecutionManager.execute(getFinder(), test));
-		test = DynamicTransformation.singleton.perform(test);
-		OperationResult.remove(test);
+		test = SimplifierDynamic.singleton.perform(getFinder(), test);
 
 		return Splitter.split(true, test);
 	}

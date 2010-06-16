@@ -19,40 +19,27 @@
 package testful.model.transformation;
 
 import junit.framework.Test;
-import junit.framework.TestResult;
 import junit.framework.TestSuite;
-import junit.textui.TestRunner;
 
 /**
- * All automatic tests
  * @author matteo
  */
-public class AllAutoTests {
+public class AutoTests {
 
 	public static Test suite() {
-		TestSuite suite = new TestSuite(AllAutoTests.class.getName());
+		TestSuite suite = new TestSuite(AutoTests.class.getName());
 		//$JUnit-BEGIN$
-		suite.addTestSuite(DynamicTransformationAutoTestCase.class);
 		suite.addTestSuite(ReferenceSorterAutoTestCase.class);
-		suite.addTestSuite(RemoveInvalidOperationsStaticAutoTestCase.class);
-		suite.addTestSuite(TestReferenceSorterAutoTestCase.class);
+		suite.addTestSuite(SimplifierDynamicAutoTestCase.class);
+		suite.addTestSuite(SimplifierStaticAutoTestCase.class);
 		suite.addTestSuite(Splitter_splitObserverAutoTestCase.class);
-		suite.addTest(AllTests.suite());
-		suite.addTestSuite(Splitter_splitAutoTestCase.class);
+		suite.addTestSuite(ReorganizerAutoTestCase.class);
+		suite.addTestSuite(Splitter_splitAndMergeAutoTestCase.class);
 		suite.addTestSuite(Splitter_splitAndMinimizeAutoTestCase.class);
-		suite.addTestSuite(TestSplitter_splitMergeAutoTestCase.class);
+		suite.addTestSuite(Splitter_splitAutoTestCase.class);
 		suite.addTestSuite(RemoveUselessDefsAutoTestCase.class);
-		suite.addTestSuite(TestReorganizerAutoTestCase.class);
-		suite.addTestSuite(RunnerCachingPrepareAutoTestCase.class);
+		suite.addTestSuite(SingleStaticAssignmentAutoTestCase.class);
 		//$JUnit-END$
 		return suite;
-	}
-
-	public static void main(String[] args) {
-		TestRunner runner = new TestRunner();
-		TestResult result = runner.doRun(suite(), false);
-
-		if (!result.wasSuccessful())
-			System.exit(1);
 	}
 }

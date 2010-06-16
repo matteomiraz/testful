@@ -36,8 +36,8 @@ import testful.model.Test;
  * Statically analyze a test and remove invalid operations
  * @author matteo
  */
-public class RemoveInvalidOperationsStatic implements TestTransformation {
-	public static final RemoveInvalidOperationsStatic singleton = new RemoveInvalidOperationsStatic();
+public class SimplifierStatic implements TestTransformation {
+	public static final SimplifierStatic singleton = new SimplifierStatic();
 
 	/**
 	 * Returns a simplified copy of the test, removing invalid operations (statically analyzed)

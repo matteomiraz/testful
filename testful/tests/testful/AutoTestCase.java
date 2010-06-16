@@ -38,7 +38,7 @@ import ec.util.MersenneTwisterFast;
  */
 public abstract class AutoTestCase extends GenericTestCase {
 
-	private static final int ITERATIONS = 100;
+	private static final int ITERATIONS = 1000;
 
 	/** Performs an extensive random testing session */
 	private static final boolean EXTENSIVE_TEST = false;
@@ -52,7 +52,6 @@ public abstract class AutoTestCase extends GenericTestCase {
 				"dummy.WhiteSample",
 				"test.coverage.Fault",
 				"test.coverage.Stopped"
-				//"apache.Fraction"
 		};
 	}
 
@@ -67,25 +66,31 @@ public abstract class AutoTestCase extends GenericTestCase {
 	}
 
 	public void testSetup() throws Exception {
-		for(String cut : getCuts())
+		for(String cut : getCuts()) {
+			if(EXTENSIVE_TEST)
+				System.out.print("   <setup>   ");
+			else
+				System.out.print("setup");
+
 			assertEquals("Setup correctly your environment!", true, autoTest(cut, 500, 17l));
+		}
 	}
 
 	public void testAllRnd() throws Exception {
 		for(String cut : getCuts()) {
 			MersenneTwisterFast r = new MersenneTwisterFast(37);
-			for(int n = 1; n < ITERATIONS; n++) {
+			for(int n = 0; n < ITERATIONS; n++) {
 				final int size = 49+r.nextInt(950);
 				final long seed = r.nextLong();
 
 				if(EXTENSIVE_TEST) {
-					for (int i = 1; i < size; i++) {
-						System.out.printf("%3.0f%% - %5.1f%% ", 100.0*n/ITERATIONS, 100.0*i/size);
+					for (int i = 1; i <= size; i++) {
+						System.out.printf("%3.0f%% - %4.1f%% ", 100.0*n/ITERATIONS, 100.0*(i-1)/size);
 						autoTest(cut, i, seed);
 					}
 
 				} else {
-					System.out.printf("%5.1f%% ", 100.0*n/ITERATIONS);
+					System.out.printf("%3.0f%% ", 100.0*n/ITERATIONS);
 					autoTest(cut, size, seed);
 				}
 			}
@@ -93,7 +98,7 @@ public abstract class AutoTestCase extends GenericTestCase {
 	}
 
 	protected boolean autoTest(String cut, int size, long seed) throws Exception {
-		System.out.print("[" + this.getClass().getCanonicalName() + "] on " + cut + " size:" + size + " seed:" + seed);
+		System.out.printf("[%40s] on %30s seed: %20d ", this.getClass().getSimpleName(), cut, seed);
 		System.out.flush();
 
 		Test orig = createRandomTest(cut, size, seed);
@@ -167,8 +172,7 @@ public abstract class AutoTestCase extends GenericTestCase {
 		int rLength = 0;
 		for(Test t : res) rLength += t.getTest().length;
 
-		return " Original: " + orig.getTest().length +
-		" Modified: " + rLength + " (" + String.format("%3.2f", (minStop - minStart)/1000000.0) + " ms)";
+		return String.format("%3d --(%5.1fms)--> %3d", orig.getTest().length, (minStop - minStart)/1000000.0, rLength);
 	}
 
 	private void checkSetup(ElementManager<String, CoverageInformation> origCov) throws TestFailedException {
@@ -203,7 +207,7 @@ public abstract class AutoTestCase extends GenericTestCase {
 			changed = false;
 			System.out.println("  Iteration " + iter++ + " (" + ops.size() + ") ");
 			int initOps = ops.size()-1;
-			for(int i = initOps; i > 0; i--) {
+			for(int i = initOps; i >= 0; i--) {
 
 				if((initOps-i) % 70 == 0) {
 					if((initOps-i) != 0)

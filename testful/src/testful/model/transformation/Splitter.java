@@ -30,7 +30,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -57,7 +56,6 @@ import testful.model.Test;
 import testful.model.TestCluster;
 import testful.model.TestCoverage;
 import testful.runner.ClassFinder;
-import testful.runner.IRunner;
 import testful.runner.RunnerPool;
 import testful.utils.ElementManager;
 
@@ -81,22 +79,28 @@ public class Splitter {
 		listener.add(l);
 	}
 
+	/**
+	 * Splits a test into smaller, independent, parts
+	 * @param splitObservers if true, also splits observers
+	 * @param test the test to analyze
+	 * @return the list of independent parts of the test
+	 */
 	public static List<Test> split(boolean splitObservers, final Test test) {
-
-		test.ensureNoDuplicateOps();
 
 		final List<Test> res = new ArrayList<Test>();
 		Splitter splitter = new Splitter(splitObservers, test.getCluster(), test.getReferenceFactory(), new Listener() {
 			@Override
 			public void notify(TestCluster cluster, ReferenceFactory refFactory, Operation[] ops) {
-				Test t = RemoveUselessDefs.singleton.perform(new Test(test.getCluster(), test.getReferenceFactory(), ops));
+				Test t;
+				t = new Test(cluster, refFactory, ops);
+				t = RemoveUselessDefs.singleton.perform(t);
 				res.add(t);
 			}
 		});
 
+		test.ensureNoDuplicateOps();
 		for (Operation op : test.getTest())
 			splitter.analyze(op);
-
 		splitter.flush();
 
 		simplify(res);
@@ -104,12 +108,104 @@ public class Splitter {
 		return res;
 	}
 
+	public static Test splitAndMerge(final Test test) {
+		try {
+			final SortedSet<Operation> set = new TreeSet<Operation>(OperationPosition.orderComparator);
+			Splitter splitter = new Splitter(true, test.getCluster(), test.getReferenceFactory(), new Listener() {
+				@Override
+				public void notify(TestCluster cluster, ReferenceFactory refFactory, Operation[] ops) {
+					for (Operation op : ops)
+						set.add(op);
+				}
+			});
+
+			test.ensureNoDuplicateOps();
+			for (Operation op : test.getTest())
+				splitter.analyze(op);
+			splitter.flush();
+
+			Test ret;
+			ret = new Test(test.getCluster(), test.getReferenceFactory(), set.toArray(new Operation[set.size()]));
+			ret = RemoveUselessDefs.singleton.perform(ret);
+
+			return ret;
+		} catch (Throwable e) {
+			logger.log(Level.FINE, "Error during split and merge: " + e, e);
+			return test;
+		}
+	}
+
+	public static Test splitAndMinimize(final Test orig, ClassFinder finder, TrackerDatum ... data) {
+
+		final List<Test> res = new ArrayList<Test>();
+		Splitter splitter = new Splitter(true, orig.getCluster(), orig.getReferenceFactory(), new Listener() {
+			@Override
+			public void notify(TestCluster cluster, ReferenceFactory refFactory, Operation[] ops) {
+				res.add(new Test(cluster, refFactory, ops));
+			}
+		});
+
+		orig.ensureNoDuplicateOps();
+		for (Operation op : orig.getTest())
+			splitter.analyze(op);
+		splitter.flush();
+
+		simplify(res);
+
+		Map<Test, Future<ElementManager<String, CoverageInformation>>> futures = new HashMap<Test, Future<ElementManager<String,CoverageInformation>>>();
+		for(Test t : res)
+			futures.put(t, RunnerPool.getRunnerPool().execute(CoverageExecutionManager.getContext(finder, t, data)));
+
+		SortedSet<TestCoverage> results = new TreeSet<TestCoverage>(new Comparator<TestCoverage>() {
+			@Override
+			public int compare(TestCoverage  o1, TestCoverage o2) {
+				if(o1 == o2) return 0;
+
+				int v = o1.getTest().length - o2.getTest().length;
+				if(v != 0) return v;
+
+				float c1 = 0;
+				for(CoverageInformation cov : o1.getCoverage()) c1 += cov.getQuality();
+
+				float c2 = 0;
+				for(CoverageInformation cov : o2.getCoverage()) c2 += cov.getQuality();
+
+				if(c1 < c2) return -1;
+				if(c1 > c2) return 1;
+
+				return 1; // never return 0: they are not the same test!
+			}
+		});
+
+		for(Entry<Test, Future<ElementManager<String, CoverageInformation>>> entry : futures.entrySet()) {
+			try {
+				results.add(new TestCoverage(entry.getKey(), entry.getValue().get()));
+			} catch(Exception e) {
+				logger.log(Level.FINE, e.getMessage(), e);
+			}
+		}
+
+		OptimalTestCreator opt = new OptimalTestCreator();
+		for(TestCoverage c : results) opt.update(c);
+
+		SortedSet<Operation> set = new TreeSet<Operation>(OperationPosition.orderComparator);
+		for(Test t : opt.get())
+			for(Operation op : t.getTest())
+				set.add(op);
+
+		Test ret;
+		ret = new Test(orig.getCluster(), orig.getReferenceFactory(), set.toArray(new Operation[set.size()]));
+		ret = RemoveUselessDefs.singleton.perform(ret);
+
+		return ret;
+	}
+
 	private static void simplify(final List<Test> res) {
 		// removes tests contained in other tests
 		for(int i = 0; i < res.size(); i++) {
 			Operation[] ops_i = res.get(i).getTest();
 
-			int j = 0;
+			int j = -1;
 			Iterator<Test> iter = res.iterator();
 			while(iter.hasNext()) {
 				j++;
@@ -141,84 +237,7 @@ public class Splitter {
 		return true;
 	}
 
-	public static Test splitAndMinimize(Test orig, ClassFinder finder, TrackerDatum ... data) {
-
-		IRunner exec = RunnerPool.getRunnerPool();
-
-		List<Test> res = split(true,orig);
-
-		Map<Test, Future<ElementManager<String, CoverageInformation>>> futures = new HashMap<Test, Future<ElementManager<String,CoverageInformation>>>();
-		for(Test t : res)
-			futures.put(t, exec.execute(CoverageExecutionManager.getContext(finder, t, data)));
-
-		SortedSet<TestCoverage> results = new TreeSet<TestCoverage>(new Comparator<TestCoverage>() {
-			@Override
-			public int compare(TestCoverage  o1, TestCoverage o2) {
-				int v = o1.getTest().length - o2.getTest().length;
-				if(v != 0) return v;
-
-				float c1 = 0;
-				for(CoverageInformation cov : o1.getCoverage()) c1 += cov.getQuality();
-
-				float c2 = 0;
-				for(CoverageInformation cov : o2.getCoverage()) c2 += cov.getQuality();
-
-				if(c1 < c2) return -1;
-				else if(c1 > c2) return 1;
-				else return 0;
-			}
-		});
-		for(Entry<Test, Future<ElementManager<String, CoverageInformation>>> e : futures.entrySet())
-			try {
-				results.add(new TestCoverage(e.getKey(), e.getValue().get()));
-			} catch(InterruptedException e1) {
-				logger.warning(e1.getMessage());
-			} catch(ExecutionException e1) {
-				logger.warning(e1.getMessage());
-			}
-
-			OptimalTestCreator opt = new OptimalTestCreator();
-			for(TestCoverage c : results) opt.update(c);
-
-			SortedSet<Operation> set = new TreeSet<Operation>(orderComparator);
-			for(Test t : opt.get())
-				for(Operation op : t.getTest())
-					set.add(op);
-
-			return new Test(orig.getCluster(), orig.getReferenceFactory(), set.toArray(new Operation[set.size()]));
-	}
-
-	public static Test splitAndMerge(Test test) {
-		try {
-			List<Test> res = split(true, test);
-
-			SortedSet<Operation> set = new TreeSet<Operation>(orderComparator);
-
-			for(Test t : res)
-				for(Operation op : t.getTest())
-					set.add(op);
-
-			return new Test(test.getCluster(), test.getReferenceFactory(), set.toArray(new Operation[set.size()]));
-		} catch (Throwable e) {
-			logger.log(Level.WARNING, "Error during split and merge: " + e, e);
-			return test;
-		}
-	}
-
 	private int position = 0;
-
-	private static final Comparator<Operation> orderComparator = new Comparator<Operation>() {
-
-		@Override
-		public int compare(Operation o1, Operation o2) {
-			int p1 = ((OperationPosition)o1.getInfo(OperationPosition.KEY)).position;
-			int p2 = ((OperationPosition)o2.getInfo(OperationPosition.KEY)).position;
-
-			if(p1 < p2) return -1;
-			else if(p1 > p2) return 1;
-			else return 0;
-		}
-	};
 
 	/** if true, split observers (i.e. find longest invocation sequences leading to new object states) */
 	private boolean splitObservers;
@@ -279,7 +298,7 @@ public class Splitter {
 
 		operations = new TreeSet[numRefs];
 		for(int i = 0; i < operations.length; i++)
-			operations[i] = new TreeSet<Operation>(orderComparator);
+			operations[i] = new TreeSet<Operation>(OperationPosition.orderComparator);
 
 		if(!splitObservers) {
 			isACopy = new boolean[numRefs];
@@ -478,7 +497,7 @@ public class Splitter {
 			final boolean toEmit = isToEmit(opTarget);
 
 			TreeSet<Operation> targetOps = operations[opTargetId];
-			operations[opTargetId] = new TreeSet<Operation>(orderComparator);
+			operations[opTargetId] = new TreeSet<Operation>(OperationPosition.orderComparator);
 			deleteAliases(opTarget, false);
 
 			if(!newSet.containsAll(targetOps) && toEmit)
@@ -649,7 +668,7 @@ public class Splitter {
 		}
 
 		// 3. calculate the set of operation "op" depends on (including "op")
-		TreeSet<Operation> newTarget = new TreeSet<Operation>(orderComparator);
+		TreeSet<Operation> newTarget = new TreeSet<Operation>(OperationPosition.orderComparator);
 		newTarget.add(op);
 		for(Reference pRef : paramsRef)
 			newTarget.addAll(operations[pRef.getId()]);
@@ -663,6 +682,9 @@ public class Splitter {
 			deleteAliases(opTarget, false);
 
 			if(toEmit) emit(targetOps);
+		} else {
+			// if target is null, emit the new operations
+			emit(newTarget);
 		}
 
 		// update parameters
@@ -683,8 +705,8 @@ public class Splitter {
 		int refId = op.getTarget().getId();
 
 		TreeSet<Operation> tmp = operations[refId];
-		operations[refId] = new TreeSet<Operation>(orderComparator);
-		if(op.getValue() != null) operations[refId].add(op);
+		operations[refId] = new TreeSet<Operation>(OperationPosition.orderComparator);
+		operations[refId].add(op);
 		if(isToEmit(op.getTarget())) emit(tmp);
 
 		if(!splitObservers) deleteAliases(op.getTarget(), false);
@@ -696,7 +718,7 @@ public class Splitter {
 		int refId = op.getTarget().getId();
 
 		TreeSet<Operation> tmp = operations[refId];
-		operations[refId] = new TreeSet<Operation>(orderComparator);
+		operations[refId] = new TreeSet<Operation>(OperationPosition.orderComparator);
 		operations[refId].add(op);
 
 		if(isToEmit(op.getTarget())) emit(tmp);
@@ -706,6 +728,21 @@ public class Splitter {
 
 	public void analyze(ResetRepository op) {
 		flush();
+
+		OperationPosition position = (OperationPosition) op.getInfo(OperationPosition.KEY);
+		if(position == null)
+			logger.fine("The position is not set");
+
+		// insert ref = null
+		for (Reference r : refs) {
+			final Operation o;
+			if(r.getClazz() instanceof PrimitiveClazz) o = new AssignPrimitive(r, null);
+			else o = new AssignConstant(r, null);
+			if(position != null)
+				o.addInfo(new OperationPosition(position.position));
+
+			operations[r.getId()].add(o);
+		}
 	}
 
 	@Override
@@ -737,7 +774,7 @@ public class Splitter {
 	public void flush() {
 		for(int i = 0; i < operations.length; i++) {
 			TreeSet<Operation> tmp = operations[i];
-			operations[i] = new TreeSet<Operation>(orderComparator);
+			operations[i] = new TreeSet<Operation>(OperationPosition.orderComparator);
 			if(isToEmit(refs[i])) {
 				boolean emitted = emit(tmp);
 
@@ -745,7 +782,7 @@ public class Splitter {
 					for(int j = 0; j < operations.length; j++)
 						if((splitObservers || !isACopy[j]) &&
 								(operations[j] == tmp || tmp.containsAll(operations[j])))
-							operations[j] = new TreeSet<Operation>(orderComparator);
+							operations[j] = new TreeSet<Operation>(OperationPosition.orderComparator);
 			}
 		}
 
@@ -788,7 +825,7 @@ public class Splitter {
 		for(Operation op : ops) {
 			if(op instanceof Invoke && ((Invoke) op).getThis().getClazz() == cluster.getCut()) return true;
 			if(op instanceof CreateObject && ((CreateObject) op).getConstructor().getClazz() == cluster.getCut()) return true;
-			if(op instanceof AssignConstant && ((AssignConstant)op).getValue().getDeclaringClass() == cluster.getCut())  return true;
+			if(op instanceof AssignConstant && ((AssignConstant)op).getValue() != null && ((AssignConstant)op).getValue().getDeclaringClass() == cluster.getCut())  return true;
 		}
 		return false;
 	}

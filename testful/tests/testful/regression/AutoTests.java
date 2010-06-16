@@ -1,6 +1,6 @@
 /*
  * TestFul - http://code.google.com/p/testful/
- * Copyright (C) 2010  Matteo Miraz
+ * Copyright (C) 2010 Matteo Miraz
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,25 +16,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package testful.model.transformation;
+package testful.regression;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import testful.AutoTestCase;
-import testful.model.Test;
-import testful.model.transformation.Splitter;
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 /**
  * @author matteo
- *
  */
-public class TestSplitter_splitMergeAutoTestCase extends AutoTestCase {
+public class AutoTests {
 
-	@Override
-	protected List<Test> perform(Test test) throws Exception {
-		List<Test> ret = new ArrayList<Test>(1);
-		ret.add(Splitter.splitAndMerge(test));
-		return ret;
+	public static Test suite() {
+		TestSuite suite = new TestSuite(AutoTests.class.getName());
+		//$JUnit-BEGIN$
+		suite.addTestSuite(TestReducerAutoTestCase.class);
+		//$JUnit-END$
+		return suite;
 	}
+
 }

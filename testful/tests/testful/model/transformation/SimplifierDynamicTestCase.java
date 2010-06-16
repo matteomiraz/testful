@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package testful.regression;
+package testful.model.transformation;
 
 import java.util.Arrays;
 import java.util.List;
@@ -25,25 +25,20 @@ import testful.GenericTestCase;
 import testful.model.CreateObject;
 import testful.model.Invoke;
 import testful.model.Operation;
-import testful.model.OperationResult;
 import testful.model.Reference;
 import testful.model.Test;
-import testful.model.TestExecutionManager;
 import testful.testCut.DummySimpleCUT;
 
 /**
  * @author matteo
  */
-public class TestSimpifierTestCase extends GenericTestCase {
+public class SimplifierDynamicTestCase extends GenericTestCase {
 
 	protected List<Test> perform(Test test) throws Exception {
-		OperationResult.insert(test.getTest());
-		Operation[] ops = TestExecutionManager.execute(getFinder(), test);
 
-		TestSimplifier s = new TestSimplifier();
-		Test r = s.process(new Test(test.getCluster(), test.getReferenceFactory(), ops));
+		test = SimplifierDynamic.singleton.perform(getFinder(), test);
 
-		return Arrays.asList(r);
+		return Arrays.asList(test);
 	}
 
 	public void testSimpleDummy1() throws Exception {
@@ -60,6 +55,6 @@ public class TestSimpifierTestCase extends GenericTestCase {
 				}
 		};
 
-		check(test, perform(test), expected);
+		check(test, perform(test), expected, true);
 	}
 }

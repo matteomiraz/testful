@@ -350,7 +350,6 @@ public class ReflectionExecutor implements Executor {
 		Serializable value = op.getValue();
 
 		if(ref == null) throw new PreconditionViolationException.Impl("The reference is not set", null);
-		if(value == null) throw new PreconditionViolationException.Impl("The primitive value has not been initialized", null);
 
 		// perform the assignment
 		set(ref, value);

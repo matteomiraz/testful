@@ -51,7 +51,6 @@ public class TestExecutionManager extends ExecutionManager<Operation[]> {
 	@Override
 	protected void warmUp() {}
 
-
 	public static Operation[] execute(ClassFinder finder, Test test, TrackerDatum ... data) throws InterruptedException, ExecutionException {
 		Context<Operation[], TestExecutionManager> ctx =  new Context<Operation[], TestExecutionManager>(TestExecutionManager.class, finder, new ReflectionExecutor(test), data);
 		ctx.setStopOnBug(false);
@@ -64,4 +63,18 @@ public class TestExecutionManager extends ExecutionManager<Operation[]> {
 
 		return ops;
 	}
+
+	public static Test executeTest(ClassFinder finder, Test test, TrackerDatum ... data) throws InterruptedException, ExecutionException {
+		Context<Operation[], TestExecutionManager> ctx =  new Context<Operation[], TestExecutionManager>(TestExecutionManager.class, finder, new ReflectionExecutor(test), data);
+		ctx.setStopOnBug(false);
+		ctx.setRecycleClassLoader(true);
+
+		Operation[] ops = RunnerPool.getRunnerPool().execute(ctx).get();
+
+		for (int i = 0; i < ops.length; i++)
+			ops[i] = ops[i].adapt(test.getCluster(), test.getReferenceFactory());
+
+		return new Test(test.getCluster(), test.getReferenceFactory(), ops);
+	}
+
 }

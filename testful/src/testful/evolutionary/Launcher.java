@@ -164,8 +164,8 @@ public class Launcher {
 		for (TestCoverage testCoverage : reducer.getOutput()) {
 			try {
 				OperationResult.insert(testCoverage.getTest());
-				Operation[] ops = TestExecutionManager.execute(testfulProblem.getFinder(), testCoverage);
-				optimal.add(new TestCoverage(new Test(testCoverage.getCluster(), testCoverage.getReferenceFactory(), ops), testCoverage.getCoverage()));
+				Test t = TestExecutionManager.executeTest(testfulProblem.getFinder(), testCoverage);
+				optimal.add(new TestCoverage(t, testCoverage.getCoverage()));
 			} catch (Exception e) {
 				logger.log(Level.WARNING, "Cannot execute the test: " + e.getLocalizedMessage(), e);
 				optimal.add(testCoverage);
@@ -178,7 +178,6 @@ public class Launcher {
 		gen.writeSuite();
 
 	}//main
-
 
 	/**
 	 * This function uses random.Launcher to generate a smarter initial population

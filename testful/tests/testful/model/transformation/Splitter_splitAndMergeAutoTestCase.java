@@ -1,6 +1,6 @@
 /*
  * TestFul - http://code.google.com/p/testful/
- * Copyright (C) 2010 Matteo Miraz
+ * Copyright (C) 2010  Matteo Miraz
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,21 +16,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package testful.utils;
+package testful.model.transformation;
 
-import java.util.Comparator;
+import java.util.Arrays;
+import java.util.List;
+
+import testful.AutoTestCase;
+import testful.model.Test;
 
 /**
- * Compare two classes, basing on their name
  * @author matteo
  */
-public class ClassComparator implements Comparator<Class<?>> {
-
-	public final static ClassComparator singleton = new ClassComparator();
+public class Splitter_splitAndMergeAutoTestCase extends AutoTestCase {
 
 	@Override
-	public int compare(Class<?> o1, Class<?> o2) {
-		if(o1 == o2) return 0;
-		return o1.getName().compareTo(o2.getName());
+	protected List<Test> perform(Test test) throws Exception {
+		test = SimplifierDynamic.singleton.perform(getFinder(), test);
+		return Arrays.asList(Splitter.splitAndMerge(test));
 	}
 }

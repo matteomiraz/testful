@@ -161,9 +161,11 @@ public class Test implements Serializable {
 
 		@Override
 		public int compare(Test o1, Test o2) {
+			if(o1 == o2) return 0;
+
 			int ret = o1.getTest().length - o2.getTest().length;
-			if(ret == 0 && o1 != o2) return 1;
-			return ret;
+			if(ret != 0) return ret;
+			return 1;
 		}
 	}
 

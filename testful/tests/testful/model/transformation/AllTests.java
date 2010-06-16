@@ -30,8 +30,12 @@ public class AllTests {
 	public static Test suite() {
 		TestSuite suite = new TestSuite(AllTests.class.getName());
 		//$JUnit-BEGIN$
+		suite.addTestSuite(ReorganizerTestCase.class);
+		suite.addTestSuite(SimplifierDynamicTestCase.class);
 		suite.addTestSuite(Splitter_splitObserverTestCase.class);
-		suite.addTestSuite(TestReorganizerTestCase.class);
+		suite.addTestSuite(Splitter_splitTestCase.class);
+		suite.addTestSuite(Splitter_splitAndMinimizeTestCase.class);
+		suite.addTestSuite(Splitter_splitAndMergeTestCase.class);
 		//$JUnit-END$
 		return suite;
 	}

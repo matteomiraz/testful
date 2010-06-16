@@ -19,6 +19,7 @@
 package testful.model.transformation;
 
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.LinkedList;
 
 import testful.model.AssignConstant;
@@ -27,6 +28,7 @@ import testful.model.Clazz;
 import testful.model.CreateObject;
 import testful.model.Invoke;
 import testful.model.Operation;
+import testful.model.OperationInformation;
 import testful.model.Reference;
 import testful.model.ResetRepository;
 import testful.model.Test;
@@ -61,6 +63,7 @@ public class RemoveUselessDefs implements TestTransformation {
 				for(int j = 0; j < usedReference.length; j++) usedReference[j] = false;
 				ret.addFirst(op);
 				continue;
+
 			}
 
 			if(op instanceof AssignConstant) {
@@ -83,16 +86,26 @@ public class RemoveUselessDefs implements TestTransformation {
 				CreateObject co = (CreateObject) op;
 				Reference target = co.getTarget();
 
-				if(target != null && target.getClazz() != cut && !usedReference[target.getId()])
+				if(target != null && target.getClazz() != cut && !usedReference[target.getId()]) {
 					op = new CreateObject(null, co.getConstructor(), co.getParams());
+
+					Iterator<OperationInformation> iter = co.getInfos();
+					while(iter.hasNext())
+						op.addInfo(iter.next());
+				}
 
 			} else if(op instanceof Invoke) {
 				Invoke in = (Invoke) op;
 				Reference target = in.getTarget();
 
-				if(target != null && target.getClazz() != cut && !usedReference[target.getId()])
+				if(target != null && target.getClazz() != cut && !usedReference[target.getId()]) {
 					op = new Invoke(null, in.getThis(), in.getMethod(), in.getParams());
 
+					Iterator<OperationInformation> iter = in.getInfos();
+					while(iter.hasNext())
+						op.addInfo(iter.next());
+
+				}
 			}
 
 			if(op != null) {
@@ -100,6 +113,54 @@ public class RemoveUselessDefs implements TestTransformation {
 
 				for(Reference r : op.getUses())
 					usedReference[r.getId()] = true;
+			}
+		}
+
+		// scan ret and remove useless = null (assignConstant and assignPrimitive)
+		{
+			boolean[] nulls = new boolean[t.getReferenceFactory().getReferences().length];
+			for (int i = 0; i < nulls.length; i++) nulls[i] = true;
+
+			Iterator<Operation> iter = ret.iterator();
+			while(iter.hasNext()) {
+				Operation op = iter.next();
+
+				if(op instanceof ResetRepository) {
+					for (int i = 0; i < nulls.length; i++) nulls[i] = true;
+
+				} else if(op instanceof AssignConstant) {
+					AssignConstant o = (AssignConstant) op;
+					if(o.getTarget() != null) {
+						if(o.getValue() == null && nulls[o.getTarget().getId()]) {
+							iter.remove();
+						} else {
+							nulls[o.getTarget().getId()] = o.getValue() == null;
+						}
+					}
+
+				} else if(op instanceof AssignPrimitive) {
+					AssignPrimitive o = (AssignPrimitive) op;
+					if(o.getTarget() != null) {
+						if(o.getValue() == null && nulls[o.getTarget().getId()]) {
+							iter.remove();
+						} else {
+							nulls[o.getTarget().getId()] = o.getValue() == null;
+						}
+					}
+
+				} else if(op instanceof CreateObject) {
+					CreateObject o = (CreateObject) op;
+					if(o.getTarget() != null) {
+						nulls[o.getTarget().getId()] = false;
+					}
+
+				} else if(op instanceof Invoke) {
+					Invoke o = (Invoke) op;
+					if(o.getTarget() != null) {
+						nulls[o.getTarget().getId()] = false;
+					}
+
+				}
 			}
 		}
 

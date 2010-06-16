@@ -39,7 +39,7 @@ import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
 import testful.model.Test;
 import testful.model.transformation.ReferenceSorter;
-import testful.model.transformation.RemoveInvalidOperationsStatic;
+import testful.model.transformation.SimplifierStatic;
 import testful.model.transformation.RemoveUselessDefs;
 import testful.model.transformation.Reorganizer;
 import testful.model.transformation.SingleStaticAssignment;
@@ -53,13 +53,13 @@ public class RunnerCaching implements IRunner{
 
 	private static final TestTransformation prepare = new TestTransformationPipeline(
 			RemoveUselessDefs.singleton,
-			RemoveInvalidOperationsStatic.singleton,
+			SimplifierStatic.singleton,
 			SingleStaticAssignment.singleton
 	);
 
 	private static final TestTransformation postprocess = new TestTransformationPipeline(
 			RemoveUselessDefs.singleton,
-			RemoveInvalidOperationsStatic.singleton,
+			SimplifierStatic.singleton,
 			SingleStaticAssignment.singleton,
 			RemoveUselessDefs.singleton,
 			Reorganizer.singleton,

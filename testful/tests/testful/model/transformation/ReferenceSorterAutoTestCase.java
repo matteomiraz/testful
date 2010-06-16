@@ -18,13 +18,11 @@
 
 package testful.model.transformation;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import testful.AutoTestCase;
 import testful.model.Test;
-import testful.model.transformation.ReferenceSorter;
-import testful.model.transformation.Splitter;
 
 /**
  * @author matteo
@@ -33,11 +31,8 @@ public class ReferenceSorterAutoTestCase extends AutoTestCase {
 
 	@Override
 	protected List<Test> perform(Test test) throws Exception {
-		List<Test> tmp = Splitter.split(true, test);
-		List<Test> ret = new ArrayList<Test>(tmp.size());
-		for(Test t : tmp)
-			ret.add(ReferenceSorter.singleton.perform(t));
+		test = SimplifierDynamic.singleton.perform(getFinder(), test);
 
-		return ret;
+		return Arrays.asList(ReferenceSorter.singleton.perform(test));
 	}
 }

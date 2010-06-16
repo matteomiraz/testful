@@ -160,25 +160,45 @@ public abstract class GenericTestCase extends TestCase {
 		}
 	};
 
-	protected void check(Test original, Collection<? extends Test> tests, Operation[][] expected) throws Exception {
-		if(TestFul.DEBUG) {
-			System.out.println("original:");
-			for(Operation o : original.getTest()) {
-				final OperationInformation info = o.getInfo(OperationPosition.KEY);
-				System.out.println((info!=null?info:"") + "\t" + o);
-			}
-			System.out.println("---");
+	/**
+	 * Verifies the outcome of a transformation.
+	 * @param original The original test
+	 * @param tests the transformed tests
+	 * @param expected the expected outcome
+	 * @param checkCoverage if true, also verifies that the expected outcome have the same coverage of the original test
+	 */
+	protected void check(Test original, Collection<? extends Test> tests, Operation[][] expected, boolean checkCoverage) throws Exception {
 
-			System.out.println("Modified: " + tests.size());
-			for(Test t1 : tests) {
-				for(Operation o : t1.getTest()) {
-					final OperationInformation info = o.getInfo(OperationPosition.KEY);
-					System.out.println((info!=null?info:"") + "\t" + o);
+		// checks if the original test and the expected one have the same level of coverage
+		if(checkCoverage) {
+			ElementManager<String, CoverageInformation> oCovs = getCoverage(original);
+			ElementManager<String, CoverageInformation> tCovs = new ElementManager<String, CoverageInformation>();
+			for (Operation[] exp : expected) {
+				for (CoverageInformation cov : getCoverage(new Test(original.getCluster(), original.getReferenceFactory(), exp))) {
+					CoverageInformation tCov = tCovs.get(cov.getKey());
+					if(tCov == null) tCovs.put(cov);
+					else tCov.merge(cov);
 				}
-				System.out.println("---");
+			}
+
+			for (CoverageInformation oCov : oCovs) {
+				if(oCov.getQuality() == 0) continue;
+
+				CoverageInformation tCov = tCovs.get(oCov.getKey());
+
+				if(tCov == null) print(original, tests);
+				assertNotNull("No " + oCov.getName() + " information", tCov);
+
+				if(oCov.getQuality() != tCov.getQuality()) {
+					print(original, tests);
+					// System.err.println("Original " + oCov.getName() + ": " + oCov);
+					// System.err.println("Oracle's " + oCov.getName() + ": " + tCov);
+				}
+				assertEquals("Wrong " + oCov.getName(), oCov.getQuality(), tCov.getQuality());
 			}
 		}
 
+		if(expected.length != tests.size()) print(original, tests);
 		assertEquals("Wrong number of results", expected.length, tests.size());
 
 		Operation[][] actual = new Operation[tests.size()][];
@@ -191,9 +211,38 @@ public abstract class GenericTestCase extends TestCase {
 		Arrays.sort(actual, dummyTestComparator);
 
 		for(int i = 0; i < expected.length; i++) {
+
+			if(expected[i].length != actual[i].length) print(original, tests);
 			assertEquals("Test " + i + ": wrong result size", expected[i].length, actual[i].length);
-			for(int j = 0; j < expected[i].length; j++)
+
+			for(int j = 0; j < expected[i].length; j++) {
+
+				if(!expected[i][j].equals(actual[i][j])) print(original, tests);
 				assertEquals("Test " + i + ": Mismatch in operation " + j, expected[i][j], actual[i][j]);
+			}
+		}
+	}
+
+	private void print(Test original, Collection<? extends Test> tests) {
+		new NullPointerException().printStackTrace();
+
+		System.err.println("original:");
+
+		int n = -1;
+		for(Operation o : original.getTest()) {
+			n++;
+			final OperationInformation info = o.getInfo(OperationPosition.KEY);
+			System.err.println((info!=null?info:"Operation #" + Integer.toString(n)) + "\t" + o);
+		}
+		System.err.println("---");
+
+		System.err.println("Modified: " + tests.size());
+		for(Test t1 : tests) {
+			for(Operation o : t1.getTest()) {
+				final OperationInformation info = o.getInfo(OperationPosition.KEY);
+				System.err.println((info!=null?info:"") + "\t" + o);
+			}
+			System.err.println("---");
 		}
 	}
 

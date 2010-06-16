@@ -34,7 +34,7 @@ public class AssignPrimitive extends Operation {
 	private final Serializable value;
 
 	public AssignPrimitive(Reference ref, Serializable value) {
-		super((ref != null ? ref.hashCode() * 29 : 0) + value.hashCode());
+		super((ref != null ? ref.hashCode() * 29 : 0) + (value != null ? value.hashCode() : 0));
 
 		if(TestFul.DEBUG) {
 			if(ref == null) {
