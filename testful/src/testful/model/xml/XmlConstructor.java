@@ -93,8 +93,8 @@ public class XmlConstructor implements Comparable<XmlConstructor> {
 	 */
 	@Override
 	public int compareTo(XmlConstructor o) {
-		Iterator<XmlParameter> it1 = parameter.iterator();
-		Iterator<XmlParameter> it2 = o.parameter.iterator();
+		Iterator<XmlParameter> it1 = getParameter().iterator();
+		Iterator<XmlParameter> it2 = o.getParameter().iterator();
 
 		while(it1.hasNext() & it2.hasNext()) {
 			XmlParameter p1 = it1.next();
