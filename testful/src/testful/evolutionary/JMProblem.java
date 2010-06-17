@@ -33,7 +33,6 @@ import testful.coverage.whiteBox.CoverageBasicBlocks;
 import testful.coverage.whiteBox.CoverageBranch;
 import testful.model.Collector;
 import testful.model.Operation;
-import testful.model.OptimalTestCreator;
 import testful.model.TestCoverage;
 import testful.utils.CoverageWriter;
 import testful.utils.ElementManager;
@@ -57,15 +56,9 @@ public class JMProblem extends Problem<Operation> {
 	private final String[] coverageKeys;
 
 	private final CoverageWriter coverageWriter;
-	private final OptimalTestCreator optimal;
-	private final Collector[] collectors = null;
-	// new Tracker[] {
-	//		new Tracker(BehaviorCoverage.KEY),
-	//		new Tracker(BranchCoverage.KEY + "d"),
-	//		new Tracker(DefUseCoverage.KEY + "d")
-	// };
+	private final Collector[] collectors;
 
-	public JMProblem(TestfulProblem problem, IConfigFitness config) {
+	public JMProblem(TestfulProblem problem, IConfigEvolutionary config) {
 		problemName_ = "Testful";
 		numberOfObjectives_  =
 			(config.isBasicBlock() ? 1 : 0) +
@@ -81,15 +74,21 @@ public class JMProblem extends Problem<Operation> {
 
 		this.problem = problem;
 
-		if(logger.isLoggable(Level.FINER))
-			optimal = new OptimalTestCreator();
-		else
-			optimal = null;
-
-		if(logger.isLoggable(Level.FINE))
+		if(logger.isLoggable(Level.FINE)) {
 			coverageWriter = new CoverageWriter("testful.evolutionary.coverage");
-		else
+		} else {
 			coverageWriter = null;
+		}
+
+		if(logger.isLoggable(Level.FINEST)) {
+			collectors = new Collector[] {
+					new Collector(config.getDirBase(), CoverageBasicBlocks.KEY),
+					new Collector(config.getDirBase(), CoverageBranch.KEY)
+			};
+		} else {
+			collectors = null;
+		}
+
 	}
 
 	public TestfulProblem getProblem() {
@@ -174,28 +173,18 @@ public class JMProblem extends Problem<Operation> {
 		if(coverageWriter != null)
 			coverageWriter.write(currentGeneration, length, covs);
 
-		if(optimal != null || collectors != null) {
-			TestCoverage testCoverage = new TestCoverage(problem.getTest(solution.getDecisionVariables().variables_), covs);
-
-			if(optimal != null)
-				optimal.update(testCoverage);
-
-			if(collectors != null)
-				for(Collector tracker : collectors)
-					tracker.update(testCoverage);
-		}
+		TestCoverage testCoverage = new TestCoverage(problem.getTest(solution.getDecisionVariables().variables_), covs);
+		problem.updateOptimal(testCoverage);
+		for(Collector collector : collectors)
+			collector.update(testCoverage);
 	}
 
 	@Override
 	public void setCurrentGeneration(int currentGeneration, long time) {
 		super.setCurrentGeneration(currentGeneration, time);
 
-		if(optimal != null)
-			optimal.log(currentGeneration, problem.getNumberOfExecutedOperations(), time);
-
-		if (collectors != null) {
-			for (Collector tracker : collectors)
-				tracker.write();
-		}
+		problem.getOptimal().log(currentGeneration, problem.getNumberOfExecutedOperations(), time);
+		for (Collector tracker : collectors)
+			tracker.write();
 	}
 }

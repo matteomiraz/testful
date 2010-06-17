@@ -334,7 +334,7 @@
 	<target name="test.cut.instrument" depends="build.instrumenter, test.cut.compile" description="instrument the tests' cut">
 		<delete dir="${base}/testCut/instrumented" />
 		<java jar="${artifacts}/instrumenter.jar" fork="true">
-			<arg line="-dir ${testCut} dummy.WhiteSample dummy.Simple dummy.StateMachine apache.Fraction test.coverage.Stopped test.coverage.Fault" />
+			<arg line="-dir ${testCut} dummy.WhiteSample dummy.Simple dummy.StateMachine apache.Fraction apache.FractionNoStatic test.coverage.Stopped test.coverage.Fault" />
 		</java>
 	</target>
 

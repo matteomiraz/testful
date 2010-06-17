@@ -27,7 +27,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jmetal.base.Solution;
-import jmetal.base.SolutionSet;
 import jmetal.base.operator.crossover.OnePointCrossoverVarLen;
 import jmetal.base.operator.localSearch.LocalSearch;
 import jmetal.base.operator.selection.BinaryTournament2;
@@ -39,6 +38,7 @@ import testful.TestFul;
 import testful.TestfulException;
 import testful.coverage.TrackerDatum;
 import testful.model.Operation;
+import testful.model.TestCoverage;
 import testful.model.TestSuite;
 import testful.random.RandomTest;
 import testful.random.RandomTestSplit;
@@ -141,17 +141,17 @@ public class Launcher {
 			algorithm.register(callBack);
 
 		/* Execute the Algorithm */
-		SolutionSet<Operation> population;
 		try {
-			population = algorithm.execute();
+			algorithm.execute();
 		} catch (JMException e) {
+			logger.log(Level.WARNING, "Cannot find some classes: " + e.getMessage(), e);
 			throw new TestfulException(e);
 		}
 
 		/* simplify tests */
 		final TestSuiteReducer reducer = new TestSuiteReducer(testfulProblem.getFinder(), testfulProblem.getData());
-		for (Solution<Operation> sol : population)
-			reducer.process(testfulProblem.getTest(sol.getDecisionVariables().variables_));
+		for (TestCoverage t : testfulProblem.getOptimalTests())
+			reducer.process(t);
 
 		/* convert tests to jUnit */
 		JUnitTestGenerator gen = new JUnitTestGenerator(config.getDirGeneratedTests(), true);

@@ -21,6 +21,7 @@ package testful.evolutionary;
 import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
@@ -34,6 +35,7 @@ import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
 import testful.coverage.whiteBox.WhiteBoxAnalysisData;
 import testful.model.Operation;
+import testful.model.OptimalTestCreator;
 import testful.model.ReferenceFactory;
 import testful.model.Test;
 import testful.model.TestCluster;
@@ -62,6 +64,9 @@ public class TestfulProblem implements Serializable {
 	private final WhiteBoxAnalysisData whiteAnalysis;
 	private final TrackerDatum[] data;
 	private final boolean reload;
+
+	/** Saves the tests with the best coverage (including fault coverage!) */
+	private final OptimalTestCreator optimal = new OptimalTestCreator();
 
 	/** cumulative number of invocations */
 	private AtomicLong invTot = new AtomicLong(0);
@@ -107,6 +112,30 @@ public class TestfulProblem implements Serializable {
 		return data;
 	}
 
+	/**
+	 * Returns the optimal test suite
+	 * @return the optimal test suite
+	 */
+	public Collection<TestCoverage> getOptimalTests() {
+		return optimal.get();
+	}
+
+	/**
+	 * Returns the optimal test creator
+	 * @return the optimal test creator
+	 */
+	public OptimalTestCreator getOptimal() {
+		return optimal;
+	}
+
+	/**
+	 * Updates the optimal test suite considering the new test
+	 * @param testCoverage the new test to consider
+	 */
+	public void updateOptimal(TestCoverage testCoverage) {
+		optimal.update(testCoverage);
+	}
+
 	public Future<ElementManager<String, CoverageInformation>> evaluate(Test test) {
 		return evaluate(test, data);
 	}
@@ -125,10 +154,6 @@ public class TestfulProblem implements Serializable {
 		return invTot.get();
 	}
 
-	public Test getTest1(Operation[] ops) {
-		return new Test(cluster, refFactory, ops);
-	}
-
 	public Test getTest(List<Operation> ops) {
 		return new Test(cluster, refFactory, ops.toArray(new Operation[ops.size()]));
 	}
@@ -143,7 +168,7 @@ public class TestfulProblem implements Serializable {
 	 * Add tests to the reserve
 	 * @param tests the tests to add
 	 */
-	public void addReserve(TestSuite tests){
+	public void addReserve(TestSuite tests) {
 		if(tests == null) return;
 
 		reserve.add(tests);
@@ -153,7 +178,7 @@ public class TestfulProblem implements Serializable {
 	 * Add a test to the reserve
 	 * @param test the test to add
 	 */
-	public void addReserve(TestCoverage test){
+	public void addReserve(TestCoverage test) {
 		if(test == null) return;
 
 		reserve.add(test);
