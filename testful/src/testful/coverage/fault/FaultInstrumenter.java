@@ -18,6 +18,7 @@
 
 package testful.coverage.fault;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import soot.Body;
@@ -53,6 +54,7 @@ import testful.model.faults.FaultyExecutionException;
 public class FaultInstrumenter implements UnifiedInstrumentator {
 
 	private static final Logger logger = Logger.getLogger("testful.coverage.instrumenter.bug");
+	private static final boolean LOG_FINER = logger.isLoggable(Level.FINER);
 
 	public static final FaultInstrumenter singleton = new FaultInstrumenter();
 
@@ -88,7 +90,7 @@ public class FaultInstrumenter implements UnifiedInstrumentator {
 
 	@Override
 	public void init(Body oldBody, Body newBody, Chain<Unit> newUnits) {
-		logger.finer(" processing " + newBody.getMethod().getName());
+		if(LOG_FINER) logger.finer(" processing " + newBody.getMethod().getName());
 		body = newBody;
 	}
 

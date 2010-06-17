@@ -184,16 +184,30 @@ public class TestCluster implements Serializable {
 
 		calculateSubClasses();
 
-		if(logger.isLoggable(Level.FINER)) {
+		if(logger.isLoggable(Level.CONFIG)) {
 			StringBuilder sb = new StringBuilder("Test Cluster:");
 
 			for (Clazz c : cluster) {
 				sb.append("\nclass " + c.getClassName());
-				for (Constructorz cns : c.getConstructors()) sb.append("\n * " + cns);
-				for (Methodz m : c.getMethods()) sb.append("\n * " + m);
+				for (Constructorz cns : c.getConstructors()) print(sb, cns.toString(), cns.getParameterTypes(), cns.getMethodInformation());
+				for (Methodz m : c.getMethods()) print(sb, m.toString(), m.getParameterTypes(), m.getMethodInformation());
 			}
 
-			logger.finer(sb.toString());
+			logger.config(sb.toString());
+		}
+	}
+
+	private void print(StringBuilder sb, final String name, final Clazz[] params, final MethodInformation info) {
+
+		sb.append("\n * [" + info.getType() + "] "  + name);
+
+		for (int i = 0; i < info.getParameters().length; i++) {
+			sb.append(String.format("\n     p%2d %s ", i, params[i].getClassName()));
+			if(info.getParameters()[i].isMutated()) sb.append(" mutated");
+			if(info.getParameters()[i].isCaptured()) sb.append(" captured");
+			if(info.getParameters()[i].isCapturedByReturn()) sb.append(" capturedByReturn");
+			if(info.getParameters()[i].getCaptureStateOf() != null && !info.getParameters()[i].getCaptureStateOf().isEmpty())
+				sb.append(info.getParameters()[i].getCaptureStateOf());
 		}
 	}
 

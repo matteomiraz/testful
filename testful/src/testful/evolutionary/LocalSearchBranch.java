@@ -58,8 +58,8 @@ import testful.model.ReferenceFactory;
 import testful.model.Test;
 import testful.model.TestCluster;
 import testful.model.TestCoverage;
-import testful.model.transformation.Splitter;
 import testful.model.transformation.SimplifierDynamic;
+import testful.model.transformation.Splitter;
 import testful.utils.ElementManager;
 import ec.util.MersenneTwisterFast;
 
@@ -75,6 +75,8 @@ import ec.util.MersenneTwisterFast;
 public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 	private static final Logger logger = Logger.getLogger("testful.evolutionary.localSearch");
+	private static final boolean LOG_FINE = logger.isLoggable(Level.FINE);
+	private static final boolean LOG_FINER = logger.isLoggable(Level.FINER);
 
 	private final AtomicInteger localSearchId = new AtomicInteger(0);
 
@@ -213,7 +215,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 		logger.info("Selected branch: " + branchId + " (score: " + test.score.getQuality() + " length: " + test.test.getTest().length + ")");
 
-		logger.fine("coverageLocalSearch " + localSearchId + " branch=" + branchId + ";iter=" + 0 + ";cov=" + covCondOrig.getQuality() + ";distance=" + covCondOrig + ";len=" + test.test.getTest().length);
+		if(LOG_FINE) logger.fine("coverageLocalSearch " + localSearchId + " branch=" + branchId + ";iter=" + 0 + ";cov=" + covCondOrig.getQuality() + ";distance=" + covCondOrig + ";len=" + test.test.getTest().length);
 
 		List<Operation> opsOrig = new ArrayList<Operation>(test.test.getTest().length);
 		for(Operation op : test.test.getTest())
@@ -234,7 +236,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			if(covCond == null)
 				covCond = new CoverageConditionTarget(branchId);
 
-			logger.fine("coverageLocalSearch " + localSearchId + " branch=" + branchId + ";iter=" + (i+1) + ";cov=" + covCond.getQuality() + ";distance=" + covCond + ";len=" + ops.size());
+			if(LOG_FINE) logger.fine("coverageLocalSearch " + localSearchId + " branch=" + branchId + ";iter=" + (i+1) + ";cov=" + covCond.getQuality() + ";distance=" + covCond + ";len=" + ops.size());
 
 			if(covCond.getQuality() < covCondOrig.getQuality()) continue;
 			if(covCond.getQuality() == covCondOrig.getQuality() && ops.size() >= opsOrig.size()) continue;
@@ -647,9 +649,10 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			if(test.getTest().length != o.test.getTest().length) return test.getTest().length - o.test.getTest().length;
 
 			if(test.hashCode() == o.test.hashCode()) {
-				logger.finer("Same Tests! " +
-						"\n T1 " + score + " hash:" + test.hashCode() + " \n" + test +
-						"\n T2 " + o.score + " hash:" + o.test.hashCode() + " \n" + o.test);
+				if(LOG_FINER)
+					logger.finer("Same Tests! " +
+							"\n T1 " + score + " hash:" + test.hashCode() + " \n" + test +
+							"\n T2 " + o.score + " hash:" + o.test.hashCode() + " \n" + o.test);
 			}
 
 			return test.hashCode() - o.test.hashCode();

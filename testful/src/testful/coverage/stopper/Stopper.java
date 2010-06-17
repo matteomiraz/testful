@@ -31,6 +31,8 @@ import testful.TestFul;
 public final class Stopper {
 
 	private static final Logger logger = Logger.getLogger("testful.coverage.stopper");
+	private static final boolean LOG_FINE = logger.isLoggable(Level.FINE);
+	private static final boolean LOG_FINER = logger.isLoggable(Level.FINER);
 
 	/** Milliseconds between two kills */
 	private static final int KILL_WAIT = 50;
@@ -71,7 +73,7 @@ public final class Stopper {
 							}
 
 							if(delta <= 0) { // KILL!
-								logger.fine("Killing controlled thread");
+								if(LOG_FINE) logger.fine("Killing controlled thread");
 								TestStoppedException.kill();
 								controlled.interrupt();
 								endOfTheWorld = curr + KILL_WAIT;
@@ -83,7 +85,7 @@ public final class Stopper {
 							}
 						}
 					}
-					logger.finer("Stopper thread has finished its job.");
+					if(LOG_FINER) logger.finer("Stopper thread has finished its job.");
 				} catch (InterruptedException e) {
 					logger.log(Level.FINER, "Stopper thread has been interrupted", e);
 					running = false;

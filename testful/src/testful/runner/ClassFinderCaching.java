@@ -32,6 +32,7 @@ import testful.utils.CachingMap.Cacheable;
 public class ClassFinderCaching implements ClassFinder {
 
 	private static Logger logger = Logger.getLogger("testful.executor.classloader");
+	private static final boolean LOG_FINER = logger.isLoggable(Level.FINER);
 
 	private final static int MAX_ELEMS = 1000;
 	private final static long MIN_AGE = 15 * 60 * 1000; // 15 min
@@ -87,7 +88,7 @@ public class ClassFinderCaching implements ClassFinder {
 		try {
 			byte[] buff = finder.getClass(name);
 			cache.put(name, new Cacheable<byte[]>(buff));
-			logger.finer("(" + key + ") serving retrieved class " + name);
+			if(LOG_FINER) logger.finer("(" + key + ") serving retrieved class " + name);
 			return buff;
 		} catch(ClassNotFoundException e) {
 			missing.add(name);

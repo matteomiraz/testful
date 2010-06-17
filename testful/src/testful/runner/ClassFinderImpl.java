@@ -43,6 +43,8 @@ import testful.utils.JavaUtils;
 public class ClassFinderImpl implements ClassFinder {
 
 	private static Logger logger = Logger.getLogger("testful.executor.classloader");
+	private static final boolean LOG_FINER = logger.isLoggable(Level.FINER);
+
 	private static final ClassLoader classLoader = ClassFinderImpl.class.getClassLoader();
 
 	private final String key;
@@ -81,7 +83,7 @@ public class ClassFinderImpl implements ClassFinder {
 			try {
 				URL classURL = searchClassFile(name);
 				byte[] ret = ByteReader.readBytes(classURL.openStream());
-				logger.finer("(" + key + ") serving class " + name + " from " + classURL);
+				if(LOG_FINER) logger.finer("(" + key + ") serving class " + name + " from " + classURL);
 
 				for (ClassData datum : data)
 					datum.load(name, classURL);
@@ -102,7 +104,7 @@ public class ClassFinderImpl implements ClassFinder {
 				try {
 					byte[] ret = ByteReader.readBytes(resource.openStream());
 					if(ret != null) {
-						logger.finer("(" + key + ") serving class " + name + " from " + resource);
+						if(LOG_FINER) logger.finer("(" + key + ") serving class " + name + " from " + resource);
 						return ret;
 					}
 				} catch(IOException e) {

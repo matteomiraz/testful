@@ -20,11 +20,14 @@ package testful.runner;
 
 import java.io.Serializable;
 import java.rmi.RemoteException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Worker extends Thread {
 
 	private static Logger logger = Logger.getLogger("testful.executor.worker");
+	private static final boolean LOG_FINE = logger.isLoggable(Level.FINE);
+	private static final boolean LOG_FINER = logger.isLoggable(Level.FINER);
 
 	private static int idGenerator = 0;
 
@@ -38,7 +41,7 @@ public class Worker extends Thread {
 
 	@Override
 	public void run() {
-		logger.fine("Created worker " + getName());
+		if(LOG_FINE) logger.fine("Created worker " + getName());
 
 		try {
 			while(true) {
@@ -54,7 +57,7 @@ public class Worker extends Thread {
 				}
 
 				try {
-					logger.finer("Worker " + getName() + " is evaluating " + ctx.id);
+					if(LOG_FINER) logger.finer("Worker " + getName() + " is evaluating " + ctx.id);
 					ExecutionManager<?> execManager = ctx.getExecManager(cl);
 					Serializable result = execManager.execute(ctx.stopOnBug);
 					workerManager.putResult(ctx, result, cl);

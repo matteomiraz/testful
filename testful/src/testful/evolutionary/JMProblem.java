@@ -48,6 +48,7 @@ public class JMProblem extends Problem<Operation> {
 	private static final long serialVersionUID = -6806014368055641433L;
 
 	private static final Logger logger = Logger.getLogger("testful.evolutionary");
+	private static final boolean LOG_FINE = logger.isLoggable(Level.FINE);
 
 	/** The reference to the testful problem: it contains the test cluster, the reference factory, and it is able to evaluate tests */
 	private TestfulProblem problem;
@@ -128,7 +129,7 @@ public class JMProblem extends Problem<Operation> {
 		}
 
 		long prep = System.nanoTime();
-		logger.fine(String.format("Preparation time: %.2fms", (prep - start)/1000000.0));
+		if(LOG_FINE) logger.fine(String.format("Preparation time: %.2fms", (prep - start)/1000000.0));
 
 		try {
 			for(Entry<Future<ElementManager<String, CoverageInformation>>, Solution<Operation>> entry : futures) {
@@ -144,7 +145,7 @@ public class JMProblem extends Problem<Operation> {
 
 		long end = System.nanoTime();
 
-		logger.fine(String.format("Execution time: %.2fms", (end - prep)/1000000.0));
+		if(LOG_FINE) logger.fine(String.format("Execution time: %.2fms", (end - prep)/1000000.0));
 
 		return n;
 	}

@@ -426,7 +426,7 @@ public class Splitter {
 		op.removeInfo(OperationPosition.KEY);
 		op.addInfo(new OperationPosition(position++));
 
-		logger.finest(op.getInfo(OperationPosition.KEY) + "\t" + op + "\n");
+		if(logger.isLoggable(Level.FINEST)) logger.finest(op.getInfo(OperationPosition.KEY) + "\t" + op + "\n");
 
 		if(op instanceof AssignPrimitive) analyze((AssignPrimitive) op);
 		else if(op instanceof AssignConstant) analyze((AssignConstant) op);
@@ -435,7 +435,7 @@ public class Splitter {
 		else if(op instanceof ResetRepository) analyze((ResetRepository) op);
 		else logger.warning("Unknown operation: " + op.getClass().getCanonicalName() + " - " + op);
 
-		logger.finest(toString());
+		if(logger.isLoggable(Level.FINEST)) logger.finest(toString());
 	}
 
 	public void analyze(Invoke op) {

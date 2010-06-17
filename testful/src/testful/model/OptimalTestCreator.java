@@ -1,17 +1,17 @@
 /*
  * TestFul - http://code.google.com/p/testful/
  * Copyright (C) 2010  Matteo Miraz
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -21,6 +21,7 @@ package testful.model;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.coverage.CoverageInformation;
@@ -29,6 +30,7 @@ import testful.utils.ElementManager;
 public class OptimalTestCreator {
 
 	private static final Logger logger = Logger.getLogger("testful.regression.OptimalTestCreator");
+	private static final boolean LOG_FINER = logger.isLoggable(Level.FINER);
 
 	/**
 	 * stores the combined coverage obtained so far.
@@ -131,6 +133,8 @@ public class OptimalTestCreator {
 	}
 
 	public void log(Integer currentGeneration, long totInvocation, long time) {
+		if(!LOG_FINER) return;
+
 		StringBuilder sb = new StringBuilder("combinedCoverage ");
 
 		sb.append("inv=").append(totInvocation);

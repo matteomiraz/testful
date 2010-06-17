@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.runner;
 
 import java.io.EOFException;
@@ -47,6 +46,7 @@ import testful.utils.Cloner;
 public class WorkerManager implements IWorkerManager, ITestRepository {
 
 	private static Logger logger = Logger.getLogger("testful.executor.worker");
+	private static final boolean LOG_FINE = logger.isLoggable(Level.FINE);
 
 	/** cache size: number of jobs to keep in local cache */
 	private static final int CACHE_SIZE = 50;
@@ -71,7 +71,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	private AtomicLong sentBytes = new AtomicLong();
 
 	public WorkerManager(int cpu, int buffer) {
-		logger.fine("Starting: Worker Manager (" + TestFul.runId + ")");
+		if(LOG_FINE) logger.fine("Starting: Worker Manager (" + TestFul.runId + ")");
 
 		if(buffer <= 0) buffer = CACHE_SIZE;
 		tests = new ArrayBlockingQueue<Context<?, ?>>(buffer);

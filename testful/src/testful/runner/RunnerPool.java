@@ -57,6 +57,8 @@ public class RunnerPool implements IRunner, ITestRepository {
 	}
 
 	private static Logger logger = Logger.getLogger("testful.executor.worker");
+	private static final boolean LOG_FINE = logger.isLoggable(Level.FINE);
+	private static final boolean LOG_FINER = logger.isLoggable(Level.FINER);
 
 	private boolean localWorkersStarted = false;
 
@@ -77,17 +79,17 @@ public class RunnerPool implements IRunner, ITestRepository {
 		futures = new ElementManager<String, TestfulFuture<?>>(new ConcurrentHashMap<String, TestfulFuture<?>>());
 		testsEval = new ConcurrentHashMap<String, Context<?, ?>>();
 
-		logger.fine("Created Runner Pool ");
+		if(LOG_FINE) logger.fine("Created Runner Pool ");
 
 		Registry registry;
 		try {
 			registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
 			registry.list();
-			logger.finer("Found a RMI registry");
+			if(LOG_FINER) logger.finer("Found a RMI registry");
 		} catch(Exception e) {
 			try {
 				registry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
-				logger.finer("Created a new RMI registry");
+				if(LOG_FINER) logger.finer("Created a new RMI registry");
 			} catch(RemoteException e1) {
 				logger.log(Level.WARNING, "Distributed evaluation disabled", e);
 				registry = null;
