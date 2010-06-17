@@ -114,14 +114,20 @@ public class SimplifierDynamic implements TestTransformation {
 
 				case EXCEPTIONAL: // when an exception is thrown, the target is not set
 
-					if(op instanceof CreateObject)
-						ops.add(new CreateObject(null, ((CreateObject) op).getConstructor(), ((CreateObject) op).getParams()));
+					if(op instanceof CreateObject) {
+						CreateObject o = new CreateObject(null, ((CreateObject) op).getConstructor(), ((CreateObject) op).getParams());
+						o.addInfo(op);
+						ops.add(o);
 
-					else if(op instanceof Invoke)
-						ops.add(new Invoke(null, ((Invoke) op).getThis(), ((Invoke) op).getMethod(), ((Invoke) op).getParams()));
+					} else if(op instanceof Invoke) {
+						Invoke o = new Invoke(null, ((Invoke) op).getThis(), ((Invoke) op).getMethod(), ((Invoke) op).getParams());
+						o.addInfo(op);
+						ops.add(o);
 
-					else
+					} else {
 						Logger.getLogger("testful.model").warning("Unexpected operation: " + op.getClass().getCanonicalName());
+
+					}
 
 					break;
 				}

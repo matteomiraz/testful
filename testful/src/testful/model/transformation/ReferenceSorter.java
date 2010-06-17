@@ -59,18 +59,22 @@ public class ReferenceSorter implements TestTransformation {
 			if(ops[i] instanceof AssignConstant) {
 				AssignConstant o = (AssignConstant) ops[i];
 				ops[i] = new AssignConstant(sortReferences(refs, freeRefs, o.getTarget()), o.getValue());
+				ops[i].addInfo(o);
 
 			} else if(ops[i] instanceof AssignPrimitive) {
 				AssignPrimitive o = (AssignPrimitive) ops[i];
 				ops[i] = new AssignPrimitive(sortReferences(refs, freeRefs, o.getTarget()), o.getValue());
+				ops[i].addInfo(o);
 
 			} else if(ops[i] instanceof CreateObject) {
 				CreateObject o = (CreateObject) ops[i];
 				ops[i] = new CreateObject(sortReferences(refs, freeRefs, o.getTarget()), o.getConstructor(), sortReferences(refs, freeRefs, o.getParams()));
+				ops[i].addInfo(o);
 
 			} else if(ops[i] instanceof Invoke) {
 				Invoke o = (Invoke) ops[i];
 				ops[i] = new Invoke(sortReferences(refs, freeRefs, o.getTarget()), sortReferences(refs, freeRefs, o.getThis()), o.getMethod(), sortReferences(refs, freeRefs, o.getParams()));
+				ops[i].addInfo(o);
 
 			} else if(ops[i] instanceof ResetRepository) {
 				freeRefs = sortReferencesGetFreeRefs(t.getCluster(), t.getReferenceFactory());

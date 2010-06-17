@@ -35,14 +35,19 @@ import testful.model.ResetRepository;
 import testful.model.Test;
 
 /**
- * Modifies the test, using the Single Static Assignment (SSA) principle.
+ * Modifies the test, using the Single Static Assignment (SSA) principle.<br>
+ * It requires that the test does not contain any hidden behavior (use {@link SimplifierDynamic})
+ * and requires that each operation uses parameters being initialized, including null parameters (use {@link SimplifierStatic}).
  * @author matteo
  */
 public class SingleStaticAssignment implements TestTransformation {
 
 	public static final SingleStaticAssignment singleton = new SingleStaticAssignment();
 
-	/** returns a Single Static Assignment of the test */
+	/**
+	 * Returns a Single Static Assignment of the test.<br>
+	 * Before applying this transformation, the test must be transformed using both {@link SimplifierDynamic} and {@link SimplifierStatic}.
+	 */
 	@Override
 	public Test perform(Test orig) {
 		Operation[] test = orig.getTest();
@@ -87,16 +92,21 @@ public class SingleStaticAssignment implements TestTransformation {
 			Operation op = test[i];
 
 			if(op instanceof AssignConstant) {
-				op = new AssignConstant(ssaCreate(newRefs, convert, ((AssignConstant) op).getTarget()), ((AssignConstant) op).getValue());
+				AssignConstant ac = (AssignConstant) op;
+				op = new AssignConstant(ssaCreate(newRefs, convert, ac.getTarget()), ac.getValue());
+				ac.addInfo(op);
 
 			} else if(op instanceof AssignPrimitive) {
-				op = new AssignPrimitive(ssaCreate(newRefs, convert, ((AssignPrimitive) op).getTarget()), ((AssignPrimitive) op).getValue());
+				AssignPrimitive ap = (AssignPrimitive) op;
+				op = new AssignPrimitive(ssaCreate(newRefs, convert, ap.getTarget()), ap.getValue());
+				op.addInfo(ap);
 
 			} else if(op instanceof CreateObject) {
 				CreateObject co = (CreateObject) op;
 				Reference[] params = ssaConvert(convert, co.getParams());
 				Reference target = ssaCreate(newRefs, convert, co.getTarget());
 				op = new CreateObject(target, co.getConstructor(), params);
+				op.addInfo(co);
 
 			} else if(op instanceof Invoke) {
 				Invoke in = (Invoke) op;
@@ -104,6 +114,8 @@ public class SingleStaticAssignment implements TestTransformation {
 				Reference[] params = ssaConvert(convert, in.getParams());
 				Reference target = ssaCreate(newRefs, convert, in.getTarget());
 				op = new Invoke(target, _this, in.getMethod(), params);
+				op.addInfo(in);
+
 			} else if(op instanceof ResetRepository) {
 				convert = new HashMap<Reference, Reference>();
 			}
@@ -126,7 +138,7 @@ public class SingleStaticAssignment implements TestTransformation {
 		if(ref == null) return null;
 
 		Reference newRef = convert.get(ref);
-		if(newRef == null) throw new NullPointerException("Running SSA on a test not valid (run SimplifierStatic )");
+		if(newRef == null) throw new NullPointerException("Running SSA on a test not valid (run SimplifierStatic) " + ref);
 		return newRef;
 	}
 

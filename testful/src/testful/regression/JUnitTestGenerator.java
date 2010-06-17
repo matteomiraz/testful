@@ -54,9 +54,14 @@ import testful.model.PrimitiveClazz;
 import testful.model.Reference;
 import testful.model.Test;
 import testful.model.TestCoverage;
-import testful.model.TestExecutionManager;
 import testful.model.TestReader;
-import testful.runner.ClassFinder;
+import testful.model.transformation.ReferenceSorter;
+import testful.model.transformation.RemoveUselessDefs;
+import testful.model.transformation.Reorganizer;
+import testful.model.transformation.SimplifierStatic;
+import testful.model.transformation.SingleStaticAssignment;
+import testful.model.transformation.TestTransformation;
+import testful.model.transformation.TestTransformationPipeline;
 import testful.runner.ClassFinderCaching;
 import testful.runner.ClassFinderImpl;
 import testful.runner.RunnerPool;
@@ -71,34 +76,48 @@ import testful.utils.ElementWithKey;
 public class JUnitTestGenerator extends TestReader {
 	private static final Logger logger = Logger.getLogger("testful.regression");
 
+	private final static TestTransformation transformation = new TestTransformationPipeline(
+			SimplifierStatic.singleton,
+			SingleStaticAssignment.singleton,
+			RemoveUselessDefs.singleton,
+			Reorganizer.singleton,
+			ReferenceSorter.singleton
+	);
+
 	/** maximum number of operation per jUnit test */
-	private static final int MAX_TEST_LEN = 1000;
+	private static final int MAX_TEST_LEN = 2000;
 
 	private final File destDir;
+	private final boolean saveBinaryTests;
 	private final TestSuite suite = new TestSuite();
-	public JUnitTestGenerator(File destDir) {
+	public JUnitTestGenerator(File destDir, boolean saveBinaryTests) {
 		this.destDir = destDir;
+		this.saveBinaryTests = saveBinaryTests;
 	}
 
 	@Override
 	public void read(String name, Test test) {
-		String className = test.getCluster().getCut().getClassName();
-		TestCase testCase = suite.get(className);
+		final String className = test.getCluster().getCut().getClassName();
+		final TestCase testCase = suite.get(className);
 
 		// write the binary file
-		File dir = new File(destDir, testCase.getPackageName().replace('.', File.separatorChar));
-		dir.mkdirs();
+		if(saveBinaryTests) {
+			File dir = new File(destDir, testCase.getPackageName().replace('.', File.separatorChar));
+			dir.mkdirs();
 
-		File testFile = new File(dir, (testCase.getClassName() + "_" + name).replace('-', '_').replace(' ', '_') + ".ser.gz");
-
-		try {
-			test.write(new GZIPOutputStream(new FileOutputStream(testFile)));
-		} catch (IOException e) {
-			logger.log(Level.WARNING, "Cannot write the test to file: " + e.getLocalizedMessage(), e);
+			try {
+				File testFile = new File(dir, (testCase.getClassName() + "_" + name).replace('-', '_').replace(' ', '_') + ".ser.gz");
+				test.write(new GZIPOutputStream(new FileOutputStream(testFile)));
+				name = testFile.getPath();
+			} catch (IOException e) {
+				logger.log(Level.WARNING, "Cannot write the test to file: " + e.getLocalizedMessage(), e);
+			}
 		}
 
+		test = transformation.perform(test);
+
 		// add to a jUnit test
-		testCase.add(testFile.getPath(), test);
+		testCase.add(name, test);
 	}
 
 	public void writeSuite() {
@@ -572,37 +591,16 @@ public class JUnitTestGenerator extends TestReader {
 			System.exit(1);
 		}
 
-		JUnitTestGenerator gen = new JUnitTestGenerator(config.getDirGeneratedTests());
+		JUnitTestGenerator gen = new JUnitTestGenerator(config.getDirGeneratedTests(), false);
 
-		gen.process(getOpStatus(finder, TestSuiteReducer.reduce(finder, config.tests, !config.noSimplify)));
+		gen.read(TestSuiteReducer.reduce(finder, config.tests));
 
 		gen.writeSuite();
 
 		System.exit(0);
 	}
 
-	private static List<TestCoverage> getOpStatus(ClassFinder finder, Iterable<TestCoverage> simplify) {
-		List<TestCoverage> ret = new ArrayList<TestCoverage>();
-
-		for (TestCoverage test : simplify) {
-			try {
-				OperationResult.insert(test.getTest());
-				Test t = TestExecutionManager.executeTest(finder, test);
-				ret.add(new TestCoverage(t, test.getCoverage()));
-			} catch (Exception e) {
-				logger.log(Level.WARNING, "Cannot execute a test: " + e.getLocalizedMessage(), e);
-				ret.add(test);
-			}
-		}
-
-
-		return ret;
-	}
-
 	private static class Config extends ConfigProject implements IConfigProject.Args4j, IConfigRunner.Args4j {
-
-		@Option(required = false, name = "-noSimplify", usage = "Do not simplify tests")
-		private boolean noSimplify;
 
 		@Option(required = true, name = "-dirTests", usage = "Specify the directory in which generated tests will be put.")
 		private File dirGeneratedTests;

@@ -22,8 +22,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,10 +39,6 @@ import testful.TestFul;
 import testful.TestfulException;
 import testful.coverage.TrackerDatum;
 import testful.model.Operation;
-import testful.model.OperationResult;
-import testful.model.Test;
-import testful.model.TestCoverage;
-import testful.model.TestExecutionManager;
 import testful.model.TestSuite;
 import testful.random.RandomTest;
 import testful.random.RandomTestSplit;
@@ -155,26 +149,13 @@ public class Launcher {
 		}
 
 		/* simplify tests */
-		final TestSuiteReducer reducer = new TestSuiteReducer(testfulProblem.getFinder(), testfulProblem.getData(), config.isSimplify());
+		final TestSuiteReducer reducer = new TestSuiteReducer(testfulProblem.getFinder(), testfulProblem.getData());
 		for (Solution<Operation> sol : population)
 			reducer.process(testfulProblem.getTest(sol.getDecisionVariables().variables_));
 
-		/* get Operation status */
-		List<TestCoverage> optimal = new ArrayList<TestCoverage>();
-		for (TestCoverage testCoverage : reducer.getOutput()) {
-			try {
-				OperationResult.insert(testCoverage.getTest());
-				Test t = TestExecutionManager.executeTest(testfulProblem.getFinder(), testCoverage);
-				optimal.add(new TestCoverage(t, testCoverage.getCoverage()));
-			} catch (Exception e) {
-				logger.log(Level.WARNING, "Cannot execute the test: " + e.getLocalizedMessage(), e);
-				optimal.add(testCoverage);
-			}
-		}
-
 		/* convert tests to jUnit */
-		JUnitTestGenerator gen = new JUnitTestGenerator(config.getDirGeneratedTests());
-		gen.process(optimal);
+		JUnitTestGenerator gen = new JUnitTestGenerator(config.getDirGeneratedTests(), true);
+		gen.read(reducer.getOutput());
 		gen.writeSuite();
 
 	}//main

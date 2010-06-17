@@ -45,12 +45,9 @@ import testful.model.OptimalTestCreator;
 import testful.model.Test;
 import testful.model.TestCoverage;
 import testful.model.TestReader;
-import testful.model.transformation.ReferenceSorter;
 import testful.model.transformation.RemoveUselessDefs;
-import testful.model.transformation.Reorganizer;
 import testful.model.transformation.SimplifierDynamic;
 import testful.model.transformation.SimplifierStatic;
-import testful.model.transformation.SingleStaticAssignment;
 import testful.model.transformation.Splitter;
 import testful.model.transformation.TestTransformation;
 import testful.model.transformation.TestTransformationPipeline;
@@ -62,85 +59,41 @@ import testful.runner.RunnerPool;
 import testful.utils.ElementManager;
 
 /**
- * Given a test suite for a class, tries to reduce it.
+ * Given a (large) test suite for a class, retrieves the minimum test suite for the class.
  * @author matteo
  */
 public class TestSuiteReducer {
-	private static final Logger logger = Logger.getLogger("testful.regression");
+	private static final Logger logger = Logger.getLogger("testful.regression.simplifier");
 
 	private static final TestTransformation transform = new TestTransformationPipeline(
 			RemoveUselessDefs.singleton,
-			SimplifierStatic.singleton,
-			SingleStaticAssignment.singleton);
+			SimplifierStatic.singleton
+	);
 
 	private final OptimalTestCreator optimal = new OptimalTestCreator();
 	private final ClassFinder finder;
 	private final TrackerDatum[] data;
-	private final boolean simplify;
 
-	public TestSuiteReducer(ClassFinder finder, TrackerDatum[] data, boolean simplify) {
+	public TestSuiteReducer(ClassFinder finder, TrackerDatum[] data) {
 		this.finder = finder;
 		this.data = data;
-		this.simplify = simplify;
 	}
 
 	public void process(Test test) {
-		if(!simplify) {
-			try {
-				// calculate the coverage for the test
-				final TestCoverage coverage = getCoverage(test);
-				if(logger.isLoggable(Level.FINER)) logger.finer("Part - coverage:\n" + coverage);
-				optimal.update(coverage);
-			} catch (InterruptedException e) {
-				logger.log(Level.WARNING, "Error while executing a test: " + e, e);
-			} catch (ExecutionException e) {
-				logger.log(Level.WARNING, "Error while executing a test: " + e, e);
-			}
-			return;
-		}
-
-		logger.fine("Reducing test: initial length " + test.getTest().length);
-		if(logger.isLoggable(Level.FINER))
-			logger.finer("Original test:\n"+test);
-
 		try {
-			try {
-				test = SimplifierDynamic.singleton.perform(finder, test);
-				test = transform.perform(test);
-			} catch (Exception e) {
-				logger.log(Level.WARNING, "Unexpected exception: " + e,  e);
-			}
+
+			test = SimplifierDynamic.singleton.perform(finder, test);
+
+			test = transform.perform(test);
 
 			final List<Test> parts = Splitter.split(false, test);
-			logger.fine("Identified " + parts.size() + "parts");
 
 			for (Test part : parts) {
-				if(logger.isLoggable(Level.FINER)) logger.finer("Part:\n" + part);
 
-				part = RemoveUselessDefs.singleton.perform(part);
-				if(logger.isLoggable(Level.FINER)) logger.finer("Part - without useless defs:\n" + part);
+				part = transform.perform(part);
 
-				part = SimplifierStatic.singleton.perform(part);
-				if(logger.isLoggable(Level.FINER)) logger.finer("Part - statically simplified:\n" + part);
-
-				part = SingleStaticAssignment.singleton.perform(part);
-				if(logger.isLoggable(Level.FINER)) logger.finer("Part - SSA:\n" + part);
-
-				part = RemoveUselessDefs.singleton.perform(part);
-				if(logger.isLoggable(Level.FINER)) logger.finer("Part - without useless defs:\n" + part);
-
-				part = SimplifierDynamic.singleton.perform(finder, part);
-
-				part = Reorganizer.singleton.perform(part);
-				if(logger.isLoggable(Level.FINER)) logger.finer("Part - reorganized:\n" + part);
-
-				part = ReferenceSorter.singleton.perform(part);
-				if(logger.isLoggable(Level.FINER)) logger.finer("Part - sorted:\n" + part);
-
-				// calculate the coverage for the test
-				final TestCoverage coverage = getCoverage(part);
-				if(logger.isLoggable(Level.FINER)) logger.finer("Part - coverage:\n" + coverage);
-				optimal.update(coverage);
+				// calculate the coverage for the test and pass it to the optimal test selector
+				optimal.update(getCoverage(part));
 			}
 
 		} catch (InterruptedException e) {
@@ -167,8 +120,8 @@ public class TestSuiteReducer {
 
 	// -------------------- static version ------------
 
-	public static Collection<TestCoverage> reduce(ClassFinder finder, List<String> tests, boolean simplify) {
-		final TestSuiteReducer reducer = new TestSuiteReducer(finder, new TrackerDatum[0], simplify);
+	public static Collection<TestCoverage> reduce(ClassFinder finder, List<String> tests) {
+		final TestSuiteReducer reducer = new TestSuiteReducer(finder, new TrackerDatum[0]);
 		new TestReader() {
 
 			@Override
@@ -189,9 +142,6 @@ public class TestSuiteReducer {
 	// -------------------- main ----------------------
 
 	private static class Config extends ConfigCut implements IConfigCut.Args4j, IConfigRunner.Args4j {
-
-		@Option(required = false, name = "-noSimplify", usage = "Do not simplify tests")
-		private boolean noSimplify;
 
 		@Option(required = true, name = "-dirOut", usage = "Specify the output directory")
 		private File out;
@@ -246,7 +196,7 @@ public class TestSuiteReducer {
 
 		TrackerDatum[] data = new TrackerDatum[] { };
 
-		final TestSuiteReducer reducer = new TestSuiteReducer(finder, data, !config.noSimplify);
+		final TestSuiteReducer reducer = new TestSuiteReducer(finder, data);
 		new TestReader() {
 
 			@Override

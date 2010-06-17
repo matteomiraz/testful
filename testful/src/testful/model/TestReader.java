@@ -20,18 +20,15 @@ package testful.model;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
-import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import testful.coverage.CoverageInformation;
 import testful.model.Collector.DataLight;
@@ -40,7 +37,7 @@ public abstract class TestReader {
 
 	protected abstract Logger getLogger();
 
-	public void process(Iterable<? extends Test> tests) {
+	public void read(Iterable<? extends Test> tests) {
 
 		// count the number of tests
 		int tot = 1;
@@ -171,44 +168,20 @@ public abstract class TestReader {
 			}
 
 			@Override
-			protected void read(String fileName, TestCoverage test) {
-				super.read(fileName, test);
-				for(CoverageInformation info : test.getCoverage()) {
-					write(fileName + "-" + info.getKey() + ".txt", info.toString());
-					getLogger().info("  " + info.getKey() + ": " + info.getQuality() + "(" + info.getClass().getName() + ")");
-				}
-			}
-
-			private void write(String fileName, String value) {
-				try {
-					PrintWriter pw = new PrintWriter(fileName);
-					pw.println(value);
-					pw.close();
-				} catch(IOException e) {
-					getLogger().log(Level.WARNING, "Cannot write " + fileName + ": " + e.getMessage(), e);
-				}
-			}
-
-			@Override
 			protected void read(String fileName, Test test) {
-				getLogger().info(fileName + ": " + test.getTest().length + " operations");
+				System.out.println(fileName + " (" + test.getTest().length + " operations)");
 
-				try {
-					test.write(new GZIPOutputStream(new FileOutputStream(fileName + ".ser.gz")));
-				} catch(IOException e) {
-					getLogger().log(Level.WARNING, "Cannot write " + fileName + ": " + e.getMessage(), e);
+				if (test instanceof TestCoverage) {
+					for(CoverageInformation info : ((TestCoverage) test).getCoverage()) {
+						System.out.println(info.getName() + ": " + info.getQuality());
+					}
 				}
 
-				PrintWriter out = null;
-				try {
-					out = new PrintWriter(fileName + ".txt");
-					for(Operation op : test.getTest())
-						out.println(op);
-				} catch(IOException e) {
-					getLogger().log(Level.WARNING, "Cannot write " + fileName + ": " + e.getMessage(), e);
-				} finally {
-					if(out != null) out.close();
+				for(Operation op : test.getTest()) {
+					System.out.println(op);
 				}
+
+				System.out.println("---");
 			}
 		};
 

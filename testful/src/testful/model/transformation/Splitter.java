@@ -481,9 +481,9 @@ public class Splitter {
 
 		// 2.3 rewrite the operation, considering aliases
 		if(!splitObservers) {
-			int opPosition = ((OperationPosition) op.getInfo(OperationPosition.KEY)).position;
+			Invoke orig = op;
 			op = new Invoke(opTarget, opThis, op.getMethod(), paramsRef);
-			op.addInfo(new OperationPosition(opPosition));
+			op.addInfo(orig);
 		}
 
 		// 3. calculate the set of operation "op" depends on (including "op")
@@ -662,9 +662,9 @@ public class Splitter {
 
 		// 2.3 rewrite the operation, considering aliases
 		if(!splitObservers) {
-			int opPosition = ((OperationPosition) op.getInfo(OperationPosition.KEY)).position;
+			CreateObject orig = op;
 			op = new CreateObject(opTarget, op.getConstructor(), paramsRef);
-			op.addInfo(new OperationPosition(opPosition));
+			op.addInfo(orig);
 		}
 
 		// 3. calculate the set of operation "op" depends on (including "op")
@@ -729,17 +729,13 @@ public class Splitter {
 	public void analyze(ResetRepository op) {
 		flush();
 
-		OperationPosition position = (OperationPosition) op.getInfo(OperationPosition.KEY);
-		if(position == null)
-			logger.fine("The position is not set");
-
 		// insert ref = null
 		for (Reference r : refs) {
 			final Operation o;
 			if(r.getClazz() instanceof PrimitiveClazz) o = new AssignPrimitive(r, null);
 			else o = new AssignConstant(r, null);
-			if(position != null)
-				o.addInfo(new OperationPosition(position.position));
+
+			o.addInfo(op);
 
 			operations[r.getId()].add(o);
 		}

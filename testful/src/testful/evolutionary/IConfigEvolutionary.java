@@ -43,10 +43,6 @@ public interface IConfigEvolutionary extends IConfigGeneration, IConfigRunner, I
 
 	public boolean isUseCpuTime();
 
-	public void setSimplify(boolean simplify);
-
-	public boolean isSimplify();
-
 	/**
 	 * Returns the seed to use in the random number generator
 	 * @return the seed to use in the random number generator

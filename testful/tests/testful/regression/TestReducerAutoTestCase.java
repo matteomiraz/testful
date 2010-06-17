@@ -22,9 +22,12 @@ import java.util.Collection;
 
 import testful.AutoTestCase;
 import testful.coverage.TrackerDatum;
+import testful.model.CreateObject;
+import testful.model.Invoke;
+import testful.model.Operation;
+import testful.model.OperationResult;
 import testful.model.Test;
 import testful.model.TestCoverage;
-import testful.regression.TestSuiteReducer;
 
 /**
  * @author matteo
@@ -33,10 +36,22 @@ public class TestReducerAutoTestCase extends AutoTestCase {
 
 	@Override
 	protected Collection<TestCoverage> perform(Test test) throws Exception {
-		TestSuiteReducer reducer = new TestSuiteReducer(getFinder(), new TrackerDatum[0], true);
-
+		TestSuiteReducer reducer = new TestSuiteReducer(getFinder(), new TrackerDatum[0]);
 		reducer.process(test);
+		Collection<TestCoverage> output = reducer.getOutput();
 
-		return reducer.getOutput();
+		for (TestCoverage t : output) {
+			for (Operation op : t.getTest()) {
+				if(op instanceof Invoke || op instanceof CreateObject) {
+					if(op.getInfo(OperationResult.KEY) == null) {
+						System.err.println(op + " does not have any operation result");
+						System.err.println(t);
+					}
+					assertNotNull(op.getInfo(OperationResult.KEY));
+				}
+			}
+		}
+
+		return output;
 	}
 }

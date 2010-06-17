@@ -42,9 +42,6 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	private final IConfigRunner.Args4j configRunner = new ConfigRunner();
 	private final IConfigFitness.Args4j configFitness = new ConfigFitness();
 
-	@Option(required = false, name = "-noSimplify", usage = "Do not simplify tests")
-	private boolean noSimplify;
-
 	@Option(required = false, name = "-localSearchPeriod", usage = "Period of the local search (default: every 20 generations; <= 0 to disable local search)")
 	private int localSearchPeriod = 5;
 
@@ -322,16 +319,6 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	@Override
 	public void setLogLevel(LogLevel logLevel) {
 		configGenerator.setLogLevel(logLevel);
-	}
-
-	@Override
-	public void setSimplify(boolean simplify) {
-		noSimplify = !simplify;
-	}
-
-	@Override
-	public boolean isSimplify() {
-		return !noSimplify;
 	}
 
 	/* (non-Javadoc)

@@ -28,7 +28,6 @@ import testful.model.Clazz;
 import testful.model.CreateObject;
 import testful.model.Invoke;
 import testful.model.Operation;
-import testful.model.OperationInformation;
 import testful.model.Reference;
 import testful.model.ResetRepository;
 import testful.model.Test;
@@ -61,12 +60,8 @@ public class RemoveUselessDefs implements TestTransformation {
 
 			if(op instanceof ResetRepository) {
 				for(int j = 0; j < usedReference.length; j++) usedReference[j] = false;
-				ret.addFirst(op);
-				continue;
 
-			}
-
-			if(op instanceof AssignConstant) {
+			} else if(op instanceof AssignConstant) {
 				AssignConstant ac = (AssignConstant) op;
 				Reference target = ac.getTarget();
 
@@ -88,10 +83,7 @@ public class RemoveUselessDefs implements TestTransformation {
 
 				if(target != null && target.getClazz() != cut && !usedReference[target.getId()]) {
 					op = new CreateObject(null, co.getConstructor(), co.getParams());
-
-					Iterator<OperationInformation> iter = co.getInfos();
-					while(iter.hasNext())
-						op.addInfo(iter.next());
+					op.addInfo(co);
 				}
 
 			} else if(op instanceof Invoke) {
@@ -100,11 +92,7 @@ public class RemoveUselessDefs implements TestTransformation {
 
 				if(target != null && target.getClazz() != cut && !usedReference[target.getId()]) {
 					op = new Invoke(null, in.getThis(), in.getMethod(), in.getParams());
-
-					Iterator<OperationInformation> iter = in.getInfos();
-					while(iter.hasNext())
-						op.addInfo(iter.next());
-
+					op.addInfo(in);
 				}
 			}
 
