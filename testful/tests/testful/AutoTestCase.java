@@ -34,7 +34,6 @@ import ec.util.MersenneTwisterFast;
 
 /**
  * @author matteo
- *
  */
 public abstract class AutoTestCase extends GenericTestCase {
 
@@ -122,9 +121,7 @@ public abstract class AutoTestCase extends GenericTestCase {
 
 			try {
 				executeTest(reduced);
-				String msg = "WARNING: phantom error!\n" + e.getMessage();
-				System.err.println(msg);
-				fail(msg);
+				System.err.println("WARNING: phantom error!\n" + e.getMessage());
 			} catch (TestFailedException e1) {
 				System.err.println(e1.getMessage());
 				fail(e1.getMessage());

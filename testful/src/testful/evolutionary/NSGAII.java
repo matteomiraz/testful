@@ -150,7 +150,7 @@ implements IUpdate {
 		int evaluations = 0;
 
 		int currentGeneration = 0;
-		problem_.setCurrentGeneration(currentGeneration++, 0);
+		problem_.setCurrentGeneration(currentGeneration, 0);
 
 		Time time;
 		if(useCpuTime) {
@@ -172,12 +172,20 @@ implements IUpdate {
 		for(Solution<V> solution : population)
 			problem_.evaluateConstraints(solution);
 
-		long currentTime = time.getCurrentMs();
-		problem_.setCurrentGeneration(currentGeneration++, currentTime);
+		long currentTime;
 
 		// Generations ...
-		while (currentTime < maxTime) {
+		while ((currentTime = time.getCurrentMs()) < maxTime) {
+			problem_.setCurrentGeneration(++currentGeneration, currentTime);
 			update(0, currentTime, maxTime);
+
+			final long remaining = (maxTime - currentTime) / 1000;
+
+			logger.info(String.format("(%5.2f%%) Evaluating generation %d - %d:%02d to go",
+					(100.0 * currentTime) / maxTime,
+					currentGeneration,
+					remaining / 60,
+					remaining % 60));
 
 			// perform the improvement
 			if(improvement != null && currentGeneration % localSearchPeriod == 0) {
@@ -197,14 +205,6 @@ implements IUpdate {
 					}
 				}
 			}
-
-			final long remaining = (maxTime - currentTime) / 1000;
-
-			logger.info(String.format("(%5.2f%%) Evaluating generation %d - %d:%02d to go",
-					(100.0 * currentTime) / maxTime,
-					currentGeneration,
-					remaining / 60,
-					remaining % 60));
 
 			SolutionSet<V> offspringPopulation = new SolutionSet<V>(populationSize);
 
@@ -313,9 +313,6 @@ implements IUpdate {
 
 				remain = 0;
 			} // if
-
-			currentTime = time.getCurrentMs();
-			problem_.setCurrentGeneration(currentGeneration++, currentTime);
 
 		} // while
 

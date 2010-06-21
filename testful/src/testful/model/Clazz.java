@@ -124,14 +124,21 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 	public void clearCache() {
 		javaClass = null;
 
-		if(constructors != null) for(Constructorz cns : constructors)
-			cns.clearCache();
+		if (constructors != null) {
+			for (Constructorz cns : constructors)
+				cns.clearCache();
+		}
 
-		if(methods != null) for(Methodz m : methods)
-			m.clearCache();
 
-		if(constants != null) for(StaticValue c : constants)
-			c.clearCache();
+		if (methods != null) {
+			for (Methodz m : methods)
+				m.clearCache();
+		}
+
+		if (constants != null) {
+			for (StaticValue c : constants)
+				c.clearCache();
+		}
 	}
 
 	public Clazz getReferenceClazz() {

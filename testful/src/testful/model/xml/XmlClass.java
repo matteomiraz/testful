@@ -103,7 +103,7 @@ public class XmlClass {
 		XmlClass xmlClass = testful.model.xml.ObjectFactory.factory.createClass();
 
 		// add the return type to the test cluster
-		for (Method meth : c.getDeclaredMethods()) {
+		for (Method meth : c.getMethods()) {
 			final Class<?> returnType = meth.getReturnType();
 			final XmlMethod xmlMeth = xmlClass.getMethod(meth);
 

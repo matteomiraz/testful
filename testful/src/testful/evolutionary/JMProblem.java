@@ -86,7 +86,7 @@ public class JMProblem extends Problem<Operation> {
 					new Collector(config.getDirBase(), CoverageBranch.KEY)
 			};
 		} else {
-			collectors = null;
+			collectors = new Collector[0];
 		}
 
 	}

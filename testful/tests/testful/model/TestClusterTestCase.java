@@ -52,7 +52,6 @@ public class TestClusterTestCase extends GenericTestCase {
 			tc.isValid();
 			fail("The cluster is not valid.");
 		} catch (MissingClassException e) {
-			assertTrue(e.fatal);
 			assertEquals(1, e.missing.size());
 			assertTrue(e.missing.contains("test.model.cluster.test02.I"));
 		}
@@ -81,7 +80,6 @@ public class TestClusterTestCase extends GenericTestCase {
 			tc.isValid();
 			fail("The cluster is not valid.");
 		} catch (MissingClassException e) {
-			assertTrue(e.fatal);
 			assertEquals(1, e.missing.size());
 			assertTrue(e.missing.contains("test.model.cluster.test04.I"));
 		}
@@ -475,16 +473,16 @@ public class TestClusterTestCase extends GenericTestCase {
 		}
 	}
 
-	public void test37() throws Exception {
-		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
-		config.setCut("test.model.cluster.test37.Cut");
-
-		TestCluster tc = new TestCluster(new TestfulClassLoader(getFinder()), config);
-
-		try {
-			tc.isValid();
-		} catch (MissingClassException e) {
-			fail(e.getMessage());
-		}
-	}
+	//	public void test37() throws Exception {
+	//		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
+	//		config.setCut("test.model.cluster.test37.Cut");
+	//
+	//		TestCluster tc = new TestCluster(new TestfulClassLoader(getFinder()), config);
+	//
+	//		try {
+	//			tc.isValid();
+	//		} catch (MissingClassException e) {
+	//			fail(e.getMessage());
+	//		}
+	//	}
 }

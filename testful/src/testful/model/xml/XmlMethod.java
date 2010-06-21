@@ -162,7 +162,7 @@ public class XmlMethod implements Comparable<XmlMethod> {
 	}
 
 	/**
-	 * @return true if testful should ignore this constructor
+	 * @return true if testful should ignore this method
 	 */
 	public boolean isSkip() {
 		return kind == Kind.SKIP;

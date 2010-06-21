@@ -23,6 +23,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -33,6 +34,8 @@ import javax.xml.bind.annotation.XmlType;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(namespace = "http://testful.sourceforge.net/schema/1.2/testful.xsd", name = "constructor", propOrder = { "parameter", "extra" })
 public class XmlConstructor implements Comparable<XmlConstructor> {
+
+	private static final Logger logger = Logger.getLogger("testful.model.xml");
 
 	@XmlElement(nillable = true)
 	protected List<XmlParameter> parameter;
@@ -117,6 +120,14 @@ public class XmlConstructor implements Comparable<XmlConstructor> {
 	 */
 	public static XmlConstructor create(Constructor<?> cns) {
 		if(!Modifier.isPublic(cns.getModifiers())) return null;
+
+		// skip constructors with arrays
+		for (Class<?> params : cns.getParameterTypes()) {
+			if(params.isArray()) {
+				logger.info("Skipping " + cns + ": has an array as parameter. If you are interested in using this constructor, vote for issue #1: http://code.google.com/p/testful/issues/detail?id=1");
+				return null;
+			}
+		}
 
 		XmlConstructor xcns = testful.model.xml.ObjectFactory.factory.createConstructor();
 

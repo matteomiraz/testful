@@ -224,10 +224,11 @@ public class TestCluster implements Serializable {
 			xml.put(clazz.getClassName(), xmlClass);
 		}
 
-		// Consider public fields
-		for(Field f : javaClass.getFields())
-			if(Modifier.isPublic(f.getModifiers()))
-				todo.add(getRegistry().getClazz(f.getType()));
+		// Include types used in public fields
+		for(Field f : javaClass.getFields()) {
+			if(!skipField(f))
+				getRegistry().getClazz(f.getType());
+		}
 
 		// Consider constructors
 		for(Constructor<?> cns : javaClass.getConstructors()) {
@@ -297,8 +298,6 @@ public class TestCluster implements Serializable {
 
 		/** Contains the missing classes */
 		public final Set<String> missing;
-		/** if true, it is critical */
-		public final boolean fatal;
 
 		public MissingClassException(Set<Clazz> missing, Clazz cut) {
 			super("Some classes are missing:" + missing);
@@ -306,22 +305,6 @@ public class TestCluster implements Serializable {
 			Set<String> tmp = new HashSet<String>();
 			for (Clazz c : missing) tmp.add(c.getClassName());
 			this.missing = Collections.unmodifiableSet(tmp);
-
-			fatal = calculateFatal(missing, cut);
-		}
-
-		private static boolean calculateFatal(Set<Clazz> missing, Clazz cut) {
-			if(missing.contains(cut)) return true;
-
-			for (Constructorz cns : cut.getConstructors())
-				for (Clazz p : cns.getParameterTypes())
-					if(missing.contains(p)) return true;
-
-			for (Methodz m : cut.getMethods())
-				for (Clazz p : m.getParameterTypes())
-					if(missing.contains(p)) return true;
-
-			return false;
 		}
 	}
 
@@ -437,29 +420,38 @@ public class TestCluster implements Serializable {
 		for(Clazz cz : cluster) {
 			for(Field field : cz.toJavaClass().getFields()) {
 				Class<?> fieldType = field.getType();
-				String fieldName = field.getName();
 
-				if((field.getModifiers() & (Modifier.STATIC | Modifier.PUBLIC)) == 0) continue;
-
-				if(fieldName.startsWith("__")) continue;
+				if(skipField(field)) continue;
 
 				Clazz fieldClazz = registry.getClazzIfExists(fieldType);
-				if(fieldClazz == null || !contains(fieldClazz)) continue;
+				if(fieldClazz == null) continue;
 
 				for(Clazz d : fieldClazz.getAssignableTo()) {
-					Set<StaticValue> fields = fieldMap.get(d);
-					if(fields == null) {
-						fields = new TreeSet<StaticValue>();
-						fieldMap.put(d, fields);
+					if(contains(d)) {
+						Set<StaticValue> fields = fieldMap.get(d);
+						if(fields == null) {
+							fields = new TreeSet<StaticValue>();
+							fieldMap.put(d, fields);
+						}
+						fields.add(new StaticValue(this, field));
 					}
-					fields.add(new StaticValue(this, field));
 				}
 			}
+
 			for(Clazz c : fieldMap.keySet()) {
 				Set<StaticValue> fields = fieldMap.get(c);
 				c.setConstants(fields.toArray(new StaticValue[fields.size()]));
 			}
 		}
+	}
+
+	private boolean skipField(Field field) {
+
+		if((field.getModifiers() & (Modifier.STATIC | Modifier.PUBLIC)) == 0) return true;
+		if(field.getType().isArray()) return true;
+		if(field.getName().startsWith("__")) return true;
+
+		return false;
 	}
 
 	private void calculateSubClasses() throws ClassNotFoundException {
