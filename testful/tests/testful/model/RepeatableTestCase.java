@@ -167,8 +167,8 @@ public class RepeatableTestCase extends GenericTestCase {
 		assertEquals(       7194, t1.getTest()[11].hashCode());
 		assertEquals(-1826123715, t1.getTest()[12].hashCode());
 		assertEquals(  450995975, t1.getTest()[13].hashCode());
-		assertEquals( 1072696844, t1.getTest()[14].hashCode());
-		assertEquals( -826954055, t1.getTest()[15].hashCode());
+		assertEquals(   26787523, t1.getTest()[14].hashCode());
+		assertEquals(-1826081214, t1.getTest()[15].hashCode());
 		assertEquals(  -73348954, t1.getTest()[16].hashCode());
 		assertEquals( 1770876040, t1.getTest()[17].hashCode());
 		assertEquals( -523064318, t1.getTest()[18].hashCode());
@@ -180,22 +180,22 @@ public class RepeatableTestCase extends GenericTestCase {
 		assertEquals( -149596541, t1.getTest()[24].hashCode());
 		assertEquals( 1861196016, t1.getTest()[25].hashCode());
 		assertEquals(       2139, t1.getTest()[26].hashCode());
-		assertEquals( 1072696844, t1.getTest()[27].hashCode());
-		assertEquals( -845839317, t1.getTest()[28].hashCode());
+		assertEquals( 1131663299, t1.getTest()[27].hashCode());
+		assertEquals( 1946056956, t1.getTest()[28].hashCode());
 		assertEquals(-1671288812, t1.getTest()[29].hashCode());
 		assertEquals(       9880, t1.getTest()[30].hashCode());
 		assertEquals( 1945845450, t1.getTest()[31].hashCode());
-		assertEquals(-1154671456, t1.getTest()[32].hashCode());
-		assertEquals( 1072698642, t1.getTest()[33].hashCode());
-		assertEquals( -787984216, t1.getTest()[34].hashCode());
-		assertEquals(  183978438, t1.getTest()[35].hashCode());
-		assertEquals(  -71693833, t1.getTest()[36].hashCode());
-		assertEquals( 1752871586, t1.getTest()[37].hashCode());
-		assertEquals(  184038020, t1.getTest()[38].hashCode());
-		assertEquals(       9888, t1.getTest()[39].hashCode());
-		assertEquals( 1072697743, t1.getTest()[40].hashCode());
-		assertEquals(-1674708861, t1.getTest()[41].hashCode());
-		assertEquals( -997601657, t1.getTest()[42].hashCode());
+		assertEquals(  -80929631, t1.getTest()[32].hashCode());
+		assertEquals(  523352157, t1.getTest()[33].hashCode());
+		assertEquals( -447835854, t1.getTest()[34].hashCode());
+		assertEquals(  462830006, t1.getTest()[35].hashCode());
+		assertEquals(       8982, t1.getTest()[36].hashCode());
+		assertEquals(  665162531, t1.getTest()[37].hashCode());
+		assertEquals(  450995975, t1.getTest()[38].hashCode());
+		assertEquals( -532485776, t1.getTest()[39].hashCode());
+		assertEquals( -445169947, t1.getTest()[40].hashCode());
+		assertEquals(  641481569, t1.getTest()[41].hashCode());
+		assertEquals(-1274745497, t1.getTest()[42].hashCode());
 		assertEquals(       7193, t1.getTest()[43].hashCode());
 		assertEquals(  844040617, t1.getTest()[44].hashCode());
 		assertEquals(-1928657518, t1.getTest()[45].hashCode());
@@ -254,6 +254,6 @@ public class RepeatableTestCase extends GenericTestCase {
 		assertEquals( -763897147, t1.getTest()[98].hashCode());
 		assertEquals(-1922329193, t1.getTest()[99].hashCode());
 
-		assertEquals(  832891131, t1.hashCode());
+		assertEquals( -439185318, t1.hashCode());
 	}
 }

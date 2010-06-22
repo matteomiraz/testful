@@ -187,7 +187,7 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 	public static float SET_TO_NULL = 0.05f;
 
 	public static float GEN_BASIC_VALUES = .40f;
-	public static float LIMITED_VALUES = .40f;
+	public static float LIMITED_VALUES = .50f;
 
 	private static final AtomicLong idGenerator = new AtomicLong();
 

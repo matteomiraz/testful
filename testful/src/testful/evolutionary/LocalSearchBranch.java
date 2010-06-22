@@ -52,6 +52,7 @@ import testful.coverage.whiteBox.CoverageConditionTarget;
 import testful.coverage.whiteBox.Data;
 import testful.coverage.whiteBox.DataUse;
 import testful.model.AssignPrimitive;
+import testful.model.Clazz;
 import testful.model.Operation;
 import testful.model.PrimitiveClazz;
 import testful.model.ReferenceFactory;
@@ -276,9 +277,10 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 				AssignPrimitive ap = (AssignPrimitive) op;
 
 				Serializable value = ap.getValue();
+				final Clazz type = ap.getTarget().getClazz();
 
-				if(ap.getTarget().getClazz() instanceof PrimitiveClazz) {
-					switch(((PrimitiveClazz) ap.getTarget().getClazz()).getType()) {
+				if(type instanceof PrimitiveClazz) {
+					switch(((PrimitiveClazz) type).getType()) {
 					case BooleanClass:
 					case BooleanType:
 						if(value == null) {
@@ -365,7 +367,93 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 						break;
 					}
 				} else {
-					// TODO: do something for the string
+
+					if(type.getClassName().equals("java.lang.String")) {
+
+						if(value == null) {
+							value = AssignPrimitive.getString(random);
+
+						} else {
+
+							byte[] bytes = ((String)value).getBytes();
+							final int lBytes = bytes.length;
+
+							byte[] newBytes;
+
+							switch(random.nextInt(3)) {
+							case 1: // add one or more character(s)
+							{
+								int howMany = random.nextInt(10)+1;
+								SortedSet<Integer> nPos = new TreeSet<Integer>();
+								while(nPos.size() < howMany)
+									nPos.add(random.nextInt(lBytes + howMany));
+
+								newBytes = new byte[lBytes + howMany];
+
+								int j = 0;
+								Iterator<Integer> iter = nPos.iterator();
+								Integer next = iter.next();
+								for (int i = 0; i < newBytes.length; i++) {
+									if(next != null && i == next) {
+										newBytes[i] = (byte) AssignPrimitive.getCharacter(random);
+										if(iter.hasNext()) next = iter.next();
+										else next = null;
+
+									} else newBytes[i] = bytes[j++];
+								}
+
+								break;
+							}
+
+							case 2: // remove a character
+
+							{
+								int howMany = random.nextInt(lBytes-1)+1;
+								SortedSet<Integer> nPos = new TreeSet<Integer>();
+								while(nPos.size() < howMany)
+									nPos.add(random.nextInt(lBytes));
+
+								newBytes = new byte[lBytes - howMany];
+
+								int j = 0;
+								Iterator<Integer> iter = nPos.iterator();
+								Integer next = iter.next();
+								for (int i = 0; i < bytes.length; i++) {
+
+									if(next != null && i == next) {
+										if(iter.hasNext()) next = iter.next();
+										else next = null;
+
+									} else newBytes[j++] = bytes[i];
+								}
+
+								break;
+							}
+
+							default: // change a character
+							{
+								newBytes = bytes;
+
+								int howMany = random.nextInt(lBytes-1)+1;
+								SortedSet<Integer> nPos = new TreeSet<Integer>();
+								while(nPos.size() < howMany)
+									nPos.add(random.nextInt(lBytes));
+
+								for (Integer i : nPos) {
+									newBytes[i] = (byte) AssignPrimitive.getCharacter(random);
+								}
+
+							}
+
+							}
+
+							value = new String(newBytes);
+						}
+
+					} else {
+						logger.fine("Unknown type in AssignPrimitive"  + type.getClassName() + " (" + ap + ")");
+
+					}
 				}
 
 
