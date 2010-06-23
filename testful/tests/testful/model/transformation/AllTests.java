@@ -22,7 +22,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 /**
- * Tests (excluding random *AutoTestCase tests) for the transformation module
+ * Tests for the transformation module
  * @author matteo
  */
 public class AllTests {
@@ -30,11 +30,21 @@ public class AllTests {
 	public static Test suite() {
 		TestSuite suite = new TestSuite(AllTests.class.getName());
 		//$JUnit-BEGIN$
+		suite.addTestSuite(ReferenceSorterAutoTestCase.class);
 		suite.addTestSuite(ReorganizerTestCase.class);
+		suite.addTestSuite(SimplifierDynamicAutoTestCase.class);
 		suite.addTestSuite(SimplifierDynamicTestCase.class);
-		suite.addTestSuite(SimplifierStaticTestCase.class);
+		suite.addTestSuite(SimplifierStaticAutoTestCase.class);
+		suite.addTestSuite(Splitter_splitObserverAutoTestCase.class);
+		suite.addTestSuite(ReorganizerAutoTestCase.class);
+		suite.addTestSuite(Splitter_splitAndMergeAutoTestCase.class);
+		suite.addTestSuite(Splitter_splitAndMinimizeAutoTestCase.class);
+		suite.addTestSuite(Splitter_splitAutoTestCase.class);
 		suite.addTestSuite(Splitter_splitObserverTestCase.class);
+		suite.addTestSuite(SingleStaticAssignmentAutoTestCase.class);
+		suite.addTestSuite(SimplifierStaticTestCase.class);
 		suite.addTestSuite(Splitter_splitTestCase.class);
+		suite.addTestSuite(RemoveUselessDefsAutoTestCase.class);
 		suite.addTestSuite(Splitter_splitAndMinimizeTestCase.class);
 		suite.addTestSuite(Splitter_splitAndMergeTestCase.class);
 		//$JUnit-END$

@@ -18,7 +18,10 @@
 
 package testful;
 
+import java.util.Enumeration;
+
 import junit.framework.Test;
+import junit.framework.TestCase;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
@@ -29,6 +32,9 @@ import junit.textui.TestRunner;
  */
 public class AllTests {
 
+	/** If true, also run AutoTests (Random) */
+	public static final boolean AUTO = false;
+
 	public static Test suite() {
 		TestFul.setupLogging(GenericTestCase.getConfig());
 
@@ -38,7 +44,8 @@ public class AllTests {
 		suite.addTest(testful.coverage.AllTests.suite());
 		suite.addTest(testful.regression.AllTests.suite());
 		suite.addTest(testful.runner.AllTests.suite());
-		return suite;
+
+		return refine(suite);
 	}
 
 	public static void main(String[] args) {
@@ -49,4 +56,34 @@ public class AllTests {
 			System.exit(1);
 	}
 
+	@SuppressWarnings("unchecked")
+	private static Test refine(Test test) {
+		if(test instanceof TestSuite) {
+
+			TestSuite newSuite = new TestSuite(((TestSuite) test).getName());
+
+			Enumeration<Test> tests = ((TestSuite) test).tests();
+			while(tests.hasMoreElements()) {
+				Test t = refine(tests.nextElement());
+				if(t != null) newSuite.addTest(t);
+			}
+
+			return newSuite;
+
+		} else if(test instanceof TestCase) {
+
+			if(test instanceof AutoTestCase) {
+				if(AUTO) return test;
+				else return null;
+
+			} else {
+				return test;
+
+			}
+		} else {
+
+			System.err.println("Unknown class: " + test.getClass().getCanonicalName() + ": " + test);
+			return null;
+		}
+	}
 }

@@ -46,7 +46,7 @@ public abstract class AutoTestCase extends GenericTestCase {
 
 	protected String[] getCuts() {
 		return new String[] {
-				"apache.FractionNoStatic",
+				// "apache.FractionNoStatic",
 				"dummy.Simple",
 				"dummy.StateMachine",
 				"dummy.WhiteSample",

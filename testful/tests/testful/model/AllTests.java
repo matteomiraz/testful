@@ -31,11 +31,11 @@ public class AllTests {
 		TestSuite suite = new TestSuite(AllTests.class.getName());
 
 		//$JUnit-BEGIN$
-		suite.addTestSuite(ArrayTestCase.class);
-		suite.addTestSuite(OptimalTestCase.class);
-		suite.addTestSuite(RepeatableTestCase.class);
 		suite.addTestSuite(TestClusterTestCase.class);
+		suite.addTestSuite(RepeatableTestCase.class);
+		suite.addTestSuite(OptimalTestCase.class);
 		suite.addTestSuite(TestExecutionManagerTestCase.class);
+		suite.addTestSuite(ArrayTestCase.class);
 		//$JUnit-END$
 
 		suite.addTest(testful.model.transformation.AllTests.suite());
