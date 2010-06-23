@@ -62,6 +62,8 @@ public final class ResetRepository extends Operation {
 
 	@Override
 	public Operation clone() {
-		return singleton;
+		ResetRepository clone = new ResetRepository();
+		clone.addInfo(this);
+		return clone;
 	}
 }

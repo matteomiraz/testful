@@ -34,6 +34,7 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import testful.TestFul;
 import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
@@ -130,6 +131,7 @@ public class Splitter {
 
 			return ret;
 		} catch (Throwable e) {
+			if(TestFul.DEBUG) e.printStackTrace();
 			logger.log(Level.FINE, "Error during split and merge: " + e, e);
 			return test;
 		}
@@ -181,6 +183,7 @@ public class Splitter {
 			try {
 				results.add(new TestCoverage(entry.getKey(), entry.getValue().get()));
 			} catch(Exception e) {
+				if(TestFul.DEBUG) e.printStackTrace();
 				logger.log(Level.FINE, e.getMessage(), e);
 			}
 		}
@@ -445,7 +448,17 @@ public class Splitter {
 		final Reference opTarget = op.getTarget();
 		final int opTargetId = opTarget != null ? opTarget.getId() : -1;
 
-		final Reference opThis = methodInfo.getType() == Kind.MUTATOR ? op.getThis() : alias(op.getThis());
+		final Reference opThis;
+		switch(methodInfo.getType()) {
+		case STATIC:
+			opThis = null;
+			break;
+		case MUTATOR:
+			opThis = op.getThis();
+			break;
+		default:
+			opThis = alias(op.getThis());
+		}
 		final int opThisId = opThis != null ? opThis.getId() : -1;
 
 		final ParameterInformation[] paramsInfo = methodInfo.getParameters();
@@ -487,7 +500,10 @@ public class Splitter {
 		}
 
 		// 3. calculate the set of operation "op" depends on (including "op")
-		TreeSet<Operation> newSet = (TreeSet<Operation>) operations[opThis.getId()].clone();
+		final TreeSet<Operation> newSet;
+		if(opThisId >= 0) newSet = (TreeSet<Operation>) operations[opThisId].clone();
+		else newSet = new TreeSet<Operation>(OperationPosition.orderComparator);
+
 		newSet.add(op);
 		for(Reference pRef : paramsRef)
 			newSet.addAll(operations[pRef.getId()]);
@@ -602,8 +618,13 @@ public class Splitter {
 			else
 				emit(newSet);
 		} else {
-			if(methodInfo.getType() == Kind.MUTATOR || opTarget == null || aliases[opTargetId] == null)
-				operations[opThisId] = newSet;
+			if(methodInfo.getType() == Kind.MUTATOR || opTarget == null || aliases[opTargetId] == null) {
+				if(opThisId >= 0)
+					operations[opThisId] = newSet;
+				else
+					emit(newSet);
+
+			}
 		}
 
 		if(opTarget != null) {
@@ -819,7 +840,7 @@ public class Splitter {
 
 	private boolean interesting(SortedSet<Operation> ops) {
 		for(Operation op : ops) {
-			if(op instanceof Invoke && ((Invoke) op).getThis().getClazz() == cluster.getCut()) return true;
+			if(op instanceof Invoke && ((Invoke) op).getMethod().getClazz() == cluster.getCut()) return true;
 			if(op instanceof CreateObject && ((CreateObject) op).getConstructor().getClazz() == cluster.getCut()) return true;
 			if(op instanceof AssignConstant && ((AssignConstant)op).getValue() != null && ((AssignConstant)op).getValue().getDeclaringClass() == cluster.getCut())  return true;
 		}
@@ -827,6 +848,8 @@ public class Splitter {
 	}
 
 	private void merge(int pos1, int pos2) {
+		if(pos1 < 0 || pos2 < 0) return;
+
 		if(operations[pos1] == operations[pos2]) return;
 
 		if(operations[pos1].isEmpty()) operations[pos1] = operations[pos2];

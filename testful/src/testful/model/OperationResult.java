@@ -50,6 +50,7 @@ import testful.utils.Cloner;
  *
  * @author matteo
  */
+@SuppressWarnings("unused")
 public class OperationResult extends OperationInformation {
 
 	private static final long serialVersionUID = 772248461493438644L;
@@ -109,7 +110,6 @@ public class OperationResult extends OperationInformation {
 		status = Status.POSTCONDITION_ERROR;
 	}
 
-	@SuppressWarnings("unused")
 	public void setSuccessful(Object object, Object result, TestCluster cluster) throws ReplayException {
 
 		if(TestFul.DEBUG && status != Status.NOT_EXECUTED)
@@ -120,7 +120,6 @@ public class OperationResult extends OperationInformation {
 		this.result = new Value(result, cluster);
 	}
 
-	@SuppressWarnings("unused")
 	public void setExceptional(Throwable exc, Object object, TestCluster cluster) throws ReplayException {
 
 		if(TestFul.DEBUG && status != Status.NOT_EXECUTED)

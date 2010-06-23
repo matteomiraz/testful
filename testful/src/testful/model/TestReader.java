@@ -177,10 +177,7 @@ public abstract class TestReader {
 					}
 				}
 
-				for(Operation op : test.getTest()) {
-					System.out.println(op);
-				}
-
+				System.out.println(test);
 				System.out.println("---");
 			}
 		};

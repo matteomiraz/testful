@@ -20,7 +20,6 @@ package testful.model;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import testful.model.MethodInformation.Kind;
@@ -51,13 +50,7 @@ public class Invoke extends Operation {
 	@Override
 	public Operation adapt(TestCluster cluster, ReferenceFactory refFactory) {
 		final Invoke ret = new Invoke(refFactory.adapt(_return), refFactory.adapt(_this), cluster.adapt(method), refFactory.adapt(params));
-
-		Iterator<OperationInformation> it = getInfos();
-		while(it.hasNext()) {
-			OperationInformation info = it.next();
-			ret.addInfo(info.clone());
-		}
-
+		ret.addInfo(this);
 		return ret;
 	}
 
@@ -102,6 +95,12 @@ public class Invoke extends Operation {
 	@Override
 	public String toString() {
 
+		String ret = "";
+		if(_return != null) {
+			ret = _return + " = ";
+			if(_return.getClazz() instanceof PrimitiveClazz) ret += ((PrimitiveClazz) _return.getClazz()).getCast() + " ";
+		}
+
 		StringBuilder pars = null;
 		for(Reference p : params) {
 			if(pars == null) pars = new StringBuilder();
@@ -109,13 +108,8 @@ public class Invoke extends Operation {
 			pars.append(p.toString());
 		}
 
-		String ret = "";
-		if(_return != null) {
-			ret = _return + " = ";
-			if(_return.getClazz() instanceof PrimitiveClazz) ret += ((PrimitiveClazz) _return.getClazz()).getCast() + " ";
-		}
 
-		return ret + _this + "." + method.getName() + "(" + (pars != null ? pars.toString() : "") + ")";
+		return ret + (_this == null ? method.getClazz().getClassName() : _this.toString())+ "." + method.getName() + "(" + (pars != null ? pars.toString() : "") + ")";
 	}
 
 	@Override
@@ -177,6 +171,8 @@ public class Invoke extends Operation {
 
 	@Override
 	public Operation clone() {
-		return new Invoke(_return, _this, method, params);
+		final Invoke clone = new Invoke(_return, _this, method, params);
+		clone.addInfo(this);
+		return clone;
 	}
 }

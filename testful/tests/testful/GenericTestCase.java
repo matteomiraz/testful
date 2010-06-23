@@ -216,16 +216,15 @@ public abstract class GenericTestCase extends TestCase {
 			assertEquals("Test " + i + ": wrong result size", expected[i].length, actual[i].length);
 
 			for(int j = 0; j < expected[i].length; j++) {
-
-				if(!expected[i][j].equals(actual[i][j])) print(original, tests);
-				assertEquals("Test " + i + ": Mismatch in operation " + j, expected[i][j], actual[i][j]);
+				if(!expected[i][j].toString().equals(actual[i][j].toString())) {
+					print(original, tests);
+					assertEquals("Test " + i + ": Mismatch in operation " + j, expected[i][j].toString(), actual[i][j].toString());
+				}
 			}
 		}
 	}
 
 	private void print(Test original, Collection<? extends Test> tests) {
-		new NullPointerException().printStackTrace();
-
 		System.err.println("original:");
 
 		int n = -1;

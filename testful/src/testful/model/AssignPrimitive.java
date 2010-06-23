@@ -20,7 +20,6 @@ package testful.model;
 
 import java.io.Serializable;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -73,13 +72,7 @@ public class AssignPrimitive extends Operation {
 	@Override
 	public Operation adapt(TestCluster cluster, ReferenceFactory refFactory) {
 		final AssignPrimitive ret = new AssignPrimitive(refFactory.adapt(ref), value);
-
-		Iterator<OperationInformation> it = getInfos();
-		while(it.hasNext()) {
-			OperationInformation info = it.next();
-			ret.addInfo(info.clone());
-		}
-
+		ret.addInfo(this);
 		return ret;
 	}
 
@@ -386,6 +379,8 @@ public class AssignPrimitive extends Operation {
 
 	@Override
 	public Operation clone() {
-		return new AssignPrimitive(ref, value);
+		final AssignPrimitive clone = new AssignPrimitive(ref, value);
+		clone.addInfo(this);
+		return clone;
 	}
 }

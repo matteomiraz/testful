@@ -386,17 +386,20 @@ public class ReflectionExecutor implements Executor {
 	}
 
 	private void invoke(Invoke op) throws Throwable {
-		Reference targetPos = op.getTarget();
-		Reference sourcePos = op.getThis();
-		Methodz method = op.getMethod();
-		Reference[] params = op.getParams();
-		Clazz[] paramsTypes = method.getParameterTypes();
-		OperationResult opRes = (OperationResult) op.getInfo(OperationResult.KEY);
+		final Reference targetPos = op.getTarget();
+		final Reference sourcePos = op.getThis();
+		final Methodz method = op.getMethod();
+		final Reference[] params = op.getParams();
+		final Clazz[] paramsTypes = method.getParameterTypes();
+		final OperationResult opRes = (OperationResult) op.getInfo(OperationResult.KEY);
 
-		Method m = method.toMethod();
-		Object[] args = new Object[params.length];
+		final Method m = method.toMethod();
+		final Object[] args = new Object[params.length];
 
-		Object baseObject = get(sourcePos);
+		final Object baseObject;
+		if(sourcePos != null) baseObject = get(sourcePos);
+		else baseObject = null;
+
 		if(baseObject == null && !method.isStatic()) {
 			if(opRes != null) opRes.setPreconditionError();
 			throw new PreconditionViolationException.Impl("The object accepting the method call is null", null);
@@ -448,7 +451,7 @@ public class ReflectionExecutor implements Executor {
 			}
 
 			// a valid exception is thrown
-			if(opRes != null) opRes.setExceptional(exc, null, cluster);
+			if(opRes != null) opRes.setExceptional(exc, baseObject, cluster);
 
 		} catch(Throwable e) {
 			logger.log(Level.WARNING, "Reflection error in invoke(" + op + "): " + e.getMessage(), e);

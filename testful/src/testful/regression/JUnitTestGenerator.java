@@ -84,7 +84,7 @@ public class JUnitTestGenerator extends TestReader {
 			ReferenceSorter.singleton
 	);
 
-	/** maximum number of operation per jUnit test */
+	/** maximum number of operation for each jUnit test */
 	private static final int MAX_TEST_LEN = 2000;
 
 	private final File destDir;

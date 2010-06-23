@@ -95,7 +95,12 @@ public class SimplifierStatic implements TestTransformation {
 
 				if(!checkInitializated(in.getMethod().getParameterTypes(), in.getParams(), initialized)) continue;
 
-				if(in.getThis() != null && !initialized[in.getThis().getId()]) continue;
+				if(!in.getMethod().isStatic() && (in.getThis() == null || !initialized[in.getThis().getId()])) continue;
+
+				if(in.getMethod().isStatic()) {
+					op = new Invoke(in.getTarget(), null, in.getMethod(), in.getParams());
+					op.addInfo(in);
+				}
 
 				initializeToNull(ops, in.getParams(), initialized, initializedNull);
 

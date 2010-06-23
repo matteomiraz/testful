@@ -31,6 +31,7 @@ import testful.model.Test;
 import testful.testCut.ApacheFractionCUT;
 import testful.testCut.DummySimpleCUT;
 import testful.testCut.DummyStateMachineCUT;
+import testful.testCut.TestModelArrayStringMatrixCUT;
 
 /**
  * @author matteo
@@ -378,5 +379,36 @@ public class Splitter_splitTestCase extends GenericTestCase {
 		};
 
 		check(t, perform(t), expected, false);
+	}
+
+	/**
+	 * test_model_array_StringArrayArray_3 = new test.model.array.StringArrayArray();
+	 * java_lang_Integer_2 = (int)-813928003;
+	 * test_model_array_StringArray_2 = test_model_array_StringMatrix_2.testful_crea(java_lang_Integer_2);
+	 * test_model_array_StringArrayArray_3.addHead(test_model_array_StringArray_2);
+	 * java_lang_Integer_1 = (int) test_model_array_StringMatrix_1.testful_conta(test_model_array_StringArrayArray_3);
+	 * test_model_array_StringArray_3 = test_model_array_StringMatrix_1.testful_crea(java_lang_Integer_2);
+	 */
+	public void testArray1() throws Exception {
+		TestModelArrayStringMatrixCUT cut = new TestModelArrayStringMatrixCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.saa[2], cut.saa_cns, new Reference[] { }),
+				new AssignPrimitive(cut.ints[2], -813928003),
+				new Invoke(cut.sa[2], null, cut.c_crea, new Reference[] { cut.ints[2] }),
+				new Invoke(null, cut.sa[3], cut.sa_addHead, new Reference[] { cut.sa[2] }),
+				new Invoke(cut.ints[1], cut.cuts[1], cut.c_conta, new Reference[] { cut.saa[3] }),
+				new Invoke(cut.saa[3], cut.cuts[1], cut.c_crea, new Reference[] { cut.ints[2] })
+		});
+
+		Operation[][] expected = {
+				{
+					new Invoke(null, null, cut.c_conta, new Reference[] { cut.saa[3] }),
+				}, {
+					new AssignPrimitive(cut.ints[2], -813928003),
+					new Invoke(null, null, cut.c_crea, new Reference[] { cut.ints[2] })
+				}
+		};
+
+		check(t, perform(t), expected, true);
 	}
 }

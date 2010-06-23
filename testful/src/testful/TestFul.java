@@ -46,7 +46,7 @@ public class TestFul {
 	 */
 	public static final boolean DEBUG = false;
 
-	private static final String VERSION = "1.1.3";
+	private static final String VERSION = "1.2.0.alpha";
 
 	public static void parseCommandLine(IConfig config, String[] args, Class<?> launcher, String name) {
 

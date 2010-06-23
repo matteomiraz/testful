@@ -32,6 +32,7 @@ public class AllTests {
 		//$JUnit-BEGIN$
 		suite.addTestSuite(ReorganizerTestCase.class);
 		suite.addTestSuite(SimplifierDynamicTestCase.class);
+		suite.addTestSuite(SimplifierStaticTestCase.class);
 		suite.addTestSuite(Splitter_splitObserverTestCase.class);
 		suite.addTestSuite(Splitter_splitTestCase.class);
 		suite.addTestSuite(Splitter_splitAndMinimizeTestCase.class);

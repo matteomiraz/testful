@@ -51,7 +51,8 @@ public abstract class AutoTestCase extends GenericTestCase {
 				"dummy.StateMachine",
 				"dummy.WhiteSample",
 				"test.coverage.Fault",
-				"test.coverage.Stopped"
+				"test.coverage.Stopped",
+				"test.model.array.StringMatrix"
 		};
 	}
 

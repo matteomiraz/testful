@@ -29,6 +29,7 @@ public class AutoTests {
 	public static Test suite() {
 		TestSuite suite = new TestSuite(AutoTests.class.getName());
 		//$JUnit-BEGIN$
+		suite.addTestSuite(JUnitTransformationAutoTestCase.class);
 		suite.addTestSuite(TestReducerAutoTestCase.class);
 		//$JUnit-END$
 		return suite;

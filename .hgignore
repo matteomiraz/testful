@@ -7,3 +7,4 @@ syntax: regexp
 /bin/
 ^testful/testCut/bin$
 ^testful/testCut/instrumented$
+^testful/auto.txt$
