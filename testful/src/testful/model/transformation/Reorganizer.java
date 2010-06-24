@@ -237,7 +237,16 @@ public class Reorganizer implements TestTransformation {
 				Invoke i1 = (Invoke) o1;
 				Invoke i2 = (Invoke) o2;
 
+				if(i1.getMethod().isStatic() && !i2.getMethod().isStatic()) return -1;
+				if(!i1.getMethod().isStatic() && i2.getMethod().isStatic()) return  1;
+
+				String class1 = i1.getMethod().getClazz().getClassName();
+				String class2 = i1.getMethod().getClazz().getClassName();
+				cmp = class1.compareTo(class2);
+				if(cmp != 0) return cmp;
+
 				cmp = compare(i1.getThis(), i2.getThis());
+				if(cmp != 0) return cmp;
 
 				name1 = i1.getMethod().getFullMethodName();
 				name2 = i2.getMethod().getFullMethodName();

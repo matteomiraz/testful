@@ -60,9 +60,9 @@ public class Invoke extends Operation {
 		Methodz[] usableMethods = c.getMethods();
 		if(usableMethods.length <= 0) return null;
 
-		Reference t = generateRef(c, cluster, refFactory, random);
-
 		Methodz m = usableMethods[random.nextInt(usableMethods.length)];
+
+		Reference t = m.isStatic() ? null : generateRef(c, cluster, refFactory, random);
 
 		Clazz[] paramsType = m.getParameterTypes();
 		Reference[] p = new Reference[paramsType.length];
@@ -80,6 +80,10 @@ public class Invoke extends Operation {
 		return _return;
 	}
 
+	/**
+	 * Returns the reference of the object accepting the method call. Null if the method is static.
+	 * @return the reference of the object accepting the method call. Null if the method is static.
+	 */
 	public Reference getThis() {
 		return _this;
 	}
