@@ -28,7 +28,7 @@ import testful.GenericTestCase;
 import testful.coverage.whiteBox.ConditionTargetDatum;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
 import testful.coverage.whiteBox.CoverageBranch;
-import testful.coverage.whiteBox.CoverageConditionTarget;
+import testful.coverage.whiteBox.CoverageBranchTarget;
 import testful.model.AssignPrimitive;
 import testful.model.Clazz;
 import testful.model.Constructorz;
@@ -164,7 +164,7 @@ public class CoverageCFGTestCase extends GenericTestCase {
 
 		for(int br : distance.keySet()) {
 			ElementManager<String, CoverageInformation> cov = getCoverage(t, new ConditionTargetDatum(br));
-			CoverageConditionTarget ct = (CoverageConditionTarget) cov.get(CoverageConditionTarget.getKEY(br));
+			CoverageBranchTarget ct = (CoverageBranchTarget) cov.get(CoverageBranchTarget.KEY);
 
 			assertEquals("Wrong distance on branch " + br, (float) (1.0f/distance.get(br)), ct.getQuality());
 		}

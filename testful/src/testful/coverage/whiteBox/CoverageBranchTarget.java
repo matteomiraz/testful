@@ -32,36 +32,28 @@ import testful.coverage.CoverageInformation;
  *
  * @author matteo
  */
-public class CoverageConditionTarget implements CoverageInformation {
+public class CoverageBranchTarget implements CoverageInformation {
 	private static final long serialVersionUID = 7837300371834856584L;
 
 	private static String NAME = "Distance to branch ";
+	public static String KEY = "tbr";
 
-	private static String KEY = "br-";
-	public static String getKEY(int branchId) {
-		return KEY + branchId;
-	}
-
-	private final String name;
-	private final String key;
 	private final int branchId;
 	private double distance;
 
-	public CoverageConditionTarget(int branchId) {
-		key = KEY + branchId;
-		name = NAME + branchId;
+	public CoverageBranchTarget(int branchId) {
 		this.branchId = branchId;
 		distance = Float.POSITIVE_INFINITY;
 	}
 
 	@Override
 	public String getKey() {
-		return key;
+		return KEY;
 	}
 
 	@Override
 	public String getName() {
-		return name;
+		return NAME + branchId;
 	}
 
 	public int getBranchId() {
@@ -91,7 +83,7 @@ public class CoverageConditionTarget implements CoverageInformation {
 	public boolean contains(CoverageInformation other) {
 		if(!other.getKey().equals(getKey())) return false;
 
-		CoverageConditionTarget o = (CoverageConditionTarget) other;
+		CoverageBranchTarget o = (CoverageBranchTarget) other;
 		if(distance > o.distance) return false;
 
 		return true;
@@ -102,20 +94,20 @@ public class CoverageConditionTarget implements CoverageInformation {
 	public void merge(CoverageInformation other) {
 		if(!other.getKey().equals(getKey())) return;
 
-		CoverageConditionTarget o = (CoverageConditionTarget) other;
+		CoverageBranchTarget o = (CoverageBranchTarget) other;
 		if(distance <= o.distance) return;
 
 		distance = o.distance;
 	}
 
 	@Override
-	public CoverageConditionTarget createEmpty() {
-		return new CoverageConditionTarget(branchId);
+	public CoverageBranchTarget createEmpty() {
+		return new CoverageBranchTarget(branchId);
 	}
 
 	@Override
-	public CoverageConditionTarget clone() {
-		CoverageConditionTarget ret = new CoverageConditionTarget(branchId);
+	public CoverageBranchTarget clone() {
+		CoverageBranchTarget ret = new CoverageBranchTarget(branchId);
 		ret.distance = distance;
 		return ret;
 	}
