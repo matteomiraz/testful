@@ -412,7 +412,8 @@ public class JUnitTestGenerator extends TestReader {
 								generateAssertions("\t\t", out, opResult.getResult(), returnType.getClassName(), tmpVar);
 							}
 
-							generateAssertions("\t\t", out, opResult.getObject(), null, invoke.getThis().toString());
+							if(invoke.getThis() != null)
+								generateAssertions("\t\t", out, opResult.getObject(), null, invoke.getThis().toString());
 
 							out.println();
 

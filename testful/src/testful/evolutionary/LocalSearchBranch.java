@@ -380,7 +380,8 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 							byte[] newBytes;
 
-							switch(random.nextInt(3)) {
+							// if lBytes = 0, the string is empty. In this case we only insert new characters
+							switch( (lBytes > 0 ? random.nextInt(3) : 1) ) {
 							case 1: // add one or more character(s)
 							{
 								int howMany = random.nextInt(10)+1;
