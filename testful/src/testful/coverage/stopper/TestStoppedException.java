@@ -32,6 +32,7 @@ public class TestStoppedException extends RuntimeException implements FaultyExec
 	/** if set to true, stops the execution */
 	private static volatile boolean kill = false;
 
+	/** the exception that is thrown */
 	private static TestStoppedException singleton = null;
 
 	public static void check() {

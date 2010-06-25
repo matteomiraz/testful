@@ -35,7 +35,7 @@ public final class Stopper {
 	private static final boolean LOG_FINER = logger.isLoggable(Level.FINER);
 
 	/** Milliseconds between two kills */
-	private static final int KILL_WAIT = 50;
+	private static final int KILL_WAIT = 20;
 
 	/** Standard waiting time if IDLE */
 	private static final int IDLE_WAIT = 10000;
@@ -59,10 +59,9 @@ public final class Stopper {
 			public void run() {
 				try {
 					while(running) {
-
-						final long curr = System.currentTimeMillis();
 						synchronized (wait) {
 
+							final long curr = System.currentTimeMillis();
 							final long end, delta;
 							if(endOfTheWorld > 0) {
 								end = endOfTheWorld;
@@ -112,13 +111,11 @@ public final class Stopper {
 		if(TestFul.DEBUG && endOfTheWorld > 0)
 			logger.log(Level.WARNING, "The Stopper is already running", new IllegalStateException("The end is scheduled for " + endOfTheWorld));
 
-		final long _endOfTheWorld = System.currentTimeMillis() + maxExecTime;
-
 		synchronized (wait) {
-			endOfTheWorld = _endOfTheWorld;
+			endOfTheWorld = System.currentTimeMillis() + maxExecTime;
 			TestStoppedException.dontKill();
 
-			if(waiting > _endOfTheWorld) wait.notify();
+			if(waiting > endOfTheWorld) wait.notify();
 		}
 	}
 
