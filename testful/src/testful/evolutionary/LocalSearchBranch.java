@@ -74,18 +74,19 @@ import ec.util.MersenneTwisterFast;
  */
 public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
-	private static final boolean DEBUG_LS = false;
-
 	private static final Logger logger = Logger.getLogger("testful.evolutionary.localSearch");
 	private static final boolean LOG_FINE = logger.isLoggable(Level.FINE);
 	private static final boolean LOG_FINER = logger.isLoggable(Level.FINER);
+	private static final boolean LOG_FINEST = logger.isLoggable(Level.FINEST);
 
 	private final AtomicInteger localSearchId = new AtomicInteger(0);
 
 	private final MersenneTwisterFast random;
 
-	private final int AGE_FIRST = 10;
-	private final int AGE_IMPR  = 50;
+	/** Number of attempts when a new operation is targeted */
+	private final int TTL_FIRST = 10;
+	/** Number of attempts for operations able to reduce the branch distance */
+	private final int TTL_IMPROVEMENT  = 50;
 
 	private final float SCORE_BOOL = 0;
 	private final float SCORE_ARRAY = 0;
@@ -203,9 +204,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			for(Solution<Operation> solution : solutionSet)
 				tests.addAll(evalParts(solution));
 
-			BitSet execConds = getExecutedBranches(tests);
-
-			Set<TestWithScore> testScore = addSearchScore(tests, execConds);
+			Set<TestWithScore> testScore = addSearchScore(tests, getExecutedBranches(tests));
 			TestWithScore test = getBest(testScore);
 			if(test == null || test.score == null) return null;
 
@@ -213,12 +212,12 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 			if(result == null) return null;
 
-			Solution<Operation> solution = ((SolutionRef)test.test.getCoverage().get(SolutionRef.KEY)).getSolution();
-			for(Operation op : result)
-				solution.getDecisionVariables().variables_.add(op);
+			SolutionSet<Operation> ret = new SolutionSet<Operation>(solutionSet.size());
+			for(Solution<Operation> s : solutionSet) {
+				for(Operation op : result) s.getDecisionVariables().variables_.add(op);
+				ret.add(s);
+			}
 
-			SolutionSet<Operation> ret = new SolutionSet<Operation>(1);
-			ret.add(solution);
 			return ret;
 
 		} catch(Throwable e) {
@@ -244,18 +243,18 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 		for(Operation op : test.test.getTest())
 			opsOrig.add(op);
 
-		Integer p = attempts.get(branchId);
-		if(p == null) p = 0;
+		Integer nAttempts = attempts.get(branchId);
+		if(nAttempts == null) nAttempts = 0;
 
-		int pos = 0;
-		int age = 0;
-		for(int i = 0; i < maxEvaluations*(p+1); i++) {
+		int pos = 0; // the position to target
+		int ttl = 0; // how many times the position can be targeted again
+		for(int i = 0; i < maxEvaluations*(nAttempts+1); i++) {
 
 			List<Operation> ops = new LinkedList<Operation>(opsOrig);
 
-			if(--age < 0) {
+			if(--ttl < 0) {
 				pos = ops.isEmpty() ? -1 : random.nextInt(ops.size());
-				age = AGE_FIRST;
+				ttl = TTL_FIRST;
 			}
 
 			boolean canContinue = mutate(ops, pos);
@@ -266,7 +265,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 			if(LOG_FINE) logger.fine("coverageLocalSearch " + localSearchId + " branch=" + branchId + ";iter=" + (i+1) + ";cov=" + covCond.getQuality() + ";distance=" + covCond + ";len=" + ops.size());
 
-			if(DEBUG_LS) {
+			if(LOG_FINEST) {
 				StringBuilder sb = new StringBuilder();
 
 				if(covCond.getQuality() < covCondOrig.getQuality()) sb.append(" ");
@@ -278,25 +277,22 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 				if(canContinue) sb.append("C");
 				else sb.append(" ");
 
-				sb.append(" p:" + pos + " #" + age + " q:" + covCond.getQuality() + " oq:" + covCondOrig.getQuality() + " d:" + covCond + " od:" + covCondOrig).append("\n");
+				sb.append(" p:" + pos + " #" + ttl + " q:" + covCond.getQuality() + " oq:" + covCondOrig.getQuality() + " d:" + covCond + " od:" + covCondOrig).append("\n");
 
-				sb.append("Orig Test: \n");
+				sb.append("Origiginal Test:\n");
 				for (Operation o : opsOrig)
 					sb.append("  " + o).append("\n");
-				sb.append("Mod Test: \n");
+				sb.append("Modified Test:\n");
 				for (Operation o : ops)
 					sb.append("  " + o).append("\n");
-				System.err.println(sb.append("---").toString());
+				logger.finest(sb.append("---").toString());
 			}
 
 			if(covCond.getQuality() < covCondOrig.getQuality()) continue;
 			if(covCond.getQuality() == covCondOrig.getQuality() && ops.size() >= opsOrig.size()) continue;
 
-			if(!canContinue) age = 0;
-			else {
-				age = AGE_IMPR;
-				if(covCond.getQuality() <= covCondOrig.getQuality()) System.err.println("QUI!?!");
-			}
+			if(!canContinue) ttl = 0;
+			else ttl = TTL_IMPROVEMENT;
 
 			opsOrig = ops;
 			covCondOrig = covCond;
@@ -308,9 +304,9 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			}
 		}
 
-		attempts.put(branchId, ++p);
+		attempts.put(branchId, ++nAttempts);
 
-		logger.info("Branch " + branchId + " missed " + p + " times");
+		logger.info("Branch " + branchId + " missed " + nAttempts + " times");
 
 		return null;
 	}
@@ -343,7 +339,12 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 		else return -1;
 	}
 
-
+	/**
+	 * Mutate the operations
+	 * @param ops the operations to mutate
+	 * @param pos the position to mutate
+	 * @return true if it is possible to work on the position (i.e., ops is not modified by removing or introducing operations)
+	 */
 	public boolean mutate(List<Operation> ops, int pos) {
 
 		final boolean isModifiable = pos >= 0 && (ops.get(pos) instanceof AssignPrimitive);
@@ -382,7 +383,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			return true;
 
 		case 2:
-			ops.remove(random.nextInt(ops.size()));
+			ops.remove(pos);
 			return false;
 
 		default:
@@ -428,7 +429,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 				if(value == null)
 					return random.nextDouble();
 
-				if(random.nextBoolean(.75))
+				if(random.nextBoolean(.9))
 					return ((Double)value) + random.nextGaussian();
 				else
 					return random.nextDouble();
@@ -438,7 +439,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 				if(value == null)
 					return random.nextFloat();
 
-				if(random.nextBoolean(.75))
+				if(random.nextBoolean(.9))
 					return (float) (((Float)value) + random.nextGaussian());
 				else
 					return random.nextFloat();
@@ -506,7 +507,6 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 					}
 
 					case 2: // remove a character
-
 					{
 						int howMany = random.nextInt(lBytes-1)+1;
 						SortedSet<Integer> nPos = new TreeSet<Integer>();
@@ -614,25 +614,22 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 	}
 
 	private Set<TestCoverage> evalParts(Solution<Operation> solution) throws InterruptedException, ExecutionException {
-		Test test = problem.getTest(solution.getDecisionVariables().variables_);
-		test = SimplifierDynamic.singleton.perform(problem.getFinder(), test);
 
-		List<Test> parts = Splitter.split(true, test);
-		int size = parts.size();
+		List<Test> parts = Splitter.split(true,
+				SimplifierDynamic.singleton.perform(problem.getFinder(),
+						problem.getTest(solution.getDecisionVariables().variables_)));
 
-		List<Future<ElementManager<String, CoverageInformation>>> futures = new ArrayList<Future<ElementManager<String, CoverageInformation>>>(size);
+		List<Future<ElementManager<String, CoverageInformation>>> futures = new ArrayList<Future<ElementManager<String, CoverageInformation>>>(parts.size());
 		for(Test t : parts) futures.add(problem.evaluate(t));
 
 		Set<TestCoverage> tests = new LinkedHashSet<TestCoverage>();
+		evaluations += parts.size();
+
+		// iterate both on parts and on futures
 		Iterator<Test> partsIter = parts.iterator();
 		Iterator<Future<ElementManager<String, CoverageInformation>>> futuresIter = futures.iterator();
-		while(partsIter.hasNext()) {
-			ElementManager<String, CoverageInformation> cov = futuresIter.next().get();
-			cov.put(new SolutionRef(solution));
-			tests.add(new TestCoverage(partsIter.next(), cov));
-		}
-
-		evaluations += size;
+		while(partsIter.hasNext())
+			tests.add(new TestCoverage(partsIter.next(), futuresIter.next().get()));
 
 		return tests;
 	}
@@ -828,56 +825,6 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			}
 
 			return test.hashCode() - o.test.hashCode();
-		}
-	}
-
-	private static class SolutionRef implements CoverageInformation {
-		private static final long serialVersionUID = -5289426823204679546L;
-
-		static final String KEY = "SolutionRef";
-
-		private final Solution<Operation> solution;
-
-		public SolutionRef(Solution<Operation> solution) {
-			this.solution = solution;
-		}
-
-		public Solution<Operation> getSolution() {
-			return solution;
-		}
-
-		@Override
-		public boolean contains(CoverageInformation other) {
-			return false;
-		}
-
-		@Override
-		public CoverageInformation createEmpty() {
-			return this;
-		}
-
-		@Override
-		public String getKey() {
-			return KEY;
-		}
-
-		@Override
-		public String getName() {
-			return KEY;
-		}
-
-		@Override
-		public float getQuality() {
-			return 0;
-		}
-
-		@Override
-		public void merge(CoverageInformation other) {
-		}
-
-		@Override
-		public SolutionRef clone() throws CloneNotSupportedException {
-			return this;
 		}
 	}
 }
