@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import testful.GenericTestCase;
+import testful.model.AssignConstant;
 import testful.model.AssignPrimitive;
 import testful.model.CreateObject;
 import testful.model.Invoke;
@@ -78,7 +79,7 @@ public class SimplifierStaticTestCase extends GenericTestCase {
 				new Invoke(cut.ints[3], cut.cuts[1], cut.c_conta, new Reference[] { cut.saa[2] }),
 				new Invoke(cut.sa[1], cut.cuts[0], cut.c_crea, new Reference[] { cut.ints[3] }),
 				new CreateObject(cut.saa[0], cut.saa_cns, new Reference[] { }),
-				new AssignPrimitive(cut.sa[1], null),
+				new AssignConstant(cut.sa[1], null),
 				new Invoke(null, cut.saa[0], cut.saa_addTail, new Reference[] { cut.sa[1] } ),
 				new Invoke(cut.ints[2], cut.cuts[2], cut.c_conta, new Reference[] { cut.saa[0] }),
 

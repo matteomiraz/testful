@@ -183,7 +183,6 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			if(test == null || test.score == null) return null;
 
 			List<Operation> result = hillClimb(test);
-
 			if(result == null) return null;
 
 			for(Operation op : result)
@@ -209,7 +208,6 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			if(test == null || test.score == null) return null;
 
 			List<Operation> result = hillClimb(test);
-
 			if(result == null) return null;
 
 			SolutionSet<Operation> ret = new SolutionSet<Operation>(solutionSet.size());
@@ -508,7 +506,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 					case 2: // remove a character
 					{
-						int howMany = random.nextInt(lBytes-1)+1;
+						int howMany = 1 + (lBytes == 1 ? 0 : random.nextInt(lBytes-1));
 						SortedSet<Integer> nPos = new TreeSet<Integer>();
 						while(nPos.size() < howMany)
 							nPos.add(random.nextInt(lBytes));
@@ -534,7 +532,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 					{
 						newBytes = bytes;
 
-						int howMany = random.nextInt(lBytes-1)+1;
+						int howMany = 1 + (lBytes == 1 ? 0 : random.nextInt(lBytes-1));
 						SortedSet<Integer> nPos = new TreeSet<Integer>();
 						while(nPos.size() < howMany)
 							nPos.add(random.nextInt(lBytes));

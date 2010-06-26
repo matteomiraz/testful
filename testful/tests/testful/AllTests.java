@@ -52,8 +52,7 @@ public class AllTests {
 		TestRunner runner = new TestRunner();
 		TestResult result = runner.doRun(suite(), false);
 
-		if (! result.wasSuccessful())
-			System.exit(1);
+		System.exit(result.wasSuccessful() ? 0 : 1);
 	}
 
 	@SuppressWarnings("unchecked")
