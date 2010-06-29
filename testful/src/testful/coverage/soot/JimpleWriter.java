@@ -125,7 +125,7 @@ public class JimpleWriter extends BodyTransformer {
 
 		System.out.println("--- traps ---");
 		for(Trap t : body.getTraps())
-			System.out.println(" " + findIndex(units, t.getBeginUnit()) + "-" + findIndex(units, t.getEndUnit()) + " -> (" + t.getException() + ") -> " + findIndex(units, t.getHandlerUnit()));
+			System.out.println(" [" + findIndex(units, t.getBeginUnit()) + "-" + findIndex(units, t.getEndUnit()) + ") -> (" + t.getException() + ") -> " + findIndex(units, t.getHandlerUnit()));
 
 		System.out.println();
 	}

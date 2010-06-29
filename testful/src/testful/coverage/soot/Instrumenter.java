@@ -276,8 +276,6 @@ public class Instrumenter {
 
 			/** stores the start of an operation (i.e. nopPre) */
 			final Map<Unit, Unit> start = new HashMap<Unit, Unit>();
-			/** stores the end of an operation (i.e. nopAfter) */
-			final Map<Unit, Unit> stop = new HashMap<Unit, Unit>();
 
 			// instrumentation structure:
 			//   initial method code (@this=this, params, superCall)
@@ -368,7 +366,6 @@ public class Instrumenter {
 
 				final Unit nopAfter = Jimple.v().newNopStmt();
 				nopAfter.addTag(new StringTag("nopAfter"));
-				stop.put(stmt, nopAfter);
 
 				if(stmt instanceof IdentityStmt) {
 
@@ -447,7 +444,7 @@ public class Instrumenter {
 			// fix traps (try-catch)
 			for(Trap trap : oldBody.getTraps()) {
 				final Unit newBegin = start.get(trap.getBeginUnit());
-				final Unit newEnd = stop.get(trap.getEndUnit());
+				final Unit newEnd = start.get(trap.getEndUnit());
 				final Unit newHandler = start.get(trap.getHandlerUnit());
 
 				newBody.getTraps().add(Jimple.v().newTrap(trap.getException(), newBegin, newEnd, newHandler));
