@@ -177,6 +177,8 @@ public class TestCluster implements Serializable {
 
 		// for each known class
 		all = registry.registry.values().toArray(new Clazz[registry.registry.size()]);
+		Arrays.sort(all);
+
 		for(Clazz c : all)
 			c.calculateAssignableTo();
 
@@ -530,7 +532,7 @@ public class TestCluster implements Serializable {
 		for(Clazz c : all)
 			if(c.equals(clazz)) return c;
 
-		logger.warning("Cannot adapt " + clazz);
+		logger.warning("Cannot adapt class " + clazz);
 		return null;
 	}
 
@@ -550,7 +552,7 @@ public class TestCluster implements Serializable {
 		for(Methodz m : thisClass.getMethods())
 			if(m.equals(method)) return m;
 
-		logger.warning("Cannot adapt " + method);
+		logger.warning("Cannot adapt Method " + method);
 		return null;
 	}
 
@@ -570,7 +572,7 @@ public class TestCluster implements Serializable {
 		for(Constructorz c : thisClass.getConstructors())
 			if(c.equals(cns)) return c;
 
-		logger.warning("Cannot adapt " + cns);
+		logger.warning("Cannot adapt Constructor " + cns);
 		return null;
 	}
 
@@ -590,7 +592,7 @@ public class TestCluster implements Serializable {
 		for(StaticValue v : thisClass.getConstants())
 			if(v.equals(sv)) return v;
 
-		logger.warning("WARN: cannot adapt " + sv);
+		logger.warning("WARN: cannot adapt StaticValue " + sv);
 		return null;
 	}
 }

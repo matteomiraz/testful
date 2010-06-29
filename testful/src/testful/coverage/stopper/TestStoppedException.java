@@ -18,6 +18,8 @@
 
 package testful.coverage.stopper;
 
+import java.util.logging.Logger;
+
 import testful.model.faults.FaultyExecutionException;
 
 /**
@@ -32,6 +34,9 @@ public class TestStoppedException extends RuntimeException implements FaultyExec
 	/** if set to true, stops the execution */
 	private static volatile boolean kill = false;
 
+	/** If true (and if kill is true) interrupts the static initialization of classes */
+	private static final boolean STOP_CLINIT = false;
+
 	/** the exception that is thrown */
 	private static TestStoppedException singleton = null;
 
@@ -39,6 +44,15 @@ public class TestStoppedException extends RuntimeException implements FaultyExec
 		if (kill) {
 			if (singleton == null)
 				singleton = new TestStoppedException();
+
+			if(!STOP_CLINIT) {
+				for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
+					if(ste.getMethodName().equals("<clinit>")) {
+						Logger.getLogger("testful.coverage.stopper").fine("Not killing the thread: executing the static initialization of " + ste.getClassName());
+						return;
+					}
+				}
+			}
 
 			throw singleton;
 		}

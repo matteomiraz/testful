@@ -49,7 +49,7 @@ public class BlockClass extends Block implements Iterable<Block> {
 	private static final String FILE_SUFFIX = ".wgz";
 
 	@SuppressWarnings("unused") // for the DEBUG
-	public static BlockClass read(URL classURL) {
+	public static BlockClass read(URL classURL) throws IOException, ClassNotFoundException {
 		ObjectInput oi = null;
 
 		final String str = classURL.toString();
@@ -63,9 +63,6 @@ public class BlockClass extends Block implements Iterable<Block> {
 		try {
 			oi = new ObjectInputStream(new GZIPInputStream(new URL(url).openStream()));
 			return (BlockClass) oi.readObject();
-		} catch(Exception e) {
-			logger.log(Level.WARNING, "Exception while reading " + url + ": " + e.toString(), e);
-			return null;
 		} finally {
 			if(oi != null) {
 				try {
@@ -221,7 +218,7 @@ public class BlockClass extends Block implements Iterable<Block> {
 				sb.append("  ").append(c.getId()).append(" [shape=box,label=\"").append(c.name).append("\\nFields:");
 				for(Data d : c.fields)
 					sb.append(" ").append(d);
-				printDataAnalysis(b, sb);
+				if(printLocalData) printLocalDataAnalysis(b, sb);
 				sb.append("\"];\n");
 
 				for(Data field : c.getFields()) {
@@ -241,22 +238,22 @@ public class BlockClass extends Block implements Iterable<Block> {
 			} else if(b instanceof BlockFunctionEntry) {
 				BlockFunctionEntry c = (BlockFunctionEntry) b;
 				sb.append("  ").append(c.getId()).append(" [label=\"(").append(c.getId()).append(") ").append(c.getFullQualifiedName()).append("::Start");
-				printDataAnalysis(b, sb);
+				if(printLocalData) printLocalDataAnalysis(b, sb);
 				sb.append("\"];\n");
 			} else if(b instanceof BlockFunctionExit) {
 				BlockFunctionExit c = (BlockFunctionExit) b;
 				sb.append("  ").append(c.getId()).append(" [label=\"").append(c.getFullQualifiedName()).append("::End");
-				printDataAnalysis(b, sb);
+				if(printLocalData) printLocalDataAnalysis(b, sb);
 				sb.append("\"];\n");
 			} else if(b instanceof BlockFunctionCall) {
 				BlockFunctionCall c = (BlockFunctionCall) b;
 				sb.append("  ").append(c.getId()).append(" [label=\"").append(c.getId()).append("\\ncall:").append((c.isStatic() ? "static " : "")).append(c.getMethodName());
-				printDataAnalysis(b, sb);
+				if(printLocalData) printLocalDataAnalysis(b, sb);
 				sb.append("\",color=red];\n");
 			} else if(b instanceof BlockBasic) {
 				BlockBasic c = (BlockBasic) b;
 				sb.append("  ").append(c.getId()).append(" [label=\"").append(c.getId());
-				//printDataAnalysis(b, sb);
+				if(printLocalData) printLocalDataAnalysis(b, sb);
 				sb.append("\"];\n");
 			}
 
@@ -299,60 +296,30 @@ public class BlockClass extends Block implements Iterable<Block> {
 		return sb.toString();
 	}
 
-	private void printDataAnalysis(Block b, StringBuilder sb) {
-		//				sb.append("\\ninDefs:");
-		//				BitSet bs = b.getIn();
-		//				for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i+1)) {
-		//					sb.append(" ").append(i);
-		//				}
-
-		//		if(b instanceof BlockClass) {
-		//			sb.append("\\nmask:");
-		//			bs = ((BlockClass)b).getMask();
-		//			for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i+1)) {
-		//				sb.append(" ").append(i);
-		//			}
-		//		} else
+	private void printLocalDataAnalysis(Block b, StringBuilder sb) {
 		if(b instanceof BlockBasic) {
+
 			boolean intro = false;
-			for(DataDef def : ((BlockBasic) b).getDefs())
-				if(printLocalData || fields.contains(def.getData())) {
+			for(DataDef def : ((BlockBasic) b).getDefs()) {
+				if(fields.contains(def.getData())) {
 					if(!intro) {
 						sb.append("\\ndefs:");
 						intro = true;
 					}
 					sb.append(" ").append(def);
 				}
+			}
 
 			intro = false;
-			for(DataUse use : ((BlockBasic) b).getUses())
-				if(printLocalData || fields.contains(use.getData())) {
+			for(DataUse use : ((BlockBasic) b).getUses()) {
+				if(fields.contains(use.getData())) {
 					if(!intro) {
 						sb.append("\\nuses:");
 						intro = true;
 					}
 					sb.append(" ").append(use).append("(").append(use.getDefUseNum()).append(")");
 				}
-
-			//						sb.append("\\ngenDefs:");
-			//						bs = ((BlockBasic) b).getGens();
-			//						for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i+1)) {
-			//							sb.append(" ").append(i);
-			//						}
-			//
-			//						sb.append("\\nkillDefs:");
-			//						bs = ((BlockBasic) b).getKills();
-			//						for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i+1)) {
-			//							sb.append(" ").append(i);
-			//						}
-
+			}
 		}
-
-		//				sb.append("\\noutDefs:");
-		//				bs = b.getOut();
-		//				for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i+1)) {
-		//					sb.append(" ").append(i);
-		//				}
-
 	}
 }

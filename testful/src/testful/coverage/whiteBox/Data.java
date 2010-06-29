@@ -61,7 +61,6 @@ public class Data implements Serializable {
 		mask = new BitSet();
 		defs = new HashSet<DataDef>();
 		uses = new HashSet<DataUse>();
-
 	}
 
 	public static Data getPrimitiveData(String fieldName, Type primType, boolean param) {

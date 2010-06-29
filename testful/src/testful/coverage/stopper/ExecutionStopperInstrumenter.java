@@ -25,6 +25,7 @@ import soot.Body;
 import soot.Local;
 import soot.Scene;
 import soot.SootClass;
+import soot.SootMethod;
 import soot.SootMethodRef;
 import soot.Unit;
 import soot.jimple.GotoStmt;
@@ -66,12 +67,17 @@ public class ExecutionStopperInstrumenter implements UnifiedInstrumentator {
 	 */
 	@Override
 	public void init(Body oldBody, Body newBody, Chain<Unit> newUnits) {
-		previous = new ArrayList<Unit>();
+		if(SootMethod.staticInitializerName.equals(newBody.getMethod().getName())) {
+			previous = null;
+		} else {
+			previous = new ArrayList<Unit>();
+		}
 	}
 
 	@Override
 	public void processPre(Chain<Unit> newUnits, Stmt op) {
 		if(op.hasTag(Skip.NAME)) return;
+		if(previous == null) return; // skip if the static constructor is being analyzed
 
 		previous.add(op);
 

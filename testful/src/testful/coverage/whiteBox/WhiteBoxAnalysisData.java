@@ -22,20 +22,35 @@ import java.net.URL;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import testful.runner.ClassData;
 
 /**
- * TODO describe me!
+ * Loads the white box analysis when the class is loaded.
  * @author matteo
  */
 public class WhiteBoxAnalysisData implements ClassData {
+
+	private static final Logger logger = Logger.getLogger("testful.coverage.whiteBox");
+
 	private final Map<String, BlockClass> classes = new HashMap<String, BlockClass>();
 
 	@Override
 	public void load(String className, URL classURL) {
-		BlockClass bClass = BlockClass.read(classURL);
-		if(bClass == null) return;
+		final BlockClass bClass;
+
+		try {
+			bClass = BlockClass.read(classURL);
+
+			if(bClass == null) throw new NullPointerException("The information read is null");
+		} catch (Throwable e) {
+			logger.log(Level.WARNING, "Cannot read whiteBox analysis information for class " + className, e);
+			return;
+		}
+
+		logger.fine("Read whiteBox analysis information for class " + className);
 
 		classes.put(bClass.getName(), bClass);
 		conditionBlocks = null;

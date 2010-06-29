@@ -72,7 +72,11 @@ public final class Stopper {
 							}
 
 							if(delta <= 0) { // KILL!
-								if(LOG_FINE) logger.fine("Killing controlled thread");
+								if(LOG_FINE) {
+									Throwable e = new Exception("Execution status of " + controlled.toString());
+									e.setStackTrace(controlled.getStackTrace());
+									logger.log(Level.FINE, "Killing controlled thread", e);
+								}
 								TestStoppedException.kill();
 								controlled.interrupt();
 								endOfTheWorld = curr + KILL_WAIT;
