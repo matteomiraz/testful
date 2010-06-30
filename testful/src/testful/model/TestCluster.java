@@ -529,10 +529,10 @@ public class TestCluster implements Serializable {
 	 * @return a class belonging to this test cluster
 	 */
 	public Clazz adapt(Clazz clazz) {
-		for(Clazz c : all)
-			if(c.equals(clazz)) return c;
+		final int idx = Arrays.binarySearch(all, clazz);
+		if(idx >= 0) return all[idx];
 
-		logger.warning("Cannot adapt class " + clazz);
+		logger.warning("Cannot adapt class " + clazz + " " + Arrays.toString(all));
 		return null;
 	}
 
@@ -546,13 +546,14 @@ public class TestCluster implements Serializable {
 	public Methodz adapt(Methodz method) {
 		if(method == null) return null;
 
-		Clazz thisClass = adapt(method.getClazz());
+		final Clazz thisClass = adapt(method.getClazz());
 		if(thisClass == null) return null;
+		final Methodz[] methods = thisClass.getMethods();
 
-		for(Methodz m : thisClass.getMethods())
-			if(m.equals(method)) return m;
+		final int idx = Arrays.binarySearch(methods, method);
+		if(idx >= 0) return methods[idx];
 
-		logger.warning("Cannot adapt Method " + method);
+		logger.warning("Cannot adapt Method " + method + " " + Arrays.toString(methods));
 		return null;
 	}
 
@@ -566,13 +567,14 @@ public class TestCluster implements Serializable {
 	public Constructorz adapt(Constructorz cns) {
 		if(cns == null) return null;
 
-		Clazz thisClass = adapt(cns.getClazz());
+		final Clazz thisClass = adapt(cns.getClazz());
 		if(thisClass == null) return null;
+		final Constructorz[] constructors = thisClass.getConstructors();
 
-		for(Constructorz c : thisClass.getConstructors())
-			if(c.equals(cns)) return c;
+		final int idx = Arrays.binarySearch(constructors, cns);
+		if(idx >= 0) return constructors[idx];
 
-		logger.warning("Cannot adapt Constructor " + cns);
+		logger.warning("Cannot adapt Constructor " + cns + " " + Arrays.toString(constructors));
 		return null;
 	}
 
@@ -586,13 +588,14 @@ public class TestCluster implements Serializable {
 	public StaticValue adapt(StaticValue sv) {
 		if(sv == null) return null;
 
-		Clazz thisClass = adapt(sv.getDeclaringClass());
+		final Clazz thisClass = adapt(sv.getType());
 		if(thisClass == null) return null;
+		final StaticValue[] constants = thisClass.getConstants();
 
-		for(StaticValue v : thisClass.getConstants())
-			if(v.equals(sv)) return v;
+		final int idx = Arrays.binarySearch(constants, sv);
+		if(idx >= 0) return constants[idx];
 
-		logger.warning("WARN: cannot adapt StaticValue " + sv);
+		logger.warning("cannot adapt StaticValue " + sv + " " + Arrays.toString(constants));
 		return null;
 	}
 }

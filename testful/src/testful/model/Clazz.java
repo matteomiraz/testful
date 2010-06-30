@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
@@ -92,6 +93,7 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 				mlist.add(new Methodz(cluster, this, meth, xmlMethod));
 		}
 		methods = mlist.toArray(new Methodz[mlist.size()]);
+		Arrays.sort(methods);
 
 		// calculate constructorz
 		Set<Constructorz> clist = new TreeSet<Constructorz>();
@@ -101,6 +103,7 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 				clist.add(new Constructorz(cluster, cns, xmlCns));
 		}
 		constructors = clist.toArray(new Constructorz[clist.size()]);
+		Arrays.sort(constructors);
 	}
 
 	/**
