@@ -27,6 +27,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jmetal.base.Solution;
+import jmetal.base.TimeTerminationCriterion.TimeCPU;
+import jmetal.base.TimeTerminationCriterion.TimeWall;
 import jmetal.base.operator.crossover.OnePointCrossoverVarLen;
 import jmetal.base.operator.localSearch.LocalSearch;
 import jmetal.base.operator.selection.BinaryTournament2;
@@ -104,9 +106,17 @@ public class Launcher {
 
 		NSGAII<Operation> algorithm = new NSGAII<Operation>(problem);
 		algorithm.setPopulationSize(config.getPopSize());
-		algorithm.setMaxEvaluations(config.getTime() * 1000);
 		algorithm.setInherit(config.getFitnessInheritance());
-		algorithm.setUseCpuTime(config.isUseCpuTime());
+
+		if(config.isUseCpuTime()) {
+			try {
+				algorithm.setTerminationCriterion(new TimeCPU(config.getTime() * 1000));
+			} catch (Exception e) {
+				algorithm.setTerminationCriterion(new TimeWall(config.getTime() * 1000));
+			}
+		} else {
+			algorithm.setTerminationCriterion(new TimeWall(config.getTime() * 1000));
+		}
 
 		try {
 			testfulProblem.addReserve(genSmartPopulation(config, testfulProblem));
@@ -132,6 +142,9 @@ public class Launcher {
 
 		if(config.getLocalSearchPeriod() > 0) {
 			LocalSearch<Operation> localSearch = new LocalSearchBranch(testfulProblem);
+			localSearch.setTerminationCriterion(algorithm.getTerminationCriterion());
+			localSearch.setAbsoluteTerminationCriterion(true);
+
 			algorithm.setImprovement(localSearch);
 			algorithm.setLocalSearchPeriod(config.getLocalSearchPeriod());
 			algorithm.setLocalSearchNum(config.getLocalSearchElements()/100.0f);

@@ -27,6 +27,7 @@ import jmetal.base.Algorithm;
 import jmetal.base.Problem;
 import jmetal.base.Solution;
 import jmetal.base.SolutionSet;
+import jmetal.base.TerminationCriterion;
 import jmetal.base.Variable;
 import jmetal.base.operator.crossover.Crossover;
 import jmetal.base.operator.localSearch.LocalSearch;
@@ -39,9 +40,6 @@ import jmetal.util.PseudoRandom;
 import jmetal.util.Ranking;
 import testful.IUpdate;
 import testful.evolutionary.IConfigEvolutionary.FitnessInheritance;
-import testful.utils.Time;
-import testful.utils.TimeCPU;
-import testful.utils.TimeWall;
 
 /**
  * This class implements the NSGA-II algorithm. Adapted from JMetal.
@@ -66,9 +64,9 @@ implements IUpdate {
 		this.callbacks.remove(c);
 	}
 
-	private void update(long start, long current, long end) {
+	private void update(TerminationCriterion criterion) {
 		for(Callback c : callbacks)
-			c.update(start, current, end);
+			c.update(criterion);
 	}
 
 	/** stores the problem  to solve */
@@ -125,11 +123,6 @@ implements IUpdate {
 		return localSearchNum;
 	}
 
-	private boolean useCpuTime = false;
-	public void setUseCpuTime(boolean useCpuTime) {
-		this.useCpuTime = useCpuTime;
-	}
-
 	/**
 	 * Runs the NSGA-II algorithm.
 	 * @return a <code>SolutionSet</code> that is a set of non dominated solutions
@@ -142,8 +135,7 @@ implements IUpdate {
 		SolutionSet<V> union;
 
 		//Read the parameters
-		int populationSize = getPopulationSize();
-		int maxTime        = getMaxEvaluations();
+		final int populationSize = getPopulationSize();
 
 		//Initialize the variables
 		population = new SolutionSet<V>(populationSize);
@@ -152,40 +144,24 @@ implements IUpdate {
 		int currentGeneration = 0;
 		problem_.setCurrentGeneration(currentGeneration, 0);
 
-		Time time;
-		if(useCpuTime) {
-			try {
-				time = new TimeCPU();
-			} catch (Exception e) {
-				time = new TimeWall();
-			}
-		} else {
-			time = new TimeWall();
-		}
-
 		// Create the initial solutionSet
+		logger.info(String.format("(%5.2f%%) Creating initial population - %s to go", getTerminationCriterion().getProgressPercent(), getTerminationCriterion().getRemaining()));
 		for (int i = 0; i < populationSize; i++)
 			population.add(new Solution<V>(problem_));
 
+		// Evaluating initial population
+		logger.info(String.format("(%5.2f%%) Generation 0 (initial population) - %s to go", getTerminationCriterion().getProgressPercent(), getTerminationCriterion().getRemaining()));
 		evaluations += problem_.evaluate(population);
 
 		for(Solution<V> solution : population)
 			problem_.evaluateConstraints(solution);
 
-		long currentTime;
-
 		// Generations ...
-		while ((currentTime = time.getCurrentMs()) < maxTime) {
-			problem_.setCurrentGeneration(++currentGeneration, currentTime);
-			update(0, currentTime, maxTime);
+		while (!getTerminationCriterion().isTerminated()) {
+			problem_.setCurrentGeneration(++currentGeneration, getTerminationCriterion().getProgress());
+			update(getTerminationCriterion());
 
-			final long remaining = (maxTime - currentTime) / 1000;
-
-			logger.info(String.format("(%5.2f%%) Evaluating generation %d - %d:%02d to go",
-					(100.0 * currentTime) / maxTime,
-					currentGeneration,
-					remaining / 60,
-					remaining % 60));
+			logger.info(String.format("(%5.2f%%) Generation %d - %s to go", getTerminationCriterion().getProgressPercent(), currentGeneration, getTerminationCriterion().getRemaining()));
 
 			// perform the improvement
 			if(improvement != null && currentGeneration % localSearchPeriod == 0) {
@@ -196,7 +172,7 @@ implements IUpdate {
 					SolutionSet<V> mutated = ((LocalSearchPopulation<V>)improvement).execute(front);
 					if(mutated != null) problem_.evaluate(mutated);
 				} else {
-					for (int i = 0; i < localSearchNum && time.getCurrentMs() < maxTime; i++) {
+					for (int i = 0; i < localSearchNum && !getTerminationCriterion().isTerminated(); i++) {
 						final int randInt = PseudoRandom.getMersenneTwisterFast().nextInt(populationSize);
 						logger.info("Local search " + i + "/" + localSearchNum + " on element " + randInt);
 						Solution<V> solution = population.get(randInt);
@@ -204,6 +180,7 @@ implements IUpdate {
 						if(solution != null) problem_.evaluate(solution);
 					}
 				}
+				continue;
 			}
 
 			SolutionSet<V> offspringPopulation = new SolutionSet<V>(populationSize);
@@ -315,8 +292,6 @@ implements IUpdate {
 			} // if
 
 		} // while
-
-		setEvaluations(evaluations);
 
 		// Return the first non-dominated front
 		Ranking<V> ranking = new Ranking<V>(population);

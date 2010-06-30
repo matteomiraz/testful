@@ -38,6 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import jmetal.base.EvaluationTerminationCriterion;
 import jmetal.base.Solution;
 import jmetal.base.SolutionSet;
 import jmetal.base.operator.localSearch.LocalSearchPopulation;
@@ -79,6 +80,8 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 	private static final boolean LOG_FINER = logger.isLoggable(Level.FINER);
 	private static final boolean LOG_FINEST = logger.isLoggable(Level.FINEST);
 
+	private static final int ITERATIONS = 1000;
+
 	private final AtomicInteger localSearchId = new AtomicInteger(0);
 
 	private final MersenneTwisterFast random;
@@ -111,9 +114,6 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 	/** if an AssignPrimitive is selected, this is the probability to modify the value */
 	private float probModify = 0.8f;
-
-	private int evaluations = 0;
-	private int maxEvaluations = 1000;
 
 	private final TestfulProblem problem;
 
@@ -162,15 +162,6 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 	 */
 	public void setProbRemove(float probRemove) {
 		this.probRemove = probRemove;
-	}
-
-	@Override
-	public int getEvaluations() {
-		return evaluations;
-	}
-
-	public void setMaxEvaluations(int maxEvaluations) {
-		this.maxEvaluations = maxEvaluations;
 	}
 
 	@Override
@@ -246,7 +237,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 		int pos = 0; // the position to target
 		int ttl = 0; // how many times the position can be targeted again
-		for(int i = 0; i < maxEvaluations*(nAttempts+1); i++) {
+		for(int i = 0; i < ITERATIONS*(nAttempts+1) && !terminationCriterion.isTerminated(); i++) {
 
 			List<Operation> ops = new LinkedList<Operation>(opsOrig);
 
@@ -620,8 +611,10 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 		List<Future<ElementManager<String, CoverageInformation>>> futures = new ArrayList<Future<ElementManager<String, CoverageInformation>>>(parts.size());
 		for(Test t : parts) futures.add(problem.evaluate(t));
 
+		if(terminationCriterion instanceof EvaluationTerminationCriterion)
+			((EvaluationTerminationCriterion)terminationCriterion).addEvaluations(parts.size());
+
 		Set<TestCoverage> tests = new LinkedHashSet<TestCoverage>();
-		evaluations += parts.size();
 
 		// iterate both on parts and on futures
 		Iterator<Test> partsIter = parts.iterator();
