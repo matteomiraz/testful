@@ -37,6 +37,9 @@ public final class Stopper {
 	/** Milliseconds between two kills */
 	private static final int KILL_WAIT = 20;
 
+	/** If the static initializer is being executed, delay the stop */
+	private static final int KILL_CLINIT = 1000;
+
 	/** Standard waiting time if IDLE */
 	private static final int IDLE_WAIT = 10000;
 
@@ -63,25 +66,51 @@ public final class Stopper {
 
 							final long curr = System.currentTimeMillis();
 							final long end, delta;
+
 							if(endOfTheWorld > 0) {
+								// if the killer is hired
+
+								if(endOfTheWorld <= curr) {
+									// if the killer is hired and armed (the deadline is expired)
+									// check if a static constructor is being executed.
+
+									if(KILL_CLINIT > 0) {
+										for (StackTraceElement ste : controlled.getStackTrace()) {
+											if(ste.getMethodName().equals("<clinit>")) {
+												logger.fine("Not killing the thread: executing the static initialization of " + ste.getClassName());
+												endOfTheWorld = curr + KILL_CLINIT;
+												break;
+											}
+										}
+									}
+								}
+
 								end = endOfTheWorld;
 								delta = end - curr;
+
 							} else {
+								// if the killer is not hired, go to sleep
+
 								end = curr + IDLE_WAIT;
 								delta = IDLE_WAIT;
 							}
 
-							if(delta <= 0) { // KILL!
+							if(delta <= 0) {
+								// KILL!
+
 								if(LOG_FINE) {
 									Throwable e = new Exception("Execution status of " + controlled.toString());
 									e.setStackTrace(controlled.getStackTrace());
 									logger.log(Level.FINE, "Killing controlled thread", e);
 								}
+
 								TestStoppedException.kill();
 								controlled.interrupt();
 								endOfTheWorld = curr + KILL_WAIT;
 
-							} else { // Wait
+							} else {
+								// Wait
+
 								waiting = end;
 								wait.wait(delta);
 								waiting = -1;
