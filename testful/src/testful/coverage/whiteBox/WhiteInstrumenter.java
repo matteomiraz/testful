@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.coverage.whiteBox;
 
 import java.io.File;
@@ -256,9 +255,6 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		/** traps active when analyzing the current operation */
 		private final Deque<Trap> activeTraps;
 
-		/** traps for the current block (unchecked exceptions) */
-		private final Set<Trap> uncheckedExceptionHandlers;
-
 		public Analyzer(Chain<Unit> newUnits, BlockClass clazz, Body newBody, Collection<Trap> newTraps, Collection<Trap> oldTraps) {
 			final SootMethod method = newBody.getMethod();
 			newBody.getTraps();
@@ -279,7 +275,6 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 			this.oldTraps = oldTraps;
 			activeTraps = new LinkedList<Trap>();
-			uncheckedExceptionHandlers = new HashSet<Trap>();
 
 			start = new BlockFunctionEntry(clazz, methodName, methodPublic);
 			Block paramInit = new BlockBasic(defs, uses);
@@ -795,6 +790,18 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		 * Performs a preliminary analysis on the statement.
 		 */
 		private void preProcess(Chain<Unit> newUnits, Stmt stmt) {
+			//remove expired traps
+			Iterator<Trap> iterTraps = activeTraps.iterator();
+			while(iterTraps.hasNext()) {
+				if(iterTraps.next().getEndUnit() == stmt) {
+					iterTraps.remove();
+				}
+			}
+
+			// add new traps
+			for(Trap t : oldTraps)
+				if(t.getBeginUnit() == stmt) activeTraps.addLast(t);
+
 			// If the current unit contains an invocation, create a new building block
 			if(stmt.containsInvokeExpr()) {
 				Edge link = null;
@@ -849,17 +856,6 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					}
 				}
 			}
-
-			// update oldTraps: add new oldTraps
-			for(Trap t : oldTraps)
-				if(t.getBeginUnit() == stmt) activeTraps.addLast(t);
-
-			// update unchecked oldTraps
-			for(Trap t : activeTraps) {
-				SootClass exc = t.getException();
-				if(!SootUtils.isAssignable(exceptionClass, exc) || SootUtils.isAssignable(runtimeExceptionClass, exc))
-					uncheckedExceptionHandlers.add(t);
-			}
 		}
 
 		public void processPost(Chain<Unit> newUnits, Stmt stmt) {
@@ -867,11 +863,6 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				toLink = new EdgeDirect(current);
 				current = null;
 			}
-
-			// update oldTraps: remove expired oldTraps
-			Iterator<Trap> iterTraps = activeTraps.iterator();
-			while(iterTraps.hasNext())
-				if(iterTraps.next().getEndUnit() == stmt) iterTraps.remove();
 		}
 
 		private void preCreateBuildingBlock() {
@@ -887,10 +878,12 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			done.put(stmt, current);
 			blocks.set(current.getId());
 
-			// for each unchecked trap, create an edge!
-			for(Trap t : uncheckedExceptionHandlers)
-				add(new EdgeExceptional(current, t.getException().getJavaStyleName()), t.getHandlerUnit());
-			uncheckedExceptionHandlers.clear();
+			// for each unchecked trap, create an exceptional edge
+			for(Trap t : activeTraps) {
+				SootClass exc = t.getException();
+				if(!SootUtils.isAssignable(exceptionClass, exc) || SootUtils.isAssignable(runtimeExceptionClass, exc))
+					add(new EdgeExceptional(current, t.getException().getJavaStyleName()), t.getHandlerUnit());
+			}
 
 			if(toLink != null) {
 				toLink.setTo(current);
