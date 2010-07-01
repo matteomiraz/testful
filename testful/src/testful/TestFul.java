@@ -18,7 +18,11 @@
 
 package testful;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
@@ -46,7 +50,7 @@ public class TestFul {
 	 */
 	public static final boolean DEBUG = false;
 
-	private static final String VERSION = "1.2.0.alpha";
+	private static final String VERSION = "1.2 alpha";
 
 	public static void parseCommandLine(IConfig config, String[] args, Class<?> launcher, String name) {
 
@@ -77,12 +81,33 @@ public class TestFul {
 
 	public static void printHeader(String module) {
 
-		System.out.println("Testful v. " + VERSION + (module != null ? " - " + module : "") + " - http://code.google.com/p/testful");
+		System.out.println("Testful v. " + VERSION + readInternalVersion() + (module != null ? " - " + module : "") + " - http://code.google.com/p/testful");
 		System.out.println("Copyright (c) 2010 - Matteo Miraz");
 		System.out.println("This program comes with ABSOLUTELY NO WARRANTY.");
 		System.out.println("This is free software, and you are welcome to redistribute it under certain conditions.");
 		System.out.println("For more information, read http://www.gnu.org/licenses/gpl-3.0.txt");
 		System.out.println();
+	}
+
+	/**
+	 * @return
+	 */
+	private static String readInternalVersion() {
+		final InputStream stream = TestFul.class.getResourceAsStream("/version.txt");
+		if(stream == null) return "";
+
+		BufferedReader reader = null;
+		try {
+			reader = new BufferedReader(new InputStreamReader(stream));
+			return " (" + reader.readLine() + ")";
+		} catch (Exception e) {
+			return "";
+		} finally {
+			try {
+				if(reader != null) reader.close();
+			} catch (IOException e) {
+			}
+		}
 	}
 
 	private static final Formatter consoleFormatter = new Formatter() {
