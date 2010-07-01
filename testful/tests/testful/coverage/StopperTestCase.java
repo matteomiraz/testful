@@ -292,9 +292,10 @@ public class StopperTestCase extends GenericTestCase {
 		assertEquals(fault.getCauseExceptionName(), "java.lang.StackOverflowError");
 
 		final StackTraceElement[] stackTrace = fault.getStackTrace();
-		for(int i = 0; i < stackTrace.length; i++ )
-			assertEquals("wrong " + i + " stack trace element" , "test.coverage.Stopped.infLoop(Stopped.java)", stackTrace[i].toString());
-
+		assertEquals(3, fault.getStackTrace().length);
+		assertEquals(" --  recursion.end  -- ()", stackTrace[0].toString());
+		assertEquals("test.coverage.Stopped.infLoop(Stopped.java)", stackTrace[1].toString());
+		assertEquals(" -- recursion.start -- ()", stackTrace[2].toString());
 	}
 
 	public void testInfLoop1b() throws Exception {
@@ -319,8 +320,239 @@ public class StopperTestCase extends GenericTestCase {
 		assertEquals(fault.getExceptionName(), TestStoppedException.class.getCanonicalName());
 
 		final StackTraceElement[] stackTrace = fault.getStackTrace();
-		assertEquals(50.0, 1.0*stackTrace.length, 2.0);
-		for(int i = 0; i < stackTrace.length; i++ )
-			assertEquals("wrong " + i + " stack trace element" , "test.coverage.Stopped.infLoop(Stopped.java)", stackTrace[i].toString());
+		assertEquals(3, fault.getStackTrace().length);
+		assertEquals(" --  recursion.end  -- ()", stackTrace[0].toString());
+		assertEquals("test.coverage.Stopped.infLoop(Stopped.java)", stackTrace[1].toString());
+		assertEquals(" -- recursion.start -- ()", stackTrace[2].toString());
+	}
+
+	public void testInfLoop2a() throws Exception {
+		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.ints[0], 2), // 2 recursion
+				new AssignPrimitive(cut.ints[1], 0), // no delay => stackOverFlow
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.infLoop, new Reference[] { cut.ints[0], cut.ints[1] } )
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t);
+
+		assertEquals(9.0f, covs.get(CoverageBasicBlocks.KEY).getQuality());
+
+		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(faults);
+		assertEquals(1.0f, faults.getQuality());
+
+		final Fault fault = faults.faults.iterator().next();
+		assertNotNull(fault);
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getCanonicalName());
+		assertEquals(fault.getCauseExceptionName(), "java.lang.StackOverflowError");
+
+		final StackTraceElement[] stackTrace = fault.getStackTrace();
+		assertEquals(4, fault.getStackTrace().length);
+		assertEquals(" --  recursion.end  -- ()", stackTrace[0].toString());
+
+		// it the StackOverflow is throw, the initial element is not known
+		assertTrue(
+				( // correct order
+						"test.coverage.Stopped.infLoop2(Stopped.java)".equals(stackTrace[1].toString()) &&
+						"test.coverage.Stopped.infLoop(Stopped.java)".equals(stackTrace[2].toString())
+				) || (
+						"test.coverage.Stopped.infLoop(Stopped.java)".equals(stackTrace[1].toString()) &&
+						"test.coverage.Stopped.infLoop2(Stopped.java)".equals(stackTrace[2].toString())
+				)
+		);
+
+		assertEquals(" -- recursion.start -- ()", stackTrace[3].toString());
+	}
+
+	public void testInfLoop2b() throws Exception {
+		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.ints[0], 2),  // 2 recursion
+				new AssignPrimitive(cut.ints[1], 10), // 10 ms of delay => Test Stopped
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.infLoop, new Reference[] { cut.ints[0], cut.ints[1] } )
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t);
+
+		assertEquals(15.0f, covs.get(CoverageBasicBlocks.KEY).getQuality());
+
+		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(faults);
+		assertEquals(1.0f, faults.getQuality());
+
+		final Fault fault = faults.faults.iterator().next();
+		assertNotNull(fault);
+		assertEquals(fault.getExceptionName(), TestStoppedException.class.getCanonicalName());
+
+		final StackTraceElement[] stackTrace = fault.getStackTrace();
+		assertEquals(4, fault.getStackTrace().length);
+		assertEquals(" --  recursion.end  -- ()", stackTrace[0].toString());
+		assertEquals("test.coverage.Stopped.infLoop2(Stopped.java)", stackTrace[1].toString());
+		assertEquals("test.coverage.Stopped.infLoop(Stopped.java)", stackTrace[2].toString());
+		assertEquals(" -- recursion.start -- ()", stackTrace[3].toString());
+	}
+
+	public void testInfLoop3a() throws Exception {
+		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.ints[0], 3), // 3 recursion
+				new AssignPrimitive(cut.ints[1], 0), // no delay => stackOverFlow
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.infLoop, new Reference[] { cut.ints[0], cut.ints[1] } )
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t);
+
+		assertEquals(12.0f, covs.get(CoverageBasicBlocks.KEY).getQuality());
+
+		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(faults);
+		assertEquals(1.0f, faults.getQuality());
+
+		final Fault fault = faults.faults.iterator().next();
+		assertNotNull(fault);
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getCanonicalName());
+		assertEquals(fault.getCauseExceptionName(), "java.lang.StackOverflowError");
+
+		final StackTraceElement[] stackTrace = fault.getStackTrace();
+		assertEquals(5, fault.getStackTrace().length);
+		assertEquals(" --  recursion.end  -- ()", stackTrace[0].toString());
+
+		// it the StackOverflow is throw, the initial element is not known
+		assertTrue(
+				( // correct order
+						"test.coverage.Stopped.infLoop2(Stopped.java)".equals(stackTrace[1].toString()) &&
+						"test.coverage.Stopped.infLoop3(Stopped.java)".equals(stackTrace[2].toString()) &&
+						"test.coverage.Stopped.infLoop(Stopped.java)".equals(stackTrace[3].toString())
+				) || (
+						"test.coverage.Stopped.infLoop2(Stopped.java)".equals(stackTrace[2].toString()) &&
+						"test.coverage.Stopped.infLoop3(Stopped.java)".equals(stackTrace[3].toString()) &&
+						"test.coverage.Stopped.infLoop(Stopped.java)".equals(stackTrace[1].toString())
+				) || (
+						"test.coverage.Stopped.infLoop2(Stopped.java)".equals(stackTrace[3].toString()) &&
+						"test.coverage.Stopped.infLoop3(Stopped.java)".equals(stackTrace[1].toString()) &&
+						"test.coverage.Stopped.infLoop(Stopped.java)".equals(stackTrace[2].toString())
+				)
+		);
+
+		assertEquals(" -- recursion.start -- ()", stackTrace[4].toString());
+	}
+
+	public void testInfLoop3b() throws Exception {
+		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.ints[0], 3),  // 3 recursion
+				new AssignPrimitive(cut.ints[1], 10), // 10 ms of delay => Test Stopped
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.infLoop, new Reference[] { cut.ints[0], cut.ints[1] } )
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t);
+
+		assertEquals(20.0f, covs.get(CoverageBasicBlocks.KEY).getQuality());
+
+		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(faults);
+		assertEquals(1.0f, faults.getQuality());
+
+		final Fault fault = faults.faults.iterator().next();
+		assertNotNull(fault);
+		assertEquals(fault.getExceptionName(), TestStoppedException.class.getCanonicalName());
+
+		final StackTraceElement[] stackTrace = fault.getStackTrace();
+		assertEquals(5, fault.getStackTrace().length);
+		assertEquals(" --  recursion.end  -- ()", stackTrace[0].toString());
+		assertEquals("test.coverage.Stopped.infLoop2(Stopped.java)", stackTrace[1].toString());
+		assertEquals("test.coverage.Stopped.infLoop3(Stopped.java)", stackTrace[2].toString());
+		assertEquals("test.coverage.Stopped.infLoop(Stopped.java)",  stackTrace[3].toString());
+		assertEquals(" -- recursion.start -- ()", stackTrace[4].toString());
+	}
+
+	public void testInfLoop4a() throws Exception {
+		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.ints[0], 4), // 4 recursion
+				new AssignPrimitive(cut.ints[1], 0), // no delay => stackOverFlow
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.infLoop, new Reference[] { cut.ints[0], cut.ints[1] } )
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t);
+
+		assertEquals(15.0f, covs.get(CoverageBasicBlocks.KEY).getQuality());
+
+		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(faults);
+		assertEquals(1.0f, faults.getQuality());
+
+		final Fault fault = faults.faults.iterator().next();
+		assertNotNull(fault);
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getCanonicalName());
+		assertEquals(fault.getCauseExceptionName(), "java.lang.StackOverflowError");
+
+		final StackTraceElement[] stackTrace = fault.getStackTrace();
+		assertEquals(6, fault.getStackTrace().length);
+		assertEquals(" --  recursion.end  -- ()", stackTrace[0].toString());
+
+		// it the StackOverflow is throw, the initial element is not known
+		assertTrue(
+				( // correct order
+						"test.coverage.Stopped.infLoop2(Stopped.java)".equals(stackTrace[1].toString()) &&
+						"test.coverage.Stopped.infLoop3(Stopped.java)".equals(stackTrace[2].toString()) &&
+						"test.coverage.Stopped.infLoop4(Stopped.java)".equals(stackTrace[3].toString()) &&
+						"test.coverage.Stopped.infLoop(Stopped.java)" .equals(stackTrace[4].toString())
+				) || (
+						"test.coverage.Stopped.infLoop2(Stopped.java)".equals(stackTrace[2].toString()) &&
+						"test.coverage.Stopped.infLoop3(Stopped.java)".equals(stackTrace[3].toString()) &&
+						"test.coverage.Stopped.infLoop4(Stopped.java)".equals(stackTrace[4].toString()) &&
+						"test.coverage.Stopped.infLoop(Stopped.java)" .equals(stackTrace[1].toString())
+				) || (
+						"test.coverage.Stopped.infLoop2(Stopped.java)".equals(stackTrace[3].toString()) &&
+						"test.coverage.Stopped.infLoop3(Stopped.java)".equals(stackTrace[4].toString()) &&
+						"test.coverage.Stopped.infLoop4(Stopped.java)".equals(stackTrace[1].toString()) &&
+						"test.coverage.Stopped.infLoop(Stopped.java)" .equals(stackTrace[2].toString())
+				) || (
+						"test.coverage.Stopped.infLoop2(Stopped.java)".equals(stackTrace[4].toString()) &&
+						"test.coverage.Stopped.infLoop3(Stopped.java)".equals(stackTrace[1].toString()) &&
+						"test.coverage.Stopped.infLoop4(Stopped.java)".equals(stackTrace[2].toString()) &&
+						"test.coverage.Stopped.infLoop(Stopped.java)" .equals(stackTrace[3].toString())
+				)
+		);
+
+		assertEquals(" -- recursion.start -- ()", stackTrace[5].toString());
+	}
+
+	public void testInfLoop4b() throws Exception {
+		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.ints[0], 4),  // 41 recursion
+				new AssignPrimitive(cut.ints[1], 10), // 10 ms of delay => Test Stopped
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.infLoop, new Reference[] { cut.ints[0], cut.ints[1] } )
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t);
+
+		assertEquals(25.0f, covs.get(CoverageBasicBlocks.KEY).getQuality());
+
+		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(faults);
+		assertEquals(1.0f, faults.getQuality());
+
+		final Fault fault = faults.faults.iterator().next();
+		assertNotNull(fault);
+		assertEquals(fault.getExceptionName(), TestStoppedException.class.getCanonicalName());
+
+		final StackTraceElement[] stackTrace = fault.getStackTrace();
+		assertEquals(6, fault.getStackTrace().length);
+		assertEquals(" --  recursion.end  -- ()", stackTrace[0].toString());
+		assertEquals("test.coverage.Stopped.infLoop2(Stopped.java)", stackTrace[1].toString());
+		assertEquals("test.coverage.Stopped.infLoop3(Stopped.java)", stackTrace[2].toString());
+		assertEquals("test.coverage.Stopped.infLoop4(Stopped.java)", stackTrace[3].toString());
+		assertEquals("test.coverage.Stopped.infLoop(Stopped.java)",  stackTrace[4].toString());
+		assertEquals(" -- recursion.start -- ()", stackTrace[5].toString());
 	}
 }

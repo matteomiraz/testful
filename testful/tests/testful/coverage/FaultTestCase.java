@@ -245,4 +245,282 @@ public class FaultTestCase extends GenericTestCase {
 		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
 		assertTrue(fCov == null || fCov.getQuality() == 0);
 	}
+
+	public void testRecursion1NoIntro() {
+		StackOverflowError exc = new StackOverflowError();
+		exc.setStackTrace(new StackTraceElement[] {
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+		});
+		Fault f = new Fault(new UnexpectedExceptionException(exc), "foo.bar.ClassName");
+
+		StackTraceElement[] expected = new StackTraceElement[] {
+				new StackTraceElement(" --  recursion", "end  -- ", "", -1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement(" -- recursion", "start -- ", "", -1)
+		};
+
+		assertEquals(expected.length, f.getStackTrace().length);
+		for (int i = 0; i < expected.length; i++)
+			assertEquals("Wrong " + i + " element", expected[i], f.getStackTrace()[i]);
+	}
+
+	public void testRecursion1PreludeNoIntro() {
+		StackOverflowError exc = new StackOverflowError();
+		exc.setStackTrace(new StackTraceElement[] {
+
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+
+				new StackTraceElement("pre", "c", "c", 3),
+				new StackTraceElement("pre", "b", "b", 2),
+				new StackTraceElement("pre", "a", "a", 1),
+		});
+		Fault f = new Fault(new UnexpectedExceptionException(exc), "foo.bar.ClassName");
+
+		StackTraceElement[] expected = new StackTraceElement[] {
+				new StackTraceElement(" --  recursion", "end  -- ", "", -1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement(" -- recursion", "start -- ", "", -1),
+		};
+
+		assertEquals(expected.length, f.getStackTrace().length);
+		for (int i = 0; i < expected.length; i++)
+			assertEquals("Wrong " + i + " element", expected[i], f.getStackTrace()[i]);
+	}
+
+	public void testRecursion1Intro() {
+		StackOverflowError exc = new StackOverflowError();
+		exc.setStackTrace(new StackTraceElement[] {
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 3),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 3),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 3),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 3),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 3),
+
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+		});
+		Fault f = new Fault(new UnexpectedExceptionException(exc), "foo.bar.ClassName");
+
+		StackTraceElement[] expected = new StackTraceElement[] {
+				new StackTraceElement(" --  recursion", "end  -- ", "", -1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 3),
+				new StackTraceElement(" -- recursion", "start -- ", "", -1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+		};
+
+		assertEquals(expected.length, f.getStackTrace().length);
+		for (int i = 0; i < expected.length; i++)
+			assertEquals("Wrong " + i + " element", expected[i], f.getStackTrace()[i]);
+	}
+
+	public void testRecursion1PreludeIntro() {
+		StackOverflowError exc = new StackOverflowError();
+		exc.setStackTrace(new StackTraceElement[] {
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 3),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 3),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 3),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 3),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 3),
+
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+
+				new StackTraceElement("pre", "c", "c", 3),
+				new StackTraceElement("pre", "b", "b", 2),
+				new StackTraceElement("pre", "a", "a", 1),
+		});
+		Fault f = new Fault(new UnexpectedExceptionException(exc), "foo.bar.ClassName");
+
+		StackTraceElement[] expected = new StackTraceElement[] {
+				new StackTraceElement(" --  recursion", "end  -- ", "", -1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 3),
+				new StackTraceElement(" -- recursion", "start -- ", "", -1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+		};
+
+		assertEquals(expected.length, f.getStackTrace().length);
+		for (int i = 0; i < expected.length; i++)
+			assertEquals("Wrong " + i + " element", expected[i], f.getStackTrace()[i]);
+	}
+
+	public void testRecursion2NoIntro() {
+		StackOverflowError exc = new StackOverflowError();
+		exc.setStackTrace(new StackTraceElement[] {
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+		});
+		Fault f = new Fault(new UnexpectedExceptionException(exc), "foo.bar.ClassName");
+
+		StackTraceElement[] expected = new StackTraceElement[] {
+				new StackTraceElement(" --  recursion", "end  -- ", "", -1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement(" -- recursion", "start -- ", "", -1)
+		};
+
+		assertEquals(expected.length, f.getStackTrace().length);
+		for (int i = 0; i < expected.length; i++)
+			assertEquals("Wrong " + i + " element", expected[i], f.getStackTrace()[i]);
+	}
+
+	public void testRecursion2PreludeNoIntro() {
+		StackOverflowError exc = new StackOverflowError();
+		exc.setStackTrace(new StackTraceElement[] {
+
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+
+				new StackTraceElement("pre", "c", "c", 3),
+				new StackTraceElement("pre", "b", "b", 2),
+				new StackTraceElement("pre", "a", "a", 1),
+		});
+		Fault f = new Fault(new UnexpectedExceptionException(exc), "foo.bar.ClassName");
+
+		StackTraceElement[] expected = new StackTraceElement[] {
+				new StackTraceElement(" --  recursion", "end  -- ", "", -1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement(" -- recursion", "start -- ", "", -1),
+		};
+
+		assertEquals(expected.length, f.getStackTrace().length);
+		for (int i = 0; i < expected.length; i++)
+			assertEquals("Wrong " + i + " element", expected[i], f.getStackTrace()[i]);
+	}
+
+	public void testRecursion2Intro() {
+		StackOverflowError exc = new StackOverflowError();
+		exc.setStackTrace(new StackTraceElement[] {
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+		});
+		Fault f = new Fault(new UnexpectedExceptionException(exc), "foo.bar.ClassName");
+
+		StackTraceElement[] expected = new StackTraceElement[] {
+				new StackTraceElement(" --  recursion", "end  -- ", "", -1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement(" -- recursion", "start -- ", "", -1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0)
+		};
+
+		assertEquals(expected.length, f.getStackTrace().length);
+		for (int i = 0; i < expected.length; i++)
+			assertEquals("Wrong " + i + " element", expected[i], f.getStackTrace()[i]);
+	}
+
+	public void testRecursion2PreludeIntro() {
+		StackOverflowError exc = new StackOverflowError();
+		exc.setStackTrace(new StackTraceElement[] {
+
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+
+				new StackTraceElement("pre", "c", "c", 3),
+				new StackTraceElement("pre", "b", "b", 2),
+				new StackTraceElement("pre", "a", "a", 1),
+		});
+		Fault f = new Fault(new UnexpectedExceptionException(exc), "foo.bar.ClassName");
+
+		StackTraceElement[] expected = new StackTraceElement[] {
+				new StackTraceElement(" --  recursion", "end  -- ", "", -1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement(" -- recursion", "start -- ", "", -1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0)
+		};
+
+		assertEquals(expected.length, f.getStackTrace().length);
+		for (int i = 0; i < expected.length; i++)
+			assertEquals("Wrong " + i + " element", expected[i], f.getStackTrace()[i]);
+	}
+
+	public void testRecursionComplex() {
+		StackOverflowError exc = new StackOverflowError();
+		exc.setStackTrace(new StackTraceElement[] {
+
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+
+				new StackTraceElement("pre", "c", "c", 3),
+				new StackTraceElement("pre", "b", "b", 2),
+				new StackTraceElement("pre", "a", "a", 1),
+		});
+
+		Fault f = new Fault(new UnexpectedExceptionException(exc), "foo.bar.ClassName");
+
+		StackTraceElement[] expected = new StackTraceElement[] {
+				new StackTraceElement(" --  recursion", "end  -- ", "", -1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement(" -- recursion", "start -- ", "", -1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+		};
+
+		assertEquals(expected.length, f.getStackTrace().length);
+		for (int i = 0; i < expected.length; i++)
+			assertEquals("Wrong " + i + " element", expected[i], f.getStackTrace()[i]);
+	}
 }

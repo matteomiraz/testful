@@ -36,6 +36,12 @@ public class Fault implements Serializable {
 
 	private static final long serialVersionUID = 7235014552766544190L;
 
+	/** Maximum length of recursion */
+	private static final int MAX_STEP = 25;
+
+	/** (recursion) Minimum number of iterations */
+	private static final int MIN_ITER = 5;
+
 	private static final Logger logger = Logger.getLogger("testful.coverage.fault");
 
 	private final String message;
@@ -55,7 +61,7 @@ public class Fault implements Serializable {
 	public Fault(FaultyExecutionException exc, String targetClassName) {
 		message = exc.getMessage();
 		exceptionName = exc.getClass().getCanonicalName();
-		stackTrace = processStackTrace(exc.getStackTrace(), targetClassName);
+		stackTrace = processStackTrace(exc, targetClassName);
 
 		Throwable cause = exc.getCause();
 
@@ -75,7 +81,8 @@ public class Fault implements Serializable {
 			((causeMessage == null) ? 0 : causeMessage.hashCode());
 	}
 
-	private static StackTraceElement[] processStackTrace(StackTraceElement[] stackTrace, String baseClassName) {
+	private static StackTraceElement[] processStackTrace(FaultyExecutionException fault, String baseClassName) {
+		final StackTraceElement[] stackTrace = fault.getStackTrace();
 		if(stackTrace.length == 0) {
 			if(TestFul.DEBUG) logger.warning("Empty StackTrace");
 			else logger.fine("Empty StackTrace");
@@ -101,7 +108,48 @@ public class Fault implements Serializable {
 		for(int i = base; i < n; i++)
 			pruned[i-base] = stackTrace[i];
 
+		// if there could be a loop in the stack trace
+		if ( fault instanceof testful.coverage.stopper.TestStoppedException ||
+				(fault instanceof testful.coverage.fault.UnexpectedExceptionException && fault.getCause() instanceof java.lang.StackOverflowError)) {
+
+			// for each initial point
+			final int len = pruned.length-1;
+			for (int initial = len; initial > 0 ; initial--) {
+
+				// for each valid step
+				for(int step = 1; step < MAX_STEP && (initial + 1 - MIN_ITER*step) >= 0; step++) {
+
+					if(checkRecursion(pruned, initial, step)) {
+
+						StackTraceElement[] recursion = new StackTraceElement[len-initial + step + 2];
+
+						recursion[0] = new StackTraceElement(" --  recursion", "end  -- ", "", -1);
+						for(int i = 0; i < step; i++)
+							recursion[i+1] = pruned[initial-step+i+1];
+						recursion[step+1] = new StackTraceElement(" -- recursion", "start -- ", "", -1);
+
+						for(int i = 0; i < len-initial; i++)
+							recursion[step+2+i] = pruned[initial + 1 + i];
+
+						return recursion;
+
+					}
+				}
+			}
+		}
+
 		return pruned;
+	}
+
+	private static boolean checkRecursion(StackTraceElement[] pruned, int initial, int step) {
+		int j = -1;
+		for(int i = initial - step; i >= 0; i--) {
+			if(++j % step == 0) j = 0;
+
+			if(!pruned[i].equals( pruned[initial - j])) return false;
+		}
+
+		return true;
 	}
 
 	/**
