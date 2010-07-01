@@ -96,8 +96,8 @@ public class FaultTracker extends Tracker {
 		throw (Throwable) fault;
 	}
 
-	private static void processStackTrace(FaultyExecutionException cause, String baseClassName) {
-		StackTraceElement[] stackTrace = cause.getStackTrace();
+	private static void processStackTrace(FaultyExecutionException fault, String baseClassName) {
+		StackTraceElement[] stackTrace = fault.getStackTrace();
 
 		if(stackTrace.length == 0) {
 			if(TestFul.DEBUG) logger.warning("Empty StackTrace");
@@ -120,6 +120,6 @@ public class FaultTracker extends Tracker {
 		for(int i = 0; i < n; i++)
 			pruned[i] = stackTrace[i];
 
-		cause.setStackTrace(pruned);
+		fault.setStackTrace(pruned);
 	}
 }

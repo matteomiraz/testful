@@ -48,7 +48,7 @@ public interface IUpdate {
 
 		/**
 		 * When an update is made, its information is sent to all subscribers by using this method.
-		 * @param progress the progress (between 0 and 100)
+		 * @param criterion the termination criterion being used
 		 */
 		public void update(TerminationCriterion criterion);
 
