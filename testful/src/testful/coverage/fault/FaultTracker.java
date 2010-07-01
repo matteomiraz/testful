@@ -107,6 +107,7 @@ public class FaultTracker extends Tracker {
 		}
 
 		int n = stackTrace.length;
+		int base = 0;
 
 		// remove initial elements in the stack
 		if(baseClassName != null) {
@@ -116,9 +117,12 @@ public class FaultTracker extends Tracker {
 			else n = stackTrace.length;
 		}
 
-		StackTraceElement[] pruned = new StackTraceElement[n];
-		for(int i = 0; i < n; i++)
-			pruned[i] = stackTrace[i];
+		// remove the last element in the stack
+		while(base < n && stackTrace[base].getClassName().startsWith("testful.")) base++;
+
+		StackTraceElement[] pruned = new StackTraceElement[n - base];
+		for(int i = base; i < n; i++)
+			pruned[i-base] = stackTrace[i];
 
 		fault.setStackTrace(pruned);
 	}
