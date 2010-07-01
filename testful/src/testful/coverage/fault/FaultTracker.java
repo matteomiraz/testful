@@ -18,9 +18,6 @@
 
 package testful.coverage.fault;
 
-import java.util.logging.Logger;
-
-import testful.TestFul;
 import testful.coverage.CoverageInformation;
 import testful.coverage.Tracker;
 import testful.model.OperationResult;
@@ -28,8 +25,6 @@ import testful.model.faults.FaultyExecutionException;
 import testful.utils.ElementManager;
 
 public class FaultTracker extends Tracker {
-
-	private static final Logger logger = Logger.getLogger("testful.coverage.fault");
 
 	public static final FaultTracker singleton = new FaultTracker();
 
@@ -87,43 +82,10 @@ public class FaultTracker extends Tracker {
 			fault = new UnexpectedExceptionException(exc);
 		}
 
-		processStackTrace(fault, targetClassName);
-
-		coverage.faults.add(new Fault(fault));
+		coverage.faults.add(new Fault(fault, targetClassName));
 
 		if(opRes != null) opRes.setPostconditionError();
 
 		throw (Throwable) fault;
-	}
-
-	private static void processStackTrace(FaultyExecutionException fault, String baseClassName) {
-		StackTraceElement[] stackTrace = fault.getStackTrace();
-
-		if(stackTrace.length == 0) {
-			if(TestFul.DEBUG) logger.warning("Empty StackTrace");
-			else logger.fine("Empty StackTrace");
-
-			return ;
-		}
-
-		int n = stackTrace.length;
-		int base = 0;
-
-		// remove initial elements in the stack
-		if(baseClassName != null) {
-			while(--n >= 0 && !baseClassName.equals(stackTrace[n].getClassName()));
-
-			if(n >= 0) n++;
-			else n = stackTrace.length;
-		}
-
-		// remove the last element in the stack
-		while(base < n && stackTrace[base].getClassName().startsWith("testful.")) base++;
-
-		StackTraceElement[] pruned = new StackTraceElement[n - base];
-		for(int i = base; i < n; i++)
-			pruned[i-base] = stackTrace[i];
-
-		fault.setStackTrace(pruned);
 	}
 }

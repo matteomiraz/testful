@@ -20,7 +20,9 @@ package testful.coverage.fault;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.logging.Logger;
 
+import testful.TestFul;
 import testful.model.faults.FaultyExecutionException;
 
 /**
@@ -34,6 +36,8 @@ public class Fault implements Serializable {
 
 	private static final long serialVersionUID = 7235014552766544190L;
 
+	private static final Logger logger = Logger.getLogger("testful.coverage.fault");
+
 	private final String message;
 	private final String exceptionName;
 	private final StackTraceElement[] stackTrace;
@@ -46,11 +50,12 @@ public class Fault implements Serializable {
 	/**
 	 * Creates a fault from the {@link FaultyExecutionException}.
 	 * @param exc The exception thrown
+	 * @param targetClassName the name of the class of the method being executed
 	 */
-	public Fault(FaultyExecutionException exc) {
+	public Fault(FaultyExecutionException exc, String targetClassName) {
 		message = exc.getMessage();
 		exceptionName = exc.getClass().getCanonicalName();
-		stackTrace = exc.getStackTrace();
+		stackTrace = processStackTrace(exc.getStackTrace(), targetClassName);
 
 		Throwable cause = exc.getCause();
 
@@ -68,6 +73,35 @@ public class Fault implements Serializable {
 			31*31*Arrays.hashCode(stackTrace) +
 			31*((causeExceptionName == null) ? 0 : causeExceptionName.hashCode()) +
 			((causeMessage == null) ? 0 : causeMessage.hashCode());
+	}
+
+	private static StackTraceElement[] processStackTrace(StackTraceElement[] stackTrace, String baseClassName) {
+		if(stackTrace.length == 0) {
+			if(TestFul.DEBUG) logger.warning("Empty StackTrace");
+			else logger.fine("Empty StackTrace");
+
+			return new StackTraceElement[0];
+		}
+
+		int n = stackTrace.length;
+		int base = 0;
+
+		// remove initial elements in the stack
+		if(baseClassName != null) {
+			while(--n >= 0 && !baseClassName.equals(stackTrace[n].getClassName()));
+
+			if(n >= 0) n++;
+			else n = stackTrace.length;
+		}
+
+		// remove last elements in the stack (if they belongs to testful)
+		while(base < n && stackTrace[base].getClassName().startsWith("testful.")) base++;
+
+		StackTraceElement[] pruned = new StackTraceElement[n - base];
+		for(int i = base; i < n; i++)
+			pruned[i-base] = stackTrace[i];
+
+		return pruned;
 	}
 
 	/**
@@ -113,22 +147,32 @@ public class Fault implements Serializable {
 		return hashCode;
 	}
 
-
 	/**
 	 * Compare two faults using the message of the exception and the (readapted) stack trace.
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if(this == obj) return true;
-		if(obj == null) return false;
-		if(getClass() != obj.getClass()) return false;
+		if (this == obj) return true;
+		if (obj == null) return false;
+
+		if (!(obj instanceof Fault)) return false;
 		Fault other = (Fault) obj;
 
-		if(message == null) {
-			if(other.message != null) return false;
-		} else if(!message.equals(other.message)) return false;
+		if (!exceptionName.equals(other.exceptionName)) return false;
 
-		if(!Arrays.equals(stackTrace, other.stackTrace)) return false;
+		if (message == null) {
+			if (other.message != null) return false;
+		} else if (!message.equals(other.message)) return false;
+
+		if (!Arrays.equals(stackTrace, other.stackTrace)) return false;
+
+		if (causeExceptionName == null) {
+			if (other.causeExceptionName != null) return false;
+		} else if (!causeExceptionName.equals(other.causeExceptionName)) return false;
+
+		if (causeMessage == null) {
+			if (other.causeMessage != null) return false;
+		} else if (!causeMessage.equals(other.causeMessage)) return false;
 
 		return true;
 	}
