@@ -7,4 +7,7 @@
     <method kind="mutator" exposeState="false" maxExecTime="23" name="longMethod3"/>
     <method kind="mutator" exposeState="false" maxExecTime="24" name="longMethod4"/>
     <method kind="mutator" exposeState="false" maxExecTime="25" name="longMethod5"/>
+    <method kind="mutator" exposeState="false" maxExecTime="500" name="infLoop">
+		<parameter captured="false" mutated="false" type="int"/>
+    </method>
 </ns2:class>

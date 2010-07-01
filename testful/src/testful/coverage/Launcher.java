@@ -141,7 +141,6 @@ public class Launcher {
 			Instrumenter.prepare(config, toInstrument);
 
 			Instrumenter.run(config, toInstrument,
-					testful.coverage.fault.FaultInstrumenter.singleton,
 					testful.coverage.whiteBox.WhiteInstrumenter.singleton,
 					testful.coverage.stopper.ExecutionStopperInstrumenter.singleton
 			);

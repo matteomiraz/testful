@@ -19,9 +19,12 @@
 package testful.coverage;
 
 import testful.GenericTestCase;
+import testful.coverage.fault.Fault;
 import testful.coverage.fault.FaultsCoverage;
+import testful.coverage.fault.UnexpectedExceptionException;
 import testful.coverage.stopper.TestStoppedException;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
+import testful.model.AssignPrimitive;
 import testful.model.CreateObject;
 import testful.model.Invoke;
 import testful.model.Operation;
@@ -49,7 +52,7 @@ public class StopperTestCase extends GenericTestCase {
 		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
 		assertNotNull(faults);
 		assertEquals(1.0f, faults.getQuality());
-		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
+		assertTrue(faults.faults.iterator().next().getExceptionName().equals(TestStoppedException.class.getCanonicalName()));
 	}
 
 	public void testLongMethod1b() throws Exception {
@@ -67,7 +70,7 @@ public class StopperTestCase extends GenericTestCase {
 		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
 		assertNotNull(faults);
 		assertEquals(1.0f, faults.getQuality());
-		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
+		assertTrue(faults.faults.iterator().next().getExceptionName().equals(TestStoppedException.class.getCanonicalName()));
 	}
 
 	public void testLongMethod2() throws Exception {
@@ -83,7 +86,7 @@ public class StopperTestCase extends GenericTestCase {
 		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
 		assertNotNull(faults);
 		assertEquals(1.0f, faults.getQuality());
-		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
+		assertTrue(faults.faults.iterator().next().getExceptionName().equals(TestStoppedException.class.getCanonicalName()));
 	}
 
 	public void testLongMethod2b() throws Exception {
@@ -101,7 +104,7 @@ public class StopperTestCase extends GenericTestCase {
 		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
 		assertNotNull(faults);
 		assertEquals(1.0f, faults.getQuality());
-		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
+		assertTrue(faults.faults.iterator().next().getExceptionName().equals(TestStoppedException.class.getCanonicalName()));
 	}
 
 	public void testLongMethod3() throws Exception {
@@ -117,7 +120,7 @@ public class StopperTestCase extends GenericTestCase {
 		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
 		assertNotNull(faults);
 		assertEquals(1.0f, faults.getQuality());
-		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
+		assertTrue(faults.faults.iterator().next().getExceptionName().equals(TestStoppedException.class.getCanonicalName()));
 	}
 
 	public void testLongMethod3b() throws Exception {
@@ -135,7 +138,7 @@ public class StopperTestCase extends GenericTestCase {
 		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
 		assertNotNull(faults);
 		assertEquals(1.0f, faults.getQuality());
-		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
+		assertTrue(faults.faults.iterator().next().getExceptionName().equals(TestStoppedException.class.getCanonicalName()));
 	}
 
 	public void testLongMethod4() throws Exception {
@@ -151,7 +154,7 @@ public class StopperTestCase extends GenericTestCase {
 		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
 		assertNotNull(faults);
 		assertEquals(1.0f, faults.getQuality());
-		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
+		assertTrue(faults.faults.iterator().next().getExceptionName().equals(TestStoppedException.class.getCanonicalName()));
 	}
 
 	public void testLongMethod4b() throws Exception {
@@ -169,7 +172,7 @@ public class StopperTestCase extends GenericTestCase {
 		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
 		assertNotNull(faults);
 		assertEquals(1.0f, faults.getQuality());
-		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
+		assertTrue(faults.faults.iterator().next().getExceptionName().equals(TestStoppedException.class.getCanonicalName()));
 	}
 
 	public void testLongMethod5() throws Exception {
@@ -185,7 +188,7 @@ public class StopperTestCase extends GenericTestCase {
 		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
 		assertNotNull(faults);
 		assertEquals(1.0f, faults.getQuality());
-		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
+		assertTrue(faults.faults.iterator().next().getExceptionName().equals(TestStoppedException.class.getCanonicalName()));
 	}
 
 	public void testLongMethod5b() throws Exception {
@@ -203,6 +206,51 @@ public class StopperTestCase extends GenericTestCase {
 		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
 		assertNotNull(faults);
 		assertEquals(1.0f, faults.getQuality());
-		assertTrue(faults.faults.iterator().next().getFault() instanceof TestStoppedException);
+		assertTrue(faults.faults.iterator().next().getExceptionName().equals(TestStoppedException.class.getCanonicalName()));
+	}
+
+	public void testInfLoop1a() throws Exception {
+		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.ints[0], 1), // 1 recursion
+				new AssignPrimitive(cut.ints[1], 0), // no delay => stackOverFlow
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.infLoop, new Reference[] { cut.ints[0], cut.ints[1] } )
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t);
+
+		assertEquals(6.0f, covs.get(CoverageBasicBlocks.KEY).getQuality());
+
+		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(faults);
+		assertEquals(1.0f, faults.getQuality());
+
+		final Fault fault = faults.faults.iterator().next();
+		assertNotNull(fault);
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getCanonicalName());
+		assertEquals(fault.getCauseExceptionName(), "java.lang.StackOverflowError");
+	}
+
+	public void testInfLoop1b() throws Exception {
+		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.ints[0], 1),  // 1 recursion
+				new AssignPrimitive(cut.ints[1], 10), // 10 ms of delay => Test Stopped
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.infLoop, new Reference[] { cut.ints[0], cut.ints[1] } )
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t);
+
+		assertEquals(10.0f, covs.get(CoverageBasicBlocks.KEY).getQuality());
+
+		FaultsCoverage faults = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(faults);
+		assertEquals(1.0f, faults.getQuality());
+
+		final Fault fault = faults.faults.iterator().next();
+		assertNotNull(fault);
+		assertEquals(fault.getExceptionName(), TestStoppedException.class.getCanonicalName());
 	}
 }

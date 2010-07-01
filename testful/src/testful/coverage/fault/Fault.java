@@ -20,7 +20,6 @@ package testful.coverage.fault;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.logging.Logger;
 
 import testful.model.faults.FaultyExecutionException;
 
@@ -35,59 +34,72 @@ public class Fault implements Serializable {
 
 	private static final long serialVersionUID = 7235014552766544190L;
 
-	private String msg;
-	private StackTraceElement[] stackTrace;
-	private FaultyExecutionException fault;
+	private final String message;
+	private final String exceptionName;
+	private final StackTraceElement[] stackTrace;
+
+	private final String causeMessage;
+	private final String causeExceptionName;
+
+	private final int hashCode;
 
 	/**
-	 * Creates a fault from the {@link FaultyExecutionException} and the
-	 * base element of the stack trace. The latter is the element of the stack trace
-	 * that called the System Under Test.
-	 *
+	 * Creates a fault from the {@link FaultyExecutionException}.
 	 * @param exc The exception thrown
-	 * @param base the element to consider as the base of stack trace
 	 */
-	public Fault(FaultyExecutionException exc, StackTraceElement base) {
-		fault = exc;
-		stackTrace = processStackTrace(exc, base);
-		msg = exc.getMessage();
-	}
+	public Fault(FaultyExecutionException exc) {
+		message = exc.getMessage();
+		exceptionName = exc.getClass().getCanonicalName();
+		stackTrace = exc.getStackTrace();
 
-	private StackTraceElement[] processStackTrace(FaultyExecutionException cause, StackTraceElement base) {
-		StackTraceElement[] stackTrace = cause.getStackTrace();
+		Throwable cause = exc.getCause();
 
-		if(stackTrace.length == 0) {
-			cause.fillInStackTrace(); // this seems to force the (sun) JVM to fill stack traces (in subsequent throws)!
-
-			final Logger logger = Logger.getLogger("testful.coverage.bug");
-			logger.warning("Empty StackTrace: using " + base);
-
-			return new StackTraceElement[] { base };
+		if(cause == null) {
+			causeMessage = null;
+			causeExceptionName = null;
+		} else {
+			causeMessage= cause.getMessage();
+			causeExceptionName = cause.getClass().getCanonicalName();
 		}
 
-		int n = stackTrace.length;
-
-		while(n > 0 && !stackTrace[n - 1].getClassName().equals(base.getClassName()))
-			n--;
-
-		StackTraceElement[] ret = new StackTraceElement[n];
-		for(int i = 0; i < n; i++)
-			ret[i] = stackTrace[i];
-
-		return ret;
+		hashCode =
+			31*31*31*31*exceptionName.hashCode() +
+			31*31*31*((message == null) ? 0 : message.hashCode()) +
+			31*31*Arrays.hashCode(stackTrace) +
+			31*((causeExceptionName == null) ? 0 : causeExceptionName.hashCode()) +
+			((causeMessage == null) ? 0 : causeMessage.hashCode());
 	}
 
 	/**
-	 * Returns the exception containing the fault
-	 * @return the exception containing the fault
+	 * @return the exceptionName
 	 */
-	public FaultyExecutionException getFault() {
-		return fault;
+	public String getExceptionName() {
+		return exceptionName;
 	}
 
 	/**
-	 * Returns the stack trace
-	 * @return the stack trace
+	 * @return the message
+	 */
+	public String getMessage() {
+		return message;
+	}
+
+	/**
+	 * @return the causeExceptionName
+	 */
+	public String getCauseExceptionName() {
+		return causeExceptionName;
+	}
+
+	/**
+	 * @return the causeMessage
+	 */
+	public String getCauseMessage() {
+		return causeMessage;
+	}
+
+	/**
+	 * @return the stackTrace
 	 */
 	public StackTraceElement[] getStackTrace() {
 		return stackTrace;
@@ -98,12 +110,9 @@ public class Fault implements Serializable {
 	 */
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((msg == null) ? 0 : msg.hashCode());
-		result = prime * result + Arrays.hashCode(stackTrace);
-		return result;
+		return hashCode;
 	}
+
 
 	/**
 	 * Compare two faults using the message of the exception and the (readapted) stack trace.
@@ -114,15 +123,13 @@ public class Fault implements Serializable {
 		if(obj == null) return false;
 		if(getClass() != obj.getClass()) return false;
 		Fault other = (Fault) obj;
-		if(msg == null) {
-			if(other.msg != null) return false;
-		} else if(!msg.equals(other.msg)) return false;
-		if(!Arrays.equals(stackTrace, other.stackTrace)) return false;
-		return true;
-	}
 
-	@Override
-	public String toString() {
-		return msg;
+		if(message == null) {
+			if(other.message != null) return false;
+		} else if(!message.equals(other.message)) return false;
+
+		if(!Arrays.equals(stackTrace, other.stackTrace)) return false;
+
+		return true;
 	}
 }

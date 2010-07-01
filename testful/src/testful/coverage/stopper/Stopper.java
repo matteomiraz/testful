@@ -99,8 +99,11 @@ public final class Stopper {
 								// KILL!
 
 								if(LOG_FINE) {
-									Throwable e = new Exception("Execution status of " + controlled.toString());
-									e.setStackTrace(controlled.getStackTrace());
+									final Throwable e;
+									if(LOG_FINER) {
+										e = new Exception("Execution status of " + controlled.toString());
+										e.setStackTrace(controlled.getStackTrace());
+									} else e = null;
 									logger.log(Level.FINE, "Killing controlled thread", e);
 								}
 

@@ -26,53 +26,11 @@ import testful.model.faults.FaultyExecutionException;
  */
 public class UnexpectedExceptionException extends Exception implements FaultyExecutionException {
 
-	private static final long serialVersionUID = -5570505062285290950L;
+	private static final long serialVersionUID = 3271255551511260354L;
 
-	private final String message;
-	private final String exceptionName;
-	private final StackTraceElement[] stackTrace;
 	public UnexpectedExceptionException(Throwable cause) {
-		exceptionName = cause.getClass().getCanonicalName();
-		message = cause.getMessage();
-		stackTrace = cause.getStackTrace();
+		super(cause);
+		setStackTrace(cause.getStackTrace());
 	}
 
-	@Override
-	public String getMessage() {
-		return message;
-	}
-
-	@Override
-	public StackTraceElement[] getStackTrace() {
-		return stackTrace;
-	}
-
-	@Override
-	public String toString() {
-		return "[" + exceptionName + "] " + message;
-	}
-
-	/**
-	 * Checks if an exception is to be considered a failure
-	 * @param exc The exception thrown
-	 * @param declaredExceptions the exceptions that the method declares to thrown
-	 * @param parameters the parameters given to the method
-	 * @return true if the exception is to be considered a failure
-	 */
-	public static boolean check(Throwable exc, Class<?>[] declaredExceptions, Object[] parameters) {
-		if(!(exc instanceof RuntimeException)) return false;
-
-		final Class<? extends Throwable> excClass = exc.getClass();
-		for (Class<?> d : declaredExceptions) {
-			if(d.isAssignableFrom(excClass)) return false;
-		}
-
-		if(exc instanceof NullPointerException) {
-			for (Object p : parameters) {
-				if(p == null) return false;
-			}
-		}
-
-		return true;
-	}
 }

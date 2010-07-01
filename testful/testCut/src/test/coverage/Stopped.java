@@ -70,4 +70,51 @@ public class Stopped {
 		}
 		dontDoSomething();
 	}
+
+	public void infLoop(int n, int delay) {
+		try {
+			if(delay > 0) Thread.sleep(delay);
+		} catch (Exception e) {
+			dontDoSomething();
+		}
+
+		switch(n) {
+		case 1:  infLoop (1, delay); break;
+		case 2:  infLoop2(2, delay); break;
+		case 3:  infLoop3(3, delay); break;
+		default: infLoop4(4, delay);
+		}
+
+		dontDoSomething();
+	}
+
+	private void infLoop2(int n, int delay) {
+		try {
+			if(delay > 0) Thread.sleep(delay);
+		} catch (Exception e) {
+			dontDoSomething();
+		}
+
+		infLoop(n, delay);
+	}
+
+	private void infLoop3(int n, int delay) {
+		try {
+			if(delay > 0) Thread.sleep(delay);
+		} catch (Exception e) {
+			dontDoSomething();
+		}
+
+		infLoop2(n, delay);
+	}
+
+	private void infLoop4(int n, int delay) {
+		try {
+			if(delay > 0) Thread.sleep(delay);
+		} catch (Exception e) {
+			dontDoSomething();
+		}
+
+		infLoop3(n, delay);
+	}
 }

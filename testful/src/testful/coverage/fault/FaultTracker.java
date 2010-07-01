@@ -23,18 +23,20 @@ import java.util.logging.Logger;
 import testful.TestFul;
 import testful.coverage.CoverageInformation;
 import testful.coverage.Tracker;
+import testful.model.OperationResult;
 import testful.model.faults.FaultyExecutionException;
 import testful.utils.ElementManager;
 
 public class FaultTracker extends Tracker {
 
-	private static final FaultTracker tracker = new FaultTracker();
+	private static final Logger logger = Logger.getLogger("testful.coverage.fault");
 
-	private final ElementManager<String, CoverageInformation> elemManager;
+	public static final FaultTracker singleton = new FaultTracker();
+
+	private final ElementManager<String, CoverageInformation> elemManager = new ElementManager<String, CoverageInformation>();
 	private FaultsCoverage coverage;
 
 	private FaultTracker() {
-		elemManager = new ElementManager<String, CoverageInformation>();
 		reset();
 	}
 
@@ -49,17 +51,75 @@ public class FaultTracker extends Tracker {
 		return elemManager;
 	}
 
-	public static void processFaulty(FaultyExecutionException exc) {
-		StackTraceElement base = Thread.currentThread().getStackTrace()[2];
-		tracker.coverage.faults.add(new Fault(exc, base));
+	/**
+	 * Analyzes the exception thrown by a method, and determine if it is a fault or not.
+	 * In the positive case, adds tracks the fault and terminate the execution throwing a {@link FaultyExecutionException}.
+	 * @param exc the exception to analyze
+	 * @param declaredExceptions the exceptions that a method declare to throw
+	 * @param params the parameters given to the method
+	 * @param opRes if there is a fault, invokes the preconditionError on this OperationResult (if any)
+	 * @param targetClassName the name of the class of the method being executed
+	 * @throws Throwable if the exception is a fault, the method throws a {@link FaultyExecutionException}
+	 */
+	public void process(Throwable exc, Class<?>[] declaredExceptions, Object[] params, OperationResult opRes, String targetClassName) throws Throwable {
+		final FaultyExecutionException fault;
+
+		if(exc instanceof FaultyExecutionException) {
+			fault = (FaultyExecutionException) exc;
+
+		} else {
+			// if the exception is not an unchecked exception, it must be declared in the signature, and it is not a failure
+			if((exc instanceof Exception) && !(exc instanceof RuntimeException)) return;
+
+			// if the exception has been declared in the signature, it is not a failure
+			final Class<? extends Throwable> excClass = exc.getClass();
+			for (Class<?> d : declaredExceptions)
+				if(d.isAssignableFrom(excClass))
+					return;
+
+			// if it is a NullPointer Exception and a parameter was null, it is not a failure
+			if(exc instanceof NullPointerException) {
+				for (Object p : params) {
+					if(p == null) return;
+				}
+			}
+
+			fault = new UnexpectedExceptionException(exc);
+		}
+
+		processStackTrace(fault, targetClassName);
+
+		coverage.faults.add(new Fault(fault));
+
+		if(opRes != null) opRes.setPostconditionError();
+
+		throw (Throwable) fault;
 	}
 
-	@SuppressWarnings("unused")
-	public static void processException(Throwable exc) {
-		if(TestFul.DEBUG && exc instanceof FaultyExecutionException)
-			Logger.getLogger("testful.coverage.fault").warning(exc.getClass().getName() + " is instance of FaultyExecutionException: you should use the processFaulty method!");
+	private static void processStackTrace(FaultyExecutionException cause, String baseClassName) {
+		StackTraceElement[] stackTrace = cause.getStackTrace();
 
-		StackTraceElement base = Thread.currentThread().getStackTrace()[2];
-		tracker.coverage.faults.add(new Fault(new UnexpectedExceptionException(exc), base));
+		if(stackTrace.length == 0) {
+			if(TestFul.DEBUG) logger.warning("Empty StackTrace");
+			else logger.fine("Empty StackTrace");
+
+			return ;
+		}
+
+		int n = stackTrace.length;
+
+		// remove initial elements in the stack
+		if(baseClassName != null) {
+			while(--n >= 0 && !baseClassName.equals(stackTrace[n].getClassName()));
+
+			if(n >= 0) n++;
+			else n = stackTrace.length;
+		}
+
+		StackTraceElement[] pruned = new StackTraceElement[n];
+		for(int i = 0; i < n; i++)
+			pruned[i] = stackTrace[i];
+
+		cause.setStackTrace(pruned);
 	}
 }

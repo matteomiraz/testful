@@ -25,7 +25,7 @@ import java.lang.reflect.Method;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import testful.coverage.fault.UnexpectedExceptionException;
+import testful.coverage.fault.FaultTracker;
 import testful.coverage.stopper.Stopper;
 import testful.model.AssignConstant;
 import testful.model.AssignPrimitive;
@@ -321,19 +321,16 @@ public class ReflectionExecutor implements Executor {
 		} catch(InvocationTargetException invocationException) {
 			Throwable exc = invocationException.getTargetException();
 
+			// Internal error
+			if(exc instanceof TestfulInternalException) throw exc;
+
+			// precondition error
 			if(exc instanceof PreconditionViolationException) {
 				if(opRes != null) opRes.setPreconditionError();
 				throw exc;
 			}
 
-			if(exc instanceof FaultyExecutionException) {
-				if(opRes != null) opRes.setPostconditionError();
-				throw exc;
-			}
-
-			if(exc instanceof TestfulInternalException) {
-				throw exc;
-			}
+			FaultTracker.singleton.process(exc, cons.getExceptionTypes(), initargs, opRes, cons.getDeclaringClass().getCanonicalName());
 
 			// a valid exception is thrown
 			if(opRes != null) opRes.setExceptional(exc, null, cluster);
@@ -431,24 +428,16 @@ public class ReflectionExecutor implements Executor {
 		} catch(InvocationTargetException invocationException) {
 			Throwable exc = invocationException.getTargetException();
 
+			// Internal error
+			if(exc instanceof TestfulInternalException) throw exc;
+
+			// precondition error
 			if(exc instanceof PreconditionViolationException) {
 				if(opRes != null) opRes.setPreconditionError();
 				throw exc;
 			}
 
-			// Recreate faulty exceptions
-			if(UnexpectedExceptionException.check(exc, m.getExceptionTypes(), args)) {
-				exc = new UnexpectedExceptionException(exc);
-			}
-
-			if(exc instanceof FaultyExecutionException) {
-				if(opRes != null) opRes.setPostconditionError();
-				throw exc;
-			}
-
-			if(exc instanceof TestfulInternalException) {
-				throw exc;
-			}
+			FaultTracker.singleton.process(exc, m.getExceptionTypes(), args, opRes, m.getDeclaringClass().getCanonicalName());
 
 			// a valid exception is thrown
 			if(opRes != null) opRes.setExceptional(exc, baseObject, cluster);

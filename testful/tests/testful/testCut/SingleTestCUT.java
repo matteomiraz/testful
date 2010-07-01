@@ -57,6 +57,7 @@ public abstract class SingleTestCUT {
 			cut = cluster.getCut();
 			cuts = refFactory.getReferences(cut);
 		} catch (Exception e) {
+			e.printStackTrace();
 			Assert.fail(e.getMessage());
 			throw e;
 		}

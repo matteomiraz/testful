@@ -19,7 +19,9 @@
 package testful.coverage;
 
 import testful.GenericTestCase;
+import testful.coverage.fault.Fault;
 import testful.coverage.fault.FaultsCoverage;
+import testful.coverage.fault.UnexpectedExceptionException;
 import testful.model.CreateObject;
 import testful.model.Invoke;
 import testful.model.Operation;
@@ -68,6 +70,18 @@ public class FaultTestCase extends GenericTestCase {
 		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
 		assertNotNull(fCov);
 		assertEquals(1.0f, fCov.getQuality());
+
+		Fault fault = fCov.faults.iterator().next();
+		assertNotNull(fault);
+
+		assertEquals("java.lang.NullPointerException: message", fault.getMessage());
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getCanonicalName());
+
+		assertEquals("message", fault.getCauseMessage());
+		assertEquals(fault.getCauseExceptionName(), NullPointerException.class.getCanonicalName());
+
+		assertEquals(1, fault.getStackTrace().length);
+		assertEquals("test.coverage.Fault.a1(Fault.java)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testA1Null() throws Exception {
@@ -115,6 +129,18 @@ public class FaultTestCase extends GenericTestCase {
 		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
 		assertNotNull(fCov);
 		assertEquals(1.0f, fCov.getQuality());
+
+		Fault fault = fCov.faults.iterator().next();
+		assertNotNull(fault);
+
+		assertEquals("java.lang.NullPointerException: message", fault.getMessage());
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getCanonicalName());
+
+		assertEquals("message", fault.getCauseMessage());
+		assertEquals(fault.getCauseExceptionName(), NullPointerException.class.getCanonicalName());
+
+		assertEquals(1, fault.getStackTrace().length);
+		assertEquals("test.coverage.Fault.b(Fault.java)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testB1() throws Exception {
@@ -138,6 +164,18 @@ public class FaultTestCase extends GenericTestCase {
 		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
 		assertNotNull(fCov);
 		assertEquals(1.0f, fCov.getQuality());
+
+		Fault fault = fCov.faults.iterator().next();
+		assertNotNull(fault);
+
+		assertEquals("java.lang.ArithmeticException: message", fault.getMessage());
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getCanonicalName());
+
+		assertEquals("message", fault.getCauseMessage());
+		assertEquals(fault.getCauseExceptionName(), ArithmeticException.class.getCanonicalName());
+
+		assertEquals(1, fault.getStackTrace().length);
+		assertEquals("test.coverage.Fault.c(Fault.java)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testC1() throws Exception {
@@ -183,6 +221,18 @@ public class FaultTestCase extends GenericTestCase {
 		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
 		assertNotNull(fCov);
 		assertEquals(1.0f, fCov.getQuality());
+
+		Fault fault = fCov.faults.iterator().next();
+		assertNotNull(fault);
+
+		assertEquals("test.coverage.MyException", fault.getMessage());
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getCanonicalName());
+
+		assertEquals(null, fault.getCauseMessage());
+		assertEquals(fault.getCauseExceptionName(), "test.coverage.MyException");
+
+		assertEquals(1, fault.getStackTrace().length);
+		assertEquals("test.coverage.Fault.e(Fault.java)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testE1() throws Exception {
