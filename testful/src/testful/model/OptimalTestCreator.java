@@ -21,6 +21,7 @@ package testful.model;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.coverage.CoverageInformation;
@@ -29,6 +30,7 @@ import testful.utils.ElementManager;
 public class OptimalTestCreator {
 
 	private static final Logger logger = Logger.getLogger("testful.regression.OptimalTestCreator");
+	private static final boolean LOG_FINE = logger.isLoggable(Level.FINE);
 
 	/**
 	 * stores the combined coverage obtained so far.
@@ -131,6 +133,8 @@ public class OptimalTestCreator {
 	}
 
 	public void log(Integer currentGeneration, long totInvocation, long time) {
+		if(!LOG_FINE) return;
+
 		StringBuilder sb = new StringBuilder("combinedCoverage ");
 
 		sb.append("inv=").append(totInvocation);
@@ -149,6 +153,6 @@ public class OptimalTestCreator {
 		for (CoverageInformation cov : combinedCoverage)
 			sb.append(";").append(cov.getKey()).append("=").append(cov.getQuality());
 
-		logger.finer(sb.toString());
+		logger.fine(sb.toString());
 	}
 }

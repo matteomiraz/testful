@@ -19,7 +19,6 @@
 package testful.model;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import testful.TestFul;
@@ -50,13 +49,7 @@ public class AssignConstant extends Operation {
 	@Override
 	public Operation adapt(TestCluster cluster, ReferenceFactory refFactory) {
 		final AssignConstant ret = new AssignConstant(refFactory.adapt(ref), cluster.adapt(staticValue));
-
-		Iterator<OperationInformation> it = getInfos();
-		while(it.hasNext()) {
-			OperationInformation info = it.next();
-			ret.addInfo(info.clone());
-		}
-
+		ret.addInfo(this);
 		return ret;
 	}
 
@@ -116,6 +109,8 @@ public class AssignConstant extends Operation {
 
 	@Override
 	public Operation clone() {
-		return new AssignConstant(ref, staticValue);
+		final AssignConstant clone = new AssignConstant(ref, staticValue);
+		clone.addInfo(this);
+		return clone;
 	}
 }

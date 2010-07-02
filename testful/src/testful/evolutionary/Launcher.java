@@ -22,14 +22,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jmetal.base.Solution;
-import jmetal.base.SolutionSet;
+import jmetal.base.TimeTerminationCriterion.TimeCPU;
+import jmetal.base.TimeTerminationCriterion.TimeWall;
 import jmetal.base.operator.crossover.OnePointCrossoverVarLen;
 import jmetal.base.operator.localSearch.LocalSearch;
 import jmetal.base.operator.selection.BinaryTournament2;
@@ -41,9 +40,7 @@ import testful.TestFul;
 import testful.TestfulException;
 import testful.coverage.TrackerDatum;
 import testful.model.Operation;
-import testful.model.Test;
 import testful.model.TestCoverage;
-import testful.model.TestExecutionManager;
 import testful.model.TestSuite;
 import testful.random.RandomTest;
 import testful.random.RandomTestSplit;
@@ -109,9 +106,17 @@ public class Launcher {
 
 		NSGAII<Operation> algorithm = new NSGAII<Operation>(problem);
 		algorithm.setPopulationSize(config.getPopSize());
-		algorithm.setMaxEvaluations(config.getTime() * 1000);
 		algorithm.setInherit(config.getFitnessInheritance());
-		algorithm.setUseCpuTime(config.isUseCpuTime());
+
+		if(config.isUseCpuTime()) {
+			try {
+				algorithm.setTerminationCriterion(new TimeCPU(config.getTime() * 1000));
+			} catch (Exception e) {
+				algorithm.setTerminationCriterion(new TimeWall(config.getTime() * 1000));
+			}
+		} else {
+			algorithm.setTerminationCriterion(new TimeWall(config.getTime() * 1000));
+		}
 
 		try {
 			testfulProblem.addReserve(genSmartPopulation(config, testfulProblem));
@@ -137,6 +142,9 @@ public class Launcher {
 
 		if(config.getLocalSearchPeriod() > 0) {
 			LocalSearch<Operation> localSearch = new LocalSearchBranch(testfulProblem);
+			localSearch.setTerminationCriterion(algorithm.getTerminationCriterion());
+			localSearch.setAbsoluteTerminationCriterion(true);
+
 			algorithm.setImprovement(localSearch);
 			algorithm.setLocalSearchPeriod(config.getLocalSearchPeriod());
 			algorithm.setLocalSearchNum(config.getLocalSearchElements()/100.0f);
@@ -146,38 +154,24 @@ public class Launcher {
 			algorithm.register(callBack);
 
 		/* Execute the Algorithm */
-		SolutionSet<Operation> population;
 		try {
-			population = algorithm.execute();
+			algorithm.execute();
 		} catch (JMException e) {
+			logger.log(Level.WARNING, "Cannot find some classes: " + e.getMessage(), e);
 			throw new TestfulException(e);
 		}
 
 		/* simplify tests */
-		final TestSuiteReducer reducer = new TestSuiteReducer(testfulProblem.getFinder(), testfulProblem.getData(), config.isSimplify());
-		for (Solution<Operation> sol : population)
-			reducer.process(testfulProblem.getTest(sol.getDecisionVariables().variables_));
-
-		/* get Operation status */
-		List<TestCoverage> optimal = new ArrayList<TestCoverage>();
-		for (TestCoverage testCoverage : reducer.getOutput()) {
-			try {
-				Operation[] ops = TestExecutionManager.getOpStatus(testfulProblem.getFinder(), testCoverage);
-				optimal.add(new TestCoverage(new Test(testCoverage.getCluster(), testCoverage.getReferenceFactory(), ops), testCoverage.getCoverage()));
-			} catch (Exception e) {
-				logger.log(Level.WARNING, "Cannot execute the test: " + e.getLocalizedMessage(), e);
-				optimal.add(testCoverage);
-			}
-		}
-
+		final TestSuiteReducer reducer = new TestSuiteReducer(testfulProblem.getFinder(), testfulProblem.getData());
+		for (TestCoverage t : testfulProblem.getOptimalTests())
+			reducer.process(t);
 
 		/* convert tests to jUnit */
-		JUnitTestGenerator gen = new JUnitTestGenerator(config.getDirGeneratedTests());
-		gen.process(optimal);
+		JUnitTestGenerator gen = new JUnitTestGenerator(config.getDirGeneratedTests(), true);
+		gen.read(reducer.getOutput());
 		gen.writeSuite();
 
 	}//main
-
 
 	/**
 	 * This function uses random.Launcher to generate a smarter initial population
@@ -197,7 +191,7 @@ public class Launcher {
 
 		TrackerDatum[] data = new TrackerDatum[] { };
 
-		RandomTest rt = new RandomTestSplit(config.isCache(), config.getLog(), testfulProblem.getFinder() , testfulProblem.getCluster(), testfulProblem.getReferenceFactory(), config.getSeed(), data);
+		RandomTest rt = new RandomTestSplit(config.getLog(), testfulProblem.getFinder(), config.isReload(), testfulProblem.getCluster(), testfulProblem.getReferenceFactory(), config.getSeed(), data);
 
 		rt.test(smartTime * 1000);
 

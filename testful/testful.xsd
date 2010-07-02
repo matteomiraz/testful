@@ -23,6 +23,7 @@
       <xs:element name="parameter" type="tns:parameter" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element name="extra" type="tns:extra" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
+    <xs:attribute name="maxExecTime" type="xs:int"/>
     <xs:attribute name="skip" type="xs:boolean"/>
   </xs:complexType>
 
@@ -48,6 +49,7 @@
     </xs:sequence>
     <xs:attribute name="kind" type="tns:kind" use="required"/>
     <xs:attribute name="exposeState" type="xs:boolean"/>
+    <xs:attribute name="maxExecTime" type="xs:int"/>
     <xs:attribute name="name" type="xs:string" use="required"/>
   </xs:complexType>
 

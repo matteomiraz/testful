@@ -12,8 +12,8 @@ import java.util.zip.GZIPOutputStream;
 
 import testful.TestFul;
 import testful.coverage.CoverageInformation;
-import testful.coverage.fault.FaultInstrumenter;
 import testful.coverage.soot.Instrumenter;
+import testful.coverage.stopper.ExecutionStopperInstrumenter;
 import testful.model.Test;
 import testful.model.TestCoverage;
 import testful.model.TestReader;
@@ -54,9 +54,8 @@ public class Launcher {
 		ConfigHandler.track = config.isTrack();
 
 		Instrumenter.run(config, config.getGenMutant(),
-				ExecutionStopper.singleton,
-				new MutatorFunctions(config),
-				FaultInstrumenter.singleton
+				ExecutionStopperInstrumenter.singleton,
+				new MutatorFunctions(config)
 		);
 	}
 

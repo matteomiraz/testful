@@ -18,7 +18,8 @@
 
 package testful.runner;
 
-import java.io.File;
+import java.net.URL;
+
 
 /**
  * Manages some data associated with a class.
@@ -33,5 +34,5 @@ public interface ClassData {
 	 * @param className the name of the class
 	 * @param classFile the file (.class) that contains the bytecode of the class
 	 */
-	public void load(String className, File classFile);
+	public void load(String className, URL classFile);
 }

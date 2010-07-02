@@ -43,6 +43,9 @@ public class Methodz implements Serializable, Comparable<Methodz> {
 	private final Clazz returnType;
 	private final boolean isStatic;
 
+	/** The maximum execution time (in milliseconds) */
+	private final int maxExecutionTime;
+
 	private final String fullMethodName;
 
 	private transient Method method = null;
@@ -63,6 +66,7 @@ public class Methodz implements Serializable, Comparable<Methodz> {
 
 		method = m;
 		isStatic = Modifier.isStatic(method.getModifiers());
+		maxExecutionTime = xml.getMaxExecTime();
 
 		List<XmlParameter> paramsXml = xml.getParameter();
 		ParameterInformation[] paramsInfo = new ParameterInformation[paramsXml.size()];
@@ -129,6 +133,14 @@ public class Methodz implements Serializable, Comparable<Methodz> {
 		return isStatic;
 	}
 
+	/**
+	 * Returns the maximum execution time (in milliseconds)
+	 * @return the maximum execution time (in milliseconds)
+	 */
+	public int getMaxExecutionTime() {
+		return maxExecutionTime;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder(name).append("(");
@@ -169,19 +181,20 @@ public class Methodz implements Serializable, Comparable<Methodz> {
 	 */
 	@Override
 	public int compareTo(Methodz o) {
-		if(name.compareTo(o.name) != 0) return name.compareTo(o.name);
 
-		int i1 = 0, i2 = 0;
-		while(i1 < params.length & i2 < o.params.length) {
-			Clazz p1 = params[i1++];
-			Clazz p2 = o.params[i2++];
+		final int compareClazz = clazz.compareTo(o.clazz);
+		if(compareClazz != 0) return compareClazz;
 
-			final int compare = p1.compareTo(p2);
-			if(compare != 0) return compare;
+		final int compareName = name.compareTo(o.name);
+		if(compareName != 0) return compareName;
+
+		if(params.length != o.params.length) return params.length - o.params.length;
+
+		for (int i = 0; i < params.length; i++) {
+			final int compareParam = params[i].compareTo(o.params[i]);
+			if(compareParam != 0) return compareParam;
 		}
 
-		if(i1 >= params.length) return -1;
-		if(i2 >= o.params.length) return  1;
 		return 0;
 	}
 }

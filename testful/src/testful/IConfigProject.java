@@ -19,6 +19,7 @@
 package testful;
 
 import java.io.File;
+import java.util.List;
 import java.util.logging.Level;
 
 import org.kohsuke.args4j.Option;
@@ -51,6 +52,12 @@ public interface IConfigProject extends IConfig {
 	 * @return the compiled directory
 	 */
 	public File getDirCompiled();
+
+	/**
+	 * Returns the list of the libraries (both jar files and class directories).
+	 * @return the list of the libraries (both jar files and class directories).
+	 */
+	public List<File> getLibraries();
 
 	/**
 	 * Returns the directory containing instrumented binaries (e.g. $HOME/workspace/project/instrumented/ )
@@ -131,6 +138,13 @@ public interface IConfigProject extends IConfig {
 		 */
 		@Option(required = false, name = "-dirCompiled", usage = "Specify the directory containing compiled files (default: bin)")
 		public void setDirCompiled(File dirCompiled);
+
+		/**
+		 * Adds a library (either a jar file or a class directory)
+		 * @param library the library to add (either a jar file or a class directory)
+		 */
+		@Option(required = false, multiValued=true, name = "-library", usage = "Adds a library (either a jar file or a class directory)")
+		public void addLibrary(File library);
 
 		/**
 		 * Sets the directory containing instrumented files.

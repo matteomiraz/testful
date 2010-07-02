@@ -20,8 +20,8 @@ package testful.model;
 
 import java.io.Serializable;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import testful.TestFul;
 import ec.util.MersenneTwisterFast;
@@ -34,7 +34,7 @@ public class AssignPrimitive extends Operation {
 	private final Serializable value;
 
 	public AssignPrimitive(Reference ref, Serializable value) {
-		super((ref != null ? ref.hashCode() * 29 : 0) + value.hashCode());
+		super((ref != null ? ref.hashCode() * 29 : 0) + (value != null ? value.hashCode() : 0));
 
 		if(TestFul.DEBUG) {
 			if(ref == null) {
@@ -72,13 +72,7 @@ public class AssignPrimitive extends Operation {
 	@Override
 	public Operation adapt(TestCluster cluster, ReferenceFactory refFactory) {
 		final AssignPrimitive ret = new AssignPrimitive(refFactory.adapt(ref), value);
-
-		Iterator<OperationInformation> it = getInfos();
-		while(it.hasNext()) {
-			OperationInformation info = it.next();
-			ret.addInfo(info.clone());
-		}
-
+		ret.addInfo(this);
 		return ret;
 	}
 
@@ -97,7 +91,28 @@ public class AssignPrimitive extends Operation {
 			int i = ((Character) value).charValue();
 			if(i != 0) return "((int) " + i + " /* " + value.toString() + " */ )";
 			else return "((int) " + i + ")";
-		} else if(value instanceof String) return "\"" + value + "\"";
+		} else if(value instanceof String) {
+
+			final String str = (String)value;
+			StringBuilder escaped = new StringBuilder();
+			for (int i = 0; i < str.length(); i++) {
+				char ch = str.charAt(i);
+
+				if(ch == '\b') escaped.append("\\b");		// \b
+				else if(ch == '\t') escaped.append("\\t");	// \t
+				else if(ch == '\n') escaped.append("\\n");	// \n
+				else if(ch == '\f') escaped.append("\\f");	// \f
+				else if(ch == '\r') escaped.append("\\r");	// \r
+				else if(ch == '\"') escaped.append("\\\"");	// "
+				else if(ch == '\'') escaped.append("\\\'");	// '
+				else if(ch == '\\') escaped.append("\\\\");	// \
+				else if(ch >= 32 && ch <= 126) escaped.append(ch);
+				else if(ch > 0 && ch < 256) escaped.append("\\" + Integer.toOctalString(ch));
+				else Logger.getLogger("testful.model").fine("Cannot convert character #" + ((int) ch) + ": not in [0, 255]");
+			}
+
+			return "\"" + escaped.toString() + "\"";
+		}
 
 		return value.toString();
 	}
@@ -195,29 +210,30 @@ public class AssignPrimitive extends Operation {
 		return (byte) (r.nextInt(java.lang.Byte.MAX_VALUE - java.lang.Byte.MIN_VALUE) - java.lang.Byte.MIN_VALUE);
 	}
 
-	private static final char[] SPECIAL_CHARACTERS = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
-		't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '.', ',', ';', ':', '-',
-		'+', '?', '!', '\'', '`', '"', 163, '$', 8364, '%', '&', '/', '(', ')', '=', '^', '#', 176, '[', ']', '{', '}', '~' };
+	private static final char[] BASE_CHARACTERS = {
+		' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+		'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+		'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+	};
 
-	private static char getCharacter(MersenneTwisterFast r) {
+	private static final char[] SPECIAL_CHARACTERS = {
+		'\0', ' ', '\n', '\r', '\t',
+		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+		'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+		'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+		'.', ',', ';', ':', '-',  '+', '?', '!', '\'', '`', '"',
+		163, '$', 8364, '%', '&', '/', '(', ')', '=', '^', '#', 176, '[', ']', '{', '}', '~' };
+
+	public static char getCharacter(MersenneTwisterFast r) {
 		float nextFloat = r.nextFloat();
 
-		if(nextFloat < Operation.GEN_BASIC_VALUES) switch(r.nextInt(5)) {
-		case 0:
-			return '\0';
-		case 1:
-			return ' ';
-		case 2:
-			return '\n';
-		case 3:
-			return '\r';
-		default:
-			return '\t';
-		}
+		if(nextFloat < Operation.GEN_BASIC_VALUES)
+			return BASE_CHARACTERS[r.nextInt(BASE_CHARACTERS.length)];
 
-		if(nextFloat < Operation.GEN_BASIC_VALUES + Operation.LIMITED_VALUES) return SPECIAL_CHARACTERS[r.nextInt(SPECIAL_CHARACTERS.length)];
+		if(nextFloat < Operation.GEN_BASIC_VALUES + Operation.LIMITED_VALUES)
+			return SPECIAL_CHARACTERS[r.nextInt(SPECIAL_CHARACTERS.length)];
 
-		return (char) r.nextInt(Character.MAX_VALUE);
+		return (char) r.nextInt(256);
 	}
 
 	private static double getDouble(MersenneTwisterFast r) {
@@ -246,9 +262,10 @@ public class AssignPrimitive extends Operation {
 			return Double.NaN;
 		}
 
-		if(nextFloat < Operation.GEN_BASIC_VALUES + Operation.LIMITED_VALUES) return r.nextBoolean() ? 1 : -1 * r.nextDouble();
+		if(nextFloat < Operation.GEN_BASIC_VALUES + Operation.LIMITED_VALUES)
+			return (r.nextBoolean() ? 1 : -1) * r.nextDouble();
 
-		return r.nextBoolean() ? 1 : -1 * r.nextDouble() * Double.MAX_VALUE;
+		return (r.nextBoolean() ? 1 : -1) * r.nextDouble() * Double.MAX_VALUE;
 	}
 
 	private static float getFloat(MersenneTwisterFast r) {
@@ -277,9 +294,9 @@ public class AssignPrimitive extends Operation {
 			return Float.NaN;
 		}
 
-		if(nextFloat < Operation.GEN_BASIC_VALUES + Operation.LIMITED_VALUES) return r.nextBoolean() ? 1 : -1 * r.nextFloat();
+		if(nextFloat < Operation.GEN_BASIC_VALUES + Operation.LIMITED_VALUES) return (r.nextBoolean() ? 1 : -1) * r.nextFloat();
 
-		return r.nextBoolean() ? 1 : -1 * r.nextFloat() * Float.MAX_VALUE;
+		return (r.nextBoolean() ? 1 : -1) * r.nextFloat() * Float.MAX_VALUE;
 	}
 
 	private static int getInteger(MersenneTwisterFast r) {
@@ -345,10 +362,16 @@ public class AssignPrimitive extends Operation {
 		return (short) (r.nextInt(java.lang.Short.MAX_VALUE - java.lang.Short.MIN_VALUE) - java.lang.Short.MIN_VALUE);
 	}
 
-	private static String getString(MersenneTwisterFast r) {
-		char str[] = new char[r.nextInt(255)];
+	public static String getString(MersenneTwisterFast r) {
 
-		for(int i = 0; i < str.length; i++)
+		final int dim;
+		if(r.nextBoolean(.75f)) dim = r.nextInt(10);
+		else if(r.nextBoolean(.75f)) dim = r.nextInt(50);
+		else dim = r.nextInt(200);
+
+		char str[] = new char[dim];
+
+		for(int i = 0; i < dim; i++)
 			str[i] = getCharacter(r);
 
 		return new java.lang.String(str);
@@ -356,6 +379,8 @@ public class AssignPrimitive extends Operation {
 
 	@Override
 	public Operation clone() {
-		return new AssignPrimitive(ref, value);
+		final AssignPrimitive clone = new AssignPrimitive(ref, value);
+		clone.addInfo(this);
+		return clone;
 	}
 }

@@ -20,7 +20,6 @@ package testful.model;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -47,13 +46,7 @@ public class CreateObject extends Operation {
 	@Override
 	public Operation adapt(TestCluster cluster, ReferenceFactory refFactory) {
 		final CreateObject ret = new CreateObject(refFactory.adapt(ref), cluster.adapt(constructor), refFactory.adapt(params));
-
-		Iterator<OperationInformation> it = getInfos();
-		while(it.hasNext()) {
-			OperationInformation info = it.next();
-			ret.addInfo(info.clone());
-		}
-
+		ret.addInfo(this);
 		return ret;
 	}
 
@@ -112,8 +105,10 @@ public class CreateObject extends Operation {
 		if(!(obj instanceof CreateObject)) return false;
 
 		CreateObject other = (CreateObject) obj;
-		return ref == null ? other.ref == null : ref.equals(other.ref)
-				&& constructor.equals(other.constructor) && Arrays.equals(params, other.params);
+
+		return (ref == null ? other.ref == null : ref.equals(other.ref)) &&
+		constructor.equals(other.constructor) &&
+		Arrays.equals(params, other.params);
 	}
 
 	@Override
@@ -143,6 +138,8 @@ public class CreateObject extends Operation {
 
 	@Override
 	public Operation clone() {
-		return new CreateObject(ref, constructor, params);
+		final CreateObject clone = new CreateObject(ref, constructor, params);
+		clone.addInfo(this);
+		return clone;
 	}
 }

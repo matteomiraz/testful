@@ -31,7 +31,9 @@ public class AllTests {
 		TestSuite suite = new TestSuite(AllTests.class.getName());
 
 		//$JUnit-BEGIN$
-		suite.addTestSuite(ControlFlowCoverageTestCase.class);
+		suite.addTestSuite(FaultTestCase.class);
+		suite.addTestSuite(CoverageCFGTestCase.class);
+		suite.addTestSuite(StopperTestCase.class);
 		//$JUnit-END$
 
 		return suite;

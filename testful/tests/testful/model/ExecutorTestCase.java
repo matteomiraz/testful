@@ -18,7 +18,7 @@ import testful.utils.ElementManager;
 public class ExecutorTestCase extends GenericTestCase {
 
 	public void testFraction() throws Exception {
-		ConfigCut config = new ConfigCut(GenericTestCase.config);
+		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("dummy.Fraction");
 		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
 		ReferenceFactory refFactory = new ReferenceFactory(cluster, 4, 4);

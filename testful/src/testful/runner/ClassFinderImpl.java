@@ -21,6 +21,7 @@ package testful.runner;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -32,6 +33,7 @@ import java.util.logging.Logger;
 
 import testful.IConfigProject;
 import testful.utils.ByteReader;
+import testful.utils.JavaUtils;
 
 /**
  * Retrieve the bytecode of classes.
@@ -41,6 +43,8 @@ import testful.utils.ByteReader;
 public class ClassFinderImpl implements ClassFinder {
 
 	private static Logger logger = Logger.getLogger("testful.executor.classloader");
+	private static final boolean LOG_FINER = logger.isLoggable(Level.FINER);
+
 	private static final ClassLoader classLoader = ClassFinderImpl.class.getClassLoader();
 
 	private final String key;
@@ -48,11 +52,12 @@ public class ClassFinderImpl implements ClassFinder {
 	private final Collection<ClassData> data = new ArrayList<ClassData>();
 
 	public ClassFinderImpl(IConfigProject config) {
-		this(config.getDirInstrumented(), config.getDirCompiled());
+		this(JavaUtils.merge(config.getDirInstrumented(), config.getDirCompiled(), config.getLibraries()));
 	}
 
 	public ClassFinderImpl(File ... where) {
 		this.where = where;
+
 		key = UUID.randomUUID().toString();
 
 		try {
@@ -73,32 +78,33 @@ public class ClassFinderImpl implements ClassFinder {
 
 	@Override
 	public synchronized byte[] getClass(String name) throws ClassNotFoundException {
-		String fileName = name.replace('.', File.separatorChar) + ".class";
-
 		// try looking in the where class directories
 		{
 			try {
-				File classFile = searchClassFile(name);
-				byte[] ret = ByteReader.readBytes(classFile);
-				logger.finer("(" + key + ") serving class " + name + " from " + classFile);
+				URL classURL = searchClassFile(name);
+				byte[] ret = ByteReader.readBytes(classURL.openStream());
+				if(LOG_FINER) logger.finer("(" + key + ") serving class " + name + " from " + classURL);
 
 				for (ClassData datum : data)
-					datum.load(name, classFile);
+					datum.load(name, classURL);
 
 				return ret;
+			} catch(FileNotFoundException e) {
+				// not found
 			} catch(IOException e) {
+				// this should not happen!
+				logger.log(Level.WARNING, "I/O error: " + e, e);
 			}
 		}
 
 		// try using the classLoader
-		fileName = name.replace('.', '/') + ".clazz";
 		{
-			URL resource = classLoader.getResource(fileName);
+			URL resource = classLoader.getResource(name.replace('.', '/') + ".clazz");
 			if(resource != null) {
 				try {
 					byte[] ret = ByteReader.readBytes(resource.openStream());
 					if(ret != null) {
-						logger.finer("(" + key + ") serving class " + name + " from " + resource);
+						if(LOG_FINER) logger.finer("(" + key + ") serving class " + name + " from " + resource);
 						return ret;
 					}
 				} catch(IOException e) {
@@ -107,8 +113,9 @@ public class ClassFinderImpl implements ClassFinder {
 			}
 		}
 
-		logger.warning("(" + key + ") " + "cannot find class " + name);
-		throw new ClassNotFoundException("cannot find class " + name);
+		final String msg = "cannot find class " + name;
+		logger.warning("(" + key + ") " + msg);
+		throw new ClassNotFoundException(msg);
 	}
 
 	/**
@@ -118,19 +125,50 @@ public class ClassFinderImpl implements ClassFinder {
 	 * @return the file that contains the bytecode
 	 * @throws FileNotFoundException if the file is not found
 	 */
-	private File searchClassFile(String name) throws FileNotFoundException {
+	private URL searchClassFile(String name) throws FileNotFoundException {
 		final String fileName = name.replace('.', File.separatorChar) + ".class";
+		final String urlName = name.replace('.', '/') + ".class";
 
 		for(File element : where) {
-			File w = new File(element, fileName);
-			if(w.exists()) {
-				if(w.canRead()) return w;
-				else logger.warning("(" + key + ") found " + name + " in " + w.getAbsolutePath() + ", but cannot read it");
+
+			// if it is a class directory, look for a .class file
+			if(element.isDirectory()) {
+				File w = new File(element, fileName);
+				if(w.exists()) {
+					if(w.canRead()) {
+						try {
+							return w.toURI().toURL();
+						} catch (MalformedURLException e) {
+							logger.log(Level.WARNING, "(" + key + ") found " + name + " in " + w.getAbsolutePath() + ", but cannot transform to a valid URL", e);
+						}
+					} else {
+						logger.warning("(" + key + ") found " + name + " in " + w.getAbsolutePath() + ", but cannot read it");
+					}
+				}
+			}
+
+			// if it is a jar, create the jar:<element>!/urlClass URL
+			if(element.isFile()) {
+				if(!element.getName().endsWith(".jar"))
+					logger.warning("(" + key + ") classpath entry " + element.getAbsolutePath() + " is a file, but it does not ends with .jar");
+				else if(!element.canRead())
+					logger.warning("(" + key + ") but cannot read classpath entry " + element.getAbsolutePath());
+				else {
+					try {
+						final URL url = new URL("jar:" + element.toURI().toURL().toString() + "!/" + urlName);
+
+						// try to access the file
+						url.openStream().close();
+
+						return url;
+					} catch (MalformedURLException e) {
+						logger.log(Level.WARNING, "(" + key + ") found " + name + " in " + element.getAbsolutePath() + ", but cannot transform to a valid URL", e);
+					} catch (IOException e) {
+					}
+				}
 			}
 		}
 
-		throw new FileNotFoundException("cannot find class " + name);
+		throw new FileNotFoundException();
 	}
-
-
 }

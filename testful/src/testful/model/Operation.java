@@ -47,6 +47,16 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 		infos.put(info);
 	}
 
+	/**
+	 * Adds all the information contained in the other operation
+	 * @param otherOp the operation that contains the information to copy
+	 */
+	public void addInfo(Operation otherOp) {
+		Iterator<OperationInformation> iter = otherOp.getInfos();
+		while(iter.hasNext())
+			addInfo(iter.next().clone());
+	}
+
 	public OperationInformation removeInfo(String key) {
 		if(infos == null || key == null) return null;
 
@@ -177,7 +187,7 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 	public static float SET_TO_NULL = 0.05f;
 
 	public static float GEN_BASIC_VALUES = .40f;
-	public static float LIMITED_VALUES = .40f;
+	public static float LIMITED_VALUES = .50f;
 
 	private static final AtomicLong idGenerator = new AtomicLong();
 

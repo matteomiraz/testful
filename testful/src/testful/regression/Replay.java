@@ -16,13 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.regression;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,7 +39,6 @@ import testful.model.TestReader;
 import testful.runner.ClassFinder;
 import testful.runner.ClassFinderCaching;
 import testful.runner.ClassFinderImpl;
-import testful.runner.IRunner;
 import testful.runner.RunnerPool;
 
 /**
@@ -63,7 +60,6 @@ public class Replay extends TestReader {
 
 	private final boolean exitOnBug;
 
-	private IRunner executor;
 	private ClassFinder finder;
 
 	public static void main(String[] args) {
@@ -78,33 +74,34 @@ public class Replay extends TestReader {
 
 		RunnerPool.getRunnerPool().startLocalWorkers();
 
-		Replay replay = new Replay(config, config.exitOnBug);
-		replay.read(config.tests);
-
+		try {
+			Replay replay = new Replay(config, config.exitOnBug);
+			replay.read(config.tests);
+		} catch (ClassNotFoundException e) {
+			System.exit(1);
+		}
 
 		System.exit(0);
 	}
 
-	public Replay(IConfigProject config, boolean exitOnBug) {
+	public Replay(IConfigProject config, boolean exitOnBug) throws ClassNotFoundException {
 		this.exitOnBug = exitOnBug;
-
-		executor = RunnerPool.getRunnerPool();
 
 		try {
 			finder = new ClassFinderCaching(new ClassFinderImpl(config));
-		} catch(RemoteException e) {
-			// never happens!
+		} catch (RemoteException e) {
+			// never happens
+			logger.log(Level.WARNING, "Remote exception (should never happen): " + e.toString(), e);
+			throw new ClassNotFoundException("Cannot contact the remote class loading facility", e);
 		}
 	}
 
 	@Override
-	protected void read(String fileName, Test t) {
+	protected void read(String fileName, Test test) {
 		try {
-
 			logger.info("Replaying " + fileName);
-			Test test = new Test(t.getCluster(), t.getReferenceFactory(), t.getTest());
-			Future<Operation[]> future = executor.execute(TestExecutionManager.getContext(finder, test));
-			Operation[] operations = future.get();
+			OperationResult.insert(test.getTest());
+			Operation[] operations = TestExecutionManager.execute(finder, test);
 
 			for(Operation op : operations) {
 				OperationResult info = (OperationResult) op.getInfo(OperationResult.KEY);

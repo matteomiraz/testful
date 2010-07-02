@@ -52,6 +52,7 @@ import testful.IConfigProject;
 public class XmlClass {
 
 	private static final Logger logger = Logger.getLogger("testful.model.xml");
+	private static final boolean LOG_FINE = logger.isLoggable(Level.FINE);
 
 	/** when the current class is included in the test cluster, include also these classes */
 	@XmlElementWrapper(name="cluster", required=false, nillable=false)
@@ -102,15 +103,16 @@ public class XmlClass {
 		XmlClass xmlClass = testful.model.xml.ObjectFactory.factory.createClass();
 
 		// add the return type to the test cluster
-		for (Method meth : c.getDeclaredMethods()) {
+		for (Method meth : c.getMethods()) {
 			final Class<?> returnType = meth.getReturnType();
 			final XmlMethod xmlMeth = xmlClass.getMethod(meth);
 
 			if(xmlMeth != null && !xmlMeth.isSkip()
 					&& !returnType.isArray() // ISSUE #1: if you need array support, vote here: http://code.google.com/p/testful/issues/detail?id=1
+					&& !returnType.equals(c)
 					&& returnType != Void.TYPE && !returnType.isPrimitive()) {
 
-				logger.fine("Including " + returnType.getName() + " to the test cluster");
+				if(LOG_FINE) logger.fine("Including " + returnType.getName() + " in the test cluster");
 				xmlClass.getCluster().add(returnType.getName());
 			}
 		}
@@ -182,10 +184,12 @@ public class XmlClass {
 
 		final XmlConstructor xmlCns = XmlConstructor.create(cns);
 
-		if(xmlCns != null)
-			logger.fine("Using default description for constructor " + cns);
-		else
-			logger.fine("Ignoring constructor " + cns);
+		if(LOG_FINE) {
+			if(xmlCns != null)
+				logger.fine("Using default description for constructor " + cns);
+			else
+				logger.fine("Ignoring constructor " + cns);
+		}
 
 		return xmlCns;
 	}
@@ -235,10 +239,12 @@ public class XmlClass {
 
 		final XmlMethod xmlMeth = XmlMethod.create(meth);
 
-		if(xmlMeth != null)
-			logger.fine("Using default description for method " + meth);
-		else
-			logger.fine("Ignoring method " + meth);
+		if(LOG_FINE) {
+			if(xmlMeth != null)
+				logger.fine("Using default description for method " + meth);
+			else
+				logger.fine("Ignoring method " + meth);
+		}
 
 		return xmlMeth;
 	}

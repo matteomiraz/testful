@@ -22,6 +22,7 @@ import java.io.File;
 import java.rmi.RemoteException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -32,6 +33,8 @@ import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
 import testful.model.Operation;
+import testful.model.OperationInformation;
+import testful.model.OperationPosition;
 import testful.model.ReferenceFactory;
 import testful.model.Test;
 import testful.model.TestCluster;
@@ -49,27 +52,54 @@ import ec.util.MersenneTwisterFast;
  * @author matteo
  *
  */
-public abstract class GenericTestCase  extends TestCase {
+public abstract class GenericTestCase extends TestCase {
 
-	static {
+	//-------------------------- config --------------------------------------
+	/** Returns the configuration for the TestCut */
+	public static IConfigProject getConfig() {
 		ConfigProject tmp = new ConfigProject();
 		tmp.setDirBase(new File("testCut"));
-		config = tmp;
+		tmp.setQuiet(true);
+		return tmp;
 	}
-	public final static IConfigProject config;
 
-	private static ClassFinder finder = null;
-	public static ClassFinder getFinder() throws RemoteException {
-		if(finder == null)
-			finder = new ClassFinderCaching(new ClassFinderImpl(config));
-
+	//-------------------------- class finder --------------------------------
+	private static final ClassFinderCaching finder;
+	static {
+		ClassFinderCaching tmp;
+		try {
+			tmp = new ClassFinderCaching(new ClassFinderImpl(getConfig()));
+		} catch (RemoteException e) {
+			tmp = null;
+			fail(e.getMessage());
+		}
+		finder = tmp;
+	}
+	/** Returns the class finder for the TestCut */
+	public static ClassFinder getFinder() {
 		return finder;
 	}
 
-	protected static final TestFailedException SETUP = new TestFailedException("Please setup correctly your system!");
+	//-------------------------- Runner --------------------------------------
+	static {
+		TestFul.setupLogging(GenericTestCase.getConfig());
+		RunnerPool.getRunnerPool().startLocalWorkers();
+	}
+	private static IRunner exec;
+	/** Returns the executor  */
+	protected static IRunner getExec() {
+		if(exec == null)
+			exec = RunnerPool.getRunnerPool();
 
-	protected static boolean RECYCLE_CLASS_LOADER = true;
+		return exec;
+	}
 
+	//----------------------- TestFailedException ----------------------------
+
+	/**
+	 * Exception to signal that a test failed.
+	 * @author matteo
+	 */
 	public static class TestFailedException extends Exception {
 		private static final long serialVersionUID = 1L;
 
@@ -87,6 +117,131 @@ public abstract class GenericTestCase  extends TestCase {
 				Arrays.sort(covs);
 				differentCovs = covs;
 			}
+		}
+	}
+
+	protected static final TestFailedException SETUP = new TestFailedException("Please setup correctly your system!");
+
+	//------------------------- Utility methods ------------------------------
+
+	public static Test createRandomTest(String cut, int lenght, long seed) throws RemoteException, ClassNotFoundException, TestfulException {
+		MersenneTwisterFast random = new MersenneTwisterFast(seed);
+
+		ConfigCut testfulConfig = new ConfigCut(getConfig());
+		testfulConfig.setCut(cut);
+
+		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), testfulConfig);
+		ReferenceFactory refFactory = new ReferenceFactory(cluster, 4, 4);
+
+		Operation[] ops = new Operation[lenght];
+		for(int i = 0; i < ops.length; i++)
+			ops[i] = Operation.randomlyGenerate(cluster, refFactory, random);
+
+		return new Test(cluster, refFactory, ops);
+	}
+
+	protected static ElementManager<String, CoverageInformation> getCoverage(Test test, TrackerDatum ... data) throws InterruptedException, ExecutionException {
+		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx =
+			CoverageExecutionManager.getContext(getFinder(), test, data);
+
+		ctx.setRecycleClassLoader(true);
+		Future<ElementManager<String, CoverageInformation>> future = getExec().execute(ctx);
+		ElementManager<String, CoverageInformation> coverage = future.get();
+
+		return coverage;
+	}
+
+	private static final Comparator<Operation[]> dummyTestComparator = new Comparator<Operation[]>() {
+		@Override
+		public int compare(Operation[] o1, Operation[] o2) {
+			if(o1.length != o2.length) return o1.length - o2.length;
+
+			return Arrays.hashCode(o1) - Arrays.hashCode(o2);
+		}
+	};
+
+	/**
+	 * Verifies the outcome of a transformation.
+	 * @param original The original test
+	 * @param tests the transformed tests
+	 * @param expected the expected outcome
+	 * @param checkCoverage if true, also verifies that the expected outcome have the same coverage of the original test
+	 */
+	protected void check(Test original, Collection<? extends Test> tests, Operation[][] expected, boolean checkCoverage) throws Exception {
+
+		// checks if the original test and the expected one have the same level of coverage
+		if(checkCoverage) {
+			ElementManager<String, CoverageInformation> oCovs = getCoverage(original);
+			ElementManager<String, CoverageInformation> tCovs = new ElementManager<String, CoverageInformation>();
+			for (Operation[] exp : expected) {
+				for (CoverageInformation cov : getCoverage(new Test(original.getCluster(), original.getReferenceFactory(), exp))) {
+					CoverageInformation tCov = tCovs.get(cov.getKey());
+					if(tCov == null) tCovs.put(cov);
+					else tCov.merge(cov);
+				}
+			}
+
+			for (CoverageInformation oCov : oCovs) {
+				if(oCov.getQuality() == 0) continue;
+
+				CoverageInformation tCov = tCovs.get(oCov.getKey());
+
+				if(tCov == null) print(original, tests);
+				assertNotNull("No " + oCov.getName() + " information", tCov);
+
+				if(oCov.getQuality() != tCov.getQuality()) {
+					print(original, tests);
+					// System.err.println("Original " + oCov.getName() + ": " + oCov);
+					// System.err.println("Oracle's " + oCov.getName() + ": " + tCov);
+				}
+				assertEquals("Wrong " + oCov.getName(), oCov.getQuality(), tCov.getQuality());
+			}
+		}
+
+		if(expected.length != tests.size()) print(original, tests);
+		assertEquals("Wrong number of results", expected.length, tests.size());
+
+		Operation[][] actual = new Operation[tests.size()][];
+		{
+			int i = 0;
+			for(Test t1 : tests) actual[i++] = t1.getTest();
+		}
+
+		Arrays.sort(expected, dummyTestComparator);
+		Arrays.sort(actual, dummyTestComparator);
+
+		for(int i = 0; i < expected.length; i++) {
+
+			if(expected[i].length != actual[i].length) print(original, tests);
+			assertEquals("Test " + i + ": wrong result size", expected[i].length, actual[i].length);
+
+			for(int j = 0; j < expected[i].length; j++) {
+				if(!expected[i][j].toString().equals(actual[i][j].toString())) {
+					print(original, tests);
+					assertEquals("Test " + i + ": Mismatch in operation " + j, expected[i][j].toString(), actual[i][j].toString());
+				}
+			}
+		}
+	}
+
+	private void print(Test original, Collection<? extends Test> tests) {
+		System.err.println("original:");
+
+		int n = -1;
+		for(Operation o : original.getTest()) {
+			n++;
+			final OperationInformation info = o.getInfo(OperationPosition.KEY);
+			System.err.println((info!=null?info:"Operation #" + Integer.toString(n)) + "\t" + o);
+		}
+		System.err.println("---");
+
+		System.err.println("Modified: " + tests.size());
+		for(Test t1 : tests) {
+			for(Operation o : t1.getTest()) {
+				final OperationInformation info = o.getInfo(OperationPosition.KEY);
+				System.err.println((info!=null?info:"") + "\t" + o);
+			}
+			System.err.println("---");
 		}
 	}
 
@@ -137,7 +292,7 @@ public abstract class GenericTestCase  extends TestCase {
 		throw new TestFailedException(msg.toString(), differentCovs);
 	}
 
-	protected void printTest(StringBuilder msg, String name, Test test, ElementManager<String, CoverageInformation> covs) {
+	private void printTest(StringBuilder msg, String name, Test test, ElementManager<String, CoverageInformation> covs) {
 		msg.append(name).append(":\n");
 
 		if(test != null) {
@@ -153,42 +308,5 @@ public abstract class GenericTestCase  extends TestCase {
 		}
 
 		msg.append("\n");
-	}
-
-	private static IRunner exec;
-	protected static IRunner getExec() {
-		if(exec == null) {
-			RunnerPool.getRunnerPool().startLocalWorkers();
-			exec = RunnerPool.getRunnerPool();
-		}
-		return exec;
-	}
-
-	protected static ElementManager<String, CoverageInformation> getCoverage(Test test, TrackerDatum ... data) throws RemoteException, InterruptedException, ExecutionException {
-		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx =
-			CoverageExecutionManager.getContext(getFinder(), test, data);
-
-		ctx.setRecycleClassLoader(RECYCLE_CLASS_LOADER);
-		Future<ElementManager<String, CoverageInformation>> future = getExec().execute(ctx);
-		ElementManager<String, CoverageInformation> coverage = future.get();
-
-		return coverage;
-	}
-
-	public static Test createRandomTest(String cut, int lenght, long seed) throws RemoteException, ClassNotFoundException, TestfulException {
-		MersenneTwisterFast random = new MersenneTwisterFast(seed);
-
-		ConfigCut testfulConfig = new ConfigCut(config);
-		testfulConfig.setCut(cut);
-
-		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), testfulConfig);
-		ReferenceFactory refFactory = new ReferenceFactory(cluster, 4, 4);
-
-		Operation[] ops = new Operation[lenght];
-		for(int i = 0; i < ops.length; i++)
-			ops[i] = Operation.randomlyGenerate(cluster, refFactory, random);
-
-		Test t = new Test(cluster, refFactory, ops);
-		return t;
 	}
 }

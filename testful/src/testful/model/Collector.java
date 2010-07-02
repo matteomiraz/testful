@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
 
@@ -42,6 +43,7 @@ import testful.coverage.CoverageInformation;
 public class Collector {
 
 	private static final Logger logger = Logger.getLogger("testful.model");
+	private static final boolean LOG_FINE = logger.isLoggable(Level.FINE);
 
 	public static class DataLight implements Serializable, Comparable<DataLight> {
 
@@ -149,7 +151,7 @@ public class Collector {
 
 	public void write() {
 		if(wait < 0) {
-			logger.fine("Tracker" + coverageKey + ": tests not modified, skipping the update!");
+			if(LOG_FINE) logger.fine("Tracker" + coverageKey + ": tests not modified, skipping the update!");
 			return;
 		} else if(++wait < MAX_WAIT) return;
 

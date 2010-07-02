@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.random;
 
 import java.io.File;
@@ -27,22 +26,21 @@ import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
 import testful.model.Operation;
 import testful.model.ReferenceFactory;
-import testful.model.Test;
 import testful.model.TestCluster;
-import testful.model.TestSplitter;
-import testful.model.TestSplitter.Listener;
+import testful.model.transformation.Splitter;
+import testful.model.transformation.Splitter.Listener;
 import testful.runner.ClassFinder;
 import testful.utils.ElementManager;
 import testful.utils.SimpleEntry;
 
 public class RandomTestSplit extends RandomTest {
 
-	private final TestSplitter simplifier;
+	private final Splitter simplifier;
 
-	public RandomTestSplit(boolean enableCache, File logDirectory, ClassFinder finder, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
-		super(enableCache, logDirectory, finder, cluster, refFactory, seed, data);
+	public RandomTestSplit(File logDirectory, ClassFinder finder, boolean reload, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
+		super(logDirectory, finder, reload, cluster, refFactory, seed, data);
 
-		simplifier = new TestSplitter(true, cluster, refFactory);
+		simplifier = new Splitter(true, cluster, refFactory);
 	}
 
 	@Override
@@ -55,8 +53,7 @@ public class RandomTestSplit extends RandomTest {
 			@Override
 			public void notify(TestCluster cluster, ReferenceFactory refFactory, Operation[] ops) {
 				try {
-					Future<ElementManager<String, CoverageInformation>> fut = runner.execute(finder, true, new Test(cluster, refFactory, ops), data);
-					tests.put(new SimpleEntry<Operation[], Future<ElementManager<String, CoverageInformation>>>(ops, fut));
+					tests.put(new SimpleEntry<Operation[], Future<ElementManager<String, CoverageInformation>>>(ops, execute(ops)));
 				} catch(InterruptedException e) {
 					logger.log(Level.WARNING, "Interrupted: " + e.getMessage(), e);
 				}

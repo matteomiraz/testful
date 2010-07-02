@@ -141,8 +141,8 @@ public class Launcher {
 			Instrumenter.prepare(config, toInstrument);
 
 			Instrumenter.run(config, toInstrument,
-					testful.coverage.fault.FaultInstrumenter.singleton,
-					testful.coverage.whiteBox.WhiteInstrumenter.singleton
+					testful.coverage.whiteBox.WhiteInstrumenter.singleton,
+					testful.coverage.stopper.ExecutionStopperInstrumenter.singleton
 			);
 		} catch (Exception e) {
 			logger.log(Level.WARNING, "Error during the instrumentation: " + e.getMessage(), e);

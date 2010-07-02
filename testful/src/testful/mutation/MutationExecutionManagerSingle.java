@@ -13,7 +13,6 @@ import testful.runner.Executor;
 public class MutationExecutionManagerSingle extends ExecutionManager<Long> {
 	private static Logger logger = Logger.getLogger("testful.mutation");
 
-	static final long INTERRUPTED_EXECUTION = -1l;
 	static final long FAULTY_EXECUTION = -2l;
 	static final long ERROR_EXECUTION = -3l;
 
@@ -27,6 +26,9 @@ public class MutationExecutionManagerSingle extends ExecutionManager<Long> {
 
 	@Override
 	protected Long getResult() {
+		if(faults == null) return ERROR_EXECUTION;
+		if(faults > 0) return FAULTY_EXECUTION;
+
 		return executionTime;
 	}
 
@@ -37,94 +39,22 @@ public class MutationExecutionManagerSingle extends ExecutionManager<Long> {
 	protected void setup() throws ClassNotFoundException { }
 
 	@Override
-	protected void reallyExecute(boolean stopOnBug)  {
+	protected void reallyExecute(boolean stopOnBug) throws ClassNotFoundException  {
+		MutationExecutionData datum = (MutationExecutionData) Tracker.getDatum(MutationExecutionData.KEY);
+		if(datum == null) {
+			logger.finer("MutationExecution Data not found");
+			return;
+		}
+
 		try {
 			Class<?> config = classLoader.loadClass(Utils.CONFIG_CLASS);
-
-			MutationExecutionData datum = (MutationExecutionData) Tracker.getDatum(MutationExecutionData.KEY);
-			if(datum == null) {
-				logger.finer("MutationExecution Data not found");
-				executionTime = ERROR_EXECUTION;
-				return;
-			}
-
 			Field mutationField = config.getField(Utils.getCurField(datum.className));
 			mutationField.set(null, datum.mutation);
-			TestStoppedException.stop = false;
-
-			TestThread tthread = new TestThread(executor);
-			tthread.start();
-			executionTime = tthread.getResult(datum.maxExecutionTime);
-		} catch(Exception e) {
-			logger.log(Level.WARNING, "Error while executing mutant: " + e.getMessage(), e);
-			executionTime = ERROR_EXECUTION;
+		} catch (Throwable e) {
+			logger.log(Level.FINE, "Cannot activate the mutation", e);
+			return;
 		}
+
+		super.reallyExecute(stopOnBug);
 	}
-
-	private static class TestThread extends Thread {
-
-		private long executionTime;
-
-		private final Executor executor;
-
-		public TestThread(Executor executor) {
-			super("TestThread");
-
-			this.executor = executor;
-		}
-
-		public long getResult(long max) {
-			try {
-				this.join(max);
-
-				if(!isAlive()) return executionTime;
-			} catch(InterruptedException e) {
-			}
-
-			if(isAlive()) {
-				try {
-					logger.finer("Killing executor thread");
-					interrupt();
-					TestStoppedException.stop = true;
-				} catch(Exception e) {
-					e.printStackTrace();
-				}
-
-				try {
-					if(isAlive()) join(2000);
-				} catch(InterruptedException e) {
-				}
-
-				if(isAlive()) {
-					System.err.println("\nthread still alive...");
-					for(StackTraceElement ste : getStackTrace())
-						System.err.println("  " + ste);
-
-					System.err.println();
-				}
-
-				return INTERRUPTED_EXECUTION;
-			}
-
-			if(executionTime > max) System.err.println("LONG");
-
-			return executionTime;
-		}
-
-		@Override
-		public void run() {
-			try {
-				long start = System.currentTimeMillis();
-				int nFaults = executor.execute(true);
-				long stop = System.currentTimeMillis();
-
-				if(nFaults == 0) executionTime = (stop - start);
-				else executionTime = FAULTY_EXECUTION;
-			} catch(Throwable e) {
-				logger.log(Level.FINER, "Error while executing mutant: " + e.getMessage(), e);
-				executionTime = ERROR_EXECUTION;
-			}
-		}
-	}
-
 }

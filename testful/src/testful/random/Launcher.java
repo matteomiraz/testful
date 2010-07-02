@@ -27,7 +27,6 @@ import java.util.logging.Logger;
 import testful.TestFul;
 import testful.TestfulException;
 import testful.coverage.CoverageInformation;
-import testful.coverage.TrackerDatum;
 import testful.model.Operation;
 import testful.model.ReferenceFactory;
 import testful.model.TestCluster;
@@ -81,17 +80,15 @@ public class Launcher {
 
 		ReferenceFactory refFactory = new ReferenceFactory(tc, config.getNumVarCut(), config.getNumVar());
 
-		TrackerDatum[] data = new TrackerDatum[] { };
-
 		RandomTest rt = null;
 
 		logger.config("Using the " + config.getRandomType() + " algorithm");
 		switch(config.getRandomType()) {
 		case SIMPLE:
-			rt = new RandomTestSimple(config.isCache(), config.getLog(), finder, tc, refFactory, config.getSeed(), data);
+			rt = new RandomTestSimple(config.getLog(), finder, config.isReload(), tc, refFactory, config.getSeed());
 			break;
 		case SPLIT:
-			rt = new RandomTestSplit(config.isCache(), config.getLog(), finder, tc, refFactory, config.getSeed(), data);
+			rt = new RandomTestSplit(config.getLog(), finder, config.isReload(), tc, refFactory, config.getSeed());
 			break;
 		}
 

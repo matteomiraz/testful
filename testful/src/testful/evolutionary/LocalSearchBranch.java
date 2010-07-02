@@ -26,6 +26,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,6 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import jmetal.base.EvaluationTerminationCriterion;
 import jmetal.base.Solution;
 import jmetal.base.SolutionSet;
 import jmetal.base.operator.localSearch.LocalSearchPopulation;
@@ -48,17 +50,17 @@ import testful.coverage.whiteBox.Condition;
 import testful.coverage.whiteBox.ConditionTargetDatum;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
 import testful.coverage.whiteBox.CoverageBranch;
-import testful.coverage.whiteBox.CoverageConditionTarget;
+import testful.coverage.whiteBox.CoverageBranchTarget;
 import testful.coverage.whiteBox.Data;
 import testful.coverage.whiteBox.DataUse;
 import testful.model.AssignPrimitive;
+import testful.model.Clazz;
 import testful.model.Operation;
 import testful.model.PrimitiveClazz;
-import testful.model.ReferenceFactory;
 import testful.model.Test;
-import testful.model.TestCluster;
 import testful.model.TestCoverage;
-import testful.model.TestSplitter;
+import testful.model.transformation.SimplifierDynamic;
+import testful.model.transformation.Splitter;
 import testful.utils.ElementManager;
 import ec.util.MersenneTwisterFast;
 
@@ -74,10 +76,20 @@ import ec.util.MersenneTwisterFast;
 public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 	private static final Logger logger = Logger.getLogger("testful.evolutionary.localSearch");
+	private static final boolean LOG_FINE = logger.isLoggable(Level.FINE);
+	private static final boolean LOG_FINER = logger.isLoggable(Level.FINER);
+	private static final boolean LOG_FINEST = logger.isLoggable(Level.FINEST);
+
+	private static final int ITERATIONS = 1000;
 
 	private final AtomicInteger localSearchId = new AtomicInteger(0);
 
 	private final MersenneTwisterFast random;
+
+	/** Number of attempts when a new operation is targeted */
+	private final int TTL_FIRST = 10;
+	/** Number of attempts for operations able to reduce the branch distance */
+	private final int TTL_IMPROVEMENT  = 50;
 
 	private final float SCORE_BOOL = 0;
 	private final float SCORE_ARRAY = 0;
@@ -94,12 +106,14 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 	private final float SCORE_MISS_ATTEMPTS = -1000;
 
-	/** if there is a constant, this is the probability to modify its value */
-	private float probModify = 0.8f;
-	private float probRemove = 0.2f;
+	/** probability to add an operation before the selected operation */
+	private float probAdd = 0.05f;
 
-	private int evaluations = 0;
-	private int maxEvaluations = 1000;
+	/** probability to remove the selected operation */
+	private float probRemove = 0.15f;
+
+	/** if an AssignPrimitive is selected, this is the probability to modify the value */
+	private float probModify = 0.8f;
 
 	private final TestfulProblem problem;
 
@@ -110,40 +124,44 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 		@Override
 		public int compare(BranchScore s1, BranchScore s2) {
-			if(s1 == null && s2 == null) return 0;
+			if(s1 == s2) return 0;
 			if(s1 == null) return  1;
 			if(s2 == null) return -1;
 
 			if(s1.getQuality() < s2.getQuality()) return -1;
 			if(s1.getQuality() > s2.getQuality()) return  1;
-			return 0;
-
+			return 1;
 		}
 	};
 
 	public LocalSearchBranch(TestfulProblem testfulProblem) {
-		random = PseudoRandom.getMersenneTwisterFast();
-
 		problem = testfulProblem;
-
 		attempts = new HashMap<Integer, Integer>();
+		random = PseudoRandom.getMersenneTwisterFast();
 	}
 
-	public void setProbRemove(float probRemove) {
-		this.probRemove = probRemove;
+	/**
+	 * Sets the probability to add an operation before the selected operation
+	 * @param probAdd the probability to add an operation before the selected operation
+	 */
+	public void setProbAdd(float probAdd) {
+		this.probAdd = probAdd;
 	}
 
+	/**
+	 * Sets the probability to modify the value (if an AssignPrimitive is selected)
+	 * @param probModify  the probability to modify the value (if an AssignPrimitive is selected)
+	 */
 	public void setProbModify(float probModify) {
 		this.probModify = probModify;
 	}
 
-	@Override
-	public int getEvaluations() {
-		return evaluations;
-	}
-
-	public void setMaxEvaluations(int maxEvaluations) {
-		this.maxEvaluations = maxEvaluations;
+	/**
+	 * Sets the probability to remove the selected operation
+	 * @param probRemove the probability to remove the selected operation
+	 */
+	public void setProbRemove(float probRemove) {
+		this.probRemove = probRemove;
 	}
 
 	@Override
@@ -156,7 +174,6 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			if(test == null || test.score == null) return null;
 
 			List<Operation> result = hillClimb(test);
-
 			if(result == null) return null;
 
 			for(Operation op : result)
@@ -177,22 +194,19 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			for(Solution<Operation> solution : solutionSet)
 				tests.addAll(evalParts(solution));
 
-			BitSet execConds = getExecutedBranches(tests);
-
-			Set<TestWithScore> testScore = addSearchScore(tests, execConds);
+			Set<TestWithScore> testScore = addSearchScore(tests, getExecutedBranches(tests));
 			TestWithScore test = getBest(testScore);
 			if(test == null || test.score == null) return null;
 
 			List<Operation> result = hillClimb(test);
-
 			if(result == null) return null;
 
-			Solution<Operation> solution = ((SolutionRef)test.test.getCoverage().get(SolutionRef.KEY)).getSolution();
-			for(Operation op : result)
-				solution.getDecisionVariables().variables_.add(op);
+			SolutionSet<Operation> ret = new SolutionSet<Operation>(solutionSet.size());
+			for(Solution<Operation> s : solutionSet) {
+				for(Operation op : result) s.getDecisionVariables().variables_.add(op);
+				ret.add(s);
+			}
 
-			SolutionSet<Operation> ret = new SolutionSet<Operation>(1);
-			ret.add(solution);
 			return ret;
 
 		} catch(Throwable e) {
@@ -206,146 +220,331 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 		TrackerDatum[] data = new TrackerDatum[]{ new ConditionTargetDatum(branchId) };
 
-		final String KEY = CoverageConditionTarget.getKEY(branchId);
 
 		final ElementManager<String, CoverageInformation> covs = problem.evaluate(test.test, data).get();
-		CoverageConditionTarget covCondOrig = (CoverageConditionTarget)covs.get(KEY);
+		CoverageBranchTarget covCondOrig = (CoverageBranchTarget)covs.get(CoverageBranchTarget.KEY);
 
 		logger.info("Selected branch: " + branchId + " (score: " + test.score.getQuality() + " length: " + test.test.getTest().length + ")");
 
-		logger.fine("coverageLocalSearch " + localSearchId + " branch=" + branchId + ";iter=" + 0 + ";cov=" + covCondOrig.getQuality() + ";distance=" + covCondOrig + ";len=" + test.test.getTest().length);
+		if(LOG_FINE) logger.fine("coverageLocalSearch " + localSearchId + " branch=" + branchId + ";iter=" + 0 + ";cov=" + covCondOrig.getQuality() + ";distance=" + covCondOrig + ";len=" + test.test.getTest().length);
 
-		List<Operation> opsOrig = new ArrayList<Operation>(test.test.getTest().length);
+		List<Operation> opsOrig = new LinkedList<Operation>();
 		for(Operation op : test.test.getTest())
 			opsOrig.add(op);
 
-		Integer p = attempts.get(branchId);
-		if(p == null) p = 0;
+		Integer nAttempts = attempts.get(branchId);
+		if(nAttempts == null) nAttempts = 0;
 
-		for(int i = 0; i < maxEvaluations*(p+1); i++) {
+		int pos = 0; // the position to target
+		int ttl = 0; // how many times the position can be targeted again
+		for(int i = 0; i < ITERATIONS*(nAttempts+1) && !terminationCriterion.isTerminated(); i++) {
 
-			List<Operation> ops = new ArrayList<Operation>(opsOrig);
+			List<Operation> ops = new LinkedList<Operation>(opsOrig);
 
-			mutate(problem.getCluster(), problem.getReferenceFactory(), ops, random, probModify, probRemove);
+			if(--ttl < 0) {
+				pos = ops.isEmpty() ? -1 : random.nextInt(ops.size());
+				ttl = TTL_FIRST;
+			}
+
+			boolean canContinue = mutate(ops, pos);
 
 			ElementManager<String, CoverageInformation> cov = problem.evaluate(problem.getTest(ops), data).get();
-			CoverageConditionTarget covCond = (CoverageConditionTarget) cov.get(KEY);
+			CoverageBranchTarget covCond = (CoverageBranchTarget) cov.get(CoverageBranchTarget.KEY);
+			if(covCond == null) covCond = new CoverageBranchTarget(branchId);
 
-			if(covCond == null)
-				covCond = new CoverageConditionTarget(branchId);
+			if(LOG_FINE) logger.fine("coverageLocalSearch " + localSearchId + " branch=" + branchId + ";iter=" + (i+1) + ";cov=" + covCond.getQuality() + ";distance=" + covCond + ";len=" + ops.size());
 
-			logger.fine("coverageLocalSearch " + localSearchId + " branch=" + branchId + ";iter=" + (i+1) + ";cov=" + covCond.getQuality() + ";distance=" + covCond + ";len=" + ops.size());
+			if(LOG_FINEST) {
+				StringBuilder sb = new StringBuilder();
+
+				if(covCond.getQuality() < covCondOrig.getQuality()) sb.append(" ");
+				else if(covCond.getQuality() == covCondOrig.getQuality()) {
+					if(ops.size() >= opsOrig.size()) sb.append(" ");
+					else sb.append("S");
+				} else sb.append("I");
+
+				if(canContinue) sb.append("C");
+				else sb.append(" ");
+
+				sb.append(" p:" + pos + " #" + ttl + " q:" + covCond.getQuality() + " oq:" + covCondOrig.getQuality() + " d:" + covCond + " od:" + covCondOrig).append("\n");
+
+				sb.append("Origiginal Test:\n");
+				for (Operation o : opsOrig)
+					sb.append("  " + o).append("\n");
+				sb.append("Modified Test:\n");
+				for (Operation o : ops)
+					sb.append("  " + o).append("\n");
+				logger.finest(sb.append("---").toString());
+			}
 
 			if(covCond.getQuality() < covCondOrig.getQuality()) continue;
 			if(covCond.getQuality() == covCondOrig.getQuality() && ops.size() >= opsOrig.size()) continue;
 
-			logger.info("Branch " + branchId + " score: " + covCond.getQuality() + " length: " + ops.size());
+			if(!canContinue) ttl = 0;
+			else ttl = TTL_IMPROVEMENT;
+
 			opsOrig = ops;
 			covCondOrig = covCond;
 
 			if(covCond.getQuality() == Float.POSITIVE_INFINITY) {
-
 				logger.info("Branch " + branchId + " hit");
 				attempts.remove(branchId);
 				return ops;
 			}
 		}
 
-		attempts.put(branchId, ++p);
+		attempts.put(branchId, ++nAttempts);
 
-		logger.info("Branch " + branchId + " missed " + p + " times");
+		logger.info("Branch " + branchId + " missed " + nAttempts + " times");
 
 		return null;
 	}
 
-	private static int rand(MersenneTwisterFast random) {
-		int ret = 1;
-		while(random.nextBoolean(0.9)) ret++;
+	/**
+	 * Generate a gaussian integer number.
+	 * In a test of 1 billion extraction of n:
+	 * <ul>
+	 *	<li>It was never generated a number abs(n) > 60 </li>
+	 *	<li>p(n) in [-50, 50] = 0.9999998</li>
+	 *	<li>p(n) in [-40, 40] = 0.999959</li>
+	 *	<li>p(n) in [-30, 30] = 0.9980</li>
+	 *	<li>p(n) in [-20, 20] = 0.9643</li>
+	 *	<li>p(n) in [-10, 10] = 0.7286</li>
+	 *	<li>p(n) in [- 6,  6] = 0.5160</li>
+	 *	<li>p(n) in [- 5,  5] = 0.4515</li>
+	 *	<li>p(n) in [- 4,  4] = 0.3829</li>
+	 *	<li>p(n) in [- 3,  3] = 0.3108</li>
+	 *	<li>p(n) in [- 2,  2] = 0.2358</li>
+	 *	<li>p(n) in [- 1,  1] = 0.1585</li>
+	 * </ul>
+	 * @return a gaussian integer number
+	 */
+	private int gaussianInteger() {
+		final double g = random.nextGaussian();
+		Integer n = (int) (g * 10);
+		if(n != 0) return n;
 
-		return random.nextBoolean() ? ret : -ret;
+		if(g >= 0) return 1;
+		else return -1;
 	}
 
+	/**
+	 * Mutate the operations
+	 * @param ops the operations to mutate
+	 * @param pos the position to mutate
+	 * @return true if it is possible to work on the position (i.e., ops is not modified by removing or introducing operations)
+	 */
+	public boolean mutate(List<Operation> ops, int pos) {
 
-	public static void mutate(TestCluster cluster, ReferenceFactory refFactory, List<Operation> ops, MersenneTwisterFast random, float probModify, float probRemove) {
-		if(!ops.isEmpty() && random.nextBoolean(probModify)) {
-			int pos = random.nextInt(ops.size());
-			Operation op = ops.get(pos);
+		final boolean isModifiable = pos >= 0 && (ops.get(pos) instanceof AssignPrimitive);
+		final boolean isRemovable = pos >= 0;
 
-			if(op instanceof AssignPrimitive) {
-				AssignPrimitive ap = (AssignPrimitive) op;
+		/** 0 => add; 1 => modify; 2 => remove */
+		final int choice;
+		if(isModifiable && isRemovable) {
+			float c = random.nextFloat() * (probAdd + probModify + probRemove);
+			if(c < probAdd) choice = 0;
+			else if(c < probAdd + probModify) choice = 1;
+			else choice = 2;
+		} else if(isModifiable) {
+			float c = random.nextFloat() * (probAdd + probModify);
+			if(c < probAdd) choice = 0;
+			else choice = 1;
+		} else if(isRemovable) {
+			float c = random.nextFloat() * (probAdd + probRemove);
+			if(c < probAdd) choice = 0;
+			else choice = 2;
+		} else choice = 0;
 
-				Serializable value = ap.getValue();
+		switch(choice) {
 
-				if(ap.getTarget().getClazz() instanceof PrimitiveClazz) {
-					switch(((PrimitiveClazz) ap.getTarget().getClazz()).getType()) {
-					case BooleanClass:
-					case BooleanType:
-						value = !((Boolean)value);
-						break;
+		case 0:
+			if(pos < 0) pos = 0;
+			int num = random.nextInt(10);
+			for(int i = 0; i < num; i++)
+				ops.add(pos, Operation.randomlyGenerate(problem.getCluster(), problem.getReferenceFactory(), random));
+			return false;
 
-					case ByteClass:
-					case ByteType:
-						value = (byte) (((Byte)value) + rand(random));
-						break;
+		case 1:
+			AssignPrimitive ap = (AssignPrimitive) ops.get(pos);
+			Serializable newValue = modify(ap);
+			ops.set(pos, new AssignPrimitive(ap.getTarget(), newValue));
+			return true;
 
-					case CharacterClass:
-					case CharacterType:
-						value = (char) (((Character)value) + rand(random));
-						break;
+		case 2:
+			ops.remove(pos);
+			return false;
 
-					case DoubleClass:
-					case DoubleType:
+		default:
+			logger.fine("Invalid choice: " + choice);
+			return true;
+		}
+	}
 
-						if(random.nextBoolean(.75)) {
-							value = ((Double)value) + random.nextGaussian();
-						} else {
-							value = random.nextDouble();
+	/**
+	 * Modifies the value used in an assingPrimitive operation
+	 * @param ap the assignPrimitive operation to mutate
+	 * @return the new value to use in the assignPrimitive Operation
+	 */
+	private Serializable modify(AssignPrimitive ap) {
+		final Serializable value = ap.getValue();
+		final Clazz type = ap.getTarget().getClazz();
+
+		if(type instanceof PrimitiveClazz) {
+			switch(((PrimitiveClazz) type).getType()) {
+			case BooleanClass:
+			case BooleanType:
+				if(value == null)
+					return random.nextBoolean();
+
+				return !((Boolean)value);
+
+			case ByteClass:
+			case ByteType:
+				if(value == null)
+					return random.nextByte();
+
+				return (byte) (((Byte)value) + gaussianInteger());
+
+			case CharacterClass:
+			case CharacterType:
+				if(value == null)
+					return random.nextChar();
+
+				return (char) (((Character)value) + gaussianInteger());
+
+			case DoubleClass:
+			case DoubleType:
+				if(value == null)
+					return random.nextDouble();
+
+				if(random.nextBoolean(.9))
+					return ((Double)value) + random.nextGaussian();
+				else
+					return random.nextDouble();
+
+			case FloatClass:
+			case FloatType:
+				if(value == null)
+					return random.nextFloat();
+
+				if(random.nextBoolean(.9))
+					return (float) (((Float)value) + random.nextGaussian());
+				else
+					return random.nextFloat();
+
+			case IntegerClass:
+			case IntegerType:
+				if(value == null)
+					return random.nextInt();
+
+				return (int) (((Integer)value) + gaussianInteger() * (random.nextBoolean(.9) ? 1 : 1000));
+
+			case LongClass:
+			case LongType:
+				if(value == null)
+					return random.nextLong();
+
+				return (long) (((Long)value) + gaussianInteger() * (random.nextBoolean(.9) ? 1 : 1000));
+
+			case ShortClass:
+			case ShortType:
+				if(value == null)
+					return random.nextShort();
+
+				return (short) (((Integer)value) + gaussianInteger());
+			}
+
+		} else {
+
+			if(type.getClassName().equals("java.lang.String")) {
+
+				if(value == null) {
+					return AssignPrimitive.getString(random);
+
+				} else {
+
+					byte[] bytes = ((String)value).getBytes();
+					final int lBytes = bytes.length;
+
+					byte[] newBytes;
+
+					// if lBytes = 0, the string is empty. In this case we only insert new characters
+					switch( (lBytes > 0 ? random.nextInt(3) : 1) ) {
+					case 1: // add one or more character(s)
+					{
+						int howMany = random.nextInt(10)+1;
+						SortedSet<Integer> nPos = new TreeSet<Integer>();
+						while(nPos.size() < howMany)
+							nPos.add(random.nextInt(lBytes + howMany));
+
+						newBytes = new byte[lBytes + howMany];
+
+						int j = 0;
+						Iterator<Integer> iter = nPos.iterator();
+						Integer next = iter.next();
+						for (int i = 0; i < newBytes.length; i++) {
+							if(next != null && i == next) {
+								newBytes[i] = (byte) AssignPrimitive.getCharacter(random);
+								if(iter.hasNext()) next = iter.next();
+								else next = null;
+
+							} else newBytes[i] = bytes[j++];
 						}
-						break;
 
-					case FloatClass:
-					case FloatType:
-						if(random.nextBoolean(.75)) {
-							value = (float) (((Float)value) + random.nextGaussian());
-						} else {
-							value = random.nextFloat();
-						}
-						break;
-
-					case IntegerClass:
-					case IntegerType:
-						value = (int) (((Integer)value) + rand(random) * (random.nextBoolean(.75) ? 1 : 1000));
-						break;
-
-					case LongClass:
-					case LongType:
-						value = (long) (((Long)value) + rand(random) * (random.nextBoolean(.75) ? 1 : 1000));
-						break;
-
-					case ShortClass:
-					case ShortType:
-						value = (short) (((Integer)value) + rand(random));
 						break;
 					}
-				} else {
-					// TODO: do something for the string
+
+					case 2: // remove a character
+					{
+						int howMany = 1 + (lBytes == 1 ? 0 : random.nextInt(lBytes-1));
+						SortedSet<Integer> nPos = new TreeSet<Integer>();
+						while(nPos.size() < howMany)
+							nPos.add(random.nextInt(lBytes));
+
+						newBytes = new byte[lBytes - howMany];
+
+						int j = 0;
+						Iterator<Integer> iter = nPos.iterator();
+						Integer next = iter.next();
+						for (int i = 0; i < bytes.length; i++) {
+
+							if(next != null && i == next) {
+								if(iter.hasNext()) next = iter.next();
+								else next = null;
+
+							} else newBytes[j++] = bytes[i];
+						}
+
+						break;
+					}
+
+					default: // change a character
+					{
+						newBytes = bytes;
+
+						int howMany = 1 + (lBytes == 1 ? 0 : random.nextInt(lBytes-1));
+						SortedSet<Integer> nPos = new TreeSet<Integer>();
+						while(nPos.size() < howMany)
+							nPos.add(random.nextInt(lBytes));
+
+						for (Integer i : nPos) {
+							newBytes[i] = (byte) AssignPrimitive.getCharacter(random);
+						}
+
+					}
+
+					}
+
+					return new String(newBytes);
 				}
 
-
-				ops.set(pos, new AssignPrimitive(ap.getTarget(), value));
-				return;
+			} else {
+				logger.fine("Unknown type in AssignPrimitive"  + type.getClassName() + " (" + ap + ")");
 			}
 		}
 
-		if(!ops.isEmpty() && random.nextBoolean(probRemove)) {
-			ops.remove(random.nextInt(ops.size()));
-			return;
-		}
-
-		int num = random.nextInt(10);
-		for(int i = 0; i < num; i++)
-			ops.add(ops.isEmpty() ? 0 : random.nextInt(ops.size()), Operation.randomlyGenerate(cluster, refFactory, random));
-		return;
+		return value;
 	}
 
 
@@ -404,22 +603,24 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 	}
 
 	private Set<TestCoverage> evalParts(Solution<Operation> solution) throws InterruptedException, ExecutionException {
-		List<Test> parts = TestSplitter.split(true, problem.getTest(solution.getDecisionVariables().variables_));
-		int size = parts.size();
 
-		List<Future<ElementManager<String, CoverageInformation>>> futures = new ArrayList<Future<ElementManager<String, CoverageInformation>>>(size);
+		List<Test> parts = Splitter.split(true,
+				SimplifierDynamic.singleton.perform(problem.getFinder(),
+						problem.getTest(solution.getDecisionVariables().variables_)));
+
+		List<Future<ElementManager<String, CoverageInformation>>> futures = new ArrayList<Future<ElementManager<String, CoverageInformation>>>(parts.size());
 		for(Test t : parts) futures.add(problem.evaluate(t));
 
+		if(terminationCriterion instanceof EvaluationTerminationCriterion)
+			((EvaluationTerminationCriterion)terminationCriterion).addEvaluations(parts.size());
+
 		Set<TestCoverage> tests = new LinkedHashSet<TestCoverage>();
+
+		// iterate both on parts and on futures
 		Iterator<Test> partsIter = parts.iterator();
 		Iterator<Future<ElementManager<String, CoverageInformation>>> futuresIter = futures.iterator();
-		while(partsIter.hasNext()) {
-			ElementManager<String, CoverageInformation> cov = futuresIter.next().get();
-			cov.put(new SolutionRef(solution));
-			tests.add(new TestCoverage(partsIter.next(), cov));
-		}
-
-		evaluations += size;
+		while(partsIter.hasNext())
+			tests.add(new TestCoverage(partsIter.next(), futuresIter.next().get()));
 
 		return tests;
 	}
@@ -445,7 +646,6 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 				if(attempts.containsKey(branchId))
 					score += SCORE_MISS_ATTEMPTS * attempts.get(branchId);
 
-				//TBD: consider defs & uses
 				// score type, fields/var/params
 				Condition c = problem.getWhiteAnalysis().getConditionFromBranch(branchId);
 
@@ -476,7 +676,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 					case Number: score += SCORE_NUMBER; break;
 					}
 
-					//TBD: non funziona: isField ritorna sempre false! Lavorare sulla propagazione delle def-use?
+					//TBD: field detection is not working: isField always returns false!
 					if(data.isParam()) score += SCORE_PARAM;
 					else if(data.isField()) score += SCORE_FIELD;
 				}
@@ -609,62 +809,13 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			if(test.getTest().length != o.test.getTest().length) return test.getTest().length - o.test.getTest().length;
 
 			if(test.hashCode() == o.test.hashCode()) {
-				logger.finer("Same Tests! " +
-						"\n T1 " + score + " hash:" + test.hashCode() + " \n" + test +
-						"\n T2 " + o.score + " hash:" + o.test.hashCode() + " \n" + o.test);
+				if(LOG_FINER)
+					logger.finer("Same Tests! " +
+							"\n T1 " + score + " hash:" + test.hashCode() + " \n" + test +
+							"\n T2 " + o.score + " hash:" + o.test.hashCode() + " \n" + o.test);
 			}
 
 			return test.hashCode() - o.test.hashCode();
-		}
-	}
-
-	private static class SolutionRef implements CoverageInformation {
-		private static final long serialVersionUID = -5289426823204679546L;
-
-		static final String KEY = "SolutionRef";
-
-		private final Solution<Operation> solution;
-
-		public SolutionRef(Solution<Operation> solution) {
-			this.solution = solution;
-		}
-
-		public Solution<Operation> getSolution() {
-			return solution;
-		}
-
-		@Override
-		public boolean contains(CoverageInformation other) {
-			return false;
-		}
-
-		@Override
-		public CoverageInformation createEmpty() {
-			return this;
-		}
-
-		@Override
-		public String getKey() {
-			return KEY;
-		}
-
-		@Override
-		public String getName() {
-			return KEY;
-		}
-
-		@Override
-		public float getQuality() {
-			return 0;
-		}
-
-		@Override
-		public void merge(CoverageInformation other) {
-		}
-
-		@Override
-		public SolutionRef clone() throws CloneNotSupportedException {
-			return this;
 		}
 	}
 }

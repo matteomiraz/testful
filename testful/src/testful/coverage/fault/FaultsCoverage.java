@@ -68,9 +68,10 @@ public class FaultsCoverage implements CoverageInformation {
 		StringBuilder sb = new StringBuilder();
 
 		for(Fault exc : faults) {
-			sb.append("--- Exception: ").append(exc.getFault().getClass().getName()).append("\n");
+			sb.append(exc.getExceptionName()).append(": ").append(exc.getMessage()).append("\n");
 			for(StackTraceElement ste : exc.getStackTrace())
 				sb.append("  ").append(ste.toString()).append("\n");
+			sb.append("---\n");
 		}
 
 		return sb.toString();

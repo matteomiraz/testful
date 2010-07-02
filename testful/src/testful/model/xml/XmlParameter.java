@@ -71,7 +71,8 @@ public class XmlParameter implements Comparable<XmlParameter> {
 		return ret;
 	}
 
-	public Boolean isExposedByReturn() {
+	public boolean isExposedByReturn() {
+		if(exposedByReturn == null) return true;
 		return exposedByReturn;
 	}
 
@@ -79,7 +80,8 @@ public class XmlParameter implements Comparable<XmlParameter> {
 		exposedByReturn = value;
 	}
 
-	public Boolean isCaptured() {
+	public boolean isCaptured() {
+		if(captured == null) return true;
 		return captured;
 	}
 
@@ -87,7 +89,8 @@ public class XmlParameter implements Comparable<XmlParameter> {
 		captured = value;
 	}
 
-	public Boolean isMutated() {
+	public boolean isMutated() {
+		if(mutated == null) return true;
 		return mutated;
 	}
 

@@ -39,6 +39,9 @@ public class XmlMethod implements Comparable<XmlMethod> {
 
 	private static final Logger logger = Logger.getLogger("testful.model.xml");
 
+	/** Default maximum execution time (in milliseconds) */
+	static final Integer MAX_EXEC_TIME = 500;
+
 	@XmlEnum
 	@XmlType(namespace = "http://testful.sourceforge.net/schema/1.2/testful.xsd")
 	public static enum Kind {
@@ -90,6 +93,10 @@ public class XmlMethod implements Comparable<XmlMethod> {
 	@XmlAttribute(required = true)
 	protected String name;
 
+	/** Maximum execution time (in milliseconds) */
+	@XmlAttribute(required=false)
+	public Integer maxExecTime = XmlMethod.MAX_EXEC_TIME;
+
 	@XmlAttribute
 	protected Boolean exposeState;
 
@@ -132,13 +139,30 @@ public class XmlMethod implements Comparable<XmlMethod> {
 		return parameter;
 	}
 
+	/**
+	 * Returns the maximum execution time (in milliseconds)
+	 * @return the maximum execution time (in milliseconds)
+	 */
+	public int getMaxExecTime() {
+		if(maxExecTime == null) return XmlMethod.MAX_EXEC_TIME;
+		return maxExecTime;
+	}
+
+	/**
+	 * Sets the maximum execution time (in milliseconds)
+	 * @param maxExecTime the maximum execution time (in milliseconds)
+	 */
+	public void setMaxExecTime(Integer maxExecTime) {
+		this.maxExecTime = maxExecTime;
+	}
+
 	public List<Extra> getExtra() {
 		if(extra == null) extra = new ArrayList<Extra>();
 		return extra;
 	}
 
 	/**
-	 * @return true if testful should ignore this constructor
+	 * @return true if testful should ignore this method
 	 */
 	public boolean isSkip() {
 		return kind == Kind.SKIP;
@@ -225,8 +249,7 @@ public class XmlMethod implements Comparable<XmlMethod> {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		result = prime * result
-		+ ((parameter == null) ? 0 : parameter.hashCode());
+		result = prime * result + ((parameter == null) ? 0 : parameter.hashCode());
 		return result;
 	}
 

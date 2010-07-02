@@ -112,7 +112,6 @@ public class MutationExecutionManager extends ExecutionManager<MutationCoverage>
 
 			// run the original class (1st time) && save the execution time
 			mutationField.set(null, 0);
-			TestStoppedException.stop = false;
 			super.reallyExecute(stopOnBug);
 			logger.fine("Run test (" + test.length + ") on the original class " + className + ": " + executionTime);
 
@@ -138,7 +137,6 @@ public class MutationExecutionManager extends ExecutionManager<MutationCoverage>
 
 			// get the live mutant set
 			mutationField.set(null, -1);
-			TestStoppedException.stop = false;
 			super.reallyExecute(stopOnBug);
 
 			BitSet executedMutants;

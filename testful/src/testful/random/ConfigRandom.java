@@ -113,6 +113,11 @@ public class ConfigRandom implements IConfigRandom, IConfigRunner.Args4j, IConfi
 	}
 
 	@Override
+	public List<File> getLibraries() {
+		return configGenerator.getLibraries();
+	}
+
+	@Override
 	public File getDirGeneratedTests() {
 		return configGenerator.getDirGeneratedTests();
 	}
@@ -125,11 +130,6 @@ public class ConfigRandom implements IConfigRandom, IConfigRunner.Args4j, IConfi
 	@Override
 	public File getDirInstrumented() {
 		return configGenerator.getDirInstrumented();
-	}
-
-	@Override
-	public boolean isCache() {
-		return configGenerator.isCache();
 	}
 
 	@Override
@@ -173,6 +173,11 @@ public class ConfigRandom implements IConfigRandom, IConfigRunner.Args4j, IConfi
 	}
 
 	@Override
+	public void addLibrary(File library) {
+		configGenerator.addLibrary(library);
+	}
+
+	@Override
 	public void setDirGeneratedTests(File dirGeneratedTests) {
 		configGenerator.setDirGeneratedTests(dirGeneratedTests);
 	}
@@ -185,11 +190,6 @@ public class ConfigRandom implements IConfigRandom, IConfigRunner.Args4j, IConfi
 	@Override
 	public void setDirInstrumented(File dirInstrumented) {
 		configGenerator.setDirInstrumented(dirInstrumented);
-	}
-
-	@Override
-	public void setCache(boolean cache) {
-		configGenerator.setCache(cache);
 	}
 
 	@Override

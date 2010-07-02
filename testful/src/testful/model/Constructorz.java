@@ -37,6 +37,9 @@ public class Constructorz implements Serializable, Comparable<Constructorz> {
 	private final MethodInformation info;
 	private final String fullConstructorName;
 
+	/** The maximum execution time (in milliseconds) */
+	private final int maxExecutionTime;
+
 	private transient Constructor<?> constructor = null;
 
 	Constructorz(TestCluster cluster, Constructor<?> c, XmlConstructor xml) {
@@ -45,6 +48,7 @@ public class Constructorz implements Serializable, Comparable<Constructorz> {
 
 		constructor = c;
 		fullConstructorName = c.toGenericString();
+		maxExecutionTime = xml.getMaxExecTime();
 
 		List<XmlParameter> paramsXml = xml.getParameter();
 		ParameterInformation[] paramsInfo = new ParameterInformation[paramsXml.size()];
@@ -100,6 +104,14 @@ public class Constructorz implements Serializable, Comparable<Constructorz> {
 		return params;
 	}
 
+	/**
+	 * Returns the maximum execution time (in milliseconds)
+	 * @return the maximum execution time (in milliseconds)
+	 */
+	public int getMaxExecutionTime() {
+		return maxExecutionTime;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder(clazz.getClassName()).append("(");
@@ -135,17 +147,17 @@ public class Constructorz implements Serializable, Comparable<Constructorz> {
 	 */
 	@Override
 	public int compareTo(Constructorz o) {
-		int i1 = 0, i2 = 0;
-		while(i1 < params.length & i2 < o.params.length) {
-			Clazz p1 = params[i1++];
-			Clazz p2 = o.params[i2++];
 
-			final int compare = p1.compareTo(p2);
-			if(compare != 0) return compare;
+		final int compareClazz = clazz.compareTo(o.clazz);
+		if(compareClazz != 0) return compareClazz;
+
+		if(params.length != o.params.length) return params.length - o.params.length;
+
+		for (int i = 0; i < params.length; i++) {
+			final int compareParam = params[i].compareTo(o.params[i]);
+			if(compareParam != 0) return compareParam;
 		}
 
-		if(i1 >= params.length) return -1;
-		if(i2 >= o.params.length) return  1;
 		return 0;
 	}
 }

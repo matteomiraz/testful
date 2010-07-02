@@ -16,18 +16,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.model.executor;
 
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import testful.coverage.fault.FaultTracker;
+import testful.coverage.stopper.Stopper;
 import testful.model.AssignConstant;
 import testful.model.AssignPrimitive;
 import testful.model.Clazz;
@@ -61,6 +60,9 @@ import testful.runner.TestfulClassLoader;
 public class ReflectionExecutor implements Executor {
 
 	private static final Logger logger = Logger.getLogger("testful.model.ReflectionExecutor");
+	private static final boolean LOGGER_FINE   = logger.isLoggable(Level.FINE);
+	private static final boolean LOGGER_FINER  = logger.isLoggable(Level.FINER);
+	private static final boolean LOGGER_FINEST = logger.isLoggable(Level.FINEST);
 
 	private static final long serialVersionUID = -1696826206324780022L;
 
@@ -76,9 +78,6 @@ public class ReflectionExecutor implements Executor {
 	/** The internal object repository */
 	private transient Object[] repository;
 
-	/** the set of faults */
-	private transient Map<Operation, FaultyExecutionException> faults;
-
 	public ReflectionExecutor(Test test) {
 		cluster = test.getCluster();
 		repositoryType = test.getReferenceFactory().getReferences();
@@ -90,6 +89,7 @@ public class ReflectionExecutor implements Executor {
 		return test.length;
 	}
 
+	@Override
 	public Operation[] getTest() {
 		return test;
 	}
@@ -110,7 +110,7 @@ public class ReflectionExecutor implements Executor {
 		Clazz cut = cluster.getCut();
 		cut.toJavaClass();
 
-		if(logger.isLoggable(Level.FINER)) {
+		if(LOGGER_FINER) {
 			StringBuilder sb = new StringBuilder();
 
 			sb.append("Cluster: \n").append(cluster.toString()).append("\n---\n");
@@ -123,7 +123,6 @@ public class ReflectionExecutor implements Executor {
 		}
 
 		repository = new Object[repositoryType.length];
-		faults = new HashMap<Operation, FaultyExecutionException>();
 
 		/** Number of invalid operations: precondition errors */
 		int nPre = 0;
@@ -132,50 +131,91 @@ public class ReflectionExecutor implements Executor {
 		/** Number of valid operations that reveal faults */
 		int nFaulty = 0;
 
-		for(Operation op : test) {
-			try {
-				if(logger.isLoggable(Level.FINEST)) {
-					logger.finest(toString());
-					logger.finest("Executing " + op);
-				}
+		final Stopper stopper = new Stopper();
 
-				perform(op);
+		try {
+			for(Operation op : test) {
+				final Integer maxExecTime;
+				if(op instanceof CreateObject) maxExecTime = ((CreateObject)op).getConstructor().getMaxExecutionTime();
+				else if (op instanceof Invoke) maxExecTime = ((Invoke)op).getMethod().getMaxExecutionTime();
+				else maxExecTime = null;
 
-				nValid++;
+				try {
+					if(LOGGER_FINEST) {
+						logger.finest(toString());
+						logger.finest("Executing " + op);
+					}
 
-			} catch(Throwable e) {
-				if (e instanceof TestfulInternalException) {
-					// discard the exception and go ahead
+					final long start;
+					if(maxExecTime != null) {
+						stopper.start(maxExecTime);
+						if(LOGGER_FINER) start = System.nanoTime();
+						else start = -1;
+					} else {
+						start = -1;
+					}
 
-				} else if(e instanceof PreconditionViolationException) {
-					nPre++;
+					if(op instanceof AssignPrimitive) assignPrimitive((AssignPrimitive) op);
+					else if(op instanceof AssignConstant) assignConstant((AssignConstant) op);
+					else if(op instanceof CreateObject) createObject((CreateObject) op);
+					else if(op instanceof Invoke) invoke((Invoke) op);
+					else if(op instanceof ResetRepository) reset((ResetRepository) op);
+					else logger.warning("Unknown operation: " + op.getClass().getCanonicalName() + " - " + op);
 
-				} else if(e instanceof FaultyExecutionException) {
-					nFaulty++;
+					nValid++;
 
-					faults.put(op, (FaultyExecutionException) e);
+					if(LOGGER_FINER) {
+						float length = (System.nanoTime() - start) / 1000000.0f;
 
-					if(stopOnBug) break;
+						final String name;
+						if(op instanceof CreateObject) name = ((CreateObject)op).getConstructor().getFullConstructorName();
+						else if(op instanceof Invoke) name = ((Invoke)op).getMethod().getFullMethodName();
+						else name = "";
 
-					// reset the repository
-					for(int i = 0; i < repository.length; i++)
-						repository[i] = null;
+						logger.finer(String.format("OpExecution %.3f ms (%5.2f%%) %s", length, (100 * length / maxExecTime), name));
+					}
+
+				} catch(Throwable e) {
+					if (e instanceof TestfulInternalException) {
+						// discard the exception and go ahead
+
+					} else if(e instanceof PreconditionViolationException) {
+						nPre++;
+
+					} else if(e instanceof FaultyExecutionException) {
+
+						nFaulty++;
+						if(stopOnBug) break;
+
+						// reset the repository
+						for(int i = 0; i < repository.length; i++)
+							repository[i] = null;
+					}
+				} finally {
+					if(maxExecTime != null) {
+						stopper.stop();
+						if(Thread.interrupted())
+							logger.finest("Clean the thread interrupted status");
+					}
 				}
 			}
+
+		} finally {
+			stopper.done();
 		}
 
-		if(logger.isLoggable(Level.FINEST))
-			logger.finest(toString());
 
-		logger.fine(String.format("STATS ops invalid invalid%% valid valid%% faulty faulty%% -- %d %d %.2f %d %.2f %d %.2f",
-				test.length,
-				nPre, (nPre*100.0/test.length),
-				nValid, (nValid*100.0/test.length),
-				nFaulty, (nFaulty*100.0/test.length)));
+		if(LOGGER_FINEST) logger.finest(toString());
 
-		return faults.size();
+		if(LOGGER_FINE)
+			logger.fine(String.format("STATS ops invalid invalid%% valid valid%% faulty faulty%% -- %d %d %.2f %d %.2f %d %.2f",
+					test.length,
+					nPre, (nPre*100.0/test.length),
+					nValid, (nValid*100.0/test.length),
+					nFaulty, (nFaulty*100.0/test.length)));
+
+		return nFaulty;
 	}
-
 
 	/**
 	 * Returns the object with the given type at the given position. Returns NULL
@@ -195,8 +235,7 @@ public class ReflectionExecutor implements Executor {
 			// something very strange happens!
 			logger.log(Level.WARNING, "Reflection error in get(" + objRef + "): " + e.getMessage(), e);
 
-			if(logger.isLoggable(Level.FINEST)) {
-
+			if(LOGGER_FINEST) {
 				StringBuilder sb = new StringBuilder();
 
 				sb.append("Ref: ").append(objRef.getClazz()).append(" :: ").append(objRef.getPos()).append(" (").append(objRef.getId()).append(")\n");
@@ -218,7 +257,7 @@ public class ReflectionExecutor implements Executor {
 		} catch(Throwable e) {
 			logger.log(Level.WARNING, "Reflection error in set(" + objRef + "=" + value + "): " + e.getMessage(), e);
 
-			if(logger.isLoggable(Level.FINEST)) {
+			if(LOGGER_FINEST) {
 				StringBuilder sb = new StringBuilder();
 
 				sb.append("Ref: ").append(objRef.getClazz()).append(" :: ").append(objRef.getPos()).append(" (").append(objRef.getId()).append(")\n");
@@ -232,16 +271,6 @@ public class ReflectionExecutor implements Executor {
 
 			throw new TestfulInternalException.Impl(e);
 		}
-	}
-
-	private void perform(Operation op) throws Throwable {
-
-		if(op instanceof AssignPrimitive) assignPrimitive((AssignPrimitive) op);
-		else if(op instanceof AssignConstant) assignConstant((AssignConstant) op);
-		else if(op instanceof CreateObject) createObject((CreateObject) op);
-		else if(op instanceof Invoke) invoke((Invoke) op);
-		else if(op instanceof ResetRepository) reset((ResetRepository) op);
-		else logger.warning("Unknown operation: " + op.getClass().getCanonicalName() + " - " + op);
 	}
 
 	private void reset(ResetRepository op) {
@@ -292,19 +321,16 @@ public class ReflectionExecutor implements Executor {
 		} catch(InvocationTargetException invocationException) {
 			Throwable exc = invocationException.getTargetException();
 
+			// Internal error
+			if(exc instanceof TestfulInternalException) throw exc;
+
+			// precondition error
 			if(exc instanceof PreconditionViolationException) {
 				if(opRes != null) opRes.setPreconditionError();
 				throw exc;
 			}
 
-			if(exc instanceof FaultyExecutionException) {
-				if(opRes != null) opRes.setPostconditionError();
-				throw exc;
-			}
-
-			if(exc instanceof TestfulInternalException) {
-				throw exc;
-			}
+			FaultTracker.singleton.process(exc, cons.getExceptionTypes(), initargs, opRes, cons.getDeclaringClass().getCanonicalName());
 
 			// a valid exception is thrown
 			if(opRes != null) opRes.setExceptional(exc, null, cluster);
@@ -321,7 +347,6 @@ public class ReflectionExecutor implements Executor {
 		Serializable value = op.getValue();
 
 		if(ref == null) throw new PreconditionViolationException.Impl("The reference is not set", null);
-		if(value == null) throw new PreconditionViolationException.Impl("The primitive value has not been initialized", null);
 
 		// perform the assignment
 		set(ref, value);
@@ -358,17 +383,20 @@ public class ReflectionExecutor implements Executor {
 	}
 
 	private void invoke(Invoke op) throws Throwable {
-		Reference targetPos = op.getTarget();
-		Reference sourcePos = op.getThis();
-		Methodz method = op.getMethod();
-		Reference[] params = op.getParams();
-		Clazz[] paramsTypes = method.getParameterTypes();
-		OperationResult opRes = (OperationResult) op.getInfo(OperationResult.KEY);
+		final Reference targetPos = op.getTarget();
+		final Reference sourcePos = op.getThis();
+		final Methodz method = op.getMethod();
+		final Reference[] params = op.getParams();
+		final Clazz[] paramsTypes = method.getParameterTypes();
+		final OperationResult opRes = (OperationResult) op.getInfo(OperationResult.KEY);
 
-		Method m = method.toMethod();
-		Object[] args = new Object[params.length];
+		final Method m = method.toMethod();
+		final Object[] args = new Object[params.length];
 
-		Object baseObject = get(sourcePos);
+		final Object baseObject;
+		if(sourcePos != null) baseObject = get(sourcePos);
+		else baseObject = null;
+
 		if(baseObject == null && !method.isStatic()) {
 			if(opRes != null) opRes.setPreconditionError();
 			throw new PreconditionViolationException.Impl("The object accepting the method call is null", null);
@@ -400,22 +428,19 @@ public class ReflectionExecutor implements Executor {
 		} catch(InvocationTargetException invocationException) {
 			Throwable exc = invocationException.getTargetException();
 
+			// Internal error
+			if(exc instanceof TestfulInternalException) throw exc;
+
+			// precondition error
 			if(exc instanceof PreconditionViolationException) {
 				if(opRes != null) opRes.setPreconditionError();
 				throw exc;
 			}
 
-			if(exc instanceof FaultyExecutionException) {
-				if(opRes != null) opRes.setPostconditionError();
-				throw exc;
-			}
-
-			if(exc instanceof TestfulInternalException) {
-				throw exc;
-			}
+			FaultTracker.singleton.process(exc, m.getExceptionTypes(), args, opRes, m.getDeclaringClass().getCanonicalName());
 
 			// a valid exception is thrown
-			if(opRes != null) opRes.setExceptional(exc, null, cluster);
+			if(opRes != null) opRes.setExceptional(exc, baseObject, cluster);
 
 		} catch(Throwable e) {
 			logger.log(Level.WARNING, "Reflection error in invoke(" + op + "): " + e.getMessage(), e);

@@ -82,7 +82,7 @@ public class TrackerWhiteBox extends Tracker {
 		ConditionTargetDatum condTargetDatum = (ConditionTargetDatum) Tracker.getDatum(ConditionTargetDatum.KEY);
 		if(condTargetDatum != null) {
 			condTargetId = condTargetDatum.getBranchId();
-			condTarget = new CoverageConditionTarget(condTargetId);
+			condTarget = new CoverageBranchTarget(condTargetId);
 		} else {
 			condTargetId = -1;
 			condTarget = null;
@@ -107,7 +107,7 @@ public class TrackerWhiteBox extends Tracker {
 	private int condTargetId;
 
 	/** target condition distance (condTarget != null <==> condTarget > -1 ) */
-	private CoverageConditionTarget condTarget;
+	private CoverageBranchTarget condTarget;
 
 	public int getConditionTargetId() {
 		return condTargetId;

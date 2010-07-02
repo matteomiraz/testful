@@ -65,15 +65,16 @@ public class TestCoverageReporter extends TestReader {
 	private IRunner exec;
 	private final ClassFinderCaching finder;
 
-	public TestCoverageReporter(IConfigProject config) {
+	public TestCoverageReporter(IConfigProject config) throws ClassNotFoundException {
 		try {
 
 			exec = RunnerPool.getRunnerPool();
 			finder = new ClassFinderCaching(new ClassFinderImpl(config));
 
-		} catch(RemoteException e) {
+		} catch (RemoteException e) {
 			// never happens
-			throw new RuntimeException("should never happen");
+			logger.log(Level.WARNING, "Remote exception (should never happen): " + e.toString(), e);
+			throw new ClassNotFoundException("Cannot contact the remote class loading facility", e);
 		}
 	}
 
@@ -88,8 +89,13 @@ public class TestCoverageReporter extends TestReader {
 
 		RunnerPool.getRunnerPool().startLocalWorkers();
 
-		TestCoverageReporter coverage = new TestCoverageReporter(config);
-		coverage.read(config.arguments);
+		try {
+			TestCoverageReporter coverage = new TestCoverageReporter(config);
+			coverage.read(config.arguments);
+		} catch (ClassNotFoundException e) {
+			System.exit(1);
+		}
+		System.exit(0);
 	}
 
 	@Override

@@ -18,29 +18,18 @@
 
 package testful.model;
 
-import java.util.Arrays;
-
-import testful.ApacheFractionTestCase;
 import testful.GenericTestCase;
+import testful.testCut.ApacheFractionCUT;
 
 /**
  * Ensures that Testful has a repeatable behavior
  * @author matteo
  */
-public class RepeatableTestCase extends ApacheFractionTestCase {
+public class RepeatableTestCase extends GenericTestCase {
 
-	/* (non-Javadoc)
-	 * @see testful.ApacheFractionTestCase#setUp()
-	 */
-	@Override
-	protected void setUp() throws Exception {
-		super.setUp();
-	}
-
-	public void testCluster() throws Exception {
-		String[] classes = cluster.getClasses();
-
-		System.out.println(Arrays.toString(classes));
+	public void testClusterApache() throws Exception {
+		ApacheFractionCUT cut = new ApacheFractionCUT();
+		String[] classes = cut.cluster.getClasses();
 
 		assertEquals(4, classes.length);
 		assertEquals("apache.Fraction", classes[0]);
@@ -50,7 +39,8 @@ public class RepeatableTestCase extends ApacheFractionTestCase {
 	}
 
 	public void testReferenceFactory() throws Exception {
-		Reference[] refs = refFactory.getReferences();
+		ApacheFractionCUT cut = new ApacheFractionCUT();
+		Reference[] refs = cut.refFactory.getReferences();
 
 		assertEquals(0, refs[0].getId());
 		assertEquals(0, refs[0].getPos());
@@ -120,17 +110,14 @@ public class RepeatableTestCase extends ApacheFractionTestCase {
 	public void testRandomGeneration() throws Exception {
 		Operation[] ops = GenericTestCase.createRandomTest("apache.Fraction", 10, 12012010l).getTest();
 
-		//	for (int i = 0; i < ops.length; i++)
-		//		System.out.println("assertEquals(\"" + ops[i].toString() + "\", ops[" + i + "].toString());");
-
-		assertEquals("apache_Fraction_2 = apache_Fraction_0.reciprocal()", ops[0].toString());
-		assertEquals("java_lang_Integer_0 = (int)0", ops[1].toString());
+		assertEquals("apache_Fraction_2 = apache_Fraction_2.add(java_lang_Integer_2)", ops[0].toString());
+		assertEquals("apache_Fraction_0 = null", ops[1].toString());
 		assertEquals("apache_Fraction_3 = apache.Fraction.ZERO", ops[2].toString());
-		assertEquals("apache_Fraction_0 = apache_Fraction_2.add(java_lang_Integer_0)", ops[3].toString());
-		assertEquals("java_lang_Object_1 = new java.lang.Object()", ops[4].toString());
-		assertEquals("java_lang_Object_2 = apache.Fraction.ONE", ops[5].toString());
-		assertEquals("apache_Fraction_2 = apache.Fraction.FOUR_FIFTHS", ops[6].toString());
-		assertEquals("java_lang_Integer_2 = (int) apache_Fraction_1.floatValue()", ops[7].toString());
+		assertEquals("java_lang_Object_0 = apache_Fraction_3.negate()", ops[3].toString());
+		assertEquals("apache_Fraction_0 = apache_Fraction_2.subtract(java_lang_Integer_0)", ops[4].toString());
+		assertEquals("java_lang_Integer_0 = (int) apache_Fraction_2.hashCode()", ops[5].toString());
+		assertEquals("java_lang_Object_3 = apache.Fraction.ONE", ops[6].toString());
+		assertEquals("java_lang_Integer_1 = (int)-2147483648", ops[7].toString());
 		assertEquals("java_lang_Object_0 = apache.Fraction.THREE_QUARTERS", ops[8].toString());
 		assertEquals("java_lang_Object_0 = apache.Fraction.MINUS_ONE", ops[9].toString());
 	}
@@ -148,11 +135,12 @@ public class RepeatableTestCase extends ApacheFractionTestCase {
 
 
 	public void testHashCodeFast() throws Exception {
-		Test t = new Test(cluster, refFactory, new Operation[] {
-				new AssignPrimitive(doubles[3], -0.4445457912686642),
-				new AssignPrimitive(ints[2], 5),
-				new CreateObject(cuts[0], cns_double_int, new Reference[] { doubles[3], ints[2] }),
-				new Invoke(null, cuts[0], divide_Fraction, new Reference[] { cuts[0] } )
+		ApacheFractionCUT cut = new ApacheFractionCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.doubles[3], -0.4445457912686642),
+				new AssignPrimitive(cut.ints[2], 5),
+				new CreateObject(cut.cuts[0], cut.cns_double_int, new Reference[] { cut.doubles[3], cut.ints[2] }),
+				new Invoke(null, cut.cuts[0], cut.divide_Fraction, new Reference[] { cut.cuts[0] } )
 		});
 
 		assertEquals(-1894196417, t.getTest()[0].hashCode());
@@ -163,113 +151,109 @@ public class RepeatableTestCase extends ApacheFractionTestCase {
 	}
 
 	public void testHashCodeLong() throws Exception {
-		Test t1 = GenericTestCase.createRandomTest("apache.Fraction", 100, 12012010l);
+		Test t = GenericTestCase.createRandomTest("apache.Fraction", 100, 12012010l);
 
-		//	Operation[] t = t1.getTest();
-		//	for (int i = 0; i < t.length; i++)
-		//		System.out.printf("assertEquals(%11d, t1.getTest()[" +  i + "].hashCode());\n", t[i].hashCode());
+		assertEquals( 1737990415, t.getTest()[ 0].hashCode());
+		assertEquals(          0, t.getTest()[ 1].hashCode());
+		assertEquals( -445177790, t.getTest()[ 2].hashCode());
+		assertEquals(  660451802, t.getTest()[ 3].hashCode());
+		assertEquals(  751472268, t.getTest()[ 4].hashCode());
+		assertEquals( -757658614, t.getTest()[ 5].hashCode());
+		assertEquals( -447840948, t.getTest()[ 6].hashCode());
+		assertEquals(-2147475557, t.getTest()[ 7].hashCode());
+		assertEquals( 1861203859, t.getTest()[ 8].hashCode());
+		assertEquals( -787977086, t.getTest()[ 9].hashCode());
+		assertEquals( 1942916470, t.getTest()[10].hashCode());
+		assertEquals(-1674707435, t.getTest()[11].hashCode());
+		assertEquals(       7194, t.getTest()[12].hashCode());
+		assertEquals( -288207920, t.getTest()[13].hashCode());
+		assertEquals(  450995975, t.getTest()[14].hashCode());
+		assertEquals(   26787523, t.getTest()[15].hashCode());
+		assertEquals( -847409560, t.getTest()[16].hashCode());
+		assertEquals( 1739560627, t.getTest()[17].hashCode());
+		assertEquals( -445170660, t.getTest()[18].hashCode());
+		assertEquals(-1633939215, t.getTest()[19].hashCode());
+		assertEquals(       8989, t.getTest()[20].hashCode());
+		assertEquals( -756045932, t.getTest()[21].hashCode());
+		assertEquals(  768740372, t.getTest()[22].hashCode());
+		assertEquals( -756088371, t.getTest()[23].hashCode());
+		assertEquals( -443397017, t.getTest()[24].hashCode());
+		assertEquals( 1749731100, t.getTest()[25].hashCode());
+		assertEquals(-1089080157, t.getTest()[26].hashCode());
+		assertEquals(-1928666074, t.getTest()[27].hashCode());
+		assertEquals( -831622252, t.getTest()[28].hashCode());
+		assertEquals(  184008229, t.getTest()[29].hashCode());
+		assertEquals(-1674708148, t.getTest()[30].hashCode());
+		assertEquals( 2146963855, t.getTest()[31].hashCode());
+		assertEquals(       8996, t.getTest()[32].hashCode());
+		assertEquals( 1944232768, t.getTest()[33].hashCode());
+		assertEquals(  523352157, t.getTest()[34].hashCode());
+		assertEquals( -447835854, t.getTest()[35].hashCode());
+		assertEquals(-1826123963, t.getTest()[36].hashCode());
+		assertEquals(       8982, t.getTest()[37].hashCode());
+		assertEquals( 1754484268, t.getTest()[38].hashCode());
+		assertEquals(  450995975, t.getTest()[39].hashCode());
+		assertEquals( 1939648667, t.getTest()[40].hashCode());
+		assertEquals( -445169947, t.getTest()[41].hashCode());
+		assertEquals( -850507700, t.getTest()[42].hashCode());
+		assertEquals( -447836567, t.getTest()[43].hashCode());
+		assertEquals( -997303685, t.getTest()[44].hashCode());
+		assertEquals( -674317770, t.getTest()[45].hashCode());
+		assertEquals(       3596, t.getTest()[46].hashCode());
+		assertEquals(  770225675, t.getTest()[47].hashCode());
+		assertEquals(-2147475558, t.getTest()[48].hashCode());
+		assertEquals(  -35204810, t.getTest()[49].hashCode());
+		assertEquals( 1944359396, t.getTest()[50].hashCode());
+		assertEquals(  472336280, t.getTest()[51].hashCode());
+		assertEquals(  -82021238, t.getTest()[52].hashCode());
+		assertEquals(  775068445, t.getTest()[53].hashCode());
+		assertEquals(-1928668213, t.getTest()[54].hashCode());
+		assertEquals(  469195825, t.getTest()[55].hashCode());
+		assertEquals( -530830655, t.getTest()[56].hashCode());
+		assertEquals(  -36775115, t.getTest()[57].hashCode());
+		assertEquals(       9897, t.getTest()[58].hashCode());
+		assertEquals( -787974947, t.getTest()[59].hashCode());
+		assertEquals( 1770875978, t.getTest()[60].hashCode());
+		assertEquals( 1772531130, t.getTest()[61].hashCode());
+		assertEquals(  184008229, t.getTest()[62].hashCode());
+		assertEquals(  461344610, t.getTest()[63].hashCode());
+		assertEquals( 1758361104, t.getTest()[64].hashCode());
+		assertEquals( -447850930, t.getTest()[65].hashCode());
+		assertEquals(-1096931372, t.getTest()[66].hashCode());
+		assertEquals( -896936845, t.getTest()[67].hashCode());
+		assertEquals( 1753692876, t.getTest()[68].hashCode());
+		assertEquals(-1274737654, t.getTest()[69].hashCode());
+		assertEquals(-2147476457, t.getTest()[70].hashCode());
+		assertEquals(-1826124087, t.getTest()[71].hashCode());
+		assertEquals( -447837993, t.getTest()[72].hashCode());
+		assertEquals(-1674709574, t.getTest()[73].hashCode());
+		assertEquals(  892223844, t.getTest()[74].hashCode());
+		assertEquals(  767085189, t.getTest()[75].hashCode());
+		assertEquals( -303783033, t.getTest()[76].hashCode());
+		assertEquals(  110587819, t.getTest()[77].hashCode());
+		assertEquals(-1826166309, t.getTest()[78].hashCode());
+		assertEquals(       9895, t.getTest()[79].hashCode());
+		assertEquals( -529217973, t.getTest()[80].hashCode());
+		assertEquals( -672620210, t.getTest()[81].hashCode());
+		assertEquals(  786013076, t.getTest()[82].hashCode());
+		assertEquals( 2146440466, t.getTest()[83].hashCode());
+		assertEquals(-2147475558, t.getTest()[84].hashCode());
+		assertEquals(  467668052, t.getTest()[85].hashCode());
+		assertEquals( -447837993, t.getTest()[86].hashCode());
+		assertEquals( -306923519, t.getTest()[87].hashCode());
+		assertEquals(-1826038837, t.getTest()[88].hashCode());
+		assertEquals(  -49205049, t.getTest()[89].hashCode());
+		assertEquals(-2147474658, t.getTest()[90].hashCode());
+		assertEquals(-1088995279, t.getTest()[91].hashCode());
+		assertEquals( -526204804, t.getTest()[92].hashCode());
+		assertEquals(-1674708148, t.getTest()[93].hashCode());
+		assertEquals(  662022045, t.getTest()[94].hashCode());
+		assertEquals( 1936423992, t.getTest()[95].hashCode());
+		assertEquals(  -79629926, t.getTest()[96].hashCode());
+		assertEquals( 1941346227, t.getTest()[97].hashCode());
+		assertEquals(  844040555, t.getTest()[98].hashCode());
+		assertEquals(  771880827, t.getTest()[99].hashCode());
 
-		assertEquals( -305480593, t1.getTest()[0].hashCode());
-		assertEquals(       7192, t1.getTest()[1].hashCode());
-		assertEquals( -445177790, t1.getTest()[2].hashCode());
-		assertEquals( 1734849867, t1.getTest()[3].hashCode());
-		assertEquals(  184008229, t1.getTest()[4].hashCode());
-		assertEquals( -447841661, t1.getTest()[5].hashCode());
-		assertEquals(-1671287386, t1.getTest()[6].hashCode());
-		assertEquals( 1944275207, t1.getTest()[7].hashCode());
-		assertEquals( 1861203859, t1.getTest()[8].hashCode());
-		assertEquals( -787977086, t1.getTest()[9].hashCode());
-		assertEquals(  -76404562, t1.getTest()[10].hashCode());
-		assertEquals(-1674707435, t1.getTest()[11].hashCode());
-		assertEquals(       7194, t1.getTest()[12].hashCode());
-		assertEquals( -756130810, t1.getTest()[13].hashCode());
-		assertEquals(  450995975, t1.getTest()[14].hashCode());
-		assertEquals( 1072696844, t1.getTest()[15].hashCode());
-		assertEquals( -675845574, t1.getTest()[16].hashCode());
-		assertEquals(       4495, t1.getTest()[17].hashCode());
-		assertEquals( 1072697743, t1.getTest()[18].hashCode());
-		assertEquals(-1591033388, t1.getTest()[19].hashCode());
-		assertEquals(-1633939215, t1.getTest()[20].hashCode());
-		assertEquals(       8989, t1.getTest()[21].hashCode());
-		assertEquals(  -73264076, t1.getTest()[22].hashCode());
-		assertEquals( -848979834, t1.getTest()[23].hashCode());
-		assertEquals( -288123042, t1.getTest()[24].hashCode());
-		assertEquals( -897206018, t1.getTest()[25].hashCode());
-		assertEquals( 1830254731, t1.getTest()[26].hashCode());
-		assertEquals( -447844410, t1.getTest()[27].hashCode());
-		assertEquals(       2139, t1.getTest()[28].hashCode());
-		assertEquals( 1072696844, t1.getTest()[29].hashCode());
-		assertEquals(  665035214, t1.getTest()[30].hashCode());
-		assertEquals(  184008229, t1.getTest()[31].hashCode());
-		assertEquals(-1674708148, t1.getTest()[32].hashCode());
-		assertEquals( 2146963855, t1.getTest()[33].hashCode());
-		assertEquals( 1755482686, t1.getTest()[34].hashCode());
-		assertEquals( 1752956464, t1.getTest()[35].hashCode());
-		assertEquals( 1072698642, t1.getTest()[36].hashCode());
-		assertEquals( -787984216, t1.getTest()[37].hashCode());
-		assertEquals(  183978438, t1.getTest()[38].hashCode());
-		assertEquals(  -71693833, t1.getTest()[39].hashCode());
-		assertEquals(-1826123684, t1.getTest()[40].hashCode());
-		assertEquals(  184038020, t1.getTest()[41].hashCode());
-		assertEquals(       9888, t1.getTest()[42].hashCode());
-		assertEquals( 1072697743, t1.getTest()[43].hashCode());
-		assertEquals(-1674708861, t1.getTest()[44].hashCode());
-		assertEquals( -997601657, t1.getTest()[45].hashCode());
-		assertEquals(       7193, t1.getTest()[46].hashCode());
-		assertEquals(  844040617, t1.getTest()[47].hashCode());
-		assertEquals(-1928657518, t1.getTest()[48].hashCode());
-		assertEquals(  905124738, t1.getTest()[49].hashCode());
-		assertEquals(  665077653, t1.getTest()[50].hashCode());
-		assertEquals(  -35204810, t1.getTest()[51].hashCode());
-		assertEquals(  967843361, t1.getTest()[52].hashCode());
-		assertEquals( -675845574, t1.getTest()[53].hashCode());
-		assertEquals(  450997401, t1.getTest()[54].hashCode());
-		assertEquals( -303910350, t1.getTest()[55].hashCode());
-		assertEquals(-2147474658, t1.getTest()[56].hashCode());
-		assertEquals( 1830297170, t1.getTest()[57].hashCode());
-		assertEquals(  464527566, t1.getTest()[58].hashCode());
-		assertEquals( -308536201, t1.getTest()[59].hashCode());
-		assertEquals(       9897, t1.getTest()[60].hashCode());
-		assertEquals( -787974947, t1.getTest()[61].hashCode());
-		assertEquals( 1939691106, t1.getTest()[62].hashCode());
-		assertEquals(    1054869, t1.getTest()[63].hashCode());
-		assertEquals(-1826081276, t1.getTest()[64].hashCode());
-		assertEquals(  644664494, t1.getTest()[65].hashCode());
-		assertEquals( -534013580, t1.getTest()[66].hashCode());
-		assertEquals( 1734849960, t1.getTest()[67].hashCode());
-		assertEquals( -447842374, t1.getTest()[68].hashCode());
-		assertEquals( -997244134, t1.getTest()[69].hashCode());
-		assertEquals( -445169947, t1.getTest()[70].hashCode());
-		assertEquals(       8992, t1.getTest()[71].hashCode());
-		assertEquals(  361869501, t1.getTest()[72].hashCode());
-		assertEquals(-1633947058, t1.getTest()[73].hashCode());
-		assertEquals(  361868571, t1.getTest()[74].hashCode());
-		assertEquals( -447837993, t1.getTest()[75].hashCode());
-		assertEquals(-1674709574, t1.getTest()[76].hashCode());
-		assertEquals(  892223844, t1.getTest()[77].hashCode());
-		assertEquals( -850422822, t1.getTest()[78].hashCode());
-		assertEquals(  -76489440, t1.getTest()[79].hashCode());
-		assertEquals( 1072699541, t1.getTest()[80].hashCode());
-		assertEquals( -527732608, t1.getTest()[81].hashCode());
-		assertEquals(-1274744071, t1.getTest()[82].hashCode());
-		assertEquals(  462914884, t1.getTest()[83].hashCode());
-		assertEquals( -672620210, t1.getTest()[84].hashCode());
-		assertEquals( 1949112564, t1.getTest()[85].hashCode());
-		assertEquals(  -74919197, t1.getTest()[86].hashCode());
-		assertEquals( -812868845, t1.getTest()[87].hashCode());
-		assertEquals( 1938036674, t1.getTest()[88].hashCode());
-		assertEquals(  -71778711, t1.getTest()[89].hashCode());
-		assertEquals( -445178503, t1.getTest()[90].hashCode());
-		assertEquals( 1934811310, t1.getTest()[91].hashCode());
-		assertEquals(  715512916, t1.getTest()[92].hashCode());
-		assertEquals(-2147474658, t1.getTest()[93].hashCode());
-		assertEquals(-1590948510, t1.getTest()[94].hashCode());
-		assertEquals(  184067811, t1.getTest()[95].hashCode());
-		assertEquals( 1945929639, t1.getTest()[96].hashCode());
-		assertEquals(  661894728, t1.getTest()[97].hashCode());
-		assertEquals(  963132632, t1.getTest()[98].hashCode());
-		assertEquals( 1936508870, t1.getTest()[99].hashCode());
-
-		assertEquals( -807758438, t1.hashCode());
+		assertEquals(  849524984, t.hashCode());
 	}
 }

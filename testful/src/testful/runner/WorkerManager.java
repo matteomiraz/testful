@@ -1,21 +1,20 @@
 /*
  * TestFul - http://code.google.com/p/testful/
  * Copyright (C) 2010  Matteo Miraz
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 package testful.runner;
 
@@ -41,12 +40,13 @@ import java.util.logging.Logger;
 
 import testful.TestFul;
 import testful.utils.CachingMap;
-import testful.utils.Cloner;
 import testful.utils.CachingMap.Cacheable;
+import testful.utils.Cloner;
 
 public class WorkerManager implements IWorkerManager, ITestRepository {
 
 	private static Logger logger = Logger.getLogger("testful.executor.worker");
+	private static final boolean LOG_FINE = logger.isLoggable(Level.FINE);
 
 	/** cache size: number of jobs to keep in local cache */
 	private static final int CACHE_SIZE = 50;
@@ -71,7 +71,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	private AtomicLong sentBytes = new AtomicLong();
 
 	public WorkerManager(int cpu, int buffer) {
-		logger.info("Starting: Worker Manager (" + TestFul.runId + ")");
+		if(LOG_FINE) logger.fine("Starting: Worker Manager (" + TestFul.runId + ")");
 
 		if(buffer <= 0) buffer = CACHE_SIZE;
 		tests = new ArrayBlockingQueue<Context<?, ?>>(buffer);
@@ -126,7 +126,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 				}
 			}
 		});
-
+		t.setName("WorkerManager-" + name);
 		t.setDaemon(true);
 		t.start();
 	}
@@ -218,7 +218,8 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	}
 
 	public void putException(Context<?, ?> ctx, Exception exc, TestfulClassLoader cl) {
-		recycleClassLoader(cl);
+		if(cl != null)
+			recycleClassLoader(cl);
 
 		try {
 			putException(ctx.id, Cloner.serialize(exc, true));

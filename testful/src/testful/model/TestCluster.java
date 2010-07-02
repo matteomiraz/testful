@@ -160,8 +160,11 @@ public class TestCluster implements Serializable {
 
 			XmlClass xmlClass = xml.get(clazz.getClassName());
 			if(xmlClass != null) {
-				for(String aux : xmlClass.getCluster())
-					toDo.add(getRegistry().getClazz(this.classLoader.loadClass(aux)));
+				for(String aux : xmlClass.getCluster()) {
+					final Clazz clusterClazz = getRegistry().getClazz(this.classLoader.loadClass(aux));
+					if(!clusterBuilder.contains(clusterClazz))
+						toDo.add(clusterClazz);
+				}
 			}
 		}
 
@@ -174,6 +177,8 @@ public class TestCluster implements Serializable {
 
 		// for each known class
 		all = registry.registry.values().toArray(new Clazz[registry.registry.size()]);
+		Arrays.sort(all);
+
 		for(Clazz c : all)
 			c.calculateAssignableTo();
 
@@ -181,16 +186,30 @@ public class TestCluster implements Serializable {
 
 		calculateSubClasses();
 
-		if(logger.isLoggable(Level.FINER)) {
+		if(logger.isLoggable(Level.CONFIG)) {
 			StringBuilder sb = new StringBuilder("Test Cluster:");
 
 			for (Clazz c : cluster) {
 				sb.append("\nclass " + c.getClassName());
-				for (Constructorz cns : c.getConstructors()) sb.append("\n * " + cns);
-				for (Methodz m : c.getMethods()) sb.append("\n * " + m);
+				for (Constructorz cns : c.getConstructors()) print(sb, cns.toString(), cns.getParameterTypes(), cns.getMethodInformation());
+				for (Methodz m : c.getMethods()) print(sb, m.toString(), m.getParameterTypes(), m.getMethodInformation());
 			}
 
-			logger.finer(sb.toString());
+			logger.config(sb.toString());
+		}
+	}
+
+	private void print(StringBuilder sb, final String name, final Clazz[] params, final MethodInformation info) {
+
+		sb.append("\n * [" + info.getType() + "] "  + name);
+
+		for (int i = 0; i < info.getParameters().length; i++) {
+			sb.append(String.format("\n     p%2d %s ", i, params[i].getClassName()));
+			if(info.getParameters()[i].isMutated()) sb.append(" mutated");
+			if(info.getParameters()[i].isCaptured()) sb.append(" captured");
+			if(info.getParameters()[i].isCapturedByReturn()) sb.append(" capturedByReturn");
+			if(info.getParameters()[i].getCaptureStateOf() != null && !info.getParameters()[i].getCaptureStateOf().isEmpty())
+				sb.append(info.getParameters()[i].getCaptureStateOf());
 		}
 	}
 
@@ -207,13 +226,10 @@ public class TestCluster implements Serializable {
 			xml.put(clazz.getClassName(), xmlClass);
 		}
 
-		// Consider public fields
+		// Include types used in public fields
 		for(Field f : javaClass.getFields()) {
-			if(f.getType().getName().startsWith("testful.")) continue;
-			if(f.getDeclaringClass().getName().startsWith("testful.")) continue;
-
-			if(Modifier.isPublic(f.getModifiers()))
-				todo.add(getRegistry().getClazz(f.getType()));
+			if(!skipField(f))
+				getRegistry().getClazz(f.getType());
 		}
 
 		// Consider constructors
@@ -286,8 +302,6 @@ public class TestCluster implements Serializable {
 
 		/** Contains the missing classes */
 		public final Set<String> missing;
-		/** if true, it is critical */
-		public final boolean fatal;
 
 		public MissingClassException(Set<Clazz> missing, Clazz cut) {
 			super("Some classes are missing:" + missing);
@@ -295,22 +309,6 @@ public class TestCluster implements Serializable {
 			Set<String> tmp = new HashSet<String>();
 			for (Clazz c : missing) tmp.add(c.getClassName());
 			this.missing = Collections.unmodifiableSet(tmp);
-
-			fatal = calculateFatal(missing, cut);
-		}
-
-		private static boolean calculateFatal(Set<Clazz> missing, Clazz cut) {
-			if(missing.contains(cut)) return true;
-
-			for (Constructorz cns : cut.getConstructors())
-				for (Clazz p : cns.getParameterTypes())
-					if(missing.contains(p)) return true;
-
-			for (Methodz m : cut.getMethods())
-				for (Clazz p : m.getParameterTypes())
-					if(missing.contains(p)) return true;
-
-			return false;
 		}
 	}
 
@@ -426,29 +424,42 @@ public class TestCluster implements Serializable {
 		for(Clazz cz : cluster) {
 			for(Field field : cz.toJavaClass().getFields()) {
 				Class<?> fieldType = field.getType();
-				String fieldName = field.getName();
 
-				if((field.getModifiers() & (Modifier.STATIC | Modifier.PUBLIC)) == 0) continue;
-
-				if(fieldName.startsWith("__")) continue;
+				if(skipField(field)) continue;
 
 				Clazz fieldClazz = registry.getClazzIfExists(fieldType);
-				if(fieldClazz == null || !contains(fieldClazz)) continue;
+				if(fieldClazz == null) continue;
 
 				for(Clazz d : fieldClazz.getAssignableTo()) {
-					Set<StaticValue> fields = fieldMap.get(d);
-					if(fields == null) {
-						fields = new TreeSet<StaticValue>();
-						fieldMap.put(d, fields);
+					if(contains(d)) {
+						Set<StaticValue> fields = fieldMap.get(d);
+						if(fields == null) {
+							fields = new TreeSet<StaticValue>();
+							fieldMap.put(d, fields);
+						}
+						fields.add(new StaticValue(this, field));
 					}
-					fields.add(new StaticValue(this, field));
 				}
 			}
+
 			for(Clazz c : fieldMap.keySet()) {
 				Set<StaticValue> fields = fieldMap.get(c);
 				c.setConstants(fields.toArray(new StaticValue[fields.size()]));
 			}
 		}
+	}
+
+	private boolean skipField(Field field) {
+
+		if((field.getModifiers() & (Modifier.STATIC | Modifier.PUBLIC)) == 0) return true;
+		if(field.getType().isArray()) return true;
+		if(field.getName().startsWith("__")) return true;
+
+		if(field.getType().getName().startsWith("testful.")) return true;
+		if(field.getDeclaringClass().getName().startsWith("testful.")) return true;
+
+
+		return false;
 	}
 
 	private void calculateSubClasses() throws ClassNotFoundException {
@@ -524,10 +535,10 @@ public class TestCluster implements Serializable {
 	 * @return a class belonging to this test cluster
 	 */
 	public Clazz adapt(Clazz clazz) {
-		for(Clazz c : all)
-			if(c.equals(clazz)) return c;
+		final int idx = Arrays.binarySearch(all, clazz);
+		if(idx >= 0) return all[idx];
 
-		logger.warning("Cannot adapt " + clazz);
+		logger.warning("Cannot adapt class " + clazz + " " + Arrays.toString(all));
 		return null;
 	}
 
@@ -541,13 +552,14 @@ public class TestCluster implements Serializable {
 	public Methodz adapt(Methodz method) {
 		if(method == null) return null;
 
-		Clazz thisClass = adapt(method.getClazz());
+		final Clazz thisClass = adapt(method.getClazz());
 		if(thisClass == null) return null;
+		final Methodz[] methods = thisClass.getMethods();
 
-		for(Methodz m : thisClass.getMethods())
-			if(m.equals(method)) return m;
+		final int idx = Arrays.binarySearch(methods, method);
+		if(idx >= 0) return methods[idx];
 
-		logger.warning("Cannot adapt " + method);
+		logger.warning("Cannot adapt Method " + method + " " + Arrays.toString(methods));
 		return null;
 	}
 
@@ -561,13 +573,14 @@ public class TestCluster implements Serializable {
 	public Constructorz adapt(Constructorz cns) {
 		if(cns == null) return null;
 
-		Clazz thisClass = adapt(cns.getClazz());
+		final Clazz thisClass = adapt(cns.getClazz());
 		if(thisClass == null) return null;
+		final Constructorz[] constructors = thisClass.getConstructors();
 
-		for(Constructorz c : thisClass.getConstructors())
-			if(c.equals(cns)) return c;
+		final int idx = Arrays.binarySearch(constructors, cns);
+		if(idx >= 0) return constructors[idx];
 
-		logger.warning("Cannot adapt " + cns);
+		logger.warning("Cannot adapt Constructor " + cns + " " + Arrays.toString(constructors));
 		return null;
 	}
 
@@ -581,13 +594,14 @@ public class TestCluster implements Serializable {
 	public StaticValue adapt(StaticValue sv) {
 		if(sv == null) return null;
 
-		Clazz thisClass = adapt(sv.getDeclaringClass());
+		final Clazz thisClass = adapt(sv.getType());
 		if(thisClass == null) return null;
+		final StaticValue[] constants = thisClass.getConstants();
 
-		for(StaticValue v : thisClass.getConstants())
-			if(v.equals(sv)) return v;
+		final int idx = Arrays.binarySearch(constants, sv);
+		if(idx >= 0) return constants[idx];
 
-		logger.warning("WARN: cannot adapt " + sv);
+		logger.warning("cannot adapt StaticValue " + sv + " " + Arrays.toString(constants));
 		return null;
 	}
 }

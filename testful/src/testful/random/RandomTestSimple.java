@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.random;
 
 import java.io.File;
@@ -27,7 +26,6 @@ import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
 import testful.model.Operation;
 import testful.model.ReferenceFactory;
-import testful.model.Test;
 import testful.model.TestCluster;
 import testful.runner.ClassFinder;
 import testful.utils.ElementManager;
@@ -37,8 +35,8 @@ public class RandomTestSimple extends RandomTest {
 
 	private final int TEST_SIZE = 500;
 
-	public RandomTestSimple(boolean enableCache, File logDirectory, ClassFinder finder, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
-		super(enableCache, logDirectory, finder, cluster, refFactory, seed, data);
+	public RandomTestSimple(File logDirectory, ClassFinder finder, boolean reload, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
+		super(logDirectory, finder, reload, cluster, refFactory, seed, data);
 	}
 
 	@Override
@@ -54,8 +52,7 @@ public class RandomTestSimple extends RandomTest {
 				for(int i = 0; i < TEST_SIZE; i++)
 					ops[i] = Operation.randomlyGenerate(cluster, refFactory, random);
 
-				Future<ElementManager<String, CoverageInformation>> fut = runner.executeParts(finder, true, new Test(cluster, refFactory, ops), data);
-				tests.put(new SimpleEntry<Operation[], Future<ElementManager<String, CoverageInformation>>>(ops, fut));
+				tests.put(new SimpleEntry<Operation[], Future<ElementManager<String, CoverageInformation>>>(ops, execute(ops)));
 			}
 		} catch(InterruptedException e) {
 			logger.log(Level.WARNING, "Interrupted: " + e.getMessage(), e);

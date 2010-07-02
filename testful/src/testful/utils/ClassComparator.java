@@ -30,6 +30,7 @@ public class ClassComparator implements Comparator<Class<?>> {
 
 	@Override
 	public int compare(Class<?> o1, Class<?> o2) {
+		if(o1 == o2) return 0;
 		return o1.getName().compareTo(o2.getName());
 	}
 }

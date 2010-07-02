@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.random;
 
 import java.io.File;
@@ -30,6 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
 import testful.model.Operation;
@@ -40,7 +40,8 @@ import testful.model.TestCluster;
 import testful.model.TestCoverage;
 import testful.model.TestSuite;
 import testful.runner.ClassFinder;
-import testful.runner.RunnerCaching;
+import testful.runner.Context;
+import testful.runner.RunnerPool;
 import testful.utils.ElementManager;
 import ec.util.MersenneTwisterFast;
 
@@ -50,8 +51,6 @@ public abstract class RandomTest {
 	protected long start, stop;
 	private long numCall;
 
-	protected final RunnerCaching runner;
-
 	protected final TestCluster cluster;
 	protected final ReferenceFactory refFactory;
 
@@ -59,8 +58,9 @@ public abstract class RandomTest {
 
 	protected final BlockingQueue<Entry<Operation[], Future<ElementManager<String, CoverageInformation>>>> tests = new LinkedBlockingQueue<Entry<Operation[], Future<ElementManager<String, CoverageInformation>>>>();
 	private final OptimalTestCreator optimal;
-	protected final ClassFinder finder;
-	protected final TrackerDatum[] data;
+	private final ClassFinder finder;
+	private final boolean reload;
+	private final TrackerDatum[] data;
 
 	protected final MersenneTwisterFast random;
 
@@ -68,20 +68,25 @@ public abstract class RandomTest {
 
 	protected final File logDirectory;
 
-	public RandomTest(boolean enableCache, File logDirectory, ClassFinder finder, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
+	public RandomTest(File logDirectory, ClassFinder finder, boolean reload, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
 		this.logDirectory = logDirectory;
 		optimal = new OptimalTestCreator();
 
 		logger.config("RandomTest: initializing MersenneTwisterFast with seed " + seed);
 		random = new MersenneTwisterFast(seed);
 
-		runner = new RunnerCaching(enableCache);
-
 		this.cluster = cluster;
 		this.refFactory = refFactory;
 
 		this.finder = finder;
+		this.reload = reload;
 		this.data = data;
+	}
+
+	protected Future<ElementManager<String, CoverageInformation>> execute(Operation[] ops) {
+		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = CoverageExecutionManager.getContext(finder, new Test(cluster, refFactory, ops), data);
+		ctx.setRecycleClassLoader(reload);
+		return RunnerPool.getRunnerPool().execute(ctx);
 	}
 
 	protected abstract void work(long duration);
@@ -146,8 +151,6 @@ public abstract class RandomTest {
 
 					optimal.log(null, numCall, (now - start));
 
-					runner.updateCacheScore();
-
 					if(logger.isLoggable(Level.INFO)) {
 						StringBuilder sb = new StringBuilder();
 
@@ -161,7 +164,6 @@ public abstract class RandomTest {
 
 
 						sb.append("Running ").append(getRunningJobs()).append(" jobs (").append(testsDone.get()).append(" done)\n");
-						if(runner.isEnabled()) sb.append(runner).append("\n");
 
 						if(!optimal.getCoverage().isEmpty()) {
 							sb.append("Coverage:\n");

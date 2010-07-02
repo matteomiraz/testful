@@ -42,9 +42,6 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	private final IConfigRunner.Args4j configRunner = new ConfigRunner();
 	private final IConfigFitness.Args4j configFitness = new ConfigFitness();
 
-	@Option(required = false, name = "-noSimplify", usage = "Do not simplify tests")
-	private boolean noSimplify;
-
 	@Option(required = false, name = "-localSearchPeriod", usage = "Period of the local search (default: every 20 generations; <= 0 to disable local search)")
 	private int localSearchPeriod = 5;
 
@@ -164,6 +161,11 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	}
 
 	@Override
+	public List<File> getLibraries() {
+		return configGenerator.getLibraries();
+	}
+
+	@Override
 	public File getDirGeneratedTests() {
 		return configGenerator.getDirGeneratedTests();
 	}
@@ -185,11 +187,6 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	@Override
 	public File getDirInstrumented() {
 		return configGenerator.getDirInstrumented();
-	}
-
-	@Override
-	public boolean isCache() {
-		return configGenerator.isCache();
 	}
 
 	@Override
@@ -233,6 +230,11 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	}
 
 	@Override
+	public void addLibrary(File library) {
+		configGenerator.addLibrary(library);
+	}
+
+	@Override
 	public void setDirGeneratedTests(File dirGeneratedTests) {
 		configGenerator.setDirGeneratedTests(dirGeneratedTests);
 	}
@@ -253,11 +255,6 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	@Override
 	public void setDirInstrumented(File dirInstrumented) {
 		configGenerator.setDirInstrumented(dirInstrumented);
-	}
-
-	@Override
-	public void setCache(boolean cache) {
-		configGenerator.setCache(cache);
 	}
 
 	@Override
@@ -332,16 +329,6 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	@Override
 	public void setLogLevel(LogLevel logLevel) {
 		configGenerator.setLogLevel(logLevel);
-	}
-
-	@Override
-	public void setSimplify(boolean simplify) {
-		noSimplify = !simplify;
-	}
-
-	@Override
-	public boolean isSimplify() {
-		return !noSimplify;
 	}
 
 	/* (non-Javadoc)

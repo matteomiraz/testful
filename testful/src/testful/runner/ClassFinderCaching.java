@@ -20,7 +20,9 @@ package testful.runner;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.LinkedHashSet;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,6 +32,7 @@ import testful.utils.CachingMap.Cacheable;
 public class ClassFinderCaching implements ClassFinder {
 
 	private static Logger logger = Logger.getLogger("testful.executor.classloader");
+	private static final boolean LOG_FINER = logger.isLoggable(Level.FINER);
 
 	private final static int MAX_ELEMS = 1000;
 	private final static long MIN_AGE = 15 * 60 * 1000; // 15 min
@@ -37,13 +40,17 @@ public class ClassFinderCaching implements ClassFinder {
 
 	private final String key;
 	private final CachingMap<String, byte[]> cache;
+	private final Set<String> missing;
+
 	private final ClassFinder finder;
 
-	public ClassFinderCaching(ClassFinder finder) throws RemoteException {
+	public ClassFinderCaching(ClassFinder classFinder) throws RemoteException {
 
 		cache = new CachingMap<String, byte[]>(MAX_ELEMS, MIN_AGE, MIN_UNUSED);
-		this.finder = finder;
-		key = finder.getKey();
+		missing = new LinkedHashSet<String>();
+
+		finder = classFinder;
+		key = classFinder.getKey();
 
 		try {
 			UnicastRemoteObject.exportObject(this, 0);
@@ -62,8 +69,9 @@ public class ClassFinderCaching implements ClassFinder {
 	@Override
 	public byte[] getClass(String name) throws ClassNotFoundException, RemoteException {
 		if(name == null) {
-			new Exception("WARN: ClassFinderCaching.getClass(name=null)").printStackTrace();
-			return new byte[0];
+			ClassNotFoundException exc = new ClassNotFoundException("Cannot find the <null> class");
+			logger.log(Level.WARNING, exc.getMessage(), exc);
+			throw exc;
 		}
 
 		CachingMap.Cacheable<byte[]> tmp = cache.get(name);
@@ -72,11 +80,19 @@ public class ClassFinderCaching implements ClassFinder {
 			return tmp.getElement();
 		}
 
+		if(missing.contains(name)) {
+			logger.log(Level.FINEST, "(" + key + ") cannot retrieve class " + name + " (cached)");
+			throw new ClassNotFoundException("Cannot retrieve the class " + name + " (cached)");
+		}
+
 		try {
 			byte[] buff = finder.getClass(name);
 			cache.put(name, new Cacheable<byte[]>(buff));
-			logger.finer("(" + key + ") serving retrieved class " + name);
+			if(LOG_FINER) logger.finer("(" + key + ") serving retrieved class " + name);
 			return buff;
+		} catch(ClassNotFoundException e) {
+			missing.add(name);
+			throw e;
 		} catch(RemoteException e) {
 			logger.log(Level.WARNING, "(" + key + ") cannot retrieve class " + name, e);
 			throw new ClassNotFoundException("Cannot retrieve the class " + name, e);

@@ -23,6 +23,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -34,11 +35,17 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(namespace = "http://testful.sourceforge.net/schema/1.2/testful.xsd", name = "constructor", propOrder = { "parameter", "extra" })
 public class XmlConstructor implements Comparable<XmlConstructor> {
 
+	private static final Logger logger = Logger.getLogger("testful.model.xml");
+
 	@XmlElement(nillable = true)
 	protected List<XmlParameter> parameter;
 
 	@XmlAttribute(required=false)
 	public Boolean skip = false;
+
+	/** Maximum execution time (in milliseconds) */
+	@XmlAttribute(required=false)
+	public Integer maxExecTime = XmlMethod.MAX_EXEC_TIME;
 
 	@XmlElement
 	protected List<Extra> extra;
@@ -46,6 +53,23 @@ public class XmlConstructor implements Comparable<XmlConstructor> {
 	public List<XmlParameter> getParameter() {
 		if(parameter == null) parameter = new ArrayList<XmlParameter>();
 		return parameter;
+	}
+
+	/**
+	 * Returns the maximum execution time (in milliseconds)
+	 * @return the maximum execution time (in milliseconds)
+	 */
+	public int getMaxExecTime() {
+		if(maxExecTime == null) return XmlMethod.MAX_EXEC_TIME;
+		return maxExecTime;
+	}
+
+	/**
+	 * Sets the maximum execution time (in milliseconds)
+	 * @param maxExecTime the maximum execution time (in milliseconds)
+	 */
+	public void setMaxExecTime(Integer maxExecTime) {
+		this.maxExecTime = maxExecTime;
 	}
 
 	public List<Extra> getExtra() {
@@ -72,8 +96,8 @@ public class XmlConstructor implements Comparable<XmlConstructor> {
 	 */
 	@Override
 	public int compareTo(XmlConstructor o) {
-		Iterator<XmlParameter> it1 = parameter.iterator();
-		Iterator<XmlParameter> it2 = o.parameter.iterator();
+		Iterator<XmlParameter> it1 = getParameter().iterator();
+		Iterator<XmlParameter> it2 = o.getParameter().iterator();
 
 		while(it1.hasNext() & it2.hasNext()) {
 			XmlParameter p1 = it1.next();
@@ -96,6 +120,14 @@ public class XmlConstructor implements Comparable<XmlConstructor> {
 	 */
 	public static XmlConstructor create(Constructor<?> cns) {
 		if(!Modifier.isPublic(cns.getModifiers())) return null;
+
+		// skip constructors with arrays
+		for (Class<?> params : cns.getParameterTypes()) {
+			if(params.isArray()) {
+				logger.info("Skipping " + cns + ": has an array as parameter. If you are interested in using this constructor, vote for issue #1: http://code.google.com/p/testful/issues/detail?id=1");
+				return null;
+			}
+		}
 
 		XmlConstructor xcns = testful.model.xml.ObjectFactory.factory.createConstructor();
 

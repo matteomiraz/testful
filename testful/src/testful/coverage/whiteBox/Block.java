@@ -1,17 +1,17 @@
 /*
  * TestFul - http://code.google.com/p/testful/
  * Copyright (C) 2010  Matteo Miraz
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -28,13 +28,13 @@ import java.util.Set;
 public abstract class Block implements Serializable {
 
 	private static final long serialVersionUID = 2633740207186003854L;
-	
+
 	private final int id;
 	private static int idGenerator = 0;
 
 	/** if != null, the basic block ends with this condition (if or switch) */
 	protected Condition condition;
-	
+
 	/** CFG: edges incoming in this block */
 	protected Set<Edge> pre = new HashSet<Edge>();
 
@@ -71,26 +71,26 @@ public abstract class Block implements Serializable {
 	public BitSet getOut() {
 		return (BitSet) out.clone();
 	}
-	
+
 	void setCondition(Condition condition) {
 		this.condition = condition;
 	}
-	
+
 	public Condition getCondition() {
 		return condition;
 	}
-	
+
 	@Override
 	public String toString() {
 		return "B" + id;
 	}
-	
+
 	public abstract boolean updateData();
 
 	/**
 	 * Returns true if exists a path without any definition of a variable (in
 	 * which the def d is alive), which leads to the use u
-	 * 
+	 *
 	 * @param d the definition
 	 * @param u the use
 	 * @return true if a definition-clear path to u exists
@@ -132,6 +132,5 @@ public abstract class Block implements Serializable {
 		}
 
 		return false;
-
 	}
 }

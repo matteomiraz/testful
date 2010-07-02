@@ -50,6 +50,7 @@ import testful.utils.Cloner;
  *
  * @author matteo
  */
+@SuppressWarnings("unused")
 public class OperationResult extends OperationInformation {
 
 	private static final long serialVersionUID = 772248461493438644L;
@@ -76,7 +77,8 @@ public class OperationResult extends OperationInformation {
 	protected Status status = Status.NOT_EXECUTED;
 	protected Value result = null;
 	protected Value object = null;
-	protected Throwable exc = null;
+	protected String excClassName = null;
+	protected String excMessage = null;
 
 	public OperationResult() {
 		super(KEY);
@@ -88,7 +90,8 @@ public class OperationResult extends OperationInformation {
 		status = other.status;
 		object = other.object;
 		result = other.result;
-		exc = other.exc;
+		excClassName = other.excClassName;
+		excMessage = other.excMessage;
 	}
 
 	/**
@@ -107,7 +110,6 @@ public class OperationResult extends OperationInformation {
 		status = Status.POSTCONDITION_ERROR;
 	}
 
-	@SuppressWarnings("unused")
 	public void setSuccessful(Object object, Object result, TestCluster cluster) throws ReplayException {
 
 		if(TestFul.DEBUG && status != Status.NOT_EXECUTED)
@@ -118,14 +120,14 @@ public class OperationResult extends OperationInformation {
 		this.result = new Value(result, cluster);
 	}
 
-	@SuppressWarnings("unused")
 	public void setExceptional(Throwable exc, Object object, TestCluster cluster) throws ReplayException {
 
 		if(TestFul.DEBUG && status != Status.NOT_EXECUTED)
 			Logger.getLogger("testful.model").warning(OperationResult.class.getCanonicalName() + " already set");
 
 		status = Status.EXCEPTIONAL;
-		this.exc = exc;
+		excClassName = exc.getClass().getName();
+		excMessage = exc.getMessage();
 		this.object = new Value(object, cluster);
 	}
 
@@ -141,8 +143,12 @@ public class OperationResult extends OperationInformation {
 		return result;
 	}
 
-	public Throwable getException() {
-		return exc;
+	public String getExcClassName() {
+		return excClassName;
+	}
+
+	public String getExcMessage() {
+		return excMessage;
 	}
 
 	public static void insert(Operation[] ops) {
@@ -168,7 +174,7 @@ public class OperationResult extends OperationInformation {
 		if(status == Status.NOT_EXECUTED) return "Not Executed";
 
 		String ret = status.toString();
-		if(status == Status.EXCEPTIONAL) ret += " " + exc.getClass().getCanonicalName() + ": " + exc.getMessage() + ";";
+		if(status == Status.EXCEPTIONAL) ret += " " + excClassName + ": " + excMessage + ";";
 		if(object != null) ret += " object: " + object + ";";
 		if(result != null) ret += " result: " + result + ";";
 		return ret;
@@ -406,8 +412,9 @@ public class OperationResult extends OperationInformation {
 		public void setExceptional(Throwable exc, Object object, TestCluster cluster) throws ReplayException {
 			if(status != Status.EXCEPTIONAL) throw new OperationVerifierException(status, Status.EXCEPTIONAL);
 
-			Throwable thisExc = this.exc;
-			if(!thisExc.getClass().equals(exc.getClass()) || !thisExc.getMessage().equals(exc.getMessage())) throw new OperationVerifierException(thisExc, exc);
+			if(!excClassName.equals(exc.getClass().getName())) throw new OperationVerifierException(excClassName, exc.getClass().getName());
+			if(excMessage == null && exc.getMessage() != null) throw new OperationVerifierException(excMessage, exc.getMessage());
+			if(excMessage != null && !excMessage.equals(exc.getMessage())) throw new OperationVerifierException(excMessage, exc.getMessage());
 
 			this.object.check(new Value(object, cluster));
 		}
@@ -447,7 +454,7 @@ public class OperationResult extends OperationInformation {
 			super("Operation Verifier: expected " + expected + ", actual: " + actual);
 		}
 
-		public OperationVerifierException(Throwable expected, Throwable actual) {
+		public OperationVerifierException(String expected, String actual) {
 			super("Operation Verifier: operation termiated with a wrong exception. Expected " + expected + ", actual: " + actual);
 		}
 	}

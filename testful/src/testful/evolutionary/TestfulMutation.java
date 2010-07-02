@@ -19,6 +19,8 @@
 package testful.evolutionary;
 
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import jmetal.base.Solution;
 import jmetal.base.operator.mutation.Mutation;
@@ -28,7 +30,8 @@ import testful.model.Operation;
 import testful.model.ReferenceFactory;
 import testful.model.Test;
 import testful.model.TestCluster;
-import testful.model.TestSplitter;
+import testful.model.transformation.Splitter;
+import testful.model.transformation.SimplifierDynamic;
 import ec.util.MersenneTwisterFast;
 
 /**
@@ -36,6 +39,8 @@ import ec.util.MersenneTwisterFast;
  * @author matteo
  */
 public class TestfulMutation extends Mutation<Operation> {
+
+	private static final Logger logger = Logger.getLogger("testful.evolutionary");
 
 	private TestfulProblem problem;
 	public TestfulMutation(TestfulProblem problem) {
@@ -71,25 +76,34 @@ public class TestfulMutation extends Mutation<Operation> {
 		}
 
 		if(probSimplify > 0 && random.nextBoolean(probSimplify)) {
-			// remove all useless operations
-			Test t = TestSplitter.splitAndMerge(problem.getTest(repr));
+			try {
+				Test test = problem.getTest(repr);
 
-			repr.clear();
-			for(Operation operation : t.getTest())
-				repr.add(operation);
+				// remove all useless operations
+				test = SimplifierDynamic.singleton.perform(problem.getFinder(), test);
+				test = Splitter.splitAndMerge(test);
 
-		} else {
-			for(int i = 0; i < repr.size(); i++)
-				if(random.nextBoolean(probability)) {
+				repr.clear();
+				for(Operation operation : test.getTest())
+					repr.add(operation);
 
-					if(random.nextBoolean(probRemove)) {
-						repr.remove(random.nextInt(repr.size()));
-						i--;
-					} else {
-						repr.add(random.nextInt(repr.size()), Operation.randomlyGenerate(cluster, refFactory, random));
-						i++;
-					}
+				return;
+			} catch (Exception e) {
+				logger.log(Level.FINE, "Problem during mutation: " + e.getMessage(), e);
+			}
+		}
+
+		for(int i = 0; i < repr.size(); i++) {
+			if(random.nextBoolean(probability)) {
+
+				if(random.nextBoolean(probRemove)) {
+					repr.remove(random.nextInt(repr.size()));
+					i--;
+				} else {
+					repr.add(random.nextInt(repr.size()), Operation.randomlyGenerate(cluster, refFactory, random));
+					i++;
 				}
+			}
 		}
 	}
 }
