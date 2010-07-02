@@ -21,8 +21,10 @@ package testful.runner;
 import java.io.File;
 import java.net.URL;
 
+import testful.ConfigCut;
 import testful.ConfigProject;
 import testful.GenericTestCase;
+import testful.model.TestCluster;
 
 /**
  * Tests the class finder
@@ -113,5 +115,26 @@ public class ClassFinderTestCase extends GenericTestCase {
 		} catch (ClassNotFoundException e) {
 			fail(e.getMessage());
 		}
+	}
+
+	public void testInnerClass() throws Exception {
+		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
+		config.setCut("test.model.cluster.testInnerClass.Container");
+
+		TestfulClassLoader classLoader = new TestfulClassLoader(getFinder());
+		TestCluster tc = new TestCluster(classLoader, config);
+
+		tc.clearCache();
+		tc.setClassLoader(classLoader);
+
+		assertEquals(2, tc.getCluster().length);
+
+		assertNotNull(tc.getCluster(0).toJavaClass());
+		assertEquals("test.model.cluster.testInnerClass.Container", tc.getCluster()[0].toString());
+		assertEquals("test.model.cluster.testInnerClass.Container", tc.getCluster()[0].toJavaClass().getName());
+
+		assertNotNull(tc.getCluster(1).toJavaClass());
+		assertEquals("test.model.cluster.testInnerClass.Container$Contained", tc.getCluster()[1].toString());
+		assertEquals("test.model.cluster.testInnerClass.Container$Contained", tc.getCluster()[1].toJavaClass().getName());
 	}
 }

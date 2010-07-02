@@ -1,17 +1,17 @@
 /*
  * TestFul - http://code.google.com/p/testful/
  * Copyright (C) 2010  Matteo Miraz
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -40,8 +40,8 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import testful.TestFul;
 import testful.IConfigProject.LogLevel;
+import testful.TestFul;
 
 public class Launcher {
 
@@ -201,12 +201,12 @@ public class Launcher {
 
 		} catch(CmdLineException e) {
 			System.err.println(e.getMessage());
-			System.err.println("java " + Launcher.class.getCanonicalName() + " [options...] arguments...");
+			System.err.println("java " + Launcher.class.getName() + " [options...] arguments...");
 			parser.printUsage(System.err);
 			System.err.println();
 
 			// print option sample. This is useful some time
-			System.err.println("   Example: java " + Launcher.class.getCanonicalName() + parser.printExample(org.kohsuke.args4j.ExampleMode.REQUIRED));
+			System.err.println("   Example: java " + Launcher.class.getName() + parser.printExample(org.kohsuke.args4j.ExampleMode.REQUIRED));
 
 			System.exit(1);
 		}

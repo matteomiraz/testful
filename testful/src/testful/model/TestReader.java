@@ -96,7 +96,7 @@ public abstract class TestReader {
 			else if(read instanceof TestCoverage) read(getBaseFileName(fileName), (TestCoverage) read);
 			else if(read instanceof Test[]) read(getBaseFileName(fileName), (Test[]) read);
 			else if(read instanceof Test) read(getBaseFileName(fileName), (Test) read);
-			else getLogger().warning("Read an unknown object: " + read.getClass().getCanonicalName());
+			else getLogger().warning("Read an unknown object: " + read.getClass().getName());
 		}
 	}
 

@@ -184,8 +184,8 @@ public class Reorganizer implements TestTransformation {
 		public int compare(Operation o1, Operation o2) {
 			if(o1 == o2) return 0;
 
-			String name1 = o1.getClass().getCanonicalName();
-			String name2 = o2.getClass().getCanonicalName();
+			String name1 = o1.getClass().getName();
+			String name2 = o2.getClass().getName();
 			int cmp = name1.compareTo(name2);
 			if(cmp != 0) return cmp;
 

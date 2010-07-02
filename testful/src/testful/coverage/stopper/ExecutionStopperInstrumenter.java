@@ -52,8 +52,8 @@ public class ExecutionStopperInstrumenter implements UnifiedInstrumentator {
 
 	private static final SootMethodRef checkRef;
 	static {
-		Scene.v().loadClassAndSupport(TestStoppedException.class.getCanonicalName());
-		SootClass stoppedException = Scene.v().getSootClass(TestStoppedException.class.getCanonicalName());
+		Scene.v().loadClassAndSupport(TestStoppedException.class.getName());
+		SootClass stoppedException = Scene.v().getSootClass(TestStoppedException.class.getName());
 		checkRef = stoppedException.getMethodByName("check").makeRef();
 	}
 

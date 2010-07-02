@@ -215,7 +215,7 @@ public class XmlClass {
 			final Class<?>[] params = meth.getParameterTypes();
 			final String[] paramsString = new String[params.length];
 			for (int i = 0; i < params.length; i++)
-				paramsString[i] = params[i].getCanonicalName();
+				paramsString[i] = params[i].getName();
 
 			for (XmlMethod xmlMeth : method) {
 				if (!xmlMeth.getName().equals(methodName))

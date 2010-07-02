@@ -33,7 +33,7 @@ public class TestClusterTestCase extends GenericTestCase {
 
 	public void testArrayList() throws Exception {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
-		config.setCut(ArrayList.class.getCanonicalName());
+		config.setCut(ArrayList.class.getName());
 
 		TestCluster tc = new TestCluster(new TestfulClassLoader(getFinder()), config);
 

@@ -58,7 +58,7 @@ public final class PrimitiveClazz extends Clazz {
 			if(Short.class == c) return ShortClass;
 			if(Short.TYPE == c) return ShortType;
 
-			logger.warning("Cannot find the primitive type of " + c.getCanonicalName());
+			logger.warning("Cannot find the primitive type of " + c.getName());
 			return null;
 		}
 
@@ -367,7 +367,7 @@ public final class PrimitiveClazz extends Clazz {
 
 		if(object instanceof Boolean) return ((Boolean) object).booleanValue();
 
-		logger.warning("Cannot perform the conversion for type: " + object.getClass().getCanonicalName());
+		logger.warning("Cannot perform the conversion for type: " + object.getClass().getName());
 		return null;
 	}
 

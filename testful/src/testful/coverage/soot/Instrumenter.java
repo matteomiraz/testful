@@ -224,8 +224,8 @@ public class Instrumenter {
 		public static final SootClass throwableClass;
 
 		static {
-			Scene.v().loadClassAndSupport(Throwable.class.getCanonicalName());
-			throwableClass = Scene.v().getSootClass(Throwable.class.getCanonicalName());
+			Scene.v().loadClassAndSupport(Throwable.class.getName());
+			throwableClass = Scene.v().getSootClass(Throwable.class.getName());
 		}
 
 		public TestfulInstrumenter(UnifiedInstrumentator ... instrumenters) {

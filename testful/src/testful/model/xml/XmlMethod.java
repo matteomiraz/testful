@@ -207,7 +207,7 @@ public class XmlMethod implements Comparable<XmlMethod> {
 		if(!Modifier.isPublic(meth.getModifiers())) return null;
 
 		// skip Object's methods
-		if(meth.getDeclaringClass().getCanonicalName().equals("java.lang.Object"))
+		if(meth.getDeclaringClass().getName().equals("java.lang.Object"))
 			return null;
 
 		// skip methods with arrays

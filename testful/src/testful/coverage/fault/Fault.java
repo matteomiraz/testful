@@ -59,7 +59,7 @@ public class Fault implements Serializable {
 	 */
 	public Fault(FaultyExecutionException exc, String targetClassName) {
 		message = exc.getMessage();
-		exceptionName = exc.getClass().getCanonicalName();
+		exceptionName = exc.getClass().getName();
 		stackTrace = processStackTrace(exc, targetClassName);
 
 		Throwable cause = exc.getCause();
@@ -69,7 +69,7 @@ public class Fault implements Serializable {
 			causeExceptionName = null;
 		} else {
 			causeMessage= cause.getMessage();
-			causeExceptionName = cause.getClass().getCanonicalName();
+			causeExceptionName = cause.getClass().getName();
 		}
 
 		hashCode =

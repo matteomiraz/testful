@@ -75,10 +75,10 @@ public class FaultTestCase extends GenericTestCase {
 		assertNotNull(fault);
 
 		assertEquals("java.lang.NullPointerException: message", fault.getMessage());
-		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getName());
 
 		assertEquals("message", fault.getCauseMessage());
-		assertEquals(fault.getCauseExceptionName(), NullPointerException.class.getCanonicalName());
+		assertEquals(fault.getCauseExceptionName(), NullPointerException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
 		assertEquals("test.coverage.Fault.a1(Fault.java)", fault.getStackTrace()[0].toString());
@@ -134,10 +134,10 @@ public class FaultTestCase extends GenericTestCase {
 		assertNotNull(fault);
 
 		assertEquals("java.lang.NullPointerException: message", fault.getMessage());
-		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getName());
 
 		assertEquals("message", fault.getCauseMessage());
-		assertEquals(fault.getCauseExceptionName(), NullPointerException.class.getCanonicalName());
+		assertEquals(fault.getCauseExceptionName(), NullPointerException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
 		assertEquals("test.coverage.Fault.b(Fault.java)", fault.getStackTrace()[0].toString());
@@ -169,10 +169,10 @@ public class FaultTestCase extends GenericTestCase {
 		assertNotNull(fault);
 
 		assertEquals("java.lang.ArithmeticException: message", fault.getMessage());
-		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getName());
 
 		assertEquals("message", fault.getCauseMessage());
-		assertEquals(fault.getCauseExceptionName(), ArithmeticException.class.getCanonicalName());
+		assertEquals(fault.getCauseExceptionName(), ArithmeticException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
 		assertEquals("test.coverage.Fault.c(Fault.java)", fault.getStackTrace()[0].toString());
@@ -226,7 +226,7 @@ public class FaultTestCase extends GenericTestCase {
 		assertNotNull(fault);
 
 		assertEquals("test.coverage.MyException", fault.getMessage());
-		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getName());
 
 		assertEquals(null, fault.getCauseMessage());
 		assertEquals(fault.getCauseExceptionName(), "test.coverage.MyException");

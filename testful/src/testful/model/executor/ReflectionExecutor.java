@@ -160,7 +160,7 @@ public class ReflectionExecutor implements Executor {
 					else if(op instanceof CreateObject) createObject((CreateObject) op);
 					else if(op instanceof Invoke) invoke((Invoke) op);
 					else if(op instanceof ResetRepository) reset((ResetRepository) op);
-					else logger.warning("Unknown operation: " + op.getClass().getCanonicalName() + " - " + op);
+					else logger.warning("Unknown operation: " + op.getClass().getName() + " - " + op);
 
 					nValid++;
 
@@ -330,7 +330,7 @@ public class ReflectionExecutor implements Executor {
 				throw exc;
 			}
 
-			FaultTracker.singleton.process(exc, cons.getExceptionTypes(), initargs, opRes, cons.getDeclaringClass().getCanonicalName());
+			FaultTracker.singleton.process(exc, cons.getExceptionTypes(), initargs, opRes, cons.getDeclaringClass().getName());
 
 			// a valid exception is thrown
 			if(opRes != null) opRes.setExceptional(exc, null, cluster);
@@ -437,7 +437,7 @@ public class ReflectionExecutor implements Executor {
 				throw exc;
 			}
 
-			FaultTracker.singleton.process(exc, m.getExceptionTypes(), args, opRes, m.getDeclaringClass().getCanonicalName());
+			FaultTracker.singleton.process(exc, m.getExceptionTypes(), args, opRes, m.getDeclaringClass().getName());
 
 			// a valid exception is thrown
 			if(opRes != null) opRes.setExceptional(exc, baseObject, cluster);

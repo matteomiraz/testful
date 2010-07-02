@@ -180,7 +180,7 @@ public class AssignPrimitive extends Operation {
 				return new AssignPrimitive(refFactory.getReference(c, random), getShort(random));
 			}
 
-		if(c.getClassName().equals(String.class.getCanonicalName())) return new AssignPrimitive(refFactory.getReference(c, random), getString(random));
+		if(c.getClassName().equals("java.lang.String")) return new AssignPrimitive(refFactory.getReference(c, random), getString(random));
 
 		return null;
 	}

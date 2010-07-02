@@ -111,12 +111,12 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 	private static final SootMethod setConditionTargetDistance3;
 
 	static {
-		Scene.v().loadClassAndSupport(Exception.class.getCanonicalName());
-		exceptionClass = Scene.v().getSootClass(Exception.class.getCanonicalName());
-		Scene.v().loadClassAndSupport(RuntimeException.class.getCanonicalName());
-		runtimeExceptionClass = Scene.v().getSootClass(RuntimeException.class.getCanonicalName());
+		Scene.v().loadClassAndSupport(Exception.class.getName());
+		exceptionClass = Scene.v().getSootClass(Exception.class.getName());
+		Scene.v().loadClassAndSupport(RuntimeException.class.getName());
+		runtimeExceptionClass = Scene.v().getSootClass(RuntimeException.class.getName());
 
-		final String TRACKER = TrackerWhiteBox.class.getCanonicalName();
+		final String TRACKER = TrackerWhiteBox.class.getName();
 		Scene.v().loadClassAndSupport(TRACKER);
 		trackerClass = Scene.v().getSootClass(TRACKER);
 		trackerSingleton = trackerClass.getMethodByName("getTracker");
@@ -323,7 +323,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			else if(op instanceof ExitMonitorStmt)
 				; // nothing to do
 			else
-				logger.warning("cannot analyze " + op + " (" + op.getClass().getCanonicalName() + ")");
+				logger.warning("cannot analyze " + op + " (" + op.getClass().getName() + ")");
 		}
 
 		public void process(Chain<Unit> newUnits, AssignStmt u) {
@@ -358,7 +358,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			DataUse use2 = null;
 
 			if(!(u.getCondition() instanceof ConditionExpr)) {
-				logger.warning("Unknown condition: " + u.getCondition() + " (" + u.getCondition().getClass().getCanonicalName() + ")");
+				logger.warning("Unknown condition: " + u.getCondition() + " (" + u.getCondition().getClass().getName() + ")");
 				current = null;
 				return;
 			}
@@ -453,7 +453,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance3.makeRef(), localTmpDouble1, localTmpDouble2)));
 
-				} else logger.warning("Unknown operand type: " + type + " (" + type.getClass().getCanonicalName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getCanonicalName() + ")");
+				} else logger.warning("Unknown operand type: " + type + " (" + type.getClass().getName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getName() + ")");
 
 				newUnits.add(Jimple.v().newGotoStmt(after));
 
@@ -506,7 +506,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance3.makeRef(), localTmpDouble1, localTmpDouble2)));
 
-				} else logger.warning("Unknown operand type: " + type + " (" + type.getClass().getCanonicalName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getCanonicalName() + ")");
+				} else logger.warning("Unknown operand type: " + type + " (" + type.getClass().getName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getName() + ")");
 
 				newUnits.add(Jimple.v().newGotoStmt(after));
 			}

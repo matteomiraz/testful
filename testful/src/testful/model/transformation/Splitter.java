@@ -436,7 +436,7 @@ public class Splitter {
 		else if(op instanceof CreateObject) analyze((CreateObject) op);
 		else if(op instanceof Invoke) analyze((Invoke) op);
 		else if(op instanceof ResetRepository) analyze((ResetRepository) op);
-		else logger.warning("Unknown operation: " + op.getClass().getCanonicalName() + " - " + op);
+		else logger.warning("Unknown operation: " + op.getClass().getName() + " - " + op);
 
 		if(logger.isLoggable(Level.FINEST)) logger.finest(toString());
 	}
