@@ -107,7 +107,19 @@ public class Fault implements Serializable {
 		}
 
 		// remove last elements in the stack (if they belongs to testful)
-		while(base < n && stackTrace[base].getClassName().startsWith("testful.")) base++;
+		while(base < n && (
+				stackTrace[base].getClassName().startsWith("testful.")) ||
+				(base+ 1 < n && stackTrace[base+ 1].getClassName().startsWith("testful.")) ||
+				(base+ 2 < n && stackTrace[base+ 2].getClassName().startsWith("testful.")) ||
+				(base+ 3 < n && stackTrace[base+ 3].getClassName().startsWith("testful.")) ||
+				(base+ 4 < n && stackTrace[base+ 4].getClassName().startsWith("testful.")) ||
+				(base+ 5 < n && stackTrace[base+ 5].getClassName().startsWith("testful.")) ||
+				(base+ 6 < n && stackTrace[base+ 6].getClassName().startsWith("testful.")) ||
+				(base+ 7 < n && stackTrace[base+ 7].getClassName().startsWith("testful.")) ||
+				(base+ 8 < n && stackTrace[base+ 8].getClassName().startsWith("testful.")) ||
+				(base+ 9 < n && stackTrace[base+ 9].getClassName().startsWith("testful.")) ||
+				(base+10 < n && stackTrace[base+10].getClassName().startsWith("testful.")))
+			base++;
 
 		StackTraceElement[] pruned = new StackTraceElement[n - base];
 		for(int i = base; i < n; i++)

@@ -291,10 +291,6 @@ public class StopperTestCase extends GenericTestCase {
 		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getName());
 		assertEquals(fault.getCauseExceptionName(), "java.lang.StackOverflowError");
 
-		for (int i = 0; i < fault.getStackTrace().length; i++) {
-			System.err.printf("%4d  %s\n", i, fault.getStackTrace()[i]);
-		}
-
 		final StackTraceElement[] stackTrace = fault.getStackTrace();
 		assertEquals(3, fault.getStackTrace().length);
 		assertEquals(" --  recursion.end  -- ()", stackTrace[0].toString());
