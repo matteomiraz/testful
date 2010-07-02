@@ -18,6 +18,8 @@
 
 package testful.model;
 
+import java.util.ArrayList;
+
 import testful.ConfigCut;
 import testful.GenericTestCase;
 import testful.model.TestCluster.MissingClassException;
@@ -28,6 +30,32 @@ import testful.runner.TestfulClassLoader;
  * @author matteo
  */
 public class TestClusterTestCase extends GenericTestCase {
+
+	public void testArrayList() throws Exception {
+		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
+		config.setCut(ArrayList.class.getCanonicalName());
+
+		TestCluster tc = new TestCluster(new TestfulClassLoader(getFinder()), config);
+
+		assertEquals(8, tc.getClusterSize());
+		assertEquals("java.lang.Integer", tc.getCluster(0).toString());
+		assertEquals("java.lang.Object", tc.getCluster(1).toString());
+		assertEquals("java.lang.String", tc.getCluster(2).toString());
+		assertEquals("java.util.ArrayList", tc.getCluster(3).toString());
+		assertEquals("java.util.Collection", tc.getCluster(4).toString());
+		assertEquals("java.util.Iterator", tc.getCluster(5).toString());
+		assertEquals("java.util.List", tc.getCluster(6).toString());
+		assertEquals("java.util.ListIterator", tc.getCluster(7).toString());
+
+		Clazz obj = tc.getCluster(1);
+		assertEquals(0, obj.getMethods().length);
+
+		Clazz iter = tc.getCluster(5);
+		assertEquals(3, iter.getMethods().length);
+		assertEquals("hasNext()", iter.getMethods()[0].toString());
+		assertEquals("next()", iter.getMethods()[1].toString());
+		assertEquals("remove()", iter.getMethods()[2].toString());
+	}
 
 	public void test01() throws Exception {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());

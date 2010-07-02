@@ -85,9 +85,7 @@ public class XmlClass {
 				return null;
 			}
 
-			if(className.startsWith("java.") || className.startsWith("javax.") || className.startsWith("sun."))
-				logger.log(Level.FINE, "No description for " + className + ": " + e.getCause());
-			else
+			if(!className.startsWith("java.") && !className.startsWith("javax.") && !className.startsWith("sun."))
 				logger.log(Level.WARNING, "Cannot parse XML descriptor of class " + className + ": " + e.getCause());
 
 			return create(clazz);
@@ -102,11 +100,14 @@ public class XmlClass {
 	public static XmlClass create(Class<?> c) {
 		XmlClass xmlClass = testful.model.xml.ObjectFactory.factory.createClass();
 
-		// add the return type to the test cluster
+		for(Constructor<?> cns : c.getConstructors())
+			xmlClass.addConstructor(XmlConstructor.create(cns));
+
 		for (Method meth : c.getMethods()) {
 			final Class<?> returnType = meth.getReturnType();
 			final XmlMethod xmlMeth = xmlClass.getMethod(meth);
 
+			// add the return type to the test cluster
 			if(xmlMeth != null && !xmlMeth.isSkip()
 					&& !returnType.isArray() // ISSUE #1: if you need array support, vote here: http://code.google.com/p/testful/issues/detail?id=1
 					&& !returnType.equals(c)
@@ -115,13 +116,9 @@ public class XmlClass {
 				if(LOG_FINE) logger.fine("Including " + returnType.getName() + " in the test cluster");
 				xmlClass.getCluster().add(returnType.getName());
 			}
+
+			xmlClass.addMethod(xmlMeth);
 		}
-
-		for(Constructor<?> cns : c.getConstructors())
-			xmlClass.addConstructor(XmlConstructor.create(cns));
-
-		for(Method meth : c.getMethods())
-			xmlClass.addMethod(XmlMethod.create(meth));
 
 		return xmlClass;
 	}

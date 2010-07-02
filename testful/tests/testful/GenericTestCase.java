@@ -124,6 +124,12 @@ public abstract class GenericTestCase extends TestCase {
 
 	//------------------------- Utility methods ------------------------------
 
+	public static <T> void createArrayAssertions(T[] a, String var) {
+		System.err.println("assertEquals(" + a.length + ", " + var + ".length);");
+		for (int i = 0; i < a.length; i++)
+			System.err.println("assertEquals(\"" + a[i].toString() + "\", " + var  + "[" + i + "].toString());");
+	}
+
 	public static Test createRandomTest(String cut, int lenght, long seed) throws RemoteException, ClassNotFoundException, TestfulException {
 		MersenneTwisterFast random = new MersenneTwisterFast(seed);
 
