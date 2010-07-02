@@ -226,14 +226,28 @@ public class XmlMethod implements Comparable<XmlMethod> {
 		xmeth.setName(meth.getName());
 		if(Modifier.isStatic(meth.getModifiers())) xmeth.setKind(Kind.STATIC);
 		else {
-			if(meth.getName().startsWith("get") && meth.getParameterTypes().length == 0) {
+			final String methName = meth.getName();
+			final Class<?>[] methParam = meth.getParameterTypes();
+
+			if(methName.startsWith("get") && methParam.length == 0) {
 				// getter without any parameter
+
 				if(meth.getReturnType().isPrimitive()) xmeth.setKind(Kind.OBSERVER);
 				else xmeth.setKind(Kind.PURE);
 
-			} else {
+			} else if(methParam.length == 0 && (methName.equals("toString") || methName.equals("hashCode"))) {
+				// user-defined toString & hashCode
+
+				if(meth.getDeclaringClass().getName().equals("java.lang.Object")) xmeth.setKind(Kind.PURE);
+				else xmeth.setKind(Kind.OBSERVER);
+
+			} else if(methName.equals("equals")) {
+				// method equals should not have any side-effect!
+				xmeth.setKind(Kind.PURE);
+
+			} else
 				xmeth.setKind(Kind.MUTATOR);
-			}
+
 		}
 
 		for(Class<?> p : meth.getParameterTypes())
