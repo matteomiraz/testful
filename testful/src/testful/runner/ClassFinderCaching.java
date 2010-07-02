@@ -103,7 +103,7 @@ public class ClassFinderCaching implements ClassFinder {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 
-		sb.append(this.getClass().getCanonicalName()).append("\n");
+		sb.append(this.getClass().getName()).append("\n");
 		for(Entry<String, Cacheable<byte[]>> entry : cache.entrySet())
 			sb.append("  ").append(entry.getKey()).append(" (").append(entry.getValue().getElement().length).append(" byte)\n");
 

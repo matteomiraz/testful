@@ -254,7 +254,7 @@ public class TrackerWhiteBox extends Tracker {
 			if(o != null) {
 				if(o instanceof DataAccess) def.add((DataAccess) o);
 				else if(o.getClass().isArray()) addAll(def, (Object[]) o);
-				else logger.fine("DefExposer: unknown element: " + o + " - " + o.getClass().getCanonicalName());
+				else logger.fine("DefExposer: unknown element: " + o + " - " + o.getClass().getName());
 			}
 		}
 	}

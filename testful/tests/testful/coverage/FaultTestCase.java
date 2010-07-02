@@ -75,10 +75,10 @@ public class FaultTestCase extends GenericTestCase {
 		assertNotNull(fault);
 
 		assertEquals("java.lang.NullPointerException: message", fault.getMessage());
-		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getName());
 
 		assertEquals("message", fault.getCauseMessage());
-		assertEquals(fault.getCauseExceptionName(), NullPointerException.class.getCanonicalName());
+		assertEquals(fault.getCauseExceptionName(), NullPointerException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
 		assertEquals("test.coverage.Fault.a1(Fault.java)", fault.getStackTrace()[0].toString());
@@ -134,10 +134,10 @@ public class FaultTestCase extends GenericTestCase {
 		assertNotNull(fault);
 
 		assertEquals("java.lang.NullPointerException: message", fault.getMessage());
-		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getName());
 
 		assertEquals("message", fault.getCauseMessage());
-		assertEquals(fault.getCauseExceptionName(), NullPointerException.class.getCanonicalName());
+		assertEquals(fault.getCauseExceptionName(), NullPointerException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
 		assertEquals("test.coverage.Fault.b(Fault.java)", fault.getStackTrace()[0].toString());
@@ -169,10 +169,10 @@ public class FaultTestCase extends GenericTestCase {
 		assertNotNull(fault);
 
 		assertEquals("java.lang.ArithmeticException: message", fault.getMessage());
-		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getName());
 
 		assertEquals("message", fault.getCauseMessage());
-		assertEquals(fault.getCauseExceptionName(), ArithmeticException.class.getCanonicalName());
+		assertEquals(fault.getCauseExceptionName(), ArithmeticException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
 		assertEquals("test.coverage.Fault.c(Fault.java)", fault.getStackTrace()[0].toString());
@@ -226,7 +226,7 @@ public class FaultTestCase extends GenericTestCase {
 		assertNotNull(fault);
 
 		assertEquals("test.coverage.MyException", fault.getMessage());
-		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getName());
 
 		assertEquals(null, fault.getCauseMessage());
 		assertEquals(fault.getCauseExceptionName(), "test.coverage.MyException");
@@ -312,7 +312,6 @@ public class FaultTestCase extends GenericTestCase {
 				new StackTraceElement(" --  recursion", "end  -- ", "", -1),
 				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 3),
 				new StackTraceElement(" -- recursion", "start -- ", "", -1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
 		};
 
 		assertEquals(expected.length, f.getStackTrace().length);
@@ -341,7 +340,6 @@ public class FaultTestCase extends GenericTestCase {
 				new StackTraceElement(" --  recursion", "end  -- ", "", -1),
 				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 3),
 				new StackTraceElement(" -- recursion", "start -- ", "", -1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
 		};
 
 		assertEquals(expected.length, f.getStackTrace().length);
@@ -433,7 +431,6 @@ public class FaultTestCase extends GenericTestCase {
 				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
 				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
 				new StackTraceElement(" -- recursion", "start -- ", "", -1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0)
 		};
 
 		assertEquals(expected.length, f.getStackTrace().length);
@@ -469,7 +466,6 @@ public class FaultTestCase extends GenericTestCase {
 				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
 				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
 				new StackTraceElement(" -- recursion", "start -- ", "", -1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0)
 		};
 
 		assertEquals(expected.length, f.getStackTrace().length);
@@ -481,18 +477,52 @@ public class FaultTestCase extends GenericTestCase {
 		StackOverflowError exc = new StackOverflowError();
 		exc.setStackTrace(new StackTraceElement[] {
 
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "fourthMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "thirdMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "secondMethod", "Foo", 2),
 				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
 
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "fourthMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "thirdMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "secondMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+
+				new StackTraceElement("foo.bar.ClassName", "fourthMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "thirdMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "secondMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+
+				new StackTraceElement("foo.bar.ClassName", "fourthMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "thirdMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "secondMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+
+				new StackTraceElement("foo.bar.ClassName", "fourthMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "thirdMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "secondMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+
+				new StackTraceElement("foo.bar.ClassName", "fourthMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "thirdMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "secondMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+
+				new StackTraceElement("foo.bar.ClassName", "fourthMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "thirdMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "secondMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+
+				new StackTraceElement("foo.bar.ClassName", "fourthMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "thirdMethod", "Foo", 1),
+
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 5),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
 				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
 				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
 				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
@@ -508,15 +538,11 @@ public class FaultTestCase extends GenericTestCase {
 
 		StackTraceElement[] expected = new StackTraceElement[] {
 				new StackTraceElement(" --  recursion", "end  -- ", "", -1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "fourthMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "thirdMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "secondMethod", "Foo", 2),
 				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
 				new StackTraceElement(" -- recursion", "start -- ", "", -1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
 		};
 
 		assertEquals(expected.length, f.getStackTrace().length);

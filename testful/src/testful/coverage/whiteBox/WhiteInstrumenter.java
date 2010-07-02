@@ -153,22 +153,22 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 	private static final SootMethod arrayAssignmentDef;
 
 	static {
-		Scene.v().loadClassAndSupport(Object.class.getCanonicalName());
-		objectClass  = Scene.v().getSootClass(Object.class.getCanonicalName());
+		Scene.v().loadClassAndSupport(Object.class.getName());
+		objectClass  = Scene.v().getSootClass(Object.class.getName());
 		objectType = objectClass.getType();
 
-		Scene.v().loadClassAndSupport(Exception.class.getCanonicalName());
-		exceptionClass = Scene.v().getSootClass(Exception.class.getCanonicalName());
-		Scene.v().loadClassAndSupport(RuntimeException.class.getCanonicalName());
-		runtimeExceptionClass = Scene.v().getSootClass(RuntimeException.class.getCanonicalName());
+		Scene.v().loadClassAndSupport(Exception.class.getName());
+		exceptionClass = Scene.v().getSootClass(Exception.class.getName());
+		Scene.v().loadClassAndSupport(RuntimeException.class.getName());
+		runtimeExceptionClass = Scene.v().getSootClass(RuntimeException.class.getName());
 
-		Scene.v().loadClassAndSupport(DefExposer.class.getCanonicalName());
-		defExposerClass = Scene.v().getSootClass(DefExposer.class.getCanonicalName());
+		Scene.v().loadClassAndSupport(DefExposer.class.getName());
+		defExposerClass = Scene.v().getSootClass(DefExposer.class.getName());
 
-		Scene.v().loadClassAndSupport(DataAccess.class.getCanonicalName());
-		dataAccess = Scene.v().getSootClass(DataAccess.class.getCanonicalName());
+		Scene.v().loadClassAndSupport(DataAccess.class.getName());
+		dataAccess = Scene.v().getSootClass(DataAccess.class.getName());
 
-		final String TRACKER = TrackerWhiteBox.class.getCanonicalName();
+		final String TRACKER = TrackerWhiteBox.class.getName();
 		Scene.v().loadClassAndSupport(TRACKER);
 		trackerClass = Scene.v().getSootClass(TRACKER);
 		trackerSingleton = trackerClass.getMethodByName("getTracker");
@@ -243,7 +243,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 	public void preprocess(SootClass sClass) {
 		// def-use preprocessing: adding tracking fields and __testful_get_defs__ method
 
-		if(sClass.implementsInterface(DefExposer.class.getCanonicalName())) return;
+		if(sClass.implementsInterface(DefExposer.class.getName())) return;
 
 		sClass.addInterface(defExposerClass);
 
@@ -607,7 +607,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			else if(op instanceof ExitMonitorStmt)
 				; // nothing to do
 			else
-				logger.warning("cannot analyze " + op + " (" + op.getClass().getCanonicalName() + ")");
+				logger.warning("cannot analyze " + op + " (" + op.getClass().getName() + ")");
 		}
 
 		public void process(Chain<Unit> newUnits, AssignStmt u) {
@@ -647,7 +647,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			DataUse use2 = null;
 
 			if(!(u.getCondition() instanceof ConditionExpr)) {
-				logger.warning("Unknown condition: " + u.getCondition() + " (" + u.getCondition().getClass().getCanonicalName() + ")");
+				logger.warning("Unknown condition: " + u.getCondition() + " (" + u.getCondition().getClass().getName() + ")");
 				current = null;
 				return;
 			}
@@ -742,7 +742,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance3.makeRef(), localTmpDouble1, localTmpDouble2)));
 
-				} else logger.warning("Unknown operand type: " + type + " (" + type.getClass().getCanonicalName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getCanonicalName() + ")");
+				} else logger.warning("Unknown operand type: " + type + " (" + type.getClass().getName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getName() + ")");
 
 				newUnits.add(Jimple.v().newGotoStmt(after));
 
@@ -795,7 +795,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance3.makeRef(), localTmpDouble1, localTmpDouble2)));
 
-				} else logger.warning("Unknown operand type: " + type + " (" + type.getClass().getCanonicalName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getCanonicalName() + ")");
+				} else logger.warning("Unknown operand type: " + type + " (" + type.getClass().getName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getName() + ")");
 
 				newUnits.add(Jimple.v().newGotoStmt(after));
 			}
@@ -1312,7 +1312,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					newUnits.add(Jimple.v().newAssignStmt(dataDef, Jimple.v().newCastExpr(tmpObject, dataDef.getType())));
 
 				} else {
-					logger.warning("Unable to handle array definition: " + def + " - " + def.getClass().getCanonicalName());
+					logger.warning("Unable to handle array definition: " + def + " - " + def.getClass().getName());
 
 					return;
 				}
@@ -1322,7 +1322,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				dataDef = localDataAccessD;
 				newUnits.add(Jimple.v().newAssignStmt(localDataAccessD, Jimple.v().newVirtualInvokeExpr(localTracker, getDataAccess.makeRef(), IntConstant.v(defId))));
 			} else {
-				logger.warning("Unable to handle: " + def + " - " + def.getClass().getCanonicalName());
+				logger.warning("Unable to handle: " + def + " - " + def.getClass().getName());
 				return;
 			}
 

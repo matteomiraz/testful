@@ -110,22 +110,22 @@ public class MutatorFunctions implements UnifiedInstrumentator {
 		Scene.v().loadClassAndSupport(Utils.CONFIG_CLASS);
 		config = Scene.v().getSootClass(Utils.CONFIG_CLASS);
 
-		Scene.v().loadClassAndSupport(Utils.class.getCanonicalName());
-		SootClass utils = Scene.v().getSootClass(Utils.class.getCanonicalName());
+		Scene.v().loadClassAndSupport(Utils.class.getName());
+		SootClass utils = Scene.v().getSootClass(Utils.class.getName());
 		absZpushInt = utils.getMethod("zpush", Arrays.asList(new Object[] { IntType.v() }));
 		absZpushLong = utils.getMethod("zpush", Arrays.asList(new Object[] { LongType.v() }));
 		absZpushFloat = utils.getMethod("zpush", Arrays.asList(new Object[] { FloatType.v() }));
 		absZpushDouble = utils.getMethod("zpush", Arrays.asList(new Object[] { DoubleType.v() }));
 
-		Scene.v().loadClassAndSupport(Math.class.getCanonicalName());
-		SootClass mathAbs = Scene.v().getSootClass(Math.class.getCanonicalName());
+		Scene.v().loadClassAndSupport(Math.class.getName());
+		SootClass mathAbs = Scene.v().getSootClass(Math.class.getName());
 		mathAbsInt = mathAbs.getMethod("abs", Arrays.asList(new Object[] { IntType.v() }));
 		mathAbsLong = mathAbs.getMethod("abs", Arrays.asList(new Object[] { LongType.v() }));
 		mathAbsFloat = mathAbs.getMethod("abs", Arrays.asList(new Object[] { FloatType.v() }));
 		mathAbsDouble = mathAbs.getMethod("abs", Arrays.asList(new Object[] { DoubleType.v() }));
 
-		Scene.v().loadClassAndSupport(BitSet.class.getCanonicalName());
-		bitSet = Scene.v().getSootClass(BitSet.class.getCanonicalName());
+		Scene.v().loadClassAndSupport(BitSet.class.getName());
+		bitSet = Scene.v().getSootClass(BitSet.class.getName());
 		bitSet_set = bitSet.getMethod("set", Arrays.asList(new Object[] { IntType.v() }));
 		bitSet_constructor = bitSet.getMethod(SootMethod.constructorName, new ArrayList<Object>());
 	}
@@ -475,7 +475,7 @@ public class MutatorFunctions implements UnifiedInstrumentator {
 			else if(assign.getLeftOp().getType() instanceof LongType) newUnits.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newStaticInvokeExpr(mathAbsLong.makeRef(), tmp)));
 			else if(assign.getLeftOp().getType() instanceof FloatType) newUnits.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newStaticInvokeExpr(mathAbsFloat.makeRef(), tmp)));
 			else if(assign.getLeftOp().getType() instanceof DoubleType) newUnits.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newStaticInvokeExpr(mathAbsDouble.makeRef(), tmp)));
-			else System.err.println("ABS (ABS) errror: unknown type " + ((Local) assign.getLeftOp()).getType().getClass().getCanonicalName());
+			else System.err.println("ABS (ABS) errror: unknown type " + ((Local) assign.getLeftOp()).getType().getClass().getName());
 			cloned = (AssignStmt) assign.clone();
 			cloned.setRightOp(tmp);
 			newUnits.add(cloned);
@@ -500,7 +500,7 @@ public class MutatorFunctions implements UnifiedInstrumentator {
 			else if(assign.getLeftOp().getType() instanceof LongType) newUnits.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newStaticInvokeExpr(mathAbsLong.makeRef(), tmp)));
 			else if(assign.getLeftOp().getType() instanceof FloatType) newUnits.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newStaticInvokeExpr(mathAbsFloat.makeRef(), tmp)));
 			else if(assign.getLeftOp().getType() instanceof DoubleType) newUnits.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newStaticInvokeExpr(mathAbsDouble.makeRef(), tmp)));
-			else System.err.println("ABS (NABS) errror: unknown type " + ((Local) assign.getLeftOp()).getType().getClass().getCanonicalName());
+			else System.err.println("ABS (NABS) errror: unknown type " + ((Local) assign.getLeftOp()).getType().getClass().getName());
 			newUnits.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newNegExpr(tmp)));
 			cloned = (AssignStmt) assign.clone();
 			cloned.setRightOp(tmp);
@@ -526,7 +526,7 @@ public class MutatorFunctions implements UnifiedInstrumentator {
 			else if(assign.getLeftOp().getType() instanceof LongType) newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newStaticInvokeExpr(absZpushLong.makeRef(), tmp)));
 			else if(assign.getLeftOp().getType() instanceof FloatType) newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newStaticInvokeExpr(absZpushFloat.makeRef(), tmp)));
 			else if(assign.getLeftOp().getType() instanceof DoubleType) newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newStaticInvokeExpr(absZpushDouble.makeRef(), tmp)));
-			else System.err.println("ABS (ZPUSH) errror: unknown type " + ((Local) assign.getLeftOp()).getType().getClass().getCanonicalName());
+			else System.err.println("ABS (ZPUSH) errror: unknown type " + ((Local) assign.getLeftOp()).getType().getClass().getName());
 			cloned = (AssignStmt) assign.clone();
 			cloned.setRightOp(tmp);
 			newUnits.add(cloned);
@@ -913,7 +913,7 @@ public class MutatorFunctions implements UnifiedInstrumentator {
 			uoi(sClass, meth, unit, mutations, newUnits, tmpLocal, after, newArrayExpr.getSizeBox(), newArrayExpr.getSize().getType());
 
 		} else if(!(value instanceof StringConstant || value instanceof NewExpr || value instanceof NullConstant || value instanceof InstanceOfExpr)) {
-			System.err.println("unexpected value: " + value + " (" + value.getClass().getCanonicalName() + ") in unit: " + unit);
+			System.err.println("unexpected value: " + value + " (" + value.getClass().getName() + ") in unit: " + unit);
 		}
 
 		valueBox.setValue(value);
@@ -1085,7 +1085,7 @@ public class MutatorFunctions implements UnifiedInstrumentator {
 				return new NumericConstant[] { DoubleConstant.v(-1 * doubleConst.value), DoubleConstant.v(doubleConst.value + 1), DoubleConstant.v(doubleConst.value - 1), DoubleConstant.v(0) };
 		}
 
-		System.err.println("unknown type of constant: " + constant + " (" + constant.getClass().getCanonicalName() + ")");
+		System.err.println("unknown type of constant: " + constant + " (" + constant.getClass().getName() + ")");
 		return new NumericConstant[0];
 	}
 }

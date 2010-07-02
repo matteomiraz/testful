@@ -22,7 +22,6 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
-import testful.TestFul;
 import testful.model.faults.FaultyExecutionException;
 
 /**
@@ -60,7 +59,7 @@ public class Fault implements Serializable {
 	 */
 	public Fault(FaultyExecutionException exc, String targetClassName) {
 		message = exc.getMessage();
-		exceptionName = exc.getClass().getCanonicalName();
+		exceptionName = exc.getClass().getName();
 		stackTrace = processStackTrace(exc, targetClassName);
 
 		Throwable cause = exc.getCause();
@@ -70,7 +69,7 @@ public class Fault implements Serializable {
 			causeExceptionName = null;
 		} else {
 			causeMessage= cause.getMessage();
-			causeExceptionName = cause.getClass().getCanonicalName();
+			causeExceptionName = cause.getClass().getName();
 		}
 
 		hashCode =
@@ -82,10 +81,16 @@ public class Fault implements Serializable {
 	}
 
 	private static StackTraceElement[] processStackTrace(FaultyExecutionException fault, String baseClassName) {
-		final StackTraceElement[] stackTrace = fault.getStackTrace();
-		if(stackTrace.length == 0) {
-			if(TestFul.DEBUG) logger.warning("Empty StackTrace");
-			else logger.fine("Empty StackTrace");
+
+		final StackTraceElement[] stackTrace;
+		if(fault == null) stackTrace = null;
+		else stackTrace = fault.getStackTrace();
+
+		if(stackTrace == null || stackTrace.length == 0) {
+			logger.fine("Empty StackTrace (" + fault + ")");
+
+			// this seems to force the (sun) JVM to fill stack traces (in subsequent throws)!
+			fault.fillInStackTrace();
 
 			return new StackTraceElement[0];
 		}
@@ -112,33 +117,44 @@ public class Fault implements Serializable {
 		if ( fault instanceof testful.coverage.stopper.TestStoppedException ||
 				(fault instanceof testful.coverage.fault.UnexpectedExceptionException && fault.getCause() instanceof java.lang.StackOverflowError)) {
 
-			// for each initial point
-			final int len = pruned.length-1;
-			for (int initial = len; initial > 0 ; initial--) {
+			return simplify(pruned);
+		}
 
-				// for each valid step
-				for(int step = 1; step < MAX_STEP && (initial + 1 - MIN_ITER*step) >= 0; step++) {
+		return pruned;
+	}
 
-					if(checkRecursion(pruned, initial, step)) {
+	/**
+	 * Simplify the stack trace by detecting and removing the recursion
+	 * @param stackTrace the stack trace to simplify
+	 * @return the simplified stack trace (or the original one)
+	 */
+	public static StackTraceElement[] simplify(StackTraceElement[] stackTrace) {
+		// for each initial point
+		final int len = stackTrace.length-1;
+		for (int initial = len; initial > 0 ; initial--) {
 
-						StackTraceElement[] recursion = new StackTraceElement[len-initial + step + 2];
+			// for each valid step
+			for(int step = 1; step < MAX_STEP && (initial + 1 - MIN_ITER*step) >= 0; step++) {
 
-						recursion[0] = new StackTraceElement(" --  recursion", "end  -- ", "", -1);
-						for(int i = 0; i < step; i++)
-							recursion[i+1] = pruned[initial-step+i+1];
-						recursion[step+1] = new StackTraceElement(" -- recursion", "start -- ", "", -1);
+				if(checkRecursion(stackTrace, initial, step)) {
 
-						for(int i = 0; i < len-initial; i++)
-							recursion[step+2+i] = pruned[initial + 1 + i];
+					// We set as first element of the recursion the first in lexicographic order
+					int first = 0;
+					for(int i = 1; i < step; i++)
+						if(stackTrace[initial-i].toString().compareTo(stackTrace[initial-first].toString()) < 0) first = i;
 
-						return recursion;
+					StackTraceElement[] recursion = new StackTraceElement[step + 2];
+					recursion[0] = new StackTraceElement(" --  recursion", "end  -- ", "", -1);
+					for(int i = 0; i < step; i++)
+						recursion[i+1] = stackTrace[(initial-first-step+i+1)];
+					recursion[step+1] = new StackTraceElement(" -- recursion", "start -- ", "", -1);
 
-					}
+					return recursion;
 				}
 			}
 		}
 
-		return pruned;
+		return stackTrace;
 	}
 
 	private static boolean checkRecursion(StackTraceElement[] pruned, int initial, int step) {

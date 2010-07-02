@@ -22,6 +22,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.TestFul;
+import testful.coverage.fault.Fault;
 
 /**
  * Ensure that third-party code terminates within a given threshold.
@@ -102,8 +103,10 @@ public final class Stopper {
 									final Throwable e;
 									if(LOG_FINER) {
 										e = new Exception("Execution status of " + controlled.toString());
-										e.setStackTrace(controlled.getStackTrace());
-									} else e = null;
+										e.setStackTrace(Fault.simplify(controlled.getStackTrace()));
+									} else {
+										e = null;
+									}
 									logger.log(Level.FINE, "Killing controlled thread", e);
 								}
 

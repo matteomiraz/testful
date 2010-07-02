@@ -126,7 +126,7 @@ public class SimplifierDynamic implements TestTransformation {
 						ops.add(o);
 
 					} else {
-						Logger.getLogger("testful.model").warning("Unexpected operation: " + op.getClass().getCanonicalName());
+						Logger.getLogger("testful.model").warning("Unexpected operation: " + op.getClass().getName());
 
 					}
 

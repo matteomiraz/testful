@@ -55,7 +55,7 @@ public class StopperTestCase extends GenericTestCase {
 
 		final Fault fault = faults.faults.iterator().next();
 		assertNotNull(fault);
-		assertEquals(fault.getExceptionName(), TestStoppedException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
 		assertEquals("test.coverage.Stopped.longMethod1(Stopped.java)", fault.getStackTrace()[0].toString());
@@ -79,7 +79,7 @@ public class StopperTestCase extends GenericTestCase {
 
 		final Fault fault = faults.faults.iterator().next();
 		assertNotNull(fault);
-		assertEquals(fault.getExceptionName(), TestStoppedException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
 		assertEquals("test.coverage.Stopped.longMethod1(Stopped.java)", fault.getStackTrace()[0].toString());
@@ -101,7 +101,7 @@ public class StopperTestCase extends GenericTestCase {
 
 		final Fault fault = faults.faults.iterator().next();
 		assertNotNull(fault);
-		assertEquals(fault.getExceptionName(), TestStoppedException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
 		assertEquals("test.coverage.Stopped.longMethod2(Stopped.java)", fault.getStackTrace()[0].toString());
@@ -125,7 +125,7 @@ public class StopperTestCase extends GenericTestCase {
 
 		final Fault fault = faults.faults.iterator().next();
 		assertNotNull(fault);
-		assertEquals(fault.getExceptionName(), TestStoppedException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
 		assertEquals("test.coverage.Stopped.longMethod2(Stopped.java)", fault.getStackTrace()[0].toString());
@@ -147,7 +147,7 @@ public class StopperTestCase extends GenericTestCase {
 
 		final Fault fault = faults.faults.iterator().next();
 		assertNotNull(fault);
-		assertEquals(fault.getExceptionName(), TestStoppedException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
 		assertEquals("test.coverage.Stopped.longMethod3(Stopped.java)", fault.getStackTrace()[0].toString());
@@ -171,7 +171,7 @@ public class StopperTestCase extends GenericTestCase {
 
 		final Fault fault = faults.faults.iterator().next();
 		assertNotNull(fault);
-		assertEquals(fault.getExceptionName(), TestStoppedException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
 		assertEquals("test.coverage.Stopped.longMethod3(Stopped.java)", fault.getStackTrace()[0].toString());
@@ -193,7 +193,7 @@ public class StopperTestCase extends GenericTestCase {
 
 		final Fault fault = faults.faults.iterator().next();
 		assertNotNull(fault);
-		assertEquals(fault.getExceptionName(), TestStoppedException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
 		assertEquals("test.coverage.Stopped.longMethod4(Stopped.java)", fault.getStackTrace()[0].toString());
@@ -217,7 +217,7 @@ public class StopperTestCase extends GenericTestCase {
 
 		final Fault fault = faults.faults.iterator().next();
 		assertNotNull(fault);
-		assertEquals(fault.getExceptionName(), TestStoppedException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
 		assertEquals("test.coverage.Stopped.longMethod4(Stopped.java)", fault.getStackTrace()[0].toString());
@@ -239,7 +239,7 @@ public class StopperTestCase extends GenericTestCase {
 
 		final Fault fault = faults.faults.iterator().next();
 		assertNotNull(fault);
-		assertEquals(fault.getExceptionName(), TestStoppedException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
 		assertEquals("test.coverage.Stopped.longMethod5(Stopped.java)", fault.getStackTrace()[0].toString());
@@ -263,7 +263,7 @@ public class StopperTestCase extends GenericTestCase {
 
 		final Fault fault = faults.faults.iterator().next();
 		assertNotNull(fault);
-		assertEquals(fault.getExceptionName(), TestStoppedException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
 		assertEquals("test.coverage.Stopped.longMethod5(Stopped.java)", fault.getStackTrace()[0].toString());
@@ -288,8 +288,12 @@ public class StopperTestCase extends GenericTestCase {
 
 		final Fault fault = faults.faults.iterator().next();
 		assertNotNull(fault);
-		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getName());
 		assertEquals(fault.getCauseExceptionName(), "java.lang.StackOverflowError");
+
+		for (int i = 0; i < fault.getStackTrace().length; i++) {
+			System.err.printf("%4d  %s\n", i, fault.getStackTrace()[i]);
+		}
 
 		final StackTraceElement[] stackTrace = fault.getStackTrace();
 		assertEquals(3, fault.getStackTrace().length);
@@ -317,7 +321,7 @@ public class StopperTestCase extends GenericTestCase {
 
 		final Fault fault = faults.faults.iterator().next();
 		assertNotNull(fault);
-		assertEquals(fault.getExceptionName(), TestStoppedException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		final StackTraceElement[] stackTrace = fault.getStackTrace();
 		assertEquals(3, fault.getStackTrace().length);
@@ -345,23 +349,15 @@ public class StopperTestCase extends GenericTestCase {
 
 		final Fault fault = faults.faults.iterator().next();
 		assertNotNull(fault);
-		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getName());
 		assertEquals(fault.getCauseExceptionName(), "java.lang.StackOverflowError");
 
 		final StackTraceElement[] stackTrace = fault.getStackTrace();
 		assertEquals(4, fault.getStackTrace().length);
 		assertEquals(" --  recursion.end  -- ()", stackTrace[0].toString());
 
-		// it the StackOverflow is throw, the initial element is not known
-		assertTrue(
-				( // correct order
-						"test.coverage.Stopped.infLoop2(Stopped.java)".equals(stackTrace[1].toString()) &&
-						"test.coverage.Stopped.infLoop(Stopped.java)".equals(stackTrace[2].toString())
-				) || (
-						"test.coverage.Stopped.infLoop(Stopped.java)".equals(stackTrace[1].toString()) &&
-						"test.coverage.Stopped.infLoop2(Stopped.java)".equals(stackTrace[2].toString())
-				)
-		);
+		assertEquals("test.coverage.Stopped.infLoop2(Stopped.java)", stackTrace[1].toString());
+		assertEquals("test.coverage.Stopped.infLoop(Stopped.java)", stackTrace[2].toString());
 
 		assertEquals(" -- recursion.start -- ()", stackTrace[3].toString());
 	}
@@ -385,7 +381,7 @@ public class StopperTestCase extends GenericTestCase {
 
 		final Fault fault = faults.faults.iterator().next();
 		assertNotNull(fault);
-		assertEquals(fault.getExceptionName(), TestStoppedException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		final StackTraceElement[] stackTrace = fault.getStackTrace();
 		assertEquals(4, fault.getStackTrace().length);
@@ -414,29 +410,16 @@ public class StopperTestCase extends GenericTestCase {
 
 		final Fault fault = faults.faults.iterator().next();
 		assertNotNull(fault);
-		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getName());
 		assertEquals(fault.getCauseExceptionName(), "java.lang.StackOverflowError");
 
 		final StackTraceElement[] stackTrace = fault.getStackTrace();
 		assertEquals(5, fault.getStackTrace().length);
 		assertEquals(" --  recursion.end  -- ()", stackTrace[0].toString());
 
-		// it the StackOverflow is throw, the initial element is not known
-		assertTrue(
-				( // correct order
-						"test.coverage.Stopped.infLoop2(Stopped.java)".equals(stackTrace[1].toString()) &&
-						"test.coverage.Stopped.infLoop3(Stopped.java)".equals(stackTrace[2].toString()) &&
-						"test.coverage.Stopped.infLoop(Stopped.java)".equals(stackTrace[3].toString())
-				) || (
-						"test.coverage.Stopped.infLoop2(Stopped.java)".equals(stackTrace[2].toString()) &&
-						"test.coverage.Stopped.infLoop3(Stopped.java)".equals(stackTrace[3].toString()) &&
-						"test.coverage.Stopped.infLoop(Stopped.java)".equals(stackTrace[1].toString())
-				) || (
-						"test.coverage.Stopped.infLoop2(Stopped.java)".equals(stackTrace[3].toString()) &&
-						"test.coverage.Stopped.infLoop3(Stopped.java)".equals(stackTrace[1].toString()) &&
-						"test.coverage.Stopped.infLoop(Stopped.java)".equals(stackTrace[2].toString())
-				)
-		);
+		assertEquals("test.coverage.Stopped.infLoop2(Stopped.java)", stackTrace[1].toString());
+		assertEquals("test.coverage.Stopped.infLoop3(Stopped.java)", stackTrace[2].toString());
+		assertEquals("test.coverage.Stopped.infLoop(Stopped.java)" , stackTrace[3].toString());
 
 		assertEquals(" -- recursion.start -- ()", stackTrace[4].toString());
 	}
@@ -460,7 +443,7 @@ public class StopperTestCase extends GenericTestCase {
 
 		final Fault fault = faults.faults.iterator().next();
 		assertNotNull(fault);
-		assertEquals(fault.getExceptionName(), TestStoppedException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		final StackTraceElement[] stackTrace = fault.getStackTrace();
 		assertEquals(5, fault.getStackTrace().length);
@@ -490,37 +473,17 @@ public class StopperTestCase extends GenericTestCase {
 
 		final Fault fault = faults.faults.iterator().next();
 		assertNotNull(fault);
-		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getName());
 		assertEquals(fault.getCauseExceptionName(), "java.lang.StackOverflowError");
 
 		final StackTraceElement[] stackTrace = fault.getStackTrace();
 		assertEquals(6, fault.getStackTrace().length);
 		assertEquals(" --  recursion.end  -- ()", stackTrace[0].toString());
 
-		// it the StackOverflow is throw, the initial element is not known
-		assertTrue(
-				( // correct order
-						"test.coverage.Stopped.infLoop2(Stopped.java)".equals(stackTrace[1].toString()) &&
-						"test.coverage.Stopped.infLoop3(Stopped.java)".equals(stackTrace[2].toString()) &&
-						"test.coverage.Stopped.infLoop4(Stopped.java)".equals(stackTrace[3].toString()) &&
-						"test.coverage.Stopped.infLoop(Stopped.java)" .equals(stackTrace[4].toString())
-				) || (
-						"test.coverage.Stopped.infLoop2(Stopped.java)".equals(stackTrace[2].toString()) &&
-						"test.coverage.Stopped.infLoop3(Stopped.java)".equals(stackTrace[3].toString()) &&
-						"test.coverage.Stopped.infLoop4(Stopped.java)".equals(stackTrace[4].toString()) &&
-						"test.coverage.Stopped.infLoop(Stopped.java)" .equals(stackTrace[1].toString())
-				) || (
-						"test.coverage.Stopped.infLoop2(Stopped.java)".equals(stackTrace[3].toString()) &&
-						"test.coverage.Stopped.infLoop3(Stopped.java)".equals(stackTrace[4].toString()) &&
-						"test.coverage.Stopped.infLoop4(Stopped.java)".equals(stackTrace[1].toString()) &&
-						"test.coverage.Stopped.infLoop(Stopped.java)" .equals(stackTrace[2].toString())
-				) || (
-						"test.coverage.Stopped.infLoop2(Stopped.java)".equals(stackTrace[4].toString()) &&
-						"test.coverage.Stopped.infLoop3(Stopped.java)".equals(stackTrace[1].toString()) &&
-						"test.coverage.Stopped.infLoop4(Stopped.java)".equals(stackTrace[2].toString()) &&
-						"test.coverage.Stopped.infLoop(Stopped.java)" .equals(stackTrace[3].toString())
-				)
-		);
+		assertEquals("test.coverage.Stopped.infLoop2(Stopped.java)", stackTrace[1].toString());
+		assertEquals("test.coverage.Stopped.infLoop3(Stopped.java)", stackTrace[2].toString());
+		assertEquals("test.coverage.Stopped.infLoop4(Stopped.java)", stackTrace[3].toString());
+		assertEquals("test.coverage.Stopped.infLoop(Stopped.java)" , stackTrace[4].toString());
 
 		assertEquals(" -- recursion.start -- ()", stackTrace[5].toString());
 	}
@@ -544,7 +507,7 @@ public class StopperTestCase extends GenericTestCase {
 
 		final Fault fault = faults.faults.iterator().next();
 		assertNotNull(fault);
-		assertEquals(fault.getExceptionName(), TestStoppedException.class.getCanonicalName());
+		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		final StackTraceElement[] stackTrace = fault.getStackTrace();
 		assertEquals(6, fault.getStackTrace().length);

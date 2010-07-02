@@ -458,7 +458,6 @@ public class TestCluster implements Serializable {
 		if(field.getType().getName().startsWith("testful.")) return true;
 		if(field.getDeclaringClass().getName().startsWith("testful.")) return true;
 
-
 		return false;
 	}
 

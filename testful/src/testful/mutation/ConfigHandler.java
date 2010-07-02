@@ -11,8 +11,8 @@ import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import soot.IntType;
@@ -44,7 +44,7 @@ import soot.util.JasminOutputStream;
  * </ul>
  * </li>
  * </ul>
- * 
+ *
  * @author matteo
  */
 public class ConfigHandler {
@@ -125,8 +125,8 @@ public class ConfigHandler {
 			config.addField(new SootField(Utils.getCurField(sClass.getName()), IntType.v(), Modifier.PUBLIC | Modifier.STATIC | Modifier.VOLATILE));
 
 			if(track) {
-				Scene.v().loadClassAndSupport(BitSet.class.getCanonicalName());
-				SootClass bitSet = Scene.v().getSootClass(BitSet.class.getCanonicalName());
+				Scene.v().loadClassAndSupport(BitSet.class.getName());
+				SootClass bitSet = Scene.v().getSootClass(BitSet.class.getName());
 				sClass.addField(new SootField(Utils.EXECUTED_MUTANTS, bitSet.getType(), Modifier.PUBLIC | Modifier.STATIC));
 			}
 

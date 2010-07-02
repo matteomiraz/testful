@@ -113,7 +113,7 @@ public class OperationResult extends OperationInformation {
 	public void setSuccessful(Object object, Object result, TestCluster cluster) throws ReplayException {
 
 		if(TestFul.DEBUG && status != Status.NOT_EXECUTED)
-			Logger.getLogger("testful.model").warning(OperationResult.class.getCanonicalName() + " already set");
+			Logger.getLogger("testful.model").warning(OperationResult.class.getName() + " already set");
 
 		status = Status.SUCCESSFUL;
 		this.object = new Value(object, cluster);
@@ -123,7 +123,7 @@ public class OperationResult extends OperationInformation {
 	public void setExceptional(Throwable exc, Object object, TestCluster cluster) throws ReplayException {
 
 		if(TestFul.DEBUG && status != Status.NOT_EXECUTED)
-			Logger.getLogger("testful.model").warning(OperationResult.class.getCanonicalName() + " already set");
+			Logger.getLogger("testful.model").warning(OperationResult.class.getName() + " already set");
 
 		status = Status.EXCEPTIONAL;
 		excClassName = exc.getClass().getName();
@@ -197,7 +197,7 @@ public class OperationResult extends OperationInformation {
 
 			} else {
 				isNull = false;
-				type = o.getClass().getCanonicalName();
+				type = o.getClass().getName();
 				object = saveObject(o);
 
 				observers = new HashMap<String, Serializable>();

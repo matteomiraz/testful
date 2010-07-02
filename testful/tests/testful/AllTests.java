@@ -81,7 +81,7 @@ public class AllTests {
 			}
 		} else {
 
-			System.err.println("Unknown class: " + test.getClass().getCanonicalName() + ": " + test);
+			System.err.println("Unknown class: " + test.getClass().getName() + ": " + test);
 			return null;
 		}
 	}

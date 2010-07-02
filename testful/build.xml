@@ -122,7 +122,7 @@
           target: version
          - - - - - - - - - - - - - - - - - -->
     <target name="version">
-		<exec executable="hg" output="${build.classes}/version.txt">
+		<exec executable="hg" output="${build.classes}/revision.txt">
 			<arg value="id"/>
 			<arg value="-i"/>
 		</exec>
@@ -182,7 +182,7 @@
 				<attribute name="Class-Path" value="." />
 			</manifest>
 			<fileset dir="${build.classes}">
-				<include name="version.txt"/>
+				<include name="revision.txt"/>
 
 				<include name="testful/coverage/**/*.class" />
 				<include name="testful/model/**/*.class" />
@@ -221,7 +221,7 @@
 				<attribute name="Class-Path" value="." />
 			</manifest>
 			<fileset dir="${build.classes}">
-				<include name="version.txt"/>
+				<include name="revision.txt"/>
 				<patternset refid="runner" />
 			</fileset>
 		</jar>
@@ -239,7 +239,7 @@
 				<attribute name="Class-Path" value="." />
 			</manifest>
 			<fileset dir="${build.classes}">
-				<include name="version.txt"/>
+				<include name="revision.txt"/>
 				<patternset refid="runner" />
 				<include name="jmetal/base/Variable.class" />
 				<include name="testful/model/**/*.class" />
@@ -261,7 +261,7 @@
 			</manifest>
 			<fileset dir="${build.classes}">
 				<patternset>
-					<include name="version.txt"/>
+					<include name="revision.txt"/>
 					<patternset refid="auto" />
 					<include name="testful/random/**/*.class" />
 				</patternset>
@@ -305,7 +305,7 @@
 			</manifest>
 			<fileset dir="${build}">
 				<patternset>
-					<include name="version.txt"/>
+					<include name="revision.txt"/>
 					<patternset refid="auto" />
 					<include name="jmetal/base/**/*.class" />
 					<include name="jmetal/util/**/*.class" />

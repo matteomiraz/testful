@@ -52,6 +52,8 @@ public class TestFul {
 
 	private static final String VERSION = "1.2 alpha";
 
+	private static final String REVISION = readRevision();
+
 	public static void parseCommandLine(IConfig config, String[] args, Class<?> launcher, String name) {
 
 		CmdLineParser parser = new CmdLineParser(config);
@@ -81,7 +83,7 @@ public class TestFul {
 
 	public static void printHeader(String module) {
 
-		System.out.println("Testful v. " + VERSION + readInternalVersion() + (module != null ? " - " + module : "") + " - http://code.google.com/p/testful");
+		System.out.println("Testful v. " + VERSION + REVISION + (module != null ? " - " + module : "") + " - http://code.google.com/p/testful");
 		System.out.println("Copyright (c) 2010 - Matteo Miraz");
 		System.out.println("This program comes with ABSOLUTELY NO WARRANTY.");
 		System.out.println("This is free software, and you are welcome to redistribute it under certain conditions.");
@@ -92,8 +94,8 @@ public class TestFul {
 	/**
 	 * @return
 	 */
-	private static String readInternalVersion() {
-		final InputStream stream = TestFul.class.getResourceAsStream("/version.txt");
+	private static String readRevision() {
+		final InputStream stream = TestFul.class.getResourceAsStream("/revision.txt");
 		if(stream == null) return "";
 
 		BufferedReader reader = null;
@@ -193,6 +195,7 @@ public class TestFul {
 				System.err.println("Cannot log: " + e);
 			}
 
+			logger.config("Testful v. " + VERSION + REVISION);
 		}
 	}
 

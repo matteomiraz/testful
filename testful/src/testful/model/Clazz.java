@@ -67,7 +67,7 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 
 	Clazz(TestCluster cluster, Class<?> type) {
 		javaClass = type;
-		name = type.getCanonicalName();
+		name = type.getName();
 		this.cluster = cluster;
 
 		isAbstract = type.isInterface() || Modifier.isAbstract(type.getModifiers());
