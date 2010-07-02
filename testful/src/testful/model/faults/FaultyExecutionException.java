@@ -46,6 +46,10 @@ public interface FaultyExecutionException extends Serializable {
 	 */
 	void setStackTrace(StackTraceElement[] pruned);
 
+	/**
+	 * @see java.lang.Throwable#fillInStackTrace()
+	 */
+	Throwable fillInStackTrace();
 
 	/**
 	 * @see java.lang.Throwable#getCause()

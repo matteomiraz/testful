@@ -312,7 +312,6 @@ public class FaultTestCase extends GenericTestCase {
 				new StackTraceElement(" --  recursion", "end  -- ", "", -1),
 				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 3),
 				new StackTraceElement(" -- recursion", "start -- ", "", -1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
 		};
 
 		assertEquals(expected.length, f.getStackTrace().length);
@@ -341,7 +340,6 @@ public class FaultTestCase extends GenericTestCase {
 				new StackTraceElement(" --  recursion", "end  -- ", "", -1),
 				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 3),
 				new StackTraceElement(" -- recursion", "start -- ", "", -1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
 		};
 
 		assertEquals(expected.length, f.getStackTrace().length);
@@ -433,7 +431,6 @@ public class FaultTestCase extends GenericTestCase {
 				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
 				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
 				new StackTraceElement(" -- recursion", "start -- ", "", -1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0)
 		};
 
 		assertEquals(expected.length, f.getStackTrace().length);
@@ -469,7 +466,6 @@ public class FaultTestCase extends GenericTestCase {
 				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
 				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
 				new StackTraceElement(" -- recursion", "start -- ", "", -1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0)
 		};
 
 		assertEquals(expected.length, f.getStackTrace().length);
@@ -481,18 +477,52 @@ public class FaultTestCase extends GenericTestCase {
 		StackOverflowError exc = new StackOverflowError();
 		exc.setStackTrace(new StackTraceElement[] {
 
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "fourthMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "thirdMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "secondMethod", "Foo", 2),
 				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
 
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "fourthMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "thirdMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "secondMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+
+				new StackTraceElement("foo.bar.ClassName", "fourthMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "thirdMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "secondMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+
+				new StackTraceElement("foo.bar.ClassName", "fourthMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "thirdMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "secondMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+
+				new StackTraceElement("foo.bar.ClassName", "fourthMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "thirdMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "secondMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+
+				new StackTraceElement("foo.bar.ClassName", "fourthMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "thirdMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "secondMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+
+				new StackTraceElement("foo.bar.ClassName", "fourthMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "thirdMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "secondMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+
+				new StackTraceElement("foo.bar.ClassName", "fourthMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "thirdMethod", "Foo", 1),
+
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 5),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
 				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
 				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
 				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
@@ -508,15 +538,11 @@ public class FaultTestCase extends GenericTestCase {
 
 		StackTraceElement[] expected = new StackTraceElement[] {
 				new StackTraceElement(" --  recursion", "end  -- ", "", -1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "fourthMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "thirdMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "secondMethod", "Foo", 2),
 				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
 				new StackTraceElement(" -- recursion", "start -- ", "", -1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
-				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
 		};
 
 		assertEquals(expected.length, f.getStackTrace().length);
