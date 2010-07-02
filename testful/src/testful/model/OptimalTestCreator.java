@@ -55,7 +55,7 @@ public class OptimalTestCreator {
 	 * Updates optimal solutions and combined coverage
 	 * @param test the test with coverage
 	 */
-	public void update(TestCoverage test) {
+	public synchronized void update(TestCoverage test) {
 
 		/** the test cover something more than tests found so far */
 		boolean innovative = false;

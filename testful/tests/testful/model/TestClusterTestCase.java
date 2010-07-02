@@ -57,6 +57,34 @@ public class TestClusterTestCase extends GenericTestCase {
 		assertEquals("remove()", iter.getMethods()[2].toString());
 	}
 
+	/**
+	 * Test the ability to skip constructors and methods'
+	 */
+	public void testRandomIgnore() throws Exception {
+		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
+		config.setCut("java.util.Random");
+
+		TestCluster tc = new TestCluster(new TestfulClassLoader(getFinder()), config);
+
+		assertNotNull(tc.getCut());
+
+		// checking that java.util.Random() is not present, while other constructors are present
+		assertNotNull(tc.getCut().getConstructors());
+		assertEquals(1, tc.getCut().getConstructors().length);
+		assertEquals("java.util.Random(long)", tc.getCut().getConstructors()[0].toString());
+
+		// checking that java.util.Random.nextInt() is not present, while other methods are present
+		assertNotNull(tc.getCut().getMethods());
+		assertEquals(7, tc.getCut().getMethods().length);
+		assertEquals("nextBoolean()", tc.getCut().getMethods()[0].toString());
+		assertEquals("nextDouble()", tc.getCut().getMethods()[1].toString());
+		assertEquals("nextFloat()", tc.getCut().getMethods()[2].toString());
+		assertEquals("nextGaussian()", tc.getCut().getMethods()[3].toString());
+		assertEquals("nextInt()", tc.getCut().getMethods()[4].toString());
+		assertEquals("nextLong()", tc.getCut().getMethods()[5].toString());
+		assertEquals("setSeed(long)", tc.getCut().getMethods()[6].toString());
+	}
+
 	public void test01() throws Exception {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test01.Cut");

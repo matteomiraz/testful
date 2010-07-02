@@ -94,10 +94,12 @@ public class Methodz implements Serializable, Comparable<Methodz> {
 	}
 
 	public Method toMethod() {
-		if(method == null) try {
-			method = clazz.toJavaClass().getMethod(name, Clazz.convert(params));
-		} catch(Exception e) {
-			return null; // never happens
+		if(method == null) {
+			try {
+				method = clazz.toJavaClass().getMethod(name, Clazz.convert(params));
+			} catch(Exception e) {
+				return null; // never happens
+			}
 		}
 		return method;
 	}

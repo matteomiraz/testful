@@ -206,8 +206,7 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 				} else op = Invoke.generate(c, cluster, refFactory, random);
 				if(op != null) return op;
 			} catch(Throwable e) {
-				e.printStackTrace();
-				Logger.getLogger("testful.model").log(Level.WARNING, "Cannot create a random element: " + e, e);
+				Logger.getLogger("testful.model").log(Level.WARNING, "Cannot create a random element: " + e.getMessage(), e);
 			}
 		}
 	}
