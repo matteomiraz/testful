@@ -115,7 +115,7 @@
 	<!-- =================================
           target: build
          ================================= -->
-	<target name="build" depends="build.instrumenter,build.runner,build.testful,build.randomTest" description="Creater executable jars">
+	<target name="build" depends="build.shared,build.instrumenter,build.runner,build.testful,build.randomTest" description="Creater executable jars">
 	</target>
 
 	<!-- - - - - - - - - - - - - - - - - -
@@ -205,6 +205,30 @@
 				<include name="org/kohsuke/args4j/**/*" />
 				<patternset refid="soot" />
 
+			</fileset>
+		</jar>
+	</target>
+
+	<!-- =================================
+          target: build.shared
+         ================================= -->
+	<target name="build.shared" depends="compile" description="Crete jar with shared classes">
+		<mkdir dir="${artifacts}" />
+		<jar destfile="${artifacts}/shared.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Built-By" value="${user.name}" />
+				<attribute name="Class-Path" value="." />
+			</manifest>
+			<fileset dir="${build.classes}">
+				<include name="revision.txt"/>
+
+				<include name="testful/model/faults/FaultyExecutionException.class"/>
+
+				<include name="testful/model/faults/PreconditionViolationException.class"/>
+				<include name="testful/model/faults/PreconditionViolationException$Impl.class"/>
+
+				<include name="testful/model/faults/TestfulInternalException.class"/>
+				<include name="testful/model/faults/TestfulInternalException$Impl.class"/>
 			</fileset>
 		</jar>
 	</target>
