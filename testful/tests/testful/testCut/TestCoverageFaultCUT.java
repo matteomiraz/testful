@@ -39,6 +39,7 @@ public class TestCoverageFaultCUT extends SingleTestCUT {
 	public final Methodz c, c1, c2;
 	public final Methodz d;
 	public final Methodz e, e1;
+	public final Methodz f, f1, f2, f3, f4;
 
 	public TestCoverageFaultCUT() throws Exception {
 		super("test.coverage.Fault");
@@ -71,6 +72,11 @@ public class TestCoverageFaultCUT extends SingleTestCUT {
 		Methodz _d = null;
 		Methodz _e = null;
 		Methodz _e1 = null;
+		Methodz _f = null;
+		Methodz _f1 = null;
+		Methodz _f2 = null;
+		Methodz _f3 = null;
+		Methodz _f4 = null;
 		for(Methodz m : cut.getMethods()) {
 			if(checkMethod(m, "a" , oClazz)) _a  = m;
 			if(checkMethod(m, "a1", oClazz)) _a1 = m;
@@ -83,6 +89,11 @@ public class TestCoverageFaultCUT extends SingleTestCUT {
 			if(checkMethod(m, "d"         )) _d  = m;
 			if(checkMethod(m, "e"         )) _e  = m;
 			if(checkMethod(m, "e1"        )) _e1 = m;
+			if(checkMethod(m, "f"         )) _f  = m;
+			if(checkMethod(m, "f1"        )) _f1 = m;
+			if(checkMethod(m, "f2"        )) _f2 = m;
+			if(checkMethod(m, "f3"        )) _f3 = m;
+			if(checkMethod(m, "f4"        )) _f4 = m;
 		}
 		assertNotNull(_a);
 		assertNotNull(_a1);
@@ -95,10 +106,21 @@ public class TestCoverageFaultCUT extends SingleTestCUT {
 		assertNotNull(_d );
 		assertNotNull(_e );
 		assertNotNull(_e1);
+		assertNotNull(_f );
+		assertNotNull(_f1);
+		assertNotNull(_f2);
+		assertNotNull(_f3);
+		assertNotNull(_f4);
 
 		a  = _a  ;
 		a1 = _a1 ;
 		a2 = _a2 ;
-		b  = _b  ;		b1 = _b1 ;		c  = _c  ;		c1 = _c1 ;		c2 = _c2 ;		d  = _d  ;		e  = _e  ;		e1 = _e1 ;
+		b  = _b  ;		b1 = _b1 ;		c  = _c  ;		c1 = _c1 ;		c2 = _c2 ;		d  = _d  ;		e  = _e  ;
+		e1 = _e1 ;
+		f  = _f  ;
+		f1 = _f1 ;
+		f2 = _f2 ;
+		f3 = _f3 ;
+		f4 = _f4 ;
 	}
 }

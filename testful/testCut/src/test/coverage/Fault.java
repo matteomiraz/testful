@@ -1,6 +1,6 @@
 package test.coverage;
 
-public class Fault {
+public class Fault extends AFault {
 	public Fault() { }
 
 	public void a(Object o) {
@@ -46,4 +46,23 @@ public class Fault {
 	public void e1() throws MyException {
 		throw new MyException();
 	}
+
+	public void f() {
+		throw new MyException();
+	}
+
+	public void f1() throws MyException {
+		throw new MyException();
+	}
+
+	// f2 from AFault
+
+	public void f3() {
+		super.f3();
+	}
+
+	public void f4() throws MyException {
+		super.f4();
+	}
+
 }

@@ -235,6 +235,88 @@ public class FaultTestCase extends GenericTestCase {
 		assertEquals("test.coverage.Fault.e(Fault.java)", fault.getStackTrace()[0].toString());
 	}
 
+	public void testF() throws Exception {
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.f, new Reference[] { } )
+		}));
+
+		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(fCov);
+		assertEquals(1.0f, fCov.getQuality());
+
+		Fault fault = fCov.faults.iterator().next();
+		assertNotNull(fault);
+
+		assertEquals("test.coverage.MyException", fault.getMessage());
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getName());
+
+		assertEquals(null, fault.getCauseMessage());
+		assertEquals(fault.getCauseExceptionName(), "test.coverage.MyException");
+
+		assertEquals(1, fault.getStackTrace().length);
+		assertEquals("test.coverage.Fault.f(Fault.java)", fault.getStackTrace()[0].toString());
+	}
+
+	public void testF1() throws Exception {
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.f1, new Reference[] { } )
+		}));
+
+		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertTrue(fCov == null || fCov.getQuality() == 0);
+	}
+
+	public void testF2() throws Exception {
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.f2, new Reference[] { } )
+		}));
+
+		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertTrue(fCov == null || fCov.getQuality() == 0);
+	}
+
+	public void testF3() throws Exception {
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.f3, new Reference[] { } )
+		}));
+
+		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(fCov);
+		assertEquals(1.0f, fCov.getQuality());
+
+		Fault fault = fCov.faults.iterator().next();
+		assertNotNull(fault);
+
+		assertEquals("test.coverage.MyException", fault.getMessage());
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getName());
+
+		assertEquals(null, fault.getCauseMessage());
+		assertEquals(fault.getCauseExceptionName(), "test.coverage.MyException");
+
+		assertEquals(2, fault.getStackTrace().length);
+		assertEquals("test.coverage.AFault.f3(AFault.java:9)", fault.getStackTrace()[0].toString());
+		assertEquals("test.coverage.Fault.f3(Fault.java)", fault.getStackTrace()[1].toString());
+	}
+
+	public void testF4() throws Exception {
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.f4, new Reference[] { } )
+		}));
+
+		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertTrue(fCov == null || fCov.getQuality() == 0);
+	}
+
 	public void testE1() throws Exception {
 		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
 		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
