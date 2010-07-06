@@ -159,7 +159,7 @@ public class ReflectionExecutor implements Executor {
 					else if(op instanceof AssignConstant) assignConstant((AssignConstant) op);
 					else if(op instanceof CreateObject) createObject((CreateObject) op);
 					else if(op instanceof Invoke) invoke((Invoke) op);
-					else if(op instanceof ResetRepository) reset((ResetRepository) op);
+					else if(op instanceof ResetRepository) reset();
 					else logger.warning("Unknown operation: " + op.getClass().getName() + " - " + op);
 
 					nValid++;
@@ -177,7 +177,9 @@ public class ReflectionExecutor implements Executor {
 
 				} catch(Throwable e) {
 					if (e instanceof TestfulInternalException) {
-						// discard the exception and go ahead
+						// clean the test execution
+						nPre++;
+						reset();
 
 					} else if(e instanceof PreconditionViolationException) {
 						nPre++;
@@ -187,9 +189,7 @@ public class ReflectionExecutor implements Executor {
 						nFaulty++;
 						if(stopOnBug) break;
 
-						// reset the repository
-						for(int i = 0; i < repository.length; i++)
-							repository[i] = null;
+						reset();
 					}
 				} finally {
 					if(maxExecTime != null) {
@@ -273,7 +273,7 @@ public class ReflectionExecutor implements Executor {
 		}
 	}
 
-	private void reset(ResetRepository op) {
+	private void reset() {
 		for(int i = 0; i < repository.length; i++)
 			repository[i] = null;
 	}
@@ -320,6 +320,13 @@ public class ReflectionExecutor implements Executor {
 
 		} catch(InvocationTargetException invocationException) {
 			Throwable exc = invocationException.getTargetException();
+
+			// check for nasty Errors (such as OutOfMemory errors)
+			if(exc instanceof VirtualMachineError && !(exc instanceof StackOverflowError)) {
+				reset(); // early free some memory
+				logger.fine("VirtualMachine Error " + exc + " (" + exc.getClass().getCanonicalName() + ") while executing "  + op);
+				throw new TestfulInternalException.Impl(exc);
+			}
 
 			// Internal error
 			if(exc instanceof TestfulInternalException) throw exc;
@@ -427,6 +434,13 @@ public class ReflectionExecutor implements Executor {
 
 		} catch(InvocationTargetException invocationException) {
 			Throwable exc = invocationException.getTargetException();
+
+			// check for nasty Errors (such as OutOfMemory errors)
+			if(exc instanceof VirtualMachineError && !(exc instanceof StackOverflowError)) {
+				reset(); // early free some memory
+				logger.fine("VirtualMachine Error " + exc + " (" + exc.getClass().getCanonicalName() + ") while executing "  + op);
+				throw new TestfulInternalException.Impl(exc);
+			}
 
 			// Internal error
 			if(exc instanceof TestfulInternalException) throw exc;

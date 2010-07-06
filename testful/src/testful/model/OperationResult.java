@@ -438,7 +438,7 @@ public class OperationResult extends OperationInformation {
 	 * This exception signals that the class has a different behavior from the one registered during the initial test.
 	 * @author matteo
 	 */
-	public static abstract class ReplayException extends Throwable implements FaultyExecutionException {
+	public static abstract class ReplayException extends RuntimeException implements FaultyExecutionException {
 		private static final long serialVersionUID = -2557677122227176278L;
 
 		public ReplayException(String msg) {
