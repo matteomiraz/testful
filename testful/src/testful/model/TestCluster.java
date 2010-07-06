@@ -450,7 +450,9 @@ public class TestCluster implements Serializable {
 	private boolean skipField(Field field) {
 
 		if((field.getModifiers() & (Modifier.STATIC | Modifier.PUBLIC)) == 0) return true;
+		// ISSUE #1: if you need array support, vote here: http://code.google.com/p/testful/issues/detail?id=1
 		if(field.getType().isArray()) return true;
+		if(field.getType().isEnum()) return true;
 		if(field.getName().startsWith("__")) return true;
 
 		return false;

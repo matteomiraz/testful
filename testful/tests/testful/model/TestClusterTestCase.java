@@ -85,6 +85,28 @@ public class TestClusterTestCase extends GenericTestCase {
 		assertEquals("setSeed(long)", tc.getCut().getMethods()[6].toString());
 	}
 
+	public void testEnumIgnore() throws Exception {
+		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
+		config.setCut("test.model.cluster.testEnum.Normal");
+
+		TestCluster tc = new TestCluster(new TestfulClassLoader(getFinder()), config);
+
+		assertEquals(3, tc.getClasses().length);
+		assertEquals("java.lang.Integer", tc.getClasses()[0].toString());
+		assertEquals("java.lang.Short", tc.getClasses()[1].toString());
+		assertEquals("test.model.cluster.testEnum.Normal", tc.getClasses()[2].toString());
+
+		assertEquals(2, tc.getCut().getConstructors().length);
+		assertEquals("test.model.cluster.testEnum.Normal(short)", tc.getCut().getConstructors()[0].toString());
+		assertEquals("test.model.cluster.testEnum.Normal(short, int)", tc.getCut().getConstructors()[1].toString());
+
+		assertEquals(4, tc.getCut().getMethods().length);
+		assertEquals("testful_bar(short)", tc.getCut().getMethods()[0].toString());
+		assertEquals("testful_bar(short, int)", tc.getCut().getMethods()[1].toString());
+		assertEquals("testful_foo(short)", tc.getCut().getMethods()[2].toString());
+		assertEquals("testful_foo(short, int)", tc.getCut().getMethods()[3].toString());
+	}
+
 	public void test01() throws Exception {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test01.Cut");

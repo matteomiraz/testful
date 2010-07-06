@@ -110,6 +110,7 @@ public class XmlClass {
 			// add the return type to the test cluster
 			if(xmlMeth != null && !xmlMeth.isSkip()
 					&& !returnType.isArray() // ISSUE #1: if you need array support, vote here: http://code.google.com/p/testful/issues/detail?id=1
+					&& !returnType.isEnum()  // another bug: enum support!
 					&& !returnType.equals(c)
 					&& returnType != Void.TYPE && !returnType.isPrimitive()) {
 

@@ -121,10 +121,17 @@ public class XmlConstructor implements Comparable<XmlConstructor> {
 	public static XmlConstructor create(Constructor<?> cns) {
 		if(!Modifier.isPublic(cns.getModifiers())) return null;
 
-		// skip constructors with arrays
+		// skip constructors with unsupported elements
 		for (Class<?> params : cns.getParameterTypes()) {
+			// ISSUE #1: if you need array support, vote here: http://code.google.com/p/testful/issues/detail?id=1
 			if(params.isArray()) {
 				logger.info("Skipping " + cns + ": has an array as parameter. If you are interested in using this constructor, vote for issue #1: http://code.google.com/p/testful/issues/detail?id=1");
+				return null;
+			}
+
+			// another rfe: enum support!
+			if(params.isEnum()) {
+				logger.info("Skipping " + cns + ": has an enum as parameter.");
 				return null;
 			}
 		}

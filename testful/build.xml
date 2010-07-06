@@ -365,7 +365,7 @@
          - - - - - - - - - - - - - - - - - -->
 	<target name="test.cut.compile" depends="build.instrumenter">
 		<mkdir dir="${testCut.bin}" />
-		<javac srcdir="${testCut.source}" destdir="${testCut.bin}" classpath="${artifacts}/instrumenter.jar" optimize="false" debug="true" source="1.4" target="1.4"/>
+		<javac srcdir="${testCut.source}" destdir="${testCut.bin}" classpath="${artifacts}/instrumenter.jar" optimize="false" debug="true" source="1.5" target="1.5"/>
 	</target>
 
 	<!-- - - - - - - - - - - - - - - - - -
