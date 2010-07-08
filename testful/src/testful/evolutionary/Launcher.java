@@ -161,6 +161,9 @@ public class Launcher {
 			throw new TestfulException(e);
 		}
 
+		if(logger.isLoggable(Level.FINE))
+			logger.fine("Optimal Coverage " + testfulProblem.getOptimal().getCoverage());
+
 		/* simplify tests */
 		final TestSuiteReducer reducer = new TestSuiteReducer(testfulProblem.getFinder(), testfulProblem.getData());
 		for (TestCoverage t : testfulProblem.getOptimalTests())
