@@ -22,7 +22,6 @@ import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -452,7 +451,10 @@ public class ReflectionExecutor implements Executor {
 				throw exc;
 			}
 
-			FaultTracker.singleton.process(exc, m.getExceptionTypes(), args, opRes, (baseObject == null ? m.getDeclaringClass().getName() : baseObject.getClass().getName()));
+			if(baseObject == null)
+				FaultTracker.singleton.process(exc, m.getExceptionTypes(), args, opRes, m.getDeclaringClass().getName());
+			else
+				FaultTracker.singleton.process(exc, m.getName(), m.getParameterTypes(), args, opRes, baseObject.getClass());
 
 			// a valid exception is thrown
 			if(opRes != null) opRes.setExceptional(exc, baseObject, cluster);

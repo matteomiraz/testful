@@ -290,20 +290,7 @@ public class FaultTestCase extends GenericTestCase {
 
 		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
 		assertNotNull(fCov);
-		assertEquals(1.0f, fCov.getQuality());
-
-		Fault fault = fCov.faults.iterator().next();
-		assertNotNull(fault);
-
-		assertEquals("test.coverage.MyException", fault.getMessage());
-		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getName());
-
-		assertEquals(null, fault.getCauseMessage());
-		assertEquals(fault.getCauseExceptionName(), "test.coverage.MyException");
-
-		assertEquals(2, fault.getStackTrace().length);
-		assertEquals("test.coverage.AFault.f3(AFault.java:9)", fault.getStackTrace()[0].toString());
-		assertEquals("test.coverage.Fault.f3(Fault.java)", fault.getStackTrace()[1].toString());
+		assertTrue(fCov == null || fCov.getQuality() == 0);
 	}
 
 	public void testF4() throws Exception {
@@ -655,7 +642,7 @@ public class FaultTestCase extends GenericTestCase {
 		assertEquals(fault.getCauseExceptionName(), "java.lang.NullPointerException");
 
 		assertEquals(1, fault.getStackTrace().length);
-		assertEquals("test.coverage.UFault$WrongIter.next(UFault.java:38)", fault.getStackTrace()[0].toString());
+		assertEquals("test.coverage.Fault$WrongIter.next(Fault.java:80)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testInnerClassError2() throws Exception {
@@ -681,7 +668,7 @@ public class FaultTestCase extends GenericTestCase {
 		assertEquals(fault.getCauseExceptionName(), "java.lang.NullPointerException");
 
 		assertEquals(1, fault.getStackTrace().length);
-		assertEquals("test.coverage.Fault$1.next(Fault.java:99)", fault.getStackTrace()[0].toString());
+		assertEquals("test.coverage.Fault$1.next(Fault.java:102)", fault.getStackTrace()[0].toString());
 	}
 
 }

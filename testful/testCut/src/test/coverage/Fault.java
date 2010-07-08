@@ -86,7 +86,10 @@ public class Fault extends AFault {
 		}
 	}
 
-	public Iterator<Object> g() { return new UFault.WrongIter(); }
+	public Iterator<Object> g() {
+		return new WrongIter();
+	}
+
 	public Iterator<Object> g1() {
 		return new Iterator<Object>() {
 			@Override
