@@ -1,3 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <ns2:class xmlns:ns2="http://testful.sourceforge.net/schema/1.2/testful.xsd">
+	<cluster>
+		<class>java.util.Iterator</class>
+	</cluster>
 </ns2:class>

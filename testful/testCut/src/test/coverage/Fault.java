@@ -1,5 +1,8 @@
 package test.coverage;
 
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
 public class Fault extends AFault {
 	public Fault() { }
 
@@ -63,6 +66,44 @@ public class Fault extends AFault {
 
 	public void f4() throws MyException {
 		super.f4();
+	}
+
+	final static class WrongIter implements Iterator<Object> {
+
+		@Override
+		public boolean hasNext() {
+			throw new NullPointerException();
+		}
+
+		@Override
+		public Object next() throws NoSuchElementException {
+			throw new NullPointerException();
+		}
+
+		@Override
+		public void remove() throws UnsupportedOperationException, IllegalStateException {
+			throw new NullPointerException();
+		}
+	}
+
+	public Iterator<Object> g() { return new UFault.WrongIter(); }
+	public Iterator<Object> g1() {
+		return new Iterator<Object>() {
+			@Override
+			public boolean hasNext() {
+				throw new NullPointerException();
+			}
+
+			@Override
+			public Object next() throws NoSuchElementException {
+				throw new NullPointerException();
+			}
+
+			@Override
+			public void remove() throws UnsupportedOperationException, IllegalStateException {
+				throw new NullPointerException();
+			}
+		};
 	}
 
 }
