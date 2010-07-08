@@ -73,11 +73,9 @@ public class Fault implements Serializable {
 		}
 
 		hashCode =
-			31*31*31*31*exceptionName.hashCode() +
-			31*31*31*((message == null) ? 0 : message.hashCode()) +
-			31*31*Arrays.hashCode(stackTrace) +
-			31*((causeExceptionName == null) ? 0 : causeExceptionName.hashCode()) +
-			((causeMessage == null) ? 0 : causeMessage.hashCode());
+			31*31*31*Arrays.hashCode(stackTrace) +
+			31*31*exceptionName.hashCode() +
+			31*((causeExceptionName == null) ? 0 : causeExceptionName.hashCode());
 	}
 
 	private static StackTraceElement[] processStackTrace(FaultyExecutionException fault, String baseClassName) {
@@ -224,19 +222,11 @@ public class Fault implements Serializable {
 
 		if (!exceptionName.equals(other.exceptionName)) return false;
 
-		if (message == null) {
-			if (other.message != null) return false;
-		} else if (!message.equals(other.message)) return false;
-
 		if (!Arrays.equals(stackTrace, other.stackTrace)) return false;
 
 		if (causeExceptionName == null) {
 			if (other.causeExceptionName != null) return false;
 		} else if (!causeExceptionName.equals(other.causeExceptionName)) return false;
-
-		if (causeMessage == null) {
-			if (other.causeMessage != null) return false;
-		} else if (!causeMessage.equals(other.causeMessage)) return false;
 
 		return true;
 	}

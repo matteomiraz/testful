@@ -110,7 +110,7 @@ public class Instrumenter {
 	private static final boolean finalValidator= false;
 
 	public static void prepare(IConfigProject config, List<String> toInstrument) {
-		String[] SOOT_CONF = new String[] { "-validate", "--keep-line-number", "--xml-attributes", "-f", "c", "-output-dir", config.getDirInstrumented().getAbsolutePath() };
+		String[] SOOT_CONF = new String[] { "-validate", "-keep-line-number", "-f", "c", "-output-dir", config.getDirInstrumented().getAbsolutePath() };
 
 		if(System.getProperty("sun.boot.class.path") == null) {
 			logger.severe("Unknown Java Vendor: " + System.getProperty("java.vm.vendor"));
