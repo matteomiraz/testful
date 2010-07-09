@@ -41,6 +41,9 @@ public class Fault implements Serializable {
 	/** (recursion) Minimum number of iterations */
 	private static final int MIN_ITER = 5;
 
+	/** Ignore the first N calls in the stack (i.e., the last N methods called) */
+	private static final int IGNORE_LAST = 5;
+
 	private static final Logger logger = Logger.getLogger("testful.coverage.fault");
 
 	private final String message;
@@ -156,14 +159,18 @@ public class Fault implements Serializable {
 	}
 
 	private static boolean checkRecursion(StackTraceElement[] pruned, int initial, int step) {
+		int n = 1;
 		int j = -1;
-		for(int i = initial - step; i >= 0; i--) {
-			if(++j % step == 0) j = 0;
+		for(int i = initial - step; i >= IGNORE_LAST || (i >= 0 && n < MIN_ITER) ; i--) {
+			if(++j % step == 0) {
+				j = 0;
+				n++;
+			}
 
 			if(!pruned[i].equals( pruned[initial - j])) return false;
 		}
 
-		return true;
+		return n >= MIN_ITER;
 	}
 
 	/**

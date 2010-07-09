@@ -542,6 +542,45 @@ public class FaultTestCase extends GenericTestCase {
 			assertEquals("Wrong " + i + " element", expected[i], f.getStackTrace()[i]);
 	}
 
+	public void testRecursionIngoreLastCalled() {
+		StackOverflowError exc = new StackOverflowError();
+		exc.setStackTrace(new StackTraceElement[] {
+
+				new StackTraceElement("foo.bar.ClassName", "ignoreMe", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "ignoreMe", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "ignoreMe", "Foo", 3),
+
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+
+				new StackTraceElement("pre", "c", "c", 3),
+				new StackTraceElement("pre", "b", "b", 2),
+				new StackTraceElement("pre", "a", "a", 1),
+		});
+		Fault f = new Fault(new UnexpectedExceptionException(exc), "foo.bar.ClassName");
+
+		StackTraceElement[] expected = new StackTraceElement[] {
+				new StackTraceElement(" --  recursion", "end  -- ", "", -1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement(" -- recursion", "start -- ", "", -1),
+		};
+
+		assertEquals(expected.length, f.getStackTrace().length);
+		for (int i = 0; i < expected.length; i++)
+			assertEquals("Wrong " + i + " element", expected[i], f.getStackTrace()[i]);
+	}
+
 	public void testRecursionComplex() {
 		StackOverflowError exc = new StackOverflowError();
 		exc.setStackTrace(new StackTraceElement[] {
