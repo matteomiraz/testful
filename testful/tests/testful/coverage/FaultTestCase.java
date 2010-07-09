@@ -81,7 +81,7 @@ public class FaultTestCase extends GenericTestCase {
 		assertEquals(fault.getCauseExceptionName(), NullPointerException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
-		assertEquals("test.coverage.Fault.a1(Fault.java)", fault.getStackTrace()[0].toString());
+		assertEquals("test.coverage.Fault.a1(Fault.java:14)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testA1Null() throws Exception {
@@ -140,7 +140,7 @@ public class FaultTestCase extends GenericTestCase {
 		assertEquals(fault.getCauseExceptionName(), NullPointerException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
-		assertEquals("test.coverage.Fault.b(Fault.java)", fault.getStackTrace()[0].toString());
+		assertEquals("test.coverage.Fault.b(Fault.java:22)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testB1() throws Exception {
@@ -175,7 +175,7 @@ public class FaultTestCase extends GenericTestCase {
 		assertEquals(fault.getCauseExceptionName(), ArithmeticException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
-		assertEquals("test.coverage.Fault.c(Fault.java)", fault.getStackTrace()[0].toString());
+		assertEquals("test.coverage.Fault.c(Fault.java:30)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testC1() throws Exception {
@@ -232,7 +232,7 @@ public class FaultTestCase extends GenericTestCase {
 		assertEquals(fault.getCauseExceptionName(), "test.coverage.MyException");
 
 		assertEquals(1, fault.getStackTrace().length);
-		assertEquals("test.coverage.Fault.e(Fault.java)", fault.getStackTrace()[0].toString());
+		assertEquals("test.coverage.Fault.e(Fault.java:46)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testF() throws Exception {
@@ -256,7 +256,7 @@ public class FaultTestCase extends GenericTestCase {
 		assertEquals(fault.getCauseExceptionName(), "test.coverage.MyException");
 
 		assertEquals(1, fault.getStackTrace().length);
-		assertEquals("test.coverage.Fault.f(Fault.java)", fault.getStackTrace()[0].toString());
+		assertEquals("test.coverage.Fault.f(Fault.java:54)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testF1() throws Exception {
