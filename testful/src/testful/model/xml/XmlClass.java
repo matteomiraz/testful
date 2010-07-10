@@ -20,6 +20,7 @@ package testful.model.xml;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -104,6 +105,10 @@ public class XmlClass {
 			xmlClass.addConstructor(XmlConstructor.create(cns));
 
 		for (Method meth : c.getMethods()) {
+			if(!Modifier.isPublic(meth.getModifiers()) ||
+					meth.isBridge() ||
+					meth.isSynthetic()) continue;
+
 			final Class<?> returnType = meth.getReturnType();
 			final XmlMethod xmlMeth = xmlClass.getMethod(meth);
 

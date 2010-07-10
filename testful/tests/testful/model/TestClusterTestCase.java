@@ -132,6 +132,26 @@ public class TestClusterTestCase extends GenericTestCase {
 		assertEquals("test.model.cluster.testFields.Fields._public_static", tc.getCut().getConstants()[0].toString());
 	}
 
+	public void testVisible() throws Exception {
+		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
+		config.setCut(StringBuffer.class.getName());
+
+		TestCluster tc = new TestCluster(new TestfulClassLoader(getFinder()), config);
+
+		// java.lang.AbstractStringBuilder is not visible (hence it is not present)
+		assertEquals(10, tc.getCluster().length);
+		assertEquals("java.lang.Boolean", tc.getCluster()[0].toString());
+		assertEquals("java.lang.CharSequence", tc.getCluster()[1].toString());
+		assertEquals("java.lang.Character", tc.getCluster()[2].toString());
+		assertEquals("java.lang.Double", tc.getCluster()[3].toString());
+		assertEquals("java.lang.Float", tc.getCluster()[4].toString());
+		assertEquals("java.lang.Integer", tc.getCluster()[5].toString());
+		assertEquals("java.lang.Long", tc.getCluster()[6].toString());
+		assertEquals("java.lang.Object", tc.getCluster()[7].toString());
+		assertEquals("java.lang.String", tc.getCluster()[8].toString());
+		assertEquals("java.lang.StringBuffer", tc.getCluster()[9].toString());
+	}
+
 	public void test01() throws Exception {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test01.Cut");
