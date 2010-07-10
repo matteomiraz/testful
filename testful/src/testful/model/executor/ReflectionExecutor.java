@@ -25,6 +25,7 @@ import java.lang.reflect.Method;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import testful.TestFul;
 import testful.coverage.fault.FaultTracker;
 import testful.coverage.stopper.Stopper;
 import testful.model.AssignConstant;
@@ -65,6 +66,12 @@ public class ReflectionExecutor implements Executor {
 	private static final boolean LOGGER_FINEST = logger.isLoggable(Level.FINEST);
 
 	private static final long serialVersionUID = -1696826206324780022L;
+
+	// checks the System property of the current JVM
+	private static final boolean DISCOVER_FAULTS = TestFul.getProperty(TestFul.PROPERTY_FAULT_DETECT, true);
+
+	// uses the system property of the testful's JVM (and not the one of the workers)
+	private final boolean discoverFaults = DISCOVER_FAULTS;
 
 	/** types of elements in the repository */
 	private final Reference[] repositoryType;
@@ -337,7 +344,9 @@ public class ReflectionExecutor implements Executor {
 				throw exc;
 			}
 
-			FaultTracker.singleton.process(exc, cons.getExceptionTypes(), initargs, opRes, cons.getDeclaringClass().getName());
+			if(discoverFaults) {
+				FaultTracker.singleton.process(exc, cons.getExceptionTypes(), initargs, opRes, cons.getDeclaringClass().getName());
+			}
 
 			// a valid exception is thrown
 			if(opRes != null) opRes.setExceptional(exc, null, cluster);
@@ -451,10 +460,12 @@ public class ReflectionExecutor implements Executor {
 				throw exc;
 			}
 
-			if(baseObject == null)
-				FaultTracker.singleton.process(exc, m.getExceptionTypes(), args, opRes, m.getDeclaringClass().getName());
-			else
-				FaultTracker.singleton.process(exc, m.getName(), m.getParameterTypes(), args, opRes, baseObject.getClass());
+			if(discoverFaults) {
+				if(baseObject == null)
+					FaultTracker.singleton.process(exc, m.getExceptionTypes(), args, opRes, m.getDeclaringClass().getName());
+				else
+					FaultTracker.singleton.process(exc, m.getName(), m.getParameterTypes(), args, opRes, baseObject.getClass());
+			}
 
 			// a valid exception is thrown
 			if(opRes != null) opRes.setExceptional(exc, baseObject, cluster);

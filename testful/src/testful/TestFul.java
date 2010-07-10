@@ -43,11 +43,14 @@ public class TestFul {
 
 	//  ---------- testful's system properties (settable with -Dprop=value) ----------
 
-	/** enables the debug mode */
+	/** Enables the debug mode (boolean) */
 	public static final String PROPERTY_DEBUG = "testful.debug";
 
-	/** Set the number of threads to use (default: the number of CPUs of the machine) */
+	/** Set the number of threads to use (integer; default: the number of CPUs of the machine) */
 	public static final String PROPERTY_N_WORKERS = "testful.nWorkers";
+
+	/** Enables the testful's fault detection feature (boolean; default: enabled) */
+	public static final String PROPERTY_FAULT_DETECT = "testful.fault";
 
 	// ---------- end of testful's properties ----------
 

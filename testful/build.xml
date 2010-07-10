@@ -29,6 +29,8 @@
 		<exclude name="testful/coverage/**/*Instrumenter*.class" />
 
 		<include name="testful/model/**/*.class" />
+		<!-- testful.model.Operation is a Variable -->
+		<include name="jmetal/base/Variable.class" />
 
 		<include name="testful/mutation/MutationExecution*.class" />
 		<include name="testful/mutation/MutationCoverage*.class" />
