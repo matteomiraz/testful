@@ -362,7 +362,7 @@
           target: Compile testCut
           description: compile classes used by tests as CUT (in testCut)
          - - - - - - - - - - - - - - - - - -->
-	<target name="test.cut.compile" depends="build.instrumenter">
+	<target name="test.cut.compile" >
 		<mkdir dir="${testCut.bin}" />
 		<javac srcdir="${testCut.source}" destdir="${testCut.bin}" classpath="${artifacts}/instrumenter.jar" optimize="false" debug="true" source="1.5" target="1.5"/>
 	</target>
@@ -371,7 +371,7 @@
           target: Instrument testCut
           description: Instrument the classes used by tests as CUT (in testCut)
          - - - - - - - - - - - - - - - - - -->
-	<target name="test.cut.instrument" depends="build.instrumenter, test.cut.compile" description="instrument the tests' cut">
+	<target name="test.cut.instrument" depends="test.cut.compile, build.instrumenter" description="instrument the tests' cut">
 		<delete dir="${base}/testCut/instrumented" />
 		<java jar="${artifacts}/instrumenter.jar" fork="true">
 			<arg line="-dir ${testCut} dummy.WhiteSample dummy.Simple dummy.StateMachine apache.Fraction apache.FractionNoStatic test.coverage.Stopped test.coverage.Fault test.model.array.StringMatrix" />
@@ -381,7 +381,7 @@
 	<!-- =================================
           target: test.instrumenter
          ================================= -->
-	<target name="test.instrumenter" depends="build.instrumenter, test.cut.compile" description="Test the instrumentation facility">
+	<target name="test.instrumenter" depends="test.cut.compile, build.instrumenter" description="Test the instrumentation facility">
 		<java jar="${artifacts}/instrumenter.jar" fork="true" failonerror="true">
 			<arg line="-dir ${testCut} test.instrumenter.Catches test.instrumenter.Super test.instrumenter.Synchronized" />
 		</java>

@@ -96,14 +96,19 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 		Arrays.sort(methods);
 
 		// calculate constructorz
-		Set<Constructorz> clist = new TreeSet<Constructorz>();
-		for(Constructor<?> cns : toJavaClass().getConstructors()) {
-			final XmlConstructor xmlCns = xml.getConstructor(cns);
-			if(xmlCns != null && !xmlCns.isSkip())
-				clist.add(new Constructorz(cluster, cns, xmlCns));
+		if(isAbstract()) {
+			constructors = new Constructorz[0];
+
+		} else {
+			Set<Constructorz> clist = new TreeSet<Constructorz>();
+			for(Constructor<?> cns : toJavaClass().getConstructors()) {
+				final XmlConstructor xmlCns = xml.getConstructor(cns);
+				if(xmlCns != null && !xmlCns.isSkip())
+					clist.add(new Constructorz(cluster, cns, xmlCns));
+			}
+			constructors = clist.toArray(new Constructorz[clist.size()]);
+			Arrays.sort(constructors);
 		}
-		constructors = clist.toArray(new Constructorz[clist.size()]);
-		Arrays.sort(constructors);
 	}
 
 	/**
