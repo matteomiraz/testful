@@ -48,7 +48,6 @@ public class BlockClass extends Block implements Iterable<Block> {
 
 	private static final String FILE_SUFFIX = ".wgz";
 
-	@SuppressWarnings("unused") // for the DEBUG
 	public static BlockClass read(URL classURL) throws IOException, ClassNotFoundException {
 		ObjectInput oi = null;
 

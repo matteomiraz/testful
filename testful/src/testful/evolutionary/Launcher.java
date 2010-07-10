@@ -77,7 +77,7 @@ public class Launcher {
 	 * @throws TestfulException if something goes wrong
 	 */
 	public static void run(IConfigEvolutionary config, Callback ... callBacks) throws TestfulException {
-		logger.config(TestFul.getProperties(config));
+		logger.config(TestFul.printGetters(config));
 
 		PseudoRandom.setupMersenneTwisterFast(config.getSeed());
 

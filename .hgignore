@@ -4,7 +4,7 @@ cobertura.ser
 
 syntax: regexp
 ^.metadata$
-/bin/
-^testful/testCut/bin$
+^localProjects$
 ^testful/testCut/instrumented$
 ^testful/auto.txt$
+/bin/

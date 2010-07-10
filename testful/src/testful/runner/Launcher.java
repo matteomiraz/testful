@@ -87,7 +87,7 @@ public class Launcher {
 
 		TestFul.setupLogging(config.log, config.logLevel.getLoggingLevel(), config.quiet);
 
-		logger.config(TestFul.getProperties(config));
+		logger.config(TestFul.printGetters(config));
 
 		if(config.cpu < 0) {
 			logger.info("Starting without CPUs: acting as a test repository.");

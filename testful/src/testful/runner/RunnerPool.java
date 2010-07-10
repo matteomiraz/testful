@@ -132,7 +132,8 @@ public class RunnerPool implements IRunner, ITestRepository {
 	public void startLocalWorkers() {
 		if (!localWorkersStarted) {
 			try {
-				WorkerManager wm = new WorkerManager(TestFul.DEBUG ? 1 : -1, 0);
+				int nWorkers = TestFul.getProperty(TestFul.PROPERTY_N_WORKERS, TestFul.DEBUG ? 1 : -1);
+				WorkerManager wm = new WorkerManager(nWorkers, 0);
 				wm.addTestRepository(this);
 				localWorkersStarted = true;
 			} catch (RemoteException e) {

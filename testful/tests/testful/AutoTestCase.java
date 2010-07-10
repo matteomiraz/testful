@@ -37,10 +37,10 @@ import ec.util.MersenneTwisterFast;
  */
 public abstract class AutoTestCase extends GenericTestCase {
 
-	private static final int ITERATIONS = 1000;
+	private static final int ITERATIONS = TestFul.getProperty(TestProperties.PROPERTY_TEST_RANDOM_ITERATIONS, 1000);
 
 	/** Performs an extensive random testing session */
-	private static final boolean EXTENSIVE_TEST = false;
+	private static final boolean EXTENSIVE_TEST = TestFul.getProperty(TestProperties.PROPERTY_TEST_RANDOM_EXTENSIVE, false);
 
 	protected abstract Collection<? extends Test> perform(Test test) throws Exception;
 

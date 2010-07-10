@@ -50,7 +50,6 @@ import testful.utils.Cloner;
  *
  * @author matteo
  */
-@SuppressWarnings("unused")
 public class OperationResult extends OperationInformation {
 
 	private static final long serialVersionUID = 772248461493438644L;
