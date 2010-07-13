@@ -26,10 +26,18 @@ public class OptimalTestCase extends GenericTestCase {
 
 	public void testDummySimpleCUT1() throws Exception {
 		DummySimpleCUT cut = new DummySimpleCUT();
+
 		Test t1 = new Test(cut.cluster, cut.refFactory, new Operation[] {
 				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { })
 		});
 		TestCoverage tc1 = new TestCoverage(t1, getCoverage(t1));
+
+		Test t11 = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { })
+		});
+		TestCoverage tc11 = new TestCoverage(t11, getCoverage(t11));
 
 		Test t2 = new Test(cut.cluster, cut.refFactory, new Operation[] {
 				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
@@ -43,7 +51,10 @@ public class OptimalTestCase extends GenericTestCase {
 		assertEquals(0, opt.get().size());
 
 		opt.update(tc1);
+		assertEquals(1, opt.get().size());
+		assertEquals(tc1, opt.get().iterator().next());
 
+		opt.update(tc11);
 		assertEquals(1, opt.get().size());
 		assertEquals(tc1, opt.get().iterator().next());
 
