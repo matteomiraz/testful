@@ -119,7 +119,7 @@
 	<!-- =================================
           target: build
          ================================= -->
-	<target name="build" depends="build.shared,build.instrumenter,build.runner,build.testful,build.randomTest" description="Creater executable jars">
+	<target name="build" depends="build.shared,build.instrumenter,build.runner,build.testful,build.randomTest,build.junitRunner" description="Creater executable jars">
 	</target>
 
 	<!-- - - - - - - - - - - - - - - - - -
@@ -259,7 +259,7 @@
 	<!-- =================================
           target: build.junitCreator
          ================================= -->
-	<target name="build.junitCreator" depends="compile" description="Crete the runner">
+	<target name="build.junitCreator" depends="compile" description="Crete the jUnit test converter">
 		<mkdir dir="${artifacts}" />
 		<jar destfile="${artifacts}/junitCreator.jar" filesetmanifest="mergewithoutmain">
 			<manifest>
@@ -273,6 +273,28 @@
 				<include name="jmetal/base/Variable.class" />
 				<include name="testful/model/**/*.class" />
 				<include name="testful/regression/JUnitTestGenerator.class" />
+			</fileset>
+		</jar>
+	</target>
+
+	<!-- =================================
+          target: build.junitRunner
+         ================================= -->
+	<target name="build.junitRunner" depends="compile" description="Crete the jUnit runner">
+		<mkdir dir="${artifacts}" />
+		<jar destfile="${artifacts}/junitRunner.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Built-By" value="${user.name}" />
+				<attribute name="Main-Class" value="testful.regression.TestfulTestCase" />
+				<attribute name="Class-Path" value="." />
+			</manifest>
+			<fileset dir="${build.classes}">
+				<include name="revision.txt"/>
+				<patternset refid="runner" />
+				<include name="testful/model/**" />
+				<include name="testful/coverage/**"/>
+				<include name="jmetal/base/Variable.class" />
+				<include name="testful/regression/TestfulTestCase*" />
 			</fileset>
 		</jar>
 	</target>

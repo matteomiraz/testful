@@ -36,7 +36,6 @@ import testful.ConfigProject;
 import testful.IConfigProject;
 import testful.TestFul;
 import testful.TestfulException;
-import testful.model.OperationResult;
 import testful.model.TestReader;
 import testful.model.executor.ReflectionExecutor;
 import testful.runner.ClassFinder;
@@ -116,7 +115,7 @@ public class TestfulTestCase extends TestCase {
 
 				logger.info("Testing " + fileName);
 
-				OperationResult.Verifier.insertOperationResultVerifier(test.getTest());
+				// OperationResult.Verifier.insertOperationResultVerifier(test.getTest());
 
 				Context<Boolean, FaultExecutionManager> ctx = new Context<Boolean, FaultExecutionManager>(FaultExecutionManager.class, finder, new ReflectionExecutor(test));
 				ctx.setRecycleClassLoader(true);
@@ -125,7 +124,7 @@ public class TestfulTestCase extends TestCase {
 				Future<Boolean> r = RunnerPool.getRunnerPool().execute(ctx);
 
 				try {
-					if(r.get()) System.err.println("Test " + fileName + " failed");// fail("Test " + fileName + " failed");
+					if(r.get()) fail("Test " + fileName + " failed");
 				} catch (Exception e) {
 					e.printStackTrace();
 					logger.log(Level.WARNING, "Exception during the execution of the test: " + e.getMessage(), e);
