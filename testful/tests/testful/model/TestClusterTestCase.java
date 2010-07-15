@@ -152,6 +152,58 @@ public class TestClusterTestCase extends GenericTestCase {
 		assertEquals("java.lang.StringBuffer", tc.getCluster()[9].toString());
 	}
 
+	public void testGeneric() throws Exception {
+		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
+		config.setCut("test.model.generic.Generic");
+
+		TestCluster tc = new TestCluster(new TestfulClassLoader(getFinder()), config);
+		Clazz cut = tc.getCut();
+
+		assertEquals(2, tc.getCluster().length);
+		assertEquals("java.lang.Object", tc.getCluster()[0].toString());
+		assertEquals("test.model.generic.Generic", tc.getCluster()[1].toString());
+
+		assertEquals(2, cut.getConstructors().length);
+		assertEquals("test.model.generic.Generic()", cut.getConstructors()[0].toString());
+		assertEquals("test.model.generic.Generic(java.lang.Object)", cut.getConstructors()[1].toString());
+
+		assertEquals(3, cut.getMethods().length);
+		assertEquals("m1(java.lang.Object)", cut.getMethods()[0].toString());
+		assertEquals("m2()", cut.getMethods()[1].toString());
+		assertEquals("m3(java.lang.Object)", cut.getMethods()[2].toString());
+	}
+
+	public void testConcrete() throws Exception {
+		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
+		config.setCut("test.model.generic.Concrete");
+
+		TestCluster tc = new TestCluster(new TestfulClassLoader(getFinder()), config);
+		Clazz cut = tc.getCut();
+
+		assertEquals(3, tc.getCluster().length);
+		assertEquals("java.lang.Integer", tc.getCluster()[0].toString());
+		assertEquals("java.lang.Object", tc.getCluster()[1].toString());
+		assertEquals("test.model.generic.Concrete", tc.getCluster()[2].toString());
+
+		assertEquals(2, cut.getConstructors().length);
+		assertEquals("test.model.generic.Concrete()", cut.getConstructors()[0].toString());
+		assertEquals("test.model.generic.Concrete(java.lang.Integer)", cut.getConstructors()[1].toString());
+
+		assertEquals(3, cut.getMethods().length);
+		assertEquals("m1(java.lang.Object)", cut.getMethods()[0].toString());
+		assertEquals("m2()", cut.getMethods()[1].toString());
+		assertEquals("java.lang.Object", cut.getMethods()[1].getReturnType().toString());
+		assertEquals("m3(java.lang.Object)", cut.getMethods()[2].toString());
+		assertEquals("java.lang.Object", cut.getMethods()[2].getReturnType().toString());
+
+		//TODO: generic types
+		//assertEquals("m1(java.lang.Integer)", cut.getMethods()[0].toString());
+		//assertEquals("m2()", cut.getMethods()[1].toString());
+		//assertEquals("java.lang.Integer", cut.getMethods()[1].getReturnType().toString());
+		//assertEquals("m3(java.lang.Integer)", cut.getMethods()[2].toString());
+		//assertEquals("java.lang.Integer", cut.getMethods()[2].getReturnType().toString());
+	}
+
 	public void test01() throws Exception {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test01.Cut");
