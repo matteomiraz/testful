@@ -387,6 +387,7 @@ public class OperationResult extends OperationInformation {
 		public Verifier(OperationResult op) {
 			object = op.object;
 			result = op.result;
+			status = op.status;
 		}
 
 		@Override

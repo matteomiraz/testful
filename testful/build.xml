@@ -32,6 +32,8 @@
 		<!-- testful.model.Operation is a Variable -->
 		<include name="jmetal/base/Variable.class" />
 
+		<include name="testful/regression/TestfulTestCase$FaultExecutionManager.class" />
+
 		<include name="testful/mutation/MutationExecution*.class" />
 		<include name="testful/mutation/MutationCoverage*.class" />
 		<include name="testful/mutation/TestStoppedException*.class" />
@@ -230,6 +232,8 @@
 
 				<include name="testful/model/faults/TestfulInternalException.class"/>
 				<include name="testful/model/faults/TestfulInternalException$Impl.class"/>
+
+				<include name="testful/coverage/stopper/TestStoppedException.class"/>
 			</fileset>
 		</jar>
 	</target>
