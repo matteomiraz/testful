@@ -452,7 +452,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 				if(value == null)
 					return random.nextShort();
 
-				return (short) (((Integer)value) + gaussianInteger());
+				return (short) (((Short)value) + gaussianInteger());
 			}
 
 		} else {

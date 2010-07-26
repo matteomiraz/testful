@@ -94,9 +94,8 @@ public class OptimalTestCreator {
 			for(TestCoverage t : toRemove)
 				tot += t.getTest().length;
 
-			if(test.getTest().length < tot) toRemove.clear();
+			if(test.getTest().length > tot) toRemove.clear();
 		}
-
 
 		// if the test is innovative
 		//    or if it is more efficient than the others

@@ -142,7 +142,6 @@ public final class Stopper {
 	 * Start the timer: in maxExecTime milliseconds kills the execution of the operation.
 	 * @param maxExecTime the amount of time to wait before killing the execution of the operation
 	 */
-	@SuppressWarnings("unused")
 	public void start(int maxExecTime) {
 
 		if(!running) throw new IllegalStateException("The Stopper is not running");

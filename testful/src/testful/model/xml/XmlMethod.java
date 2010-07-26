@@ -210,10 +210,17 @@ public class XmlMethod implements Comparable<XmlMethod> {
 		if(meth.getDeclaringClass().getName().equals("java.lang.Object"))
 			return null;
 
-		// skip methods with arrays
+		// skip methods with unsupported elements
 		for (Class<?> params : meth.getParameterTypes()) {
+			// ISSUE #1: if you need array support, vote here: http://code.google.com/p/testful/issues/detail?id=1
 			if(params.isArray()) {
 				logger.info("Skipping " + meth + ": has an array as parameter. If you are interested in testing this method, vote for issue #1: http://code.google.com/p/testful/issues/detail?id=1");
+				return null;
+			}
+
+			// another rfe: enum support!
+			if(params.isEnum()) {
+				logger.info("Skipping " + meth + ": has an enum as parameter.");
 				return null;
 			}
 		}

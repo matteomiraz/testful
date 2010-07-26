@@ -41,6 +41,9 @@ public class Fault implements Serializable {
 	/** (recursion) Minimum number of iterations */
 	private static final int MIN_ITER = 5;
 
+	/** Ignore the first N calls in the stack (i.e., the last N methods called) */
+	private static final int IGNORE_LAST = 5;
+
 	private static final Logger logger = Logger.getLogger("testful.coverage.fault");
 
 	private final String message;
@@ -73,11 +76,9 @@ public class Fault implements Serializable {
 		}
 
 		hashCode =
-			31*31*31*31*exceptionName.hashCode() +
-			31*31*31*((message == null) ? 0 : message.hashCode()) +
-			31*31*Arrays.hashCode(stackTrace) +
-			31*((causeExceptionName == null) ? 0 : causeExceptionName.hashCode()) +
-			((causeMessage == null) ? 0 : causeMessage.hashCode());
+			31*31*31*Arrays.hashCode(stackTrace) +
+			31*31*exceptionName.hashCode() +
+			31*((causeExceptionName == null) ? 0 : causeExceptionName.hashCode());
 	}
 
 	private static StackTraceElement[] processStackTrace(FaultyExecutionException fault, String baseClassName) {
@@ -170,14 +171,18 @@ public class Fault implements Serializable {
 	}
 
 	private static boolean checkRecursion(StackTraceElement[] pruned, int initial, int step) {
+		int n = 1;
 		int j = -1;
-		for(int i = initial - step; i >= 0; i--) {
-			if(++j % step == 0) j = 0;
+		for(int i = initial - step; i >= IGNORE_LAST || (i >= 0 && n < MIN_ITER) ; i--) {
+			if(++j % step == 0) {
+				j = 0;
+				n++;
+			}
 
 			if(!pruned[i].equals( pruned[initial - j])) return false;
 		}
 
-		return true;
+		return n >= MIN_ITER;
 	}
 
 	/**
@@ -236,19 +241,11 @@ public class Fault implements Serializable {
 
 		if (!exceptionName.equals(other.exceptionName)) return false;
 
-		if (message == null) {
-			if (other.message != null) return false;
-		} else if (!message.equals(other.message)) return false;
-
 		if (!Arrays.equals(stackTrace, other.stackTrace)) return false;
 
 		if (causeExceptionName == null) {
 			if (other.causeExceptionName != null) return false;
 		} else if (!causeExceptionName.equals(other.causeExceptionName)) return false;
-
-		if (causeMessage == null) {
-			if (other.causeMessage != null) return false;
-		} else if (!causeMessage.equals(other.causeMessage)) return false;
 
 		return true;
 	}

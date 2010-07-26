@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:class xmlns:ns2="http://testful.sourceforge.net/schema/1.2/testful.xsd">
+    <constructor maxExecTime="500" skip="true"/>
+    <constructor maxExecTime="500" skip="false">
+        <parameter exposedByReturn="false" captured="false" mutated="false" type="long"/>
+    </constructor>
+    <method kind="mutator" exposeState="false" maxExecTime="500" name="nextBoolean"/>
+    <method kind="mutator" exposeState="false" maxExecTime="500" name="nextDouble"/>
+    <method kind="mutator" exposeState="false" maxExecTime="500" name="nextFloat"/>
+    <method kind="mutator" exposeState="false" maxExecTime="500" name="nextGaussian"/>
+    <method kind="skip" exposeState="false" maxExecTime="500" name="nextInt">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="int"/>
+    </method>
+    <method kind="mutator" exposeState="false" maxExecTime="500" name="nextInt"/>
+    <method kind="mutator" exposeState="false" maxExecTime="500" name="nextLong"/>
+    <method kind="mutator" exposeState="false" maxExecTime="500" name="setSeed">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="long"/>
+    </method>
+</ns2:class>

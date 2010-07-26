@@ -20,6 +20,7 @@ package testful.model.xml;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -104,12 +105,17 @@ public class XmlClass {
 			xmlClass.addConstructor(XmlConstructor.create(cns));
 
 		for (Method meth : c.getMethods()) {
+			if(!Modifier.isPublic(meth.getModifiers()) ||
+					meth.isBridge() ||
+					meth.isSynthetic()) continue;
+
 			final Class<?> returnType = meth.getReturnType();
 			final XmlMethod xmlMeth = xmlClass.getMethod(meth);
 
 			// add the return type to the test cluster
 			if(xmlMeth != null && !xmlMeth.isSkip()
 					&& !returnType.isArray() // ISSUE #1: if you need array support, vote here: http://code.google.com/p/testful/issues/detail?id=1
+					&& !returnType.isEnum()  // another bug: enum support!
 					&& !returnType.equals(c)
 					&& returnType != Void.TYPE && !returnType.isPrimitive()) {
 

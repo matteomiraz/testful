@@ -59,8 +59,6 @@ public class Splitter_splitObserverTestCase extends GenericTestCase {
 
 		check(test, tests, new Operation[][] {
 				{
-					new CreateObject(null, cut.oCns, new Reference[] { }),					//1*
-				}, {
 					new CreateObject(cut.cuts[1], cut.cCns, new Reference[] { }),			//2
 					new Invoke(null, cut.cuts[1], cut.c, new Reference[] { }),				//3
 				}, {

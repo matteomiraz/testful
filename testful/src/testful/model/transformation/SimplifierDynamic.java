@@ -92,7 +92,6 @@ public class SimplifierDynamic implements TestTransformation {
 	 * This method relies on the {@link OperationResult} Information.
 	 * If it is not present, this class does not do anything.
 	 */
-	@SuppressWarnings("unused")
 	public Operation[] perform(final Operation[] test) {
 		List<Operation> ops = new ArrayList<Operation>();
 

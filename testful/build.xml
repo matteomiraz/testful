@@ -29,6 +29,10 @@
 		<exclude name="testful/coverage/**/*Instrumenter*.class" />
 
 		<include name="testful/model/**/*.class" />
+		<!-- testful.model.Operation is a Variable -->
+		<include name="jmetal/base/Variable.class" />
+
+		<include name="testful/regression/TestfulTestCase$FaultExecutionManager.class" />
 
 		<include name="testful/mutation/MutationExecution*.class" />
 		<include name="testful/mutation/MutationCoverage*.class" />
@@ -115,7 +119,7 @@
 	<!-- =================================
           target: build
          ================================= -->
-	<target name="build" depends="build.instrumenter,build.runner,build.testful,build.randomTest" description="Creater executable jars">
+	<target name="build" depends="build.shared,build.instrumenter,build.runner,build.testful,build.randomTest,build.junitRunner" description="Creater executable jars">
 	</target>
 
 	<!-- - - - - - - - - - - - - - - - - -
@@ -210,6 +214,31 @@
 	</target>
 
 	<!-- =================================
+          target: build.shared
+         ================================= -->
+	<target name="build.shared" depends="compile" description="Crete jar with shared classes">
+		<mkdir dir="${artifacts}" />
+		<jar destfile="${artifacts}/shared.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Built-By" value="${user.name}" />
+			</manifest>
+			<fileset dir="${build.classes}">
+				<include name="revision.txt"/>
+
+				<include name="testful/model/faults/FaultyExecutionException.class"/>
+
+				<include name="testful/model/faults/PreconditionViolationException.class"/>
+				<include name="testful/model/faults/PreconditionViolationException$Impl.class"/>
+
+				<include name="testful/model/faults/TestfulInternalException.class"/>
+				<include name="testful/model/faults/TestfulInternalException$Impl.class"/>
+
+				<include name="testful/coverage/stopper/TestStoppedException.class"/>
+			</fileset>
+		</jar>
+	</target>
+
+	<!-- =================================
           target: build.runner
          ================================= -->
 	<target name="build.runner" depends="compile" description="Crete the runner">
@@ -230,7 +259,7 @@
 	<!-- =================================
           target: build.junitCreator
          ================================= -->
-	<target name="build.junitCreator" depends="compile" description="Crete the runner">
+	<target name="build.junitCreator" depends="compile" description="Crete the jUnit test converter">
 		<mkdir dir="${artifacts}" />
 		<jar destfile="${artifacts}/junitCreator.jar" filesetmanifest="mergewithoutmain">
 			<manifest>
@@ -244,6 +273,28 @@
 				<include name="jmetal/base/Variable.class" />
 				<include name="testful/model/**/*.class" />
 				<include name="testful/regression/JUnitTestGenerator.class" />
+			</fileset>
+		</jar>
+	</target>
+
+	<!-- =================================
+          target: build.junitRunner
+         ================================= -->
+	<target name="build.junitRunner" depends="compile" description="Crete the jUnit runner">
+		<mkdir dir="${artifacts}" />
+		<jar destfile="${artifacts}/junitRunner.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Built-By" value="${user.name}" />
+				<attribute name="Main-Class" value="testful.regression.TestfulTestCase" />
+				<attribute name="Class-Path" value="." />
+			</manifest>
+			<fileset dir="${build.classes}">
+				<include name="revision.txt"/>
+				<patternset refid="runner" />
+				<include name="testful/model/**" />
+				<include name="testful/coverage/**"/>
+				<include name="jmetal/base/Variable.class" />
+				<include name="testful/regression/TestfulTestCase*" />
 			</fileset>
 		</jar>
 	</target>
@@ -365,16 +416,17 @@
          - - - - - - - - - - - - - - - - - -->
 	<target name="test.cut.compile" depends="build.instrumenter">
 		<mkdir dir="${testCut.bin}" />
-		<javac srcdir="${testCut.source}" destdir="${testCut.bin}" classpath="${artifacts}/instrumenter.jar" optimize="false" debug="true" source="1.4" target="1.4"/>
+		<javac srcdir="${testCut.source}" destdir="${testCut.bin}" classpath="${artifacts}/instrumenter.jar" optimize="false" debug="true" source="1.5" target="1.5"/>
 	</target>
 
 	<!-- - - - - - - - - - - - - - - - - -
           target: Instrument testCut
           description: Instrument the classes used by tests as CUT (in testCut)
          - - - - - - - - - - - - - - - - - -->
-	<target name="test.cut.instrument" depends="build.instrumenter, test.cut.compile" description="instrument the tests' cut">
+	<target name="test.cut.instrument" depends="test.cut.compile, build.instrumenter" description="instrument the tests' cut">
 		<delete dir="${base}/testCut/instrumented" />
 		<java jar="${artifacts}/instrumenter.jar" fork="true">
+			<jvmarg value="-Dtestful.debug=true"/>
 			<arg line="-dir ${testCut} dummy.WhiteSample dummy.Simple dummy.StateMachine apache.Fraction apache.FractionNoStatic test.coverage.Stopped test.coverage.Fault test.model.array.StringMatrix" />
 		</java>
 	</target>
@@ -382,8 +434,9 @@
 	<!-- =================================
           target: test.instrumenter
          ================================= -->
-	<target name="test.instrumenter" depends="build.instrumenter, test.cut.compile" description="Test the instrumentation facility">
+	<target name="test.instrumenter" depends="test.cut.compile, build.instrumenter" description="Test the instrumentation facility">
 		<java jar="${artifacts}/instrumenter.jar" fork="true" failonerror="true">
+			<jvmarg value="-Dtestful.debug=true"/>
 			<arg line="-dir ${testCut} test.instrumenter.Catches test.instrumenter.Super test.instrumenter.Synchronized" />
 		</java>
 	</target>
@@ -395,6 +448,7 @@
 		<javac srcdir="${base}/tests" destdir="${build.tests}" classpath="${build.classes}" optimize="false" debug="true" />
 
 		<junit printsummary="on" dir="${base}" fork="true">
+			<jvmarg value="-Dtestful.debug=true"/>
 			<formatter type="brief" usefile="false" />
 			<classpath>
 				<pathelement path="${build.tests}" />
@@ -470,7 +524,7 @@
 		<!-- compile tests' cut & instrument them -->
 		<mkdir dir="${base}/testCut/bin" />
 		<delete dir="${base}/testCut/instrumented" />
-		<javac srcdir="${testCut.source}" destdir="${testCut.bin}" optimize="false" debug="true" source="1.4" target="1.4" />
+		<javac srcdir="${testCut.source}" destdir="${testCut.bin}" optimize="false" debug="true" source="1.5" target="1.5" />
 
 		<!-- test instrumenter -->
 		<java classname="testful.coverage.Launcher" fork="true" classpathref="instrumented.classpath">
@@ -479,11 +533,13 @@
 
 		<!-- Instrument classes used in jUnit -->
 		<java classname="testful.coverage.Launcher" fork="true" classpathref="instrumented.classpath">
+			<jvmarg value="-Dtestful.debug=true"/>
 			<arg line="-dir ${testCut} dummy.WhiteSample dummy.Simple dummy.StateMachine apache.Fraction test.coverage.Stopped test.coverage.Fault" />
 		</java>
 
 		<!-- run jUnit tests -->
 		<junit printsummary="on" dir="${base}" fork="true">
+			<jvmarg value="-Dtestful.debug=true"/>
 			<classpath refid="instrumented.classpath" />
 			<test name="testful.AllTests" />
 		</junit>

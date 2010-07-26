@@ -47,6 +47,7 @@ import soot.jimple.LookupSwitchStmt;
 import soot.jimple.Stmt;
 import soot.jimple.TableSwitchStmt;
 import soot.jimple.toolkits.scalar.NopEliminator;
+import soot.tagkit.LineNumberTag;
 import soot.tagkit.StringTag;
 import soot.util.Chain;
 import testful.IConfigProject;
@@ -110,7 +111,7 @@ public class Instrumenter {
 	private static final boolean finalValidator= false;
 
 	public static void prepare(IConfigProject config, List<String> toInstrument) {
-		String[] SOOT_CONF = new String[] { "-validate", "--keep-line-number", "--xml-attributes", "-f", "c", "-output-dir", config.getDirInstrumented().getAbsolutePath() };
+		String[] SOOT_CONF = new String[] { "-validate", "-keep-line-number", "-f", "c", "-output-dir", config.getDirInstrumented().getAbsolutePath() };
 
 		if(System.getProperty("sun.boot.class.path") == null) {
 			logger.severe("Unknown Java Vendor: " + System.getProperty("java.vm.vendor"));
@@ -367,11 +368,14 @@ public class Instrumenter {
 				final Unit nopAfter = Jimple.v().newNopStmt();
 				nopAfter.addTag(new StringTag("nopAfter"));
 
+				final Stmt newStmt = (Stmt) stmt.clone();
+				LineNumberTag line = (LineNumberTag) stmt.getTag("LineNumberTag");
+				if(line != null) newStmt.addTag(line);
 				if(stmt instanceof IdentityStmt) {
 
 					// insert original stmt
 					newUnits.add(nopOrig);
-					newUnits.add((Stmt) stmt.clone());
+					newUnits.add(newStmt);
 
 					// preprocess
 					newUnits.add(nopPreTrack);
@@ -392,7 +396,7 @@ public class Instrumenter {
 
 					// insert original stmt
 					newUnits.add(nopOrig);
-					newUnits.add((Stmt) stmt.clone());
+					newUnits.add(newStmt);
 
 					// postprocess
 					newUnits.add(nopPostTrack);

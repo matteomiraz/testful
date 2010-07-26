@@ -449,7 +449,7 @@ public class JUnitTestGenerator extends TestReader {
 						if(opResult.getExcMessage() != null)
 							out.println("\t\t\tassertEquals(\"" + opResult.getExcMessage() + "\", e.getMessage());");
 
-						if(op instanceof Invoke)
+						if(op instanceof Invoke && !((Invoke)op).getMethod().isStatic())
 							generateAssertions("\t\t\t", out, opResult.getObject(), null, ((Invoke)op).getThis().toString());
 
 						out.println("\t\t}");

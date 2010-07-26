@@ -77,7 +77,7 @@ public class Launcher {
 	 * @throws TestfulException if something goes wrong
 	 */
 	public static void run(IConfigEvolutionary config, Callback ... callBacks) throws TestfulException {
-		logger.config(TestFul.getProperties(config));
+		logger.config(TestFul.printGetters(config));
 
 		PseudoRandom.setupMersenneTwisterFast(config.getSeed());
 
@@ -160,6 +160,9 @@ public class Launcher {
 			logger.log(Level.WARNING, "Cannot find some classes: " + e.getMessage(), e);
 			throw new TestfulException(e);
 		}
+
+		if(logger.isLoggable(Level.FINE))
+			logger.fine("Optimal Coverage " + testfulProblem.getOptimal().getCoverage());
 
 		/* simplify tests */
 		final TestSuiteReducer reducer = new TestSuiteReducer(testfulProblem.getFinder(), testfulProblem.getData());

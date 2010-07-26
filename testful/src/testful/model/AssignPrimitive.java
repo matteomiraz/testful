@@ -107,7 +107,7 @@ public class AssignPrimitive extends Operation {
 				else if(ch == '\'') escaped.append("\\\'");	// '
 				else if(ch == '\\') escaped.append("\\\\");	// \
 				else if(ch >= 32 && ch <= 126) escaped.append(ch);
-				else if(ch > 0 && ch < 256) escaped.append("\\" + Integer.toOctalString(ch));
+				else if(ch >= 0 && ch < 256) escaped.append("\\" + Integer.toOctalString(ch));
 				else Logger.getLogger("testful.model").fine("Cannot convert character #" + ((int) ch) + ": not in [0, 255]");
 			}
 

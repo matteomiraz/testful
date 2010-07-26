@@ -58,7 +58,7 @@ public class StopperTestCase extends GenericTestCase {
 		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
-		assertEquals("test.coverage.Stopped.longMethod1(Stopped.java)", fault.getStackTrace()[0].toString());
+		assertEquals("test.coverage.Stopped.longMethod1(Stopped.java:24)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testLongMethod1b() throws Exception {
@@ -82,7 +82,7 @@ public class StopperTestCase extends GenericTestCase {
 		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
-		assertEquals("test.coverage.Stopped.longMethod1(Stopped.java)", fault.getStackTrace()[0].toString());
+		assertEquals("test.coverage.Stopped.longMethod1(Stopped.java:24)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testLongMethod2() throws Exception {
@@ -104,7 +104,7 @@ public class StopperTestCase extends GenericTestCase {
 		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
-		assertEquals("test.coverage.Stopped.longMethod2(Stopped.java)", fault.getStackTrace()[0].toString());
+		assertEquals("test.coverage.Stopped.longMethod2(Stopped.java:31)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testLongMethod2b() throws Exception {
@@ -128,7 +128,7 @@ public class StopperTestCase extends GenericTestCase {
 		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
-		assertEquals("test.coverage.Stopped.longMethod2(Stopped.java)", fault.getStackTrace()[0].toString());
+		assertEquals("test.coverage.Stopped.longMethod2(Stopped.java:31)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testLongMethod3() throws Exception {
@@ -150,7 +150,7 @@ public class StopperTestCase extends GenericTestCase {
 		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
-		assertEquals("test.coverage.Stopped.longMethod3(Stopped.java)", fault.getStackTrace()[0].toString());
+		assertEquals("test.coverage.Stopped.longMethod3(Stopped.java:39)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testLongMethod3b() throws Exception {
@@ -174,7 +174,7 @@ public class StopperTestCase extends GenericTestCase {
 		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
-		assertEquals("test.coverage.Stopped.longMethod3(Stopped.java)", fault.getStackTrace()[0].toString());
+		assertEquals("test.coverage.Stopped.longMethod3(Stopped.java:39)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testLongMethod4() throws Exception {
@@ -196,7 +196,7 @@ public class StopperTestCase extends GenericTestCase {
 		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
-		assertEquals("test.coverage.Stopped.longMethod4(Stopped.java)", fault.getStackTrace()[0].toString());
+		assertEquals("test.coverage.Stopped.longMethod4(Stopped.java:49)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testLongMethod4b() throws Exception {
@@ -220,7 +220,7 @@ public class StopperTestCase extends GenericTestCase {
 		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
-		assertEquals("test.coverage.Stopped.longMethod4(Stopped.java)", fault.getStackTrace()[0].toString());
+		assertEquals("test.coverage.Stopped.longMethod4(Stopped.java:49)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testLongMethod5() throws Exception {
@@ -242,7 +242,7 @@ public class StopperTestCase extends GenericTestCase {
 		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
-		assertEquals("test.coverage.Stopped.longMethod5(Stopped.java)", fault.getStackTrace()[0].toString());
+		assertEquals("test.coverage.Stopped.longMethod5(Stopped.java:61)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testLongMethod5b() throws Exception {
@@ -266,7 +266,7 @@ public class StopperTestCase extends GenericTestCase {
 		assertEquals(fault.getExceptionName(), TestStoppedException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
-		assertEquals("test.coverage.Stopped.longMethod5(Stopped.java)", fault.getStackTrace()[0].toString());
+		assertEquals("test.coverage.Stopped.longMethod5(Stopped.java:61)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testInfLoop1a() throws Exception {
@@ -294,7 +294,7 @@ public class StopperTestCase extends GenericTestCase {
 		final StackTraceElement[] stackTrace = fault.getStackTrace();
 		assertEquals(3, fault.getStackTrace().length);
 		assertEquals(" --  recursion.end  -- ()", stackTrace[0].toString());
-		assertEquals("test.coverage.Stopped.infLoop(Stopped.java)", stackTrace[1].toString());
+		assertEquals("test.coverage.Stopped.infLoop(Stopped.java:82)", stackTrace[1].toString());
 		assertEquals(" -- recursion.start -- ()", stackTrace[2].toString());
 	}
 
@@ -322,7 +322,7 @@ public class StopperTestCase extends GenericTestCase {
 		final StackTraceElement[] stackTrace = fault.getStackTrace();
 		assertEquals(3, fault.getStackTrace().length);
 		assertEquals(" --  recursion.end  -- ()", stackTrace[0].toString());
-		assertEquals("test.coverage.Stopped.infLoop(Stopped.java)", stackTrace[1].toString());
+		assertEquals("test.coverage.Stopped.infLoop(Stopped.java:82)", stackTrace[1].toString());
 		assertEquals(" -- recursion.start -- ()", stackTrace[2].toString());
 	}
 
@@ -352,8 +352,8 @@ public class StopperTestCase extends GenericTestCase {
 		assertEquals(4, fault.getStackTrace().length);
 		assertEquals(" --  recursion.end  -- ()", stackTrace[0].toString());
 
-		assertEquals("test.coverage.Stopped.infLoop2(Stopped.java)", stackTrace[1].toString());
-		assertEquals("test.coverage.Stopped.infLoop(Stopped.java)", stackTrace[2].toString());
+		assertEquals("test.coverage.Stopped.infLoop2(Stopped.java:98)", stackTrace[1].toString());
+		assertEquals("test.coverage.Stopped.infLoop(Stopped.java:83)", stackTrace[2].toString());
 
 		assertEquals(" -- recursion.start -- ()", stackTrace[3].toString());
 	}
@@ -382,8 +382,8 @@ public class StopperTestCase extends GenericTestCase {
 		final StackTraceElement[] stackTrace = fault.getStackTrace();
 		assertEquals(4, fault.getStackTrace().length);
 		assertEquals(" --  recursion.end  -- ()", stackTrace[0].toString());
-		assertEquals("test.coverage.Stopped.infLoop2(Stopped.java)", stackTrace[1].toString());
-		assertEquals("test.coverage.Stopped.infLoop(Stopped.java)", stackTrace[2].toString());
+		assertEquals("test.coverage.Stopped.infLoop2(Stopped.java:98)", stackTrace[1].toString());
+		assertEquals("test.coverage.Stopped.infLoop(Stopped.java:83)", stackTrace[2].toString());
 		assertEquals(" -- recursion.start -- ()", stackTrace[3].toString());
 	}
 
@@ -413,9 +413,9 @@ public class StopperTestCase extends GenericTestCase {
 		assertEquals(5, fault.getStackTrace().length);
 		assertEquals(" --  recursion.end  -- ()", stackTrace[0].toString());
 
-		assertEquals("test.coverage.Stopped.infLoop2(Stopped.java)", stackTrace[1].toString());
-		assertEquals("test.coverage.Stopped.infLoop3(Stopped.java)", stackTrace[2].toString());
-		assertEquals("test.coverage.Stopped.infLoop(Stopped.java)" , stackTrace[3].toString());
+		assertEquals("test.coverage.Stopped.infLoop2(Stopped.java:98)", stackTrace[1].toString());
+		assertEquals("test.coverage.Stopped.infLoop3(Stopped.java:108)", stackTrace[2].toString());
+		assertEquals("test.coverage.Stopped.infLoop(Stopped.java:84)" , stackTrace[3].toString());
 
 		assertEquals(" -- recursion.start -- ()", stackTrace[4].toString());
 	}
@@ -444,9 +444,9 @@ public class StopperTestCase extends GenericTestCase {
 		final StackTraceElement[] stackTrace = fault.getStackTrace();
 		assertEquals(5, fault.getStackTrace().length);
 		assertEquals(" --  recursion.end  -- ()", stackTrace[0].toString());
-		assertEquals("test.coverage.Stopped.infLoop2(Stopped.java)", stackTrace[1].toString());
-		assertEquals("test.coverage.Stopped.infLoop3(Stopped.java)", stackTrace[2].toString());
-		assertEquals("test.coverage.Stopped.infLoop(Stopped.java)",  stackTrace[3].toString());
+		assertEquals("test.coverage.Stopped.infLoop2(Stopped.java:98)", stackTrace[1].toString());
+		assertEquals("test.coverage.Stopped.infLoop3(Stopped.java:108)", stackTrace[2].toString());
+		assertEquals("test.coverage.Stopped.infLoop(Stopped.java:84)",  stackTrace[3].toString());
 		assertEquals(" -- recursion.start -- ()", stackTrace[4].toString());
 	}
 
@@ -476,10 +476,10 @@ public class StopperTestCase extends GenericTestCase {
 		assertEquals(6, fault.getStackTrace().length);
 		assertEquals(" --  recursion.end  -- ()", stackTrace[0].toString());
 
-		assertEquals("test.coverage.Stopped.infLoop2(Stopped.java)", stackTrace[1].toString());
-		assertEquals("test.coverage.Stopped.infLoop3(Stopped.java)", stackTrace[2].toString());
-		assertEquals("test.coverage.Stopped.infLoop4(Stopped.java)", stackTrace[3].toString());
-		assertEquals("test.coverage.Stopped.infLoop(Stopped.java)" , stackTrace[4].toString());
+		assertEquals("test.coverage.Stopped.infLoop2(Stopped.java:98)", stackTrace[1].toString());
+		assertEquals("test.coverage.Stopped.infLoop3(Stopped.java:108)", stackTrace[2].toString());
+		assertEquals("test.coverage.Stopped.infLoop4(Stopped.java:118)", stackTrace[3].toString());
+		assertEquals("test.coverage.Stopped.infLoop(Stopped.java:85)" , stackTrace[4].toString());
 
 		assertEquals(" -- recursion.start -- ()", stackTrace[5].toString());
 	}
@@ -508,10 +508,10 @@ public class StopperTestCase extends GenericTestCase {
 		final StackTraceElement[] stackTrace = fault.getStackTrace();
 		assertEquals(6, fault.getStackTrace().length);
 		assertEquals(" --  recursion.end  -- ()", stackTrace[0].toString());
-		assertEquals("test.coverage.Stopped.infLoop2(Stopped.java)", stackTrace[1].toString());
-		assertEquals("test.coverage.Stopped.infLoop3(Stopped.java)", stackTrace[2].toString());
-		assertEquals("test.coverage.Stopped.infLoop4(Stopped.java)", stackTrace[3].toString());
-		assertEquals("test.coverage.Stopped.infLoop(Stopped.java)",  stackTrace[4].toString());
+		assertEquals("test.coverage.Stopped.infLoop2(Stopped.java:98)", stackTrace[1].toString());
+		assertEquals("test.coverage.Stopped.infLoop3(Stopped.java:108)", stackTrace[2].toString());
+		assertEquals("test.coverage.Stopped.infLoop4(Stopped.java:118)", stackTrace[3].toString());
+		assertEquals("test.coverage.Stopped.infLoop(Stopped.java:85)",  stackTrace[4].toString());
 		assertEquals(" -- recursion.start -- ()", stackTrace[5].toString());
 	}
 }

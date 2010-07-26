@@ -33,7 +33,7 @@ import junit.textui.TestRunner;
 public class AllTests {
 
 	/** If true, also run AutoTests (Random) */
-	public static final boolean AUTO = false;
+	private static final boolean AUTO = TestFul.getProperty(TestProperties.PROPERTY_TEST_RANDOM, false);
 
 	public static Test suite() {
 		TestFul.setupLogging(GenericTestCase.getConfig());

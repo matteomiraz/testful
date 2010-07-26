@@ -59,7 +59,7 @@ public class Methodz implements Serializable, Comparable<Methodz> {
 		params = cluster.getRegistry().convert(m.getParameterTypes());
 
 		// ISSUE #1: if you need array support, vote here: http://code.google.com/p/testful/issues/detail?id=1
-		if(m.getReturnType() ==  Void.TYPE || m.getReturnType().isArray())
+		if(m.getReturnType() ==  Void.TYPE || m.getReturnType().isArray() || m.getReturnType().isEnum())
 			returnType = null;
 		else
 			returnType = cluster.getRegistry().getClazz(m.getReturnType());

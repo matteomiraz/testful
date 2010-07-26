@@ -30,6 +30,7 @@ import java.util.logging.Logger;
 import jmetal.base.Variable;
 import testful.utils.ElementManager;
 import ec.util.MersenneTwisterFast;
+
 public abstract class Operation implements Serializable, Cloneable, Variable {
 
 	private static final long serialVersionUID = -4200667624940186523L;

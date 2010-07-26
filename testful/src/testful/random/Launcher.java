@@ -50,7 +50,7 @@ public class Launcher {
 
 		TestFul.setupLogging(config);
 
-		logger.config(TestFul.getProperties(config));
+		logger.config(TestFul.printGetters(config));
 
 		try {
 			run(config);

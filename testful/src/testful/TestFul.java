@@ -41,16 +41,24 @@ import org.kohsuke.args4j.CmdLineParser;
 
 public class TestFul {
 
+	//  ---------- testful's system properties (settable with -Dprop=value) ----------
+
+	/** Enables the debug mode (boolean) */
+	public static final String PROPERTY_DEBUG = "testful.debug";
+
+	/** Set the number of threads to use (integer; default: the number of CPUs of the machine) */
+	public static final String PROPERTY_N_WORKERS = "testful.nWorkers";
+
+	/** Enables the testful's fault detection feature (boolean; default: enabled) */
+	public static final String PROPERTY_FAULT_DETECT = "testful.fault";
+
+	// ---------- end of testful's properties ----------
+
 	public static final long runId = System.currentTimeMillis();
 
-	/**
-	 * Runs TestFul in debug mode:
-	 * enables extended validity checks
-	 * and activates one executor only.
-	 */
-	public static final boolean DEBUG = false;
+	public static final boolean DEBUG = TestFul.getProperty(PROPERTY_DEBUG, false);
 
-	private static final String VERSION = "1.2 alpha";
+	private static final String VERSION = "1.2.0";
 
 	private static final String REVISION = readRevision();
 
@@ -83,17 +91,14 @@ public class TestFul {
 
 	public static void printHeader(String module) {
 
-		System.out.println("Testful v. " + VERSION + REVISION + (module != null ? " - " + module : "") + " - http://code.google.com/p/testful");
-		System.out.println("Copyright (c) 2010 - Matteo Miraz");
+		System.out.println("Testful v. " + VERSION + REVISION + (DEBUG ? " - debug mode" : "" ) + (module != null ? " - " + module : ""));
+		System.out.println("Copyright (c) 2010 Matteo Miraz - http://code.google.com/p/testful");
 		System.out.println("This program comes with ABSOLUTELY NO WARRANTY.");
 		System.out.println("This is free software, and you are welcome to redistribute it under certain conditions.");
 		System.out.println("For more information, read http://www.gnu.org/licenses/gpl-3.0.txt");
 		System.out.println();
 	}
 
-	/**
-	 * @return
-	 */
 	private static String readRevision() {
 		final InputStream stream = TestFul.class.getResourceAsStream("/revision.txt");
 		if(stream == null) return "";
@@ -199,7 +204,7 @@ public class TestFul {
 		}
 	}
 
-	public static String getProperties(Object o) {
+	public static String printGetters(Object o) {
 		StringBuilder sb = new StringBuilder();
 
 		for (Method m : o.getClass().getMethods()) {
@@ -231,4 +236,33 @@ public class TestFul {
 		return cur;
 	}
 
+	public static boolean getProperty(String key, boolean defaultValue) {
+		try {
+			final String value = System.getProperty(key);
+
+			if(value != null)
+				return Boolean.parseBoolean(value);
+
+		} catch (NumberFormatException e) {
+			Logger.getLogger("testful").log(Level.FINE, "Cannot use " + key + "property: " + e.getMessage(), e);
+		}
+		return defaultValue;
+	}
+
+	public static int getProperty(String key, int defaultValue) {
+		try {
+			final String value = System.getProperty(key);
+
+			if(value != null)
+				return Integer.parseInt(value);
+
+		} catch (NumberFormatException e) {
+			Logger.getLogger("testful").log(Level.FINE, "Cannot use " + key + "property: " + e.getMessage(), e);
+		}
+		return defaultValue;
+	}
+
+	public static String getProperty(String key, String defaultValue) {
+		return System.getProperty(key, defaultValue);
+	}
 }

@@ -81,7 +81,7 @@ public class FaultTestCase extends GenericTestCase {
 		assertEquals(fault.getCauseExceptionName(), NullPointerException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
-		assertEquals("test.coverage.Fault.a1(Fault.java)", fault.getStackTrace()[0].toString());
+		assertEquals("test.coverage.Fault.a1(Fault.java:14)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testA1Null() throws Exception {
@@ -140,7 +140,7 @@ public class FaultTestCase extends GenericTestCase {
 		assertEquals(fault.getCauseExceptionName(), NullPointerException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
-		assertEquals("test.coverage.Fault.b(Fault.java)", fault.getStackTrace()[0].toString());
+		assertEquals("test.coverage.Fault.b(Fault.java:22)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testB1() throws Exception {
@@ -175,7 +175,7 @@ public class FaultTestCase extends GenericTestCase {
 		assertEquals(fault.getCauseExceptionName(), ArithmeticException.class.getName());
 
 		assertEquals(1, fault.getStackTrace().length);
-		assertEquals("test.coverage.Fault.c(Fault.java)", fault.getStackTrace()[0].toString());
+		assertEquals("test.coverage.Fault.c(Fault.java:30)", fault.getStackTrace()[0].toString());
 	}
 
 	public void testC1() throws Exception {
@@ -232,7 +232,76 @@ public class FaultTestCase extends GenericTestCase {
 		assertEquals(fault.getCauseExceptionName(), "test.coverage.MyException");
 
 		assertEquals(1, fault.getStackTrace().length);
-		assertEquals("test.coverage.Fault.e(Fault.java)", fault.getStackTrace()[0].toString());
+		assertEquals("test.coverage.Fault.e(Fault.java:46)", fault.getStackTrace()[0].toString());
+	}
+
+	public void testF() throws Exception {
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.f, new Reference[] { } )
+		}));
+
+		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(fCov);
+		assertEquals(1.0f, fCov.getQuality());
+
+		Fault fault = fCov.faults.iterator().next();
+		assertNotNull(fault);
+
+		assertEquals("test.coverage.MyException", fault.getMessage());
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getName());
+
+		assertEquals(null, fault.getCauseMessage());
+		assertEquals(fault.getCauseExceptionName(), "test.coverage.MyException");
+
+		assertEquals(1, fault.getStackTrace().length);
+		assertEquals("test.coverage.Fault.f(Fault.java:54)", fault.getStackTrace()[0].toString());
+	}
+
+	public void testF1() throws Exception {
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.f1, new Reference[] { } )
+		}));
+
+		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertTrue(fCov == null || fCov.getQuality() == 0);
+	}
+
+	public void testF2() throws Exception {
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.f2, new Reference[] { } )
+		}));
+
+		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertTrue(fCov == null || fCov.getQuality() == 0);
+	}
+
+	public void testF3() throws Exception {
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.f3, new Reference[] { } )
+		}));
+
+		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(fCov);
+		assertTrue(fCov == null || fCov.getQuality() == 0);
+	}
+
+	public void testF4() throws Exception {
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.f4, new Reference[] { } )
+		}));
+
+		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertTrue(fCov == null || fCov.getQuality() == 0);
 	}
 
 	public void testE1() throws Exception {
@@ -473,6 +542,45 @@ public class FaultTestCase extends GenericTestCase {
 			assertEquals("Wrong " + i + " element", expected[i], f.getStackTrace()[i]);
 	}
 
+	public void testRecursionIngoreLastCalled() {
+		StackOverflowError exc = new StackOverflowError();
+		exc.setStackTrace(new StackTraceElement[] {
+
+				new StackTraceElement("foo.bar.ClassName", "ignoreMe", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "ignoreMe", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "ignoreMe", "Foo", 3),
+
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 0),
+
+				new StackTraceElement("pre", "c", "c", 3),
+				new StackTraceElement("pre", "b", "b", 2),
+				new StackTraceElement("pre", "a", "a", 1),
+		});
+		Fault f = new Fault(new UnexpectedExceptionException(exc), "foo.bar.ClassName");
+
+		StackTraceElement[] expected = new StackTraceElement[] {
+				new StackTraceElement(" --  recursion", "end  -- ", "", -1),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 2),
+				new StackTraceElement("foo.bar.ClassName", "firstMethod", "Foo", 1),
+				new StackTraceElement(" -- recursion", "start -- ", "", -1),
+		};
+
+		assertEquals(expected.length, f.getStackTrace().length);
+		for (int i = 0; i < expected.length; i++)
+			assertEquals("Wrong " + i + " element", expected[i], f.getStackTrace()[i]);
+	}
+
 	public void testRecursionComplex() {
 		StackOverflowError exc = new StackOverflowError();
 		exc.setStackTrace(new StackTraceElement[] {
@@ -549,4 +657,57 @@ public class FaultTestCase extends GenericTestCase {
 		for (int i = 0; i < expected.length; i++)
 			assertEquals("Wrong " + i + " element", expected[i], f.getStackTrace()[i]);
 	}
+
+	public void testInnerClassError1() throws Exception {
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(cut.iterators[0], cut.cuts[0], cut.g, new Reference[] { } ),
+				new Invoke(null, cut.iterators[0], cut.i_next, new Reference[] { })
+
+		}));
+
+		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(fCov);
+		assertEquals(1.0f, fCov.getQuality());
+
+		Fault fault = fCov.faults.iterator().next();
+		assertNotNull(fault);
+
+		assertEquals("java.lang.NullPointerException", fault.getMessage());
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getName());
+
+		assertEquals(null, fault.getCauseMessage());
+		assertEquals(fault.getCauseExceptionName(), "java.lang.NullPointerException");
+
+		assertEquals(1, fault.getStackTrace().length);
+		assertEquals("test.coverage.Fault$WrongIter.next(Fault.java:80)", fault.getStackTrace()[0].toString());
+	}
+
+	public void testInnerClassError2() throws Exception {
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cCns, new Reference[] { }),
+				new Invoke(cut.iterators[0], cut.cuts[0], cut.g1, new Reference[] { } ),
+				new Invoke(null, cut.iterators[0], cut.i_next, new Reference[] { })
+
+		}));
+
+		FaultsCoverage fCov = (FaultsCoverage) covs.get(FaultsCoverage.KEY);
+		assertNotNull(fCov);
+		assertEquals(1.0f, fCov.getQuality());
+
+		Fault fault = fCov.faults.iterator().next();
+		assertNotNull(fault);
+
+		assertEquals("java.lang.NullPointerException", fault.getMessage());
+		assertEquals(fault.getExceptionName(), UnexpectedExceptionException.class.getName());
+
+		assertEquals(null, fault.getCauseMessage());
+		assertEquals(fault.getCauseExceptionName(), "java.lang.NullPointerException");
+
+		assertEquals(1, fault.getStackTrace().length);
+		assertEquals("test.coverage.Fault$1.next(Fault.java:102)", fault.getStackTrace()[0].toString());
+	}
+
 }
