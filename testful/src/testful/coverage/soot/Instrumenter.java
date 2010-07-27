@@ -47,6 +47,7 @@ import soot.jimple.LookupSwitchStmt;
 import soot.jimple.Stmt;
 import soot.jimple.TableSwitchStmt;
 import soot.jimple.toolkits.scalar.NopEliminator;
+import soot.jimple.toolkits.scalar.UnreachableCodeEliminator;
 import soot.tagkit.LineNumberTag;
 import soot.tagkit.StringTag;
 import soot.util.Chain;
@@ -102,13 +103,15 @@ public class Instrumenter {
 
 	private static final Logger logger = Logger.getLogger("testful.instrumenter");
 
-	private static final boolean preWriter     = false;
-	private static final boolean instrumenter  = true;
-	private static final boolean postWriter    = false;
-	private static final boolean postValidator = false;
-	private static final boolean nopEliminator = true;
-	private static final boolean finalWriter   = false;
-	private static final boolean finalValidator= false;
+	private static final boolean preWriter           = false;
+	private static final boolean deadCodeRemoverPre  = true;
+	private static final boolean instrumenter        = true;
+	private static final boolean postWriter          = false;
+	private static final boolean postValidator       = false;
+	private static final boolean nopEliminator       = true;
+	private static final boolean deadCodeRemoverPost = true;
+	private static final boolean finalWriter         = false;
+	private static final boolean finalValidator      = false;
 
 	public static void prepare(IConfigProject config, List<String> toInstrument) {
 		String[] SOOT_CONF = new String[] { "-validate", "-keep-line-number", "-f", "c", "-output-dir", config.getDirInstrumented().getAbsolutePath() };
@@ -163,6 +166,14 @@ public class Instrumenter {
 			logger.fine("Enabled phase: " + last);
 		}
 
+		if(deadCodeRemoverPre) {
+			String newPhase = "jtp.deadCodeRemoverPre";
+			logger.fine("Enabled phase: " + newPhase);
+			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(UnreachableCodeEliminator.v())));
+			else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, ActiveBodyTransformer.v(UnreachableCodeEliminator.v())), last);
+			last = newPhase;
+		}
+
 		if(instrumenter) {
 			String newPhase = "jtp.coverageInstrumenter";
 			logger.fine("Enabled phase: " + newPhase);
@@ -192,6 +203,14 @@ public class Instrumenter {
 			logger.fine("Enabled phase: " + newPhase);
 			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(NopEliminator.v())));
 			else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, ActiveBodyTransformer.v(NopEliminator.v())), last);
+			last = newPhase;
+		}
+
+		if(deadCodeRemoverPost) {
+			String newPhase = "jtp.deadCodeRemoverPost";
+			logger.fine("Enabled phase: " + newPhase);
+			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(UnreachableCodeEliminator.v())));
+			else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, ActiveBodyTransformer.v(UnreachableCodeEliminator.v())), last);
 			last = newPhase;
 		}
 
