@@ -32,17 +32,15 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import testful.TestFul;
 import testful.coverage.CoverageInformation;
 import testful.coverage.Tracker;
 import testful.coverage.whiteBox.CoverageDataFlow.DefUse;
 import testful.utils.ElementManager;
 
-@SuppressWarnings("unused") // for the SAFE option
 public class TrackerWhiteBox extends Tracker {
 
 	private static final Logger logger = Logger.getLogger("testful.coverage.whiteBox");
-
-	private final static boolean SAFE = false;
 
 	private static TrackerWhiteBox tracker;
 
@@ -173,14 +171,14 @@ public class TrackerWhiteBox extends Tracker {
 		Integer ID = id;
 
 		Integer num = callNum.get(ID);
-		if(!SAFE || num != null) {
+		if(!TestFul.DEBUG || num != null) {
 			if(num <= 1) {
 				stackCache = null;
 				callNum.remove(ID);
 				Integer LAST = stack.removeLast();
 
-				if(SAFE && !LAST.equals(ID))
-					logger.fine("WARN: called method is not the last on the stack!");
+				if(TestFul.DEBUG && !LAST.equals(ID))
+					TestFul.debug("Context: the method called is not the last on the stack!");
 			} else {
 				callNum.put(ID, num-1);
 			}
@@ -216,7 +214,7 @@ public class TrackerWhiteBox extends Tracker {
 			if(!checkDefExposer(obj))
 				return;
 
-			final Stack stack = getStack();
+			final Stack stack = getStack(); //TODO: def-exposition does not work if we are using non-contextual analysis
 
 			Set<DataAccess> def = defExpo.get(stack);
 			if(def == null) {
@@ -258,46 +256,6 @@ public class TrackerWhiteBox extends Tracker {
 			}
 		}
 	}
-
-	// // without context
-	//
-	//	private Map<Integer[], BitSet> defExpo2;
-	//	public void manageDefExposition2(Object obj) {
-	//		if(!(obj instanceof DefExposer))
-	//			return;
-	//
-	//		final DefExposer o = (DefExposer) obj;
-	//
-	//		final Integer[] stack = getStack();
-	//
-	//		BitSet def = defExpo2.get(stack);
-	//		if(def == null) {
-	//			def = new BitSet();
-	//			defExpo2.put(stack, def);
-	//		}
-	//
-	//
-	//		final Queue<DefExposer> todo = new LinkedList<DefExposer>();
-	//		final IdentityHashMap<DefExposer, Integer> processed = new IdentityHashMap<DefExposer, Integer>();
-	//
-	//		todo.add(o);
-	//
-	//		while (!todo.isEmpty()) {
-	//			DefExposer d = todo.poll();
-	//
-	//			if (processed.put(d, VALUE) == null) {
-	//
-	//				for (DataAccess da : d.__testful_get_defs__())
-	//					if (da != null)
-	//						def.set(da.getId());
-	//
-	//				for (Object f : d.__testful_get_fields__())
-	//					getDefExposers(f, todo);
-	//
-	//			}
-	//		}
-	//	}
-
 
 	private static boolean checkDefExposer(Object o) {
 		if(o == null) return false;
@@ -379,7 +337,7 @@ public class TrackerWhiteBox extends Tracker {
 	}
 
 	/**
-	 * creates the definitions array for a given array with an arbirary number of dimensions.<br/>
+	 * creates the definitions array for a given array with an arbitrary number of dimensions.<br/>
 	 * Use this method when an array is returned from a method invocation (e.g. list.toArray()).
 	 * @param o the array created
 	 * @param id the definition id

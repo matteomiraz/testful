@@ -2,6 +2,8 @@ package testful.coverage.whiteBox;
 
 import java.io.Serializable;
 
+import testful.TestFul;
+
 public class DataAccess implements Serializable {
 	private static final long serialVersionUID = -7933747383773429832L;
 
@@ -10,10 +12,16 @@ public class DataAccess implements Serializable {
 	private final int hashCode;
 
 	public DataAccess(int id, Stack context) {
+		if(context == null) {
+			NullPointerException exc = new NullPointerException("The context must not be null");
+			TestFul.debug(exc);
+			throw exc;
+		}
+
 		this.id = id;
 		this.context = context;
 
-		hashCode = (31 + id) * 31 + (context != null ? context.hashCode() : 0 );
+		hashCode = (31 + id) * 31 + context.hashCode();
 	}
 
 	public int getId() {
@@ -38,12 +46,7 @@ public class DataAccess implements Serializable {
 		DataAccess other = (DataAccess) obj;
 
 		if(id != other.id) return false;
-		if(context == null) {
-			if(other.context != null) return false;
-		} else {
-			if(other.context == null) return false;
-			if(!context.equals(other.context)) return false;
-		}
+		if(!context.equals(other.context)) return false;
 
 		return true;
 	}
@@ -53,14 +56,7 @@ public class DataAccess implements Serializable {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append(id);
-
-		if(context != null) {
-			sb.append("(");
-			for(Integer i : context.stack)
-				sb.append(" ").append(i).append(" ");
-
-			sb.append(")");
-		}
+		sb.append(context.toString());
 
 		return sb.toString();
 	}

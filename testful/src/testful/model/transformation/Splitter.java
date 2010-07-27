@@ -131,7 +131,7 @@ public class Splitter {
 
 			return ret;
 		} catch (Throwable e) {
-			if(TestFul.DEBUG) e.printStackTrace();
+			TestFul.debug(e);
 			logger.log(Level.FINE, "Error during split and merge: " + e, e);
 			return test;
 		}
@@ -183,7 +183,7 @@ public class Splitter {
 			try {
 				results.add(new TestCoverage(entry.getKey(), entry.getValue().get()));
 			} catch(Exception e) {
-				if(TestFul.DEBUG) e.printStackTrace();
+				TestFul.debug(e);
 				logger.log(Level.FINE, e.getMessage(), e);
 			}
 		}

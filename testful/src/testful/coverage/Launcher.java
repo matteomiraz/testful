@@ -59,6 +59,24 @@ public class Launcher {
 		@Argument(required = false, multiValued = true, usage = "Instrument these classes")
 		private List<String> classes = new ArrayList<String>();
 
+		@Option(required = false, name = "-context", usage = "Use Contextual Analysis (used in Def-Use analysis)")
+		private boolean context = false;
+		public boolean isContext() {
+			return context;
+		}
+
+		@Option(required = false, name = "-du", usage = "Collect Def-Use pairs")
+		private boolean duPairs = false;
+		public boolean isDuPairs() {
+			return duPairs;
+		}
+
+		@Option(required = false, name = "-de", usage = "Collect Def-Exposition")
+		private boolean defExposition = false;
+		public boolean isDefExposition() {
+			return duPairs && defExposition;
+		}
+
 		/**
 		 * @param project instrument the whole project
 		 */
@@ -114,6 +132,8 @@ public class Launcher {
 			if(!classes.isEmpty()) n++;
 
 			if(n != 1) throw new CmdLineException(null, "You must use -project, -file, or provide one (or more) classes as argument");
+
+			if(defExposition && !duPairs) throw new CmdLineException(null, "Cannot calculate Def-Exposition without Def-Use pairs");
 		}
 	}
 
@@ -141,7 +161,7 @@ public class Launcher {
 			Instrumenter.prepare(config, toInstrument);
 
 			Instrumenter.run(config, toInstrument,
-					testful.coverage.whiteBox.WhiteInstrumenter.singleton,
+					new testful.coverage.whiteBox.WhiteInstrumenter(config),
 					testful.coverage.stopper.ExecutionStopperInstrumenter.singleton
 			);
 		} catch (Exception e) {

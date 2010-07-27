@@ -210,6 +210,10 @@ public class XmlMethod implements Comparable<XmlMethod> {
 		if(meth.getDeclaringClass().getName().equals("java.lang.Object"))
 			return null;
 
+		// skip def-exposition methods
+		if(meth.getName().equals("__testful_get_defs__")) return null;
+		if(meth.getName().equals("__testful_get_fields__")) return null;
+
 		// skip methods with unsupported elements
 		for (Class<?> params : meth.getParameterTypes()) {
 			// ISSUE #1: if you need array support, vote here: http://code.google.com/p/testful/issues/detail?id=1

@@ -36,8 +36,6 @@ public class AllTests {
 	private static final boolean AUTO = TestFul.getProperty(TestProperties.PROPERTY_TEST_RANDOM, false);
 
 	public static Test suite() {
-		TestFul.setupLogging(GenericTestCase.getConfig());
-
 		TestSuite suite = new TestSuite("Test for Testful");
 
 		suite.addTest(testful.model.AllTests.suite());

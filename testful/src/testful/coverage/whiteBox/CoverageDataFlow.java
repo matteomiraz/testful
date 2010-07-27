@@ -1,9 +1,11 @@
 package testful.coverage.whiteBox;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import testful.TestFul;
 import testful.coverage.CoverageInformation;
 
 public class CoverageDataFlow implements CoverageInformation {
@@ -13,11 +15,24 @@ public class CoverageDataFlow implements CoverageInformation {
 	public static class DefUse implements Serializable {
 		private static final long serialVersionUID = 2768652445227605157L;
 
-		private final DataAccess def, use;
+		/** the definition being used. If null, it is the default value (e.g., the auto-assigned 0 value for integers */
+		private final DataAccess def;
+		/** the use. This must not be null */
+		private final DataAccess use;
+
+		private final int hashCode;
 
 		public DefUse(DataAccess def, DataAccess use) {
+			if(use == null) {
+				NullPointerException e = new NullPointerException("The use cannot be null");
+				TestFul.debug(e);
+				throw e;
+			}
+
 			this.def = def;
 			this.use = use;
+
+			hashCode = 31 * ((def == null) ? 0 : def.hashCode()) + use.hashCode();
 		}
 
 		public DataAccess getDef() {
@@ -30,11 +45,7 @@ public class CoverageDataFlow implements CoverageInformation {
 
 		@Override
 		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + ((def == null) ? 0 : def.hashCode());
-			result = prime * result + ((use == null) ? 0 : use.hashCode());
-			return result;
+			return hashCode;
 		}
 
 		@Override
@@ -48,16 +59,15 @@ public class CoverageDataFlow implements CoverageInformation {
 			if(def == null) {
 				if(other.def != null) return false;
 			} else if(!def.equals(other.def)) return false;
-			if(use == null) {
-				if(other.use != null) return false;
-			} else if(!use.equals(other.use)) return false;
+
+			if(!use.equals(other.use)) return false;
 
 			return true;
 		}
 
 		@Override
 		public String toString() {
-			return def + "-"+ use;
+			return (def==null?"default[]":def) + "-"+ use;
 		}
 	}
 
@@ -118,10 +128,19 @@ public class CoverageDataFlow implements CoverageInformation {
 
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder();
+		String[] duStrings = new String[duPairs.size()];
 
+		int i = 0;
 		for(DefUse du : duPairs)
-			sb.append(du).append("\n");
+			duStrings[i++] = du.toString();
+
+		Arrays.sort(duStrings);
+
+		StringBuilder sb = new StringBuilder();
+		for (i = 0; i < duStrings.length; i++) {
+			if(i > 0) sb.append("\n");
+			sb.append(duStrings[i]);
+		}
 
 		return sb.toString();
 	}

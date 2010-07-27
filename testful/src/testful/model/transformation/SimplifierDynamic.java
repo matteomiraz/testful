@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.TestFul;
@@ -61,8 +60,6 @@ import testful.runner.ClassFinder;
 public class SimplifierDynamic implements TestTransformation {
 
 	public static final SimplifierDynamic singleton = new SimplifierDynamic ();
-
-	private static final Logger logger = Logger.getLogger("testful.model.transformation");
 
 	/**
 	 * This method relies on the {@link OperationResult} Information.
@@ -134,7 +131,7 @@ public class SimplifierDynamic implements TestTransformation {
 
 			} else {
 				if(TestFul.DEBUG && (op instanceof Invoke || op instanceof CreateObject))
-					logger.log(Level.WARNING, "An OperationResult is expected, but it is not found", new NullPointerException());
+					TestFul.debug("An OperationResult is expected, but it is not found");
 
 				ops.add(op);
 			}

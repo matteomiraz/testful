@@ -56,7 +56,7 @@ public class BlockClass extends Block implements Iterable<Block> {
 		String pre = str.substring(0, i+1);
 		String classFileName = str.substring(i+1);
 
-		if(TestFul.DEBUG && !classFileName.endsWith(".class")) logger.warning("The class file does not ends with .class " + classURL);
+		if(TestFul.DEBUG && !classFileName.endsWith(".class")) TestFul.debug("The class file does not ends with .class " + classURL);
 
 		final String url = pre + classFileName.substring(0, classFileName.length()-6) + FILE_SUFFIX;
 		try {

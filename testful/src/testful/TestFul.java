@@ -54,9 +54,29 @@ public class TestFul {
 
 	// ---------- end of testful's properties ----------
 
-	public static final long runId = System.currentTimeMillis();
+	// ------------------- debug -----------------------
+	public static final boolean DEBUG;
+	private static final Logger loggerDebug;
+	static {
+		DEBUG = TestFul.getProperty(PROPERTY_DEBUG, false);
 
-	public static final boolean DEBUG = TestFul.getProperty(PROPERTY_DEBUG, false);
+		if(DEBUG) loggerDebug = Logger.getLogger("debug");
+		else loggerDebug = null;
+	}
+
+	public static void debug(String message) {
+		if(DEBUG)
+			loggerDebug.warning(message);
+	}
+
+	public static void debug(Throwable exc) {
+		if(DEBUG)
+			loggerDebug.log(Level.WARNING, exc.getMessage(), exc);
+	}
+
+	// ----------- command-line handling ---------------
+
+	public static final long runId = System.currentTimeMillis();
 
 	private static final String VERSION = "1.2.0";
 
@@ -141,6 +161,38 @@ public class TestFul {
 		}
 	};
 
+	private static final Formatter debugFormatter = new Formatter() {
+		private final Calendar cal = Calendar.getInstance();
+
+		@Override
+		public String format(LogRecord record) {
+			cal.setTimeInMillis(record.getMillis());
+
+			StringBuilder sb = new StringBuilder();
+
+			sb.append(" ----- start DEBUG -----\n");
+
+			sb.append(String.format("%2d:%02d:%02d ",
+					cal.get(Calendar.HOUR_OF_DAY),
+					cal.get(Calendar.MINUTE),
+					cal.get(Calendar.SECOND)));
+
+			sb.append(record.getLevel().getLocalizedName()).append(" ");
+
+			sb.append(record.getMessage()).append("\n");
+
+			if(record.getThrown() != null) {
+				sb.append("-- ").append(record.getThrown().toString()).append("\n");
+				for (StackTraceElement ste : record.getThrown().getStackTrace())
+					sb.append("    ").append(ste).append("\n");
+			}
+
+			sb.append(" ------ end  DEBUG -----\n");
+
+			return sb.toString();
+		}
+	};
+
 	private static final Formatter fileFormatter = new Formatter() {
 
 		@Override
@@ -183,6 +235,17 @@ public class TestFul {
 			ch.setFormatter(consoleFormatter);
 			ch.setLevel(Level.INFO);
 			logger.addHandler(ch);
+		}
+
+		if(DEBUG) {
+			Logger debug = Logger.getLogger("debug");
+			debug.setUseParentHandlers(false);
+			debug.setLevel(Level.ALL);
+
+			ConsoleHandler ch = new ConsoleHandler();
+			ch.setFormatter(debugFormatter);
+			ch.setLevel(Level.ALL);
+			debug.addHandler(ch);
 		}
 
 		if(logDir != null) {

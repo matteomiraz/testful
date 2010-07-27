@@ -36,9 +36,9 @@ public class AssignConstant extends Operation {
 
 		if(TestFul.DEBUG) {
 			if(ref == null) {
-				final NullPointerException exception = new NullPointerException("REF cannot be null!");
-				exception.printStackTrace();
-				throw exception;
+				final NullPointerException exc = new NullPointerException("REF cannot be null!");
+				TestFul.debug(exc);
+				throw exc;
 			}
 		}
 

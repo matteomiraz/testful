@@ -147,7 +147,7 @@ public final class Stopper {
 		if(!running) throw new IllegalStateException("The Stopper is not running");
 
 		if(TestFul.DEBUG && endOfTheWorld > 0)
-			logger.log(Level.WARNING, "The Stopper is already running", new IllegalStateException("The end is scheduled for " + endOfTheWorld));
+			TestFul.debug(new IllegalStateException("The Stopper is running: its end is scheduled for " + endOfTheWorld));
 
 		synchronized (wait) {
 			endOfTheWorld = System.currentTimeMillis() + maxExecTime;

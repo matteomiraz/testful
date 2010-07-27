@@ -54,6 +54,10 @@ import ec.util.MersenneTwisterFast;
  */
 public abstract class GenericTestCase extends TestCase {
 
+	//-------------------------- logging -------------------------------------
+	static {
+		TestFul.setupLogging(GenericTestCase.getConfig());
+	}
 	//-------------------------- config --------------------------------------
 	/** Returns the configuration for the TestCut */
 	public static IConfigProject getConfig() {

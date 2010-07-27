@@ -38,15 +38,15 @@ public class AssignPrimitive extends Operation {
 
 		if(TestFul.DEBUG) {
 			if(ref == null) {
-				final NullPointerException exception = new NullPointerException("REF cannot be null!");
-				exception.printStackTrace();
-				throw exception;
+				final NullPointerException exc = new NullPointerException("REF cannot be null!");
+				TestFul.debug(exc);
+				throw exc;
 			}
 
 			if(!(ref.getClazz() instanceof PrimitiveClazz || ref.getClazz().getClassName().equals("java.lang.String"))) {
-				final ClassCastException exception = new ClassCastException("REF must be a primitive type! It is " + ref.getClazz());
-				exception.printStackTrace();
-				throw exception;
+				final ClassCastException exc = new ClassCastException("REF must be a primitive type! It is " + ref.getClazz());
+				TestFul.debug(exc);
+				throw exc;
 			}
 		}
 

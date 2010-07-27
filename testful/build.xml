@@ -427,7 +427,21 @@
 		<delete dir="${base}/testCut/instrumented" />
 		<java jar="${artifacts}/instrumenter.jar" fork="true">
 			<jvmarg value="-Dtestful.debug=true"/>
-			<arg line="-dir ${testCut} dummy.WhiteSample dummy.Simple dummy.StateMachine apache.Fraction apache.FractionNoStatic test.coverage.Stopped test.coverage.Fault test.model.array.StringMatrix" />
+			<arg value="-du"/>
+			<arg value="-de"/>
+
+			<arg value="-dir"/>
+			<arg value="${testCut}"/>
+
+			<arg value="dummy.WhiteSample"/>
+			<arg value="test.coverage.DataFlow"/>
+			<arg value="test.coverage.Fault"/>
+			<arg value="dummy.Simple"/>
+			<arg value="dummy.StateMachine"/>
+			<arg value="apache.Fraction"/>
+			<arg value="apache.FractionNoStatic"/>
+			<arg value="test.coverage.Stopped"/>
+			<arg value="test.model.array.StringMatrix"/>
 		</java>
 	</target>
 
@@ -437,7 +451,7 @@
 	<target name="test.instrumenter" depends="test.cut.compile, build.instrumenter" description="Test the instrumentation facility">
 		<java jar="${artifacts}/instrumenter.jar" fork="true" failonerror="true">
 			<jvmarg value="-Dtestful.debug=true"/>
-			<arg line="-dir ${testCut} test.instrumenter.Catches test.instrumenter.Super test.instrumenter.Synchronized" />
+			<arg line="-du -de -dir ${testCut} test.instrumenter.Catches test.instrumenter.Super test.instrumenter.Synchronized" />
 		</java>
 	</target>
 
@@ -528,13 +542,13 @@
 
 		<!-- test instrumenter -->
 		<java classname="testful.coverage.Launcher" fork="true" classpathref="instrumented.classpath">
-			<arg line="-dir ${testCut} test.instrumenter.Catches test.instrumenter.Super test.instrumenter.Synchronized" />
+			<arg line="-du -de -dir ${testCut} test.instrumenter.Catches test.instrumenter.Super test.instrumenter.Synchronized" />
 		</java>
 
 		<!-- Instrument classes used in jUnit -->
 		<java classname="testful.coverage.Launcher" fork="true" classpathref="instrumented.classpath">
 			<jvmarg value="-Dtestful.debug=true"/>
-			<arg line="-dir ${testCut} dummy.WhiteSample dummy.Simple dummy.StateMachine apache.Fraction test.coverage.Stopped test.coverage.Fault" />
+			<arg line="-du -de -dir ${testCut} dummy.WhiteSample dummy.Simple dummy.StateMachine apache.Fraction test.coverage.Stopped test.coverage.Fault" />
 		</java>
 
 		<!-- run jUnit tests -->

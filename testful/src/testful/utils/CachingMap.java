@@ -80,8 +80,13 @@ public class CachingMap<K, E> extends LinkedHashMap<K, CachingMap.Cacheable<E>> 
 	@Override
 	public CachingMap.Cacheable<E> put(K key, CachingMap.Cacheable<E> value) {
 		if(key == null) {
-			if(TestFul.DEBUG) throw new NullPointerException("Cannot insert an element with null key in the CachingMap");
-			else  return value;
+			if(TestFul.DEBUG) {
+				NullPointerException exc = new NullPointerException("Cannot insert an element with null key in the CachingMap");
+				TestFul.debug(exc);
+				throw exc;
+			}
+
+			return value;
 		}
 
 		value.setCreationTimestamp(System.currentTimeMillis());
@@ -93,7 +98,12 @@ public class CachingMap<K, E> extends LinkedHashMap<K, CachingMap.Cacheable<E>> 
 		long now = System.currentTimeMillis();
 
 		for(Entry<? extends K, ? extends Cacheable<E>> e : m.entrySet()) {
-			if(TestFul.DEBUG && e.getKey() == null) throw new NullPointerException("Cannot insert an element with null key in the CachingMap");
+			if(TestFul.DEBUG && e.getKey() == null) {
+				NullPointerException exc = new NullPointerException("Cannot insert an element with null key in the CachingMap");
+				TestFul.debug(exc);
+				throw exc;
+			}
+
 			e.getValue().setCreationTimestamp(now);
 		}
 
@@ -103,7 +113,12 @@ public class CachingMap<K, E> extends LinkedHashMap<K, CachingMap.Cacheable<E>> 
 	@Override
 	public CachingMap.Cacheable<E> get(Object key) {
 		if(key == null) {
-			if(TestFul.DEBUG) throw new NullPointerException("Cannot look for an element providing a null key with the CachingMap");
+			if(TestFul.DEBUG) {
+				NullPointerException exc = new NullPointerException("Cannot look for an element providing a null key with the CachingMap");
+				TestFul.debug(exc);
+				throw exc;
+			}
+
 			return null;
 		}
 

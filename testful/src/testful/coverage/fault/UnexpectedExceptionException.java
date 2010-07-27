@@ -18,7 +18,6 @@
 
 package testful.coverage.fault;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.TestFul;
@@ -35,16 +34,22 @@ public class UnexpectedExceptionException extends Exception implements FaultyExe
 	private static final StackTraceElement[] EMPTY_STACK_TRACE = new StackTraceElement[0];
 
 	private static final Logger logger = Logger.getLogger("testful.coverage.fault");
-	private static final Level logLevel = TestFul.DEBUG ? Level.WARNING : Level.FINE;
 
 	public UnexpectedExceptionException(Throwable cause) {
 		super(cause);
 
 		if(cause == null || cause.getStackTrace() == null || cause.getStackTrace().length == 0 ) {
 			setStackTrace(EMPTY_STACK_TRACE);
-			if(cause == null) logger.log(logLevel, "Passed a Null cause to UnexpectedExceptionException!");
-			else if(cause.getStackTrace() == null) logger.log(logLevel, "Passed a null stack trace to UnexpectedExceptionException!");
-			else if(cause.getStackTrace().length == 0) logger.log(logLevel, "Passed an empty stack trace to UnexpectedExceptionException!");
+			if(cause == null) {
+				logger.fine("Passed a Null cause to UnexpectedExceptionException!");
+				TestFul.debug("Passed a Null cause to UnexpectedExceptionException!");
+			} else if(cause.getStackTrace() == null) {
+				logger.fine("Passed a null stack trace to UnexpectedExceptionException!");
+				TestFul.debug("Passed a null stack trace to UnexpectedExceptionException!");
+			} else if(cause.getStackTrace().length == 0) {
+				logger.fine("Passed an empty stack trace to UnexpectedExceptionException!");
+				TestFul.debug("Passed an empty stack trace to UnexpectedExceptionException!");
+			}
 		} else {
 			setStackTrace(cause.getStackTrace());
 		}

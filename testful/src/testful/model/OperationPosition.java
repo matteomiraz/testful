@@ -54,11 +54,29 @@ public class OperationPosition extends OperationInformation {
 			if(o1 == o2) return 0;
 
 			if(TestFul.DEBUG) {
-				if(o1 == null) throw new NullPointerException("o1 is null");
-				if(((OperationPosition)o1.getInfo(OperationPosition.KEY)) == null) throw new NullPointerException("o1 does not have the position information " + o1);
+				if(o1 == null) {
+					NullPointerException exc = new NullPointerException("o1 is null");
+					TestFul.debug(exc);
+					throw exc;
+				}
 
-				if(o2 == null) throw new NullPointerException("o2 is null");
-				if(((OperationPosition)o2.getInfo(OperationPosition.KEY)) == null) throw new NullPointerException("o2 does not have the position information " + o2);
+				if(((OperationPosition)o1.getInfo(OperationPosition.KEY)) == null) {
+					NullPointerException exc = new NullPointerException("o1 does not have the position information " + o1);
+					TestFul.debug(exc);
+					throw exc;
+				}
+
+				if(o2 == null) {
+					NullPointerException exc = new NullPointerException("o2 is null");
+					TestFul.debug(exc);
+					throw exc;
+				}
+
+				if(((OperationPosition)o2.getInfo(OperationPosition.KEY)) == null) {
+					NullPointerException exc = new NullPointerException("o2 does not have the position information " + o2);
+					TestFul.debug(exc);
+					throw exc;
+				}
 			}
 
 			int p1 = ((OperationPosition)o1.getInfo(OperationPosition.KEY)).position;
