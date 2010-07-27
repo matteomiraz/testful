@@ -28,7 +28,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import testful.TestFul;
 import testful.model.faults.FaultyExecutionException;
 import testful.utils.Cloner;
 
@@ -110,20 +109,12 @@ public class OperationResult extends OperationInformation {
 	}
 
 	public void setSuccessful(Object object, Object result, TestCluster cluster) throws ReplayException {
-
-		if(TestFul.DEBUG && status != Status.NOT_EXECUTED)
-			TestFul.debug(OperationResult.class.getName() + " already set");
-
 		status = Status.SUCCESSFUL;
 		this.object = new Value(object, cluster);
 		this.result = new Value(result, cluster);
 	}
 
 	public void setExceptional(Throwable exc, Object object, TestCluster cluster) throws ReplayException {
-
-		if(TestFul.DEBUG && status != Status.NOT_EXECUTED)
-			TestFul.debug(OperationResult.class.getName() + " already set");
-
 		status = Status.EXCEPTIONAL;
 		excClassName = exc.getClass().getName();
 		excMessage = exc.getMessage();
