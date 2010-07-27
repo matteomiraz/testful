@@ -28,7 +28,7 @@ import testful.model.Reference;
  * Stub for the test.coverage.DataFlow class
  * @author matteo
  */
-public class TestCoverageDataFlowCUT extends SingleTestCUT {
+public class TestCoverageDataFlowCtxCUT extends SingleTestCUT {
 
 	public final Reference[] cuts, bools, ints, inners;
 
@@ -38,23 +38,23 @@ public class TestCoverageDataFlowCUT extends SingleTestCUT {
 
 	public final Methodz i_getIA, i_getIB, i_setIA, i_setIB;
 
-	public TestCoverageDataFlowCUT() throws Exception {
-		super("test.coverage.DataFlow");
+	public TestCoverageDataFlowCtxCUT() throws Exception {
+		super("test.coverage.DataFlowCtx");
 
 		final Clazz bType, iType, IType;
 		assertEquals(4, cluster.getCluster().length);
 		assertEquals("java.lang.Boolean", (bType = cluster.getCluster()[0]).toString());
 		assertEquals("java.lang.Integer", (iType = cluster.getCluster()[1]).toString());
-		assertEquals("test.coverage.DataFlow", cluster.getCluster()[2].toString());
-		assertEquals("test.coverage.DataFlow$Inner", (IType = cluster.getCluster()[3]).toString());
+		assertEquals("test.coverage.DataFlowCtx", cluster.getCluster()[2].toString());
+		assertEquals("test.coverage.DataFlowCtx$Inner", (IType = cluster.getCluster()[3]).toString());
 
 		bools = refFactory.getReferences(bType);
 		ints = refFactory.getReferences(iType);
-		cuts = refFactory.getReferences(cut);
 		inners = refFactory.getReferences(IType);
+		cuts = refFactory.getReferences(cut);
 
 		assertEquals(1, cut.getConstructors().length);
-		assertEquals("test.coverage.DataFlow()", (cut_cns = cut.getConstructors()[0]).toString());
+		assertEquals("test.coverage.DataFlowCtx()", (cut_cns = cut.getConstructors()[0]).toString());
 
 		assertEquals(9, cut.getMethods().length);
 		assertEquals("getA()", (getA = cut.getMethods()[0]).toString());
@@ -63,7 +63,7 @@ public class TestCoverageDataFlowCUT extends SingleTestCUT {
 		assertEquals("getIB()", (getIB = cut.getMethods()[3]).toString());
 		assertEquals("prova(boolean)", (prova = cut.getMethods()[4]).toString());
 		assertEquals("setA(int)", (setA = cut.getMethods()[5]).toString());
-		assertEquals("setI(test.coverage.DataFlow$Inner)", (setI = cut.getMethods()[6]).toString());
+		assertEquals("setI(test.coverage.DataFlowCtx$Inner)", (setI = cut.getMethods()[6]).toString());
 		assertEquals("setIA(int)", (setIA = cut.getMethods()[7]).toString());
 		assertEquals("setIB(int)", (setIB = cut.getMethods()[8]).toString());
 

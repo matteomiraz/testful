@@ -434,7 +434,6 @@
 			<arg value="${testCut}"/>
 
 			<arg value="dummy.WhiteSample"/>
-			<arg value="test.coverage.DataFlow"/>
 			<arg value="test.coverage.Fault"/>
 			<arg value="dummy.Simple"/>
 			<arg value="dummy.StateMachine"/>
@@ -442,6 +441,31 @@
 			<arg value="apache.FractionNoStatic"/>
 			<arg value="test.coverage.Stopped"/>
 			<arg value="test.model.array.StringMatrix"/>
+		</java>
+
+		<java jar="${artifacts}/instrumenter.jar" fork="true">
+			<jvmarg value="-Dtestful.debug=true"/>
+			<arg value="-du"/>
+			<arg value="-de"/>
+
+			<arg value="-dir"/>
+			<arg value="${testCut}"/>
+
+			<arg value="test.coverage.DataFlow"/>
+			<arg value="test.coverage.DataFlow$Inner"/>
+		</java>
+
+		<java jar="${artifacts}/instrumenter.jar" fork="true">
+			<jvmarg value="-Dtestful.debug=true"/>
+			<arg value="-context"/>
+			<arg value="-du"/>
+			<arg value="-de"/>
+
+			<arg value="-dir"/>
+			<arg value="${testCut}"/>
+
+			<arg value="test.coverage.DataFlowCtx"/>
+			<arg value="test.coverage.DataFlowCtx$Inner"/>
 		</java>
 	</target>
 

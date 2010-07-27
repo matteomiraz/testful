@@ -3,7 +3,7 @@ package test.coverage;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public class DataFlow {
+public class DataFlowCtx {
 
 	public static class Inner {
 		private int ia, ib;
