@@ -52,7 +52,6 @@ import testful.coverage.whiteBox.CoverageBasicBlocks;
 import testful.coverage.whiteBox.CoverageBranch;
 import testful.coverage.whiteBox.CoverageBranchTarget;
 import testful.coverage.whiteBox.Data;
-import testful.coverage.whiteBox.DataUse;
 import testful.model.AssignPrimitive;
 import testful.model.Clazz;
 import testful.model.Operation;
@@ -649,25 +648,12 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 				// score type, fields/var/params
 				Condition c = problem.getWhiteAnalysis().getConditionFromBranch(branchId);
 
-				DataUse u = c.getUse1();
-				if(u != null) {
-					if(c.getUse2() != null) {
-						score += SCORE_TWO_USES;
+				if(c.getUse1() == null) { // 0 uses
+					score += SCORE_ZERO_USES;
 
-						if(!u.getData().isParam() && c.getUse2().getData().isParam())
-							u = c.getUse2();
-						else
-							if(u.getData().isField() && !c.getUse2().getData().isField())
-								u = c.getUse2();
-					}
-				} else {
-					if(c.getUse2() == null) score += SCORE_ZERO_USES;
-					else score += SCORE_ONE_USE;
-				}
+				} else { // 1 or 2 uses
 
-				if(u != null) {
-					Data data = u.getData();
-					switch(data.getType()) {
+					switch(c.getUse1().getData().getType()) {
 					case Boolean: score += SCORE_BOOL; break;
 					case Array: score += SCORE_ARRAY; break;
 					case Reference: score += SCORE_REF; break;
@@ -676,8 +662,28 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 					case Number: score += SCORE_NUMBER; break;
 					}
 
-					if(data.isParam()) score += SCORE_PARAM;
-					else if(data.isField()) score += SCORE_FIELD;
+					if(c.getUse2() == null) { // 1 use
+						score += SCORE_ONE_USE;
+
+						Data data1 = c.getUse1().getData();
+						if(data1.isParam()) score += SCORE_PARAM;
+						else if(data1.isField()) score += SCORE_FIELD;
+
+						// c.getUse1().getId()
+
+					} else { // 2 uses
+						score += SCORE_TWO_USES;
+
+						Data data1 = c.getUse1().getData();
+						Data data2 = c.getUse2().getData();
+						if(data1.isParam() || data2.isParam()) score += SCORE_PARAM;
+						if(data1.isField()) score += SCORE_FIELD;
+						if(data2.isField()) score += SCORE_FIELD;
+
+						// c.getUse1().getId()
+						// c.getUse2().getId()
+
+					}
 				}
 
 				ret.add(new TestWithScore(t, new BranchScore(branchId, score)));
