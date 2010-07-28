@@ -65,6 +65,7 @@ import soot.ValueBox;
 import soot.jimple.ArrayRef;
 import soot.jimple.AssignStmt;
 import soot.jimple.ConditionExpr;
+import soot.jimple.DefinitionStmt;
 import soot.jimple.DoubleConstant;
 import soot.jimple.EnterMonitorStmt;
 import soot.jimple.ExitMonitorStmt;
@@ -94,6 +95,11 @@ import soot.jimple.TableSwitchStmt;
 import soot.jimple.ThisRef;
 import soot.jimple.ThrowStmt;
 import soot.jimple.internal.JimpleLocal;
+import soot.toolkits.graph.ExceptionalUnitGraph;
+import soot.toolkits.graph.UnitGraph;
+import soot.toolkits.scalar.CombinedAnalysis;
+import soot.toolkits.scalar.CombinedDUAnalysis;
+import soot.toolkits.scalar.UnitValueBoxPair;
 import soot.util.Chain;
 import testful.IConfigProject;
 import testful.coverage.Launcher.ConfigInstrumenter;
@@ -209,7 +215,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 	private Local localDataAccessU;
 
 	@Override
-	public void init(Body oldBody, Body newBody, Chain<Unit> newUnits) {
+	public void init(Body oldBody, Body newBody, Chain<Unit> newUnits, IdentityStmt[] paramDefs) {
 		logger.finer(" processing " + newBody.getMethod().getName());
 
 		// some useful constants
@@ -231,7 +237,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		localTmpDouble2 = Jimple.v().newLocal("__testful_white_tmp_double_2__", DoubleType.v());
 		newBody.getLocals().add(localTmpDouble2);
 
-		analyzer = new Analyzer(newUnits, clazz, newBody, newBody.getTraps(), oldBody.getTraps());
+		analyzer = new Analyzer(newUnits, clazz, newBody, oldBody, paramDefs);
 		localDataAccessD = Jimple.v().newLocal("__testful_white_data_access_d__", dataAccess.getType());
 		newBody.getLocals().add(localDataAccessD);
 
@@ -383,8 +389,6 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 	class Analyzer {
 
-		private final Factory factory;
-
 		/** the local that stores this */
 		private final Local localThis;
 
@@ -435,6 +439,8 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 		private final Chain<Local> locals;
 
+		private final CombinedAnalysis duAnalysis;
+
 		/** key: original variable; value: tracking variable */
 		private Map<Local, Local> trackingLocals = new HashMap<Local, Local>();
 
@@ -463,16 +469,16 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		 * <li> arrayTmpTrackers[2] = DataAccess[][][]</li>
 		 * </ol>
 		 */
-		private final Local[] arrayTmpTrackers1;
+		private final Local[] arrayTmpTrackers;
 
 		private Local getArrayTmpTracker(int n) {
 
-			if(arrayTmpTrackers1[n-1] == null) {
-				arrayTmpTrackers1[n-1] = new JimpleLocal(getTracker("array_" + n), ArrayType.v(dataAccess.getType(), n));
-				locals.add(arrayTmpTrackers1[n-1]);
+			if(arrayTmpTrackers[n-1] == null) {
+				arrayTmpTrackers[n-1] = new JimpleLocal(getTracker("array_" + n), ArrayType.v(dataAccess.getType(), n));
+				locals.add(arrayTmpTrackers[n-1]);
 			}
 
-			return arrayTmpTrackers1[n-1];
+			return arrayTmpTrackers[n-1];
 		}
 
 		/** It is an array of integers */
@@ -497,7 +503,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			return tmpObject;
 		}
 
-		public Analyzer(Chain<Unit> newUnits, BlockClass clazz, Body newBody, Collection<Trap> newTraps, Collection<Trap> oldTraps) {
+		public Analyzer(Chain<Unit> newUnits, BlockClass clazz, Body newBody, Body oldBody, IdentityStmt[] paramDefs) {
 			final SootMethod method = newBody.getMethod();
 			final String methodName = method.getName();
 			final boolean methodStatic = method.isStatic();
@@ -505,7 +511,9 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			final boolean methodPrivate = method.isPrivate();
 			locals = newBody.getLocals();
 
-			factory = Factory.singleton;
+			final UnitGraph unitGraph = new ExceptionalUnitGraph(oldBody);
+			duAnalysis = CombinedDUAnalysis.v(unitGraph);
+
 			localRepository = new HashMap<Local, Data>();
 			blocks = clazz.blocks;
 			branches = clazz.branches;
@@ -515,7 +523,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			defs = new HashSet<DataDef>();
 			uses = new HashSet<DataUse>();
 
-			this.oldTraps = oldTraps;
+			oldTraps = oldBody.getTraps();
 			activeTraps = new LinkedList<Trap>();
 
 			start = new BlockFunctionEntry(clazz, methodName, methodPublic);
@@ -537,7 +545,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				}
 			}
 			// create array temporary dataAccess
-			arrayTmpTrackers1 = new Local[maxDim];
+			arrayTmpTrackers = new Local[maxDim];
 
 			if(methodStatic) localThis = null;
 			else localThis = newBody.getThisLocal();
@@ -553,9 +561,24 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, manageDefExposition.makeRef(), localThis)));
 
 				//Track parameters
-				int nParams = method.getParameterCount();
-				for(int i = 0; i < nParams; i++) {
+				for(int i = 0; i < paramDefs.length; i++) {
+
 					final Local p = newBody.getParameterLocal(i);
+
+					// Consider the uses of the current definitions: if they do not have any additional definition, then it is possible to skip the du tracking
+					boolean oneDef = true;
+					for (Object unit : duAnalysis.getUsesOf(paramDefs[i])) {
+						UnitValueBoxPair u = (UnitValueBoxPair) unit;
+						if(duAnalysis.getDefsOfAt(p, u.getUnit()).size() > 1) {
+							oneDef = false;
+							break;
+						}
+					}
+					if(oneDef) {
+						logger.fine("Skipping instrumentation of the definition of parameter " + i + "(" + p + " in " + paramDefs[i] + "): it is the only definition for all of its uses");
+						continue;
+					}
+
 					DataDef def = new DataDef(start, get(p, true), null);
 					manageDefs(def);
 					Type type = p.getType();
@@ -624,20 +647,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			if(u.getLeftOp().getType() instanceof ArrayType && u.getRightOp() instanceof InvokeExpr)
 				return;
 
-			Value leftOp = u.getLeftOp();
-			Data data = get(leftOp);
-
-			if(data != null) {
-				Serializable value = null;
-				if(u.getRightOp() instanceof IntConstant) value = ((IntConstant) u.getRightOp()).value;
-				else if(u.getRightOp() instanceof LongConstant) value = ((LongConstant) u.getRightOp()).value;
-				else if(u.getRightOp() instanceof FloatConstant) value = ((FloatConstant) u.getRightOp()).value;
-				else if(u.getRightOp() instanceof DoubleConstant) value = ((DoubleConstant) u.getRightOp()).value;
-
-				final DataDef def = new DataDef(current, data, value);
-				manageDefs(def);
-				handleDef(newUnits, leftOp, def.getId(), u.getRightOp());
-			}
+			handleDef(newUnits, u);
 		}
 
 		public void process(Chain<Unit> newUnits, GotoStmt u) {
@@ -647,9 +657,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 		public void process(Chain<Unit> newUnits, IdentityStmt u) {
 			// this method is invoked to store an exception (first statement in catch blocks)
-			final DataDef def = new DataDef(current, get(u.getLeftOp()), null);
-			manageDefs(def);
-			handleDef(newUnits, u.getLeftOp(), def.getId(), u.getRightOp());
+			handleDef(newUnits, u);
 		}
 
 		public void process(Chain<Unit> newUnits, IfStmt u) {
@@ -817,13 +825,10 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			current = null;
 		}
 
-
 		public void process(Chain<Unit> newUnits, LookupSwitchStmt u) {
 			final Value key = u.getKey();
 
-			DataUse use = new DataUse(current, get(key), defs);
-			handleUse(newUnits, key, use.getId());
-			uses.add(use);
+			final DataUse use = handleUse(newUnits, u, key);
 			ConditionSwitch c = new ConditionSwitch(use);
 			current.setCondition(c);
 
@@ -873,9 +878,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			final int lIndex = u.getLowIndex();
 			final int hIndex = u.getHighIndex();
 
-			DataUse use = new DataUse(current, get(key), defs);
-			handleUse(newUnits, key, use.getId());
-			uses.add(use);
+			DataUse use = handleUse(newUnits, u, key);
 			ConditionSwitch c = new ConditionSwitch(use);
 			current.setCondition(c);
 
@@ -1059,7 +1062,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		private Data get(Value value) {
 			if(value instanceof Local) return get((Local) value, false);
 
-			if(value instanceof FieldRef) return factory.get(((FieldRef) value).getField());
+			if(value instanceof FieldRef) return Factory.singleton.get(((FieldRef) value).getField());
 
 			if(value instanceof ArrayRef) return get(((ArrayRef) value).getBase());
 
@@ -1086,12 +1089,17 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			set.add(edge);
 		}
 
+		/**
+		 * Updates the live definitions, by adding the new definition and killing those definitions that operate on the same variable
+		 * @param def the new definition
+		 */
 		private void manageDefs(DataDef def) {
 			Data data = def.getData();
 
 			Iterator<DataDef> iter = defs.iterator();
 			while(iter.hasNext())
-				if(iter.next().getData() == data) iter.remove();
+				if(iter.next().getData() == data)
+					iter.remove();
 
 			defs.add(def);
 		}
@@ -1158,14 +1166,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			// take care of uses
 			if(!(stmt instanceof IfStmt || stmt instanceof TableSwitchStmt || stmt instanceof LookupSwitchStmt)) {
 				for(ValueBox use : stmt.getUseBoxes()) {
-					Value v = use.getValue();
-					Data d = get(v);
-					if(d != null) {
-						final DataUse dataUse = new DataUse(current, d, defs);
-						uses.add(dataUse);
-
-						handleUse(newUnits, v, dataUse.getId());
-					}
+					handleUse(newUnits, stmt, use.getValue());
 				}
 			}
 		}
@@ -1176,20 +1177,35 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		 * @param v the variable to track
 		 * @param useId the id of the use
 		 */
-		private void handleUse(Chain<Unit> newUnits, Value v, final int useId) {
+		private DataUse handleUse(Chain<Unit> newUnits, Unit u, Value v) {
 
-			if(!config.isDuPairs()) return;
+			if(!config.isDuPairs()) return null;
 
-			if(v.getType() instanceof ArrayType) return;
+			if(v.getType() instanceof ArrayType) return null;
+
+			Data data = get(v);
+			if(data == null) return null;
 
 			if(v instanceof Local) {
+
+				if(v.equals(localThis))
+					return null;
+
+				// if the use has only one reaching definition, I can skip its tracking
+				if(duAnalysis.getDefsOfAt((Local) v, u).size() <= 1) {
+					logger.fine(" Skipping instrumentation of use of " + v + " in " + u + ": only 1 reachable def def");
+					return null;
+				}
+
+				DataUse use = new DataUse(current, data, defs);
+				uses.add(use);
 
 				newUnits.add(Jimple.v().newAssignStmt(
 						localDataAccessU,
 						Jimple.v().newVirtualInvokeExpr(
 								localTracker,
 								getDataAccess.makeRef(),
-								IntConstant.v(useId))));
+								IntConstant.v(use.getId()))));
 
 				newUnits.add(Jimple.v().newInvokeStmt(
 						Jimple.v().newVirtualInvokeExpr(
@@ -1198,7 +1214,12 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 								getTrackingLocal((Local)v),
 								localDataAccessU)));
 
+				return use;
+
 			} else if(v instanceof InstanceFieldRef) {
+
+				DataUse use = new DataUse(current, data, defs);
+				uses.add(use);
 
 				try {
 					InstanceFieldRef fr = (InstanceFieldRef) v;
@@ -1215,7 +1236,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 							Jimple.v().newVirtualInvokeExpr(
 									localTracker,
 									getDataAccess.makeRef(),
-									IntConstant.v(useId))));
+									IntConstant.v(use.getId()))));
 
 					newUnits.add(Jimple.v().newInvokeStmt(
 							Jimple.v().newVirtualInvokeExpr(
@@ -1228,7 +1249,12 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					logger.log(Level.WARNING, "Tracking field not found: " + e.getMessage(), e);
 				}
 
+				return use;
+
 			} else if (v instanceof StaticFieldRef) {
+
+				DataUse use = new DataUse(current, data, defs);
+				uses.add(use);
 
 				try {
 					StaticFieldRef fr = (StaticFieldRef) v;
@@ -1245,7 +1271,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 							Jimple.v().newVirtualInvokeExpr(
 									localTracker,
 									getDataAccess.makeRef(),
-									IntConstant.v(useId))));
+									IntConstant.v(use.getId()))));
 
 					newUnits.add(Jimple.v().newInvokeStmt(
 							Jimple.v().newVirtualInvokeExpr(
@@ -1257,71 +1283,102 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					logger.log(Level.WARNING, "Tracking field not found: " + e.getMessage(), e);
 				}
 
+				return use;
+
 			}
+
+			return null;
 		}
 
 		/**
 		 * Track the definition
 		 * @param newUnits the unit chain being built
-		 * @param def the Value being defined
-		 * @param defId the definition id
-		 * @param right the value being assigned (for arrays)
+		 * @param stmt the unit being processed
 		 */
-		private void handleDef(Chain<Unit> newUnits, Value def, int defId, Value right) {
+		private void handleDef(Chain<Unit> newUnits, DefinitionStmt stmt) {
 			if(!config.isDuPairs()) return;
 
-			Value dataDef;
+			final Value leftOp = stmt.getLeftOp();
+			final Value rightOp = stmt.getRightOp();
+
+			if(leftOp instanceof Local) {
+
+				// Consider the uses of the current definitions: if they do not have any additional definition, then it is possible to skip the du tracking
+				boolean oneDef = true;
+				for (Object unit : duAnalysis.getUsesOf(stmt)) {
+					UnitValueBoxPair u = (UnitValueBoxPair) unit;
+					if(duAnalysis.getDefsOfAt((Local) leftOp, u.getUnit()).size() > 1) {
+						oneDef = false;
+						break;
+					}
+				}
+				if(oneDef) {
+					logger.fine(" Skipping instrumentation of the definition of " + leftOp + " in " + stmt + ": it is the only definition for all of its uses");
+					return;
+				}
+			}
+
+			Serializable value;
+			if(stmt.getRightOp() instanceof IntConstant) value = ((IntConstant) stmt.getRightOp()).value;
+			else if(stmt.getRightOp() instanceof LongConstant) value = ((LongConstant) stmt.getRightOp()).value;
+			else if(stmt.getRightOp() instanceof FloatConstant) value = ((FloatConstant) stmt.getRightOp()).value;
+			else if(stmt.getRightOp() instanceof DoubleConstant) value = ((DoubleConstant) stmt.getRightOp()).value;
+			else value = null;
+
+			final DataDef dataDef = new DataDef(current, get(leftOp), value);
+			manageDefs(dataDef);
 
 			// calculate the definition ID
-			if(def.getType() instanceof ArrayType) {
-				ArrayType type = (ArrayType) def.getType();
+			Value dataDefValue;
+			if(leftOp.getType() instanceof ArrayType) {
+				ArrayType type = (ArrayType) leftOp.getType();
 
-				if(right instanceof Local) {
-					dataDef = getTrackingLocal((Local)right);
-				} else if(right instanceof InstanceFieldRef) {
-					InstanceFieldRef fr = (InstanceFieldRef) right;
+				if(rightOp instanceof Local) {
+					dataDefValue = getTrackingLocal((Local)rightOp);
+				} else if(rightOp instanceof InstanceFieldRef) {
+					InstanceFieldRef fr = (InstanceFieldRef) rightOp;
 					SootField field = fr.getField();
 					SootField tracker = field.getDeclaringClass().getFieldByName(getTracker(field.getName()));
 
-					dataDef =  getArrayTmpTracker(type.numDimensions);
-					newUnits.add(Jimple.v().newAssignStmt(dataDef, Jimple.v().newInstanceFieldRef(fr.getBase(), tracker.makeRef())));
+					dataDefValue =  getArrayTmpTracker(type.numDimensions);
+					newUnits.add(Jimple.v().newAssignStmt(dataDefValue, Jimple.v().newInstanceFieldRef(fr.getBase(), tracker.makeRef())));
 
-				} else if(right instanceof StaticFieldRef) {
-					StaticFieldRef fr = (StaticFieldRef) right;
+				} else if(rightOp instanceof StaticFieldRef) {
+					StaticFieldRef fr = (StaticFieldRef) rightOp;
 					SootField field = fr.getField();
 					SootField tracker = field.getDeclaringClass().getFieldByName(getTracker(field.getName()));
 
-					dataDef = getArrayTmpTracker(type.numDimensions);
-					newUnits.add(Jimple.v().newAssignStmt(dataDef, Jimple.v().newStaticFieldRef(tracker.makeRef())));
+					dataDefValue = getArrayTmpTracker(type.numDimensions);
+					newUnits.add(Jimple.v().newAssignStmt(dataDefValue, Jimple.v().newStaticFieldRef(tracker.makeRef())));
 
-				} else if(right instanceof ArrayRef) {
-					ArrayRef arrayRef = (ArrayRef) right;
+				} else if(rightOp instanceof ArrayRef) {
+					ArrayRef arrayRef = (ArrayRef) rightOp;
 					Value base = arrayRef.getBase();
 					Value index = arrayRef.getIndex();
 
-					dataDef = getArrayTmpTracker(type.numDimensions);
-					newUnits.add(Jimple.v().newAssignStmt(dataDef, Jimple.v().newArrayRef(getTrackingLocal((Local) base), index)));
-				} else if(right instanceof NewArrayExpr) {
+					dataDefValue = getArrayTmpTracker(type.numDimensions);
+					newUnits.add(Jimple.v().newAssignStmt(dataDefValue, Jimple.v().newArrayRef(getTrackingLocal((Local) base), index)));
+				} else if(rightOp instanceof NewArrayExpr) {
 
-					NewArrayExpr newArray = (NewArrayExpr) right;
-					dataDef = getArrayTmpTracker(type.numDimensions);
+					NewArrayExpr newArray = (NewArrayExpr) rightOp;
+					dataDefValue = getArrayTmpTracker(type.numDimensions);
 
 					if(type.numDimensions == 1) {
-						newUnits.add(Jimple.v().newAssignStmt(dataDef, Jimple.v().newVirtualInvokeExpr(localTracker, newArrayDef.makeRef(),
-								Arrays.asList(newArray.getSize(), IntConstant.v(defId)))));
+						newUnits.add(Jimple.v().newAssignStmt(dataDefValue, Jimple.v().newVirtualInvokeExpr(localTracker, newArrayDef.makeRef(),
+								Arrays.asList(newArray.getSize(), IntConstant.v(dataDef.getId())))));
 					} else {
 						Local arrInt = getArrayIntegers();
 						Local tmpObject = getTmpObject();
 
 						newUnits.add(Jimple.v().newAssignStmt(arrInt, Jimple.v().newNewArrayExpr(IntType.v(), IntConstant.v(type.numDimensions))));
 						newUnits.add(Jimple.v().newAssignStmt(Jimple.v().newArrayRef(arrInt, IntConstant.v(0)), newArray.getSize()));
-						newUnits.add(Jimple.v().newAssignStmt(tmpObject, Jimple.v().newVirtualInvokeExpr(localTracker, newMultiArrayDef.makeRef(), Arrays.asList(arrInt, IntConstant.v(defId)))));
-						newUnits.add(Jimple.v().newAssignStmt(dataDef, Jimple.v().newCastExpr(tmpObject, dataDef.getType())));
+						newUnits.add(Jimple.v().newAssignStmt(tmpObject, Jimple.v().newVirtualInvokeExpr(localTracker, newMultiArrayDef.makeRef(), Arrays.asList(arrInt, IntConstant.v(dataDef.getId())))));
+						newUnits.add(Jimple.v().newAssignStmt(dataDefValue, Jimple.v().newCastExpr(tmpObject, dataDefValue.getType())));
 					}
-				} else if(right instanceof NewMultiArrayExpr) {
+				} else if(rightOp instanceof NewMultiArrayExpr) {
 
-					NewMultiArrayExpr newMultiArray = (NewMultiArrayExpr) right;
-					dataDef =  getArrayTmpTracker(type.numDimensions);
+					NewMultiArrayExpr newMultiArray = (NewMultiArrayExpr) rightOp;
+					dataDefValue =  getArrayTmpTracker(type.numDimensions);
 
 					Local arrInt = getArrayIntegers();
 					Local tmpObject = getTmpObject();
@@ -1330,57 +1387,57 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					for(int i = 0; i < newMultiArray.getSizeCount(); i++)
 						newUnits.add(Jimple.v().newAssignStmt(Jimple.v().newArrayRef(arrInt, IntConstant.v(i)), newMultiArray.getSize(i)));
 
-					newUnits.add(Jimple.v().newAssignStmt(tmpObject,Jimple.v().newVirtualInvokeExpr(localTracker, newMultiArrayDef.makeRef(), Arrays.asList(arrInt, IntConstant.v(defId)))));
-					newUnits.add(Jimple.v().newAssignStmt(dataDef, Jimple.v().newCastExpr(tmpObject, dataDef.getType())));
+					newUnits.add(Jimple.v().newAssignStmt(tmpObject,Jimple.v().newVirtualInvokeExpr(localTracker, newMultiArrayDef.makeRef(), Arrays.asList(arrInt, IntConstant.v(dataDef.getId())))));
+					newUnits.add(Jimple.v().newAssignStmt(dataDefValue, Jimple.v().newCastExpr(tmpObject, dataDefValue.getType())));
 
 				} else {
-					logger.warning("Unable to handle array definition: " + def + " - " + def.getClass().getName());
+					logger.warning("Unable to handle array definition: " + leftOp + " - " + leftOp.getClass().getName());
 
 					return;
 				}
-			} else if(def instanceof Local || def instanceof InstanceFieldRef || def instanceof StaticFieldRef) {
-				dataDef =  Jimple.v().newVirtualInvokeExpr(localTracker, getDataAccess.makeRef(), IntConstant.v(defId));
-			} else if(def instanceof ArrayRef) {
-				dataDef = localDataAccessD;
-				newUnits.add(Jimple.v().newAssignStmt(localDataAccessD, Jimple.v().newVirtualInvokeExpr(localTracker, getDataAccess.makeRef(), IntConstant.v(defId))));
+			} else if(leftOp instanceof Local || leftOp instanceof InstanceFieldRef || leftOp instanceof StaticFieldRef) {
+				dataDefValue =  Jimple.v().newVirtualInvokeExpr(localTracker, getDataAccess.makeRef(), IntConstant.v(dataDef.getId()));
+			} else if(leftOp instanceof ArrayRef) {
+				dataDefValue = localDataAccessD;
+				newUnits.add(Jimple.v().newAssignStmt(localDataAccessD, Jimple.v().newVirtualInvokeExpr(localTracker, getDataAccess.makeRef(), IntConstant.v(dataDef.getId()))));
 			} else {
-				logger.warning("Unable to handle: " + def + " - " + def.getClass().getName());
+				logger.warning("Unable to handle: " + leftOp + " - " + leftOp.getClass().getName());
 				return;
 			}
 
 			// put the dataDef in the right place
-			if(def instanceof Local) {
-				newUnits.add(Jimple.v().newAssignStmt(getTrackingLocal((Local) def), dataDef));
+			if(leftOp instanceof Local) {
+				newUnits.add(Jimple.v().newAssignStmt(getTrackingLocal((Local) leftOp), dataDefValue));
 
-			} else if(def instanceof InstanceFieldRef) {
-				InstanceFieldRef fr = (InstanceFieldRef) def;
+			} else if(leftOp instanceof InstanceFieldRef) {
+				InstanceFieldRef fr = (InstanceFieldRef) leftOp;
 				SootField field = fr.getField();
 				SootField tracker = field.getDeclaringClass().getFieldByName(getTracker(field.getName()));
 
-				if(!(dataDef instanceof Local)) {
-					newUnits.add(Jimple.v().newAssignStmt(localDataAccessD, dataDef));
-					dataDef = localDataAccessD;
+				if(!(dataDefValue instanceof Local)) {
+					newUnits.add(Jimple.v().newAssignStmt(localDataAccessD, dataDefValue));
+					dataDefValue = localDataAccessD;
 				}
-				newUnits.add(Jimple.v().newAssignStmt(Jimple.v().newInstanceFieldRef(fr.getBase(), tracker.makeRef()), dataDef));
+				newUnits.add(Jimple.v().newAssignStmt(Jimple.v().newInstanceFieldRef(fr.getBase(), tracker.makeRef()), dataDefValue));
 
 
-			} else if(def instanceof StaticFieldRef) {
-				StaticFieldRef fr = (StaticFieldRef) def;
+			} else if(leftOp instanceof StaticFieldRef) {
+				StaticFieldRef fr = (StaticFieldRef) leftOp;
 				SootField field = fr.getField();
 				SootField tracker = field.getDeclaringClass().getFieldByName(getTracker(field.getName()));
 
-				if(!(dataDef instanceof Local)) {
-					newUnits.add(Jimple.v().newAssignStmt(localDataAccessD, dataDef));
-					dataDef = localDataAccessD;
+				if(!(dataDefValue instanceof Local)) {
+					newUnits.add(Jimple.v().newAssignStmt(localDataAccessD, dataDefValue));
+					dataDefValue = localDataAccessD;
 				}
-				newUnits.add(Jimple.v().newAssignStmt(Jimple.v().newStaticFieldRef(tracker.makeRef()), dataDef));
+				newUnits.add(Jimple.v().newAssignStmt(Jimple.v().newStaticFieldRef(tracker.makeRef()), dataDefValue));
 
-			} else if(def instanceof ArrayRef) {
-				ArrayRef arrayRef = (ArrayRef) def;
+			} else if(leftOp instanceof ArrayRef) {
+				ArrayRef arrayRef = (ArrayRef) leftOp;
 				Value base = arrayRef.getBase();
 				Value index = arrayRef.getIndex();
 
-				newUnits.add(Jimple.v().newAssignStmt(Jimple.v().newArrayRef(getTrackingLocal((Local) base), index), dataDef));
+				newUnits.add(Jimple.v().newAssignStmt(Jimple.v().newArrayRef(getTrackingLocal((Local) base), index), dataDefValue));
 			}
 		}
 

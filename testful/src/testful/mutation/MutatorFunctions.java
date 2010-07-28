@@ -45,6 +45,7 @@ import soot.jimple.FieldRef;
 import soot.jimple.FloatConstant;
 import soot.jimple.GeExpr;
 import soot.jimple.GtExpr;
+import soot.jimple.IdentityStmt;
 import soot.jimple.IfStmt;
 import soot.jimple.InstanceOfExpr;
 import soot.jimple.IntConstant;
@@ -158,7 +159,7 @@ public class MutatorFunctions implements UnifiedInstrumentator {
 	 * @see testful.coverage.soot.Instrumenter.UnifiedInstrumentator#init(soot.Body, soot.Body, soot.util.Chain)
 	 */
 	@Override
-	public void init(Body oldBody, Body newBody, Chain<Unit> newUnits) {
+	public void init(Body oldBody, Body newBody, Chain<Unit> newUnits, IdentityStmt[] paramDefs) {
 		method = oldBody.getMethod();
 		sClass = method.getDeclaringClass();
 		final String className = sClass.getName();

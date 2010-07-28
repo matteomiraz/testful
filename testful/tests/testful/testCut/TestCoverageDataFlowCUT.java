@@ -34,7 +34,7 @@ public class TestCoverageDataFlowCUT extends SingleTestCUT {
 
 	public final Constructorz cut_cns;
 
-	public final Methodz getA, getI, getIA, getIB, prova, setA, setI, setIA, setIB;
+	public final Methodz getA, getI, getIA, getIB, local1Def2Uses, local2Defs1Use, local2Defs2Uses, setA, setI, setIA, setIB;
 
 	public final Methodz i_getIA, i_getIB, i_setIA, i_setIB;
 
@@ -56,16 +56,18 @@ public class TestCoverageDataFlowCUT extends SingleTestCUT {
 		assertEquals(1, cut.getConstructors().length);
 		assertEquals("test.coverage.DataFlow()", (cut_cns = cut.getConstructors()[0]).toString());
 
-		assertEquals(9, cut.getMethods().length);
+		assertEquals(11, cut.getMethods().length);
 		assertEquals("getA()", (getA = cut.getMethods()[0]).toString());
 		assertEquals("getI()", (getI = cut.getMethods()[1]).toString());
 		assertEquals("getIA()", (getIA = cut.getMethods()[2]).toString());
 		assertEquals("getIB()", (getIB = cut.getMethods()[3]).toString());
-		assertEquals("prova(boolean)", (prova = cut.getMethods()[4]).toString());
-		assertEquals("setA(int)", (setA = cut.getMethods()[5]).toString());
-		assertEquals("setI(test.coverage.DataFlow$Inner)", (setI = cut.getMethods()[6]).toString());
-		assertEquals("setIA(int)", (setIA = cut.getMethods()[7]).toString());
-		assertEquals("setIB(int)", (setIB = cut.getMethods()[8]).toString());
+		assertEquals("local1Def2Uses(boolean)", (local1Def2Uses = cut.getMethods()[4]).toString());
+		assertEquals("local2Defs1Use(boolean)", (local2Defs1Use = cut.getMethods()[5]).toString());
+		assertEquals("local2Defs2Uses(boolean, boolean)", (local2Defs2Uses = cut.getMethods()[6]).toString());
+		assertEquals("setA(int)", (setA = cut.getMethods()[7]).toString());
+		assertEquals("setI(test.coverage.DataFlow$Inner)", (setI = cut.getMethods()[8]).toString());
+		assertEquals("setIA(int)", (setIA = cut.getMethods()[9]).toString());
+		assertEquals("setIB(int)", (setIB = cut.getMethods()[10]).toString());
 
 		assertEquals(4, IType.getMethods().length);
 		assertEquals("getIA()", (i_getIA = IType.getMethods()[0]).toString());

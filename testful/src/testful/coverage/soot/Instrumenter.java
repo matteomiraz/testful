@@ -70,8 +70,9 @@ public class Instrumenter {
 		 * @param oldBody the old body (read only!)
 		 * @param newBody the new body
 		 * @param newUnits the chain that will be emitted
+		 * @param paramDefs TODO
 		 */
-		public void init(Body oldBody, Body newBody, Chain<Unit> newUnits);
+		public void init(Body oldBody, Body newBody, Chain<Unit> newUnits, IdentityStmt[] paramDefs);
 
 		/**
 		 * Do something before an operation
@@ -339,8 +340,12 @@ public class Instrumenter {
 
 			// skip special statements: params
 			int nParams = method.getParameterCount();
-			for(int i = 0; i < nParams; i++)
-				newUnits.add(oldStmtIt.next());
+			final IdentityStmt[] paramDefs = new IdentityStmt[nParams];
+			for(int i = 0; i < nParams; i++) {
+				Unit paramDef = oldStmtIt.next();
+				newUnits.add(paramDef);
+				paramDefs[i] = (IdentityStmt) paramDef;
+			}
 
 			// --------------------------------------------------------------------------
 			// initialization
@@ -352,7 +357,7 @@ public class Instrumenter {
 				newUnits.add(nopPre);
 
 				for(UnifiedInstrumentator i : instrumenters)
-					i.init(oldBody, newBody, newUnits);
+					i.init(oldBody, newBody, newUnits, paramDefs);
 
 				final Unit nopPost = Jimple.v().newNopStmt();
 				nopPost.addTag(new StringTag("nopInitAfter"));

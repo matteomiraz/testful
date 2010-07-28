@@ -29,6 +29,7 @@ import soot.SootMethod;
 import soot.SootMethodRef;
 import soot.Unit;
 import soot.jimple.GotoStmt;
+import soot.jimple.IdentityStmt;
 import soot.jimple.IfStmt;
 import soot.jimple.Jimple;
 import soot.jimple.RetStmt;
@@ -66,7 +67,7 @@ public class ExecutionStopperInstrumenter implements UnifiedInstrumentator {
 	 * @see testful.coverage.soot.Instrumenter.UnifiedInstrumentator#init(soot.Body, soot.Body, soot.util.Chain)
 	 */
 	@Override
-	public void init(Body oldBody, Body newBody, Chain<Unit> newUnits) {
+	public void init(Body oldBody, Body newBody, Chain<Unit> newUnits, IdentityStmt[] paramDefs) {
 		if(SootMethod.staticInitializerName.equals(newBody.getMethod().getName())) {
 			previous = null;
 		} else {
