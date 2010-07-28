@@ -70,7 +70,7 @@ public class Instrumenter {
 		 * @param oldBody the old body (read only!)
 		 * @param newBody the new body
 		 * @param newUnits the chain that will be emitted
-		 * @param paramDefs TODO
+		 * @param paramDefs the parameters' definitions
 		 */
 		public void init(Body oldBody, Body newBody, Chain<Unit> newUnits, IdentityStmt[] paramDefs);
 

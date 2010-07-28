@@ -196,7 +196,7 @@ public class TestClusterTestCase extends GenericTestCase {
 		assertEquals("m3(java.lang.Object)", cut.getMethods()[2].toString());
 		assertEquals("java.lang.Object", cut.getMethods()[2].getReturnType().toString());
 
-		//TODO: generic types
+		//TBD: generic types
 		//assertEquals("m1(java.lang.Integer)", cut.getMethods()[0].toString());
 		//assertEquals("m2()", cut.getMethods()[1].toString());
 		//assertEquals("java.lang.Integer", cut.getMethods()[1].getReturnType().toString());
@@ -325,7 +325,7 @@ public class TestClusterTestCase extends GenericTestCase {
 		}
 	}
 
-	//TODO: support operations on public (non-static) fields (tests 14, 15, 16, 17, and 33)
+	//TBD: support operations on public (non-static) fields (tests 14, 15, 16, 17, and 33)
 	//public void test14() throws Exception {
 	//	ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 	//	config.setCut("test.model.cluster.test14.Cut");
@@ -378,7 +378,7 @@ public class TestClusterTestCase extends GenericTestCase {
 	//	}
 	//}
 
-	// TODO: solve test 18
+	// TBD: solve test 18
 	//	public void test18() throws Exception {
 	//		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 	//		config.setCut("test.model.cluster.test18.Cut");
@@ -408,7 +408,7 @@ public class TestClusterTestCase extends GenericTestCase {
 		}
 	}
 
-	// TODO: solve test 20
+	// TBD: solve test 20
 	//	public void test20() throws Exception {
 	//		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 	//		config.setCut("test.model.cluster.test20.Cut");
@@ -438,7 +438,7 @@ public class TestClusterTestCase extends GenericTestCase {
 		}
 	}
 
-	// TODO: work on test 22
+	// TBD: work on test 22
 	//	public void test22() throws Exception {
 	//		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 	//		config.setCut("test.model.cluster.test22.Cut");
@@ -494,7 +494,7 @@ public class TestClusterTestCase extends GenericTestCase {
 		}
 	}
 
-	// TODO: work on test 26
+	// TBD: work on test 26
 	//	public void test26() throws Exception {
 	//		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 	//		config.setCut("test.model.cluster.test26.Cut");
@@ -550,7 +550,7 @@ public class TestClusterTestCase extends GenericTestCase {
 		}
 	}
 
-	//TODO: work on test 30
+	// TBD: work on test 30
 	//	public void test30() throws Exception {
 	//		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 	//		config.setCut("test.model.cluster.test30.Cut");
@@ -606,7 +606,7 @@ public class TestClusterTestCase extends GenericTestCase {
 	//	}
 	//}
 
-	//TODO: work on test 34
+	// TBD: work on test 34
 	//	public void test34() throws Exception {
 	//		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 	//		config.setCut("test.model.cluster.test34.Cut");
