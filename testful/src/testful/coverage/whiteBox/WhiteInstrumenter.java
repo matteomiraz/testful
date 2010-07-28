@@ -249,7 +249,29 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 	@Override
 	public void preprocess(SootClass sClass) {
 
-		// def-exposition preprocessing: adding tracking fields and __testful_get_defs__ method
+
+		// du-tracking: add tracking fields
+		if(!config.isDuPairs()) return;
+
+		final List<SootField> fields = new ArrayList<SootField>();
+		for(SootField f : sClass.getFields())
+			fields.add(f);
+
+		for (SootField f : fields) {
+			int modifiers = f.getModifiers();
+			if(Modifier.isFinal(modifiers)) modifiers -= Modifier.FINAL;
+
+			SootField trackField;
+			if(f.getType() instanceof ArrayType) {
+				trackField = new SootField(getTracker(f.getName()), ArrayType.v(dataAccess.getType(), ((ArrayType) f.getType()).numDimensions), modifiers);
+			} else {
+				trackField = new SootField(getTracker(f.getName()), dataAccess.getType(), modifiers);
+			}
+			sClass.addField(trackField);
+		}
+
+
+		// def-exposition preprocessing: adding GET_FIELDS and __testful_get_defs__ methods
 		if(!config.isDefExposition()) return;
 
 		if(sClass.implementsInterface(DefExposer.class.getName())) return;
@@ -277,15 +299,15 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 			units.add(Jimple.v().newIdentityStmt(_this, new ThisRef(sClass.getType())));
 
-			List<SootField> fields = new ArrayList<SootField>();
-			for(SootField f : sClass.getFields())
+			List<SootField> refFields = new ArrayList<SootField>();
+			for(SootField f : fields)
 				if(SootUtils.isReference(f.getType()))
-					fields.add(f);
+					refFields.add(f);
 
-			units.add(Jimple.v().newAssignStmt(ret, Jimple.v().newNewArrayExpr(objectType, IntConstant.v(fields.size()))));
+			units.add(Jimple.v().newAssignStmt(ret, Jimple.v().newNewArrayExpr(objectType, IntConstant.v(refFields.size()))));
 
 			int i = 0;
-			for(SootField f : fields) {
+			for(SootField f : refFields) {
 				if(f.isStatic()) {
 					units.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newStaticFieldRef(f.makeRef())));
 					units.add(Jimple.v().newAssignStmt(Jimple.v().newArrayRef(ret, IntConstant.v(i++)), tmp));
@@ -320,27 +342,15 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 			units.add(Jimple.v().newIdentityStmt(_this, new ThisRef(sClass.getType())));
 
-			List<SootField> fields = new ArrayList<SootField>();
-			for(SootField f : sClass.getFields())
-				fields.add(f);
 
 			units.add(Jimple.v().newAssignStmt(ret, Jimple.v().newNewArrayExpr(objectType, IntConstant.v(fields.size()))));
 
 			int i = 0;
 			for(SootField f : fields) {
 
-				int modifiers = f.getModifiers();
-				if(Modifier.isFinal(modifiers)) modifiers -= Modifier.FINAL;
+				SootField trackField = sClass.getFieldByName(getTracker(f.getName()));
 
-				SootField trackField;
-				if(f.getType() instanceof ArrayType) {
-					trackField = new SootField(getTracker(f.getName()), ArrayType.v(dataAccess.getType(), ((ArrayType) f.getType()).numDimensions), modifiers);
-				} else {
-					trackField = new SootField(getTracker(f.getName()), dataAccess.getType(), modifiers);
-				}
-				sClass.addField(trackField);
-
-				if(Modifier.isStatic(modifiers)) {
+				if(Modifier.isStatic(f.getModifiers())) {
 					units.add(Jimple.v().newAssignStmt(tmp, Jimple.v().newStaticFieldRef(trackField.makeRef())));
 					units.add(Jimple.v().newAssignStmt(Jimple.v().newArrayRef(ret, IntConstant.v(i++)), tmp));
 				} else {
