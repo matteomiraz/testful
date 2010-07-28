@@ -46,17 +46,17 @@ public class Data implements Serializable {
 	private final Set<DataDef> defs;
 	private final Set<DataUse> uses;
 
-	private boolean isField;
-	private final boolean isParam;
+	private boolean field;
+	private final boolean param;
 
 	private Data(String fieldName, Type type, boolean param) {
 		id = idGenerator++;
 
 		this.type = type;
 
-		isParam = param;
+		this.param = param;
 		this.fieldName = fieldName;
-		isField = fieldName != null;
+		field = fieldName != null;
 
 		mask = new BitSet();
 		defs = new HashSet<DataDef>();
@@ -83,16 +83,16 @@ public class Data implements Serializable {
 		return fieldName;
 	}
 
-	void setField(boolean isField) {
-		this.isField = isField;
+	void setField(boolean field) {
+		this.field = field;
 	}
 
 	public boolean isField() {
-		return isField;
+		return field;
 	}
 
 	public boolean isParam() {
-		return isParam;
+		return param;
 	}
 
 	public BitSet getMask() {
@@ -122,8 +122,8 @@ public class Data implements Serializable {
 
 	@Override
 	public String toString() {
-		if(isParam) return "p" + id;
-		if(isField) return "f" + id;
+		if(param) return "p" + id;
+		if(field) return "f" + id;
 		return "d" + id;
 	}
 }

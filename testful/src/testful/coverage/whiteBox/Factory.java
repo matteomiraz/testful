@@ -89,7 +89,6 @@ public class Factory {
 			return Data.getReferenceData(field, isParam);
 		}
 
-		// ((ArrayType) type).toString()
 		if(type instanceof ArrayType)
 			return Data.getArrayData(field, isParam);
 

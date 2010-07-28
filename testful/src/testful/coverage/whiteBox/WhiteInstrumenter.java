@@ -575,6 +575,9 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 					final Local p = newBody.getParameterLocal(i);
 
+					DataDef def = new DataDef(start, getDataParameter(p), null);
+					manageDefs(def);
+
 					// Consider the uses of the current definitions: if they do not have any additional definition, then it is possible to skip the du tracking
 					boolean oneDef = true;
 					for (Object unit : duAnalysis.getUsesOf(paramDefs[i])) {
@@ -589,8 +592,6 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 						continue;
 					}
 
-					DataDef def = new DataDef(start, get(p, true), null);
-					manageDefs(def);
 					Type type = p.getType();
 					if(type instanceof ArrayType) {
 
@@ -687,13 +688,13 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			Type type = op1.getType();
 
 			{
-				Data dop1 = get(op1);
+				Data dop1 = getData(op1, u);
 				if(dop1 != null) {
 					use1 = new DataUse(current, dop1, defs);
 					uses.add(use1);
 				}
 
-				Data dop2 = get(op2);
+				Data dop2 = getData(op2, u);
 				if(dop2 != null) {
 					use2 = new DataUse(current, dop2, defs);
 					uses.add(use2);
@@ -1056,25 +1057,57 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				logger.warning("ERROR: block starting from " + w + " seems dead!");
 		}
 
-		private Data get(Local l, boolean param) {
-			if(l == localThis) return null;
-
+		/**
+		 * Returns the Data for a given parameter
+		 * @param l the local in which the parameter is stored
+		 * @return the data for the parameter
+		 */
+		private Data getDataParameter(Local l) {
 			Data ret = localRepository.get(l);
 
 			if(ret == null) {
-				ret = Factory.getData(null, l.getType(), param);
+				ret = Factory.getData(null, l.getType(), true);
 				localRepository.put(l, ret);
 			}
 
 			return ret;
 		}
 
-		private Data get(Value value) {
-			if(value instanceof Local) return get((Local) value, false);
+		/**
+		 * Returns the Data for a given value.
+		 * For uses, it is possible to specify the current Unit and verify if the value is defined as the copy of a field.
+		 * @param value the value
+		 * @param u if not null and the value is a Local, search if there is exactly one definition reaching this use, and if it is an assignment of a field to the considered local
+		 * @return the Data for the value
+		 */
+		private Data getData(Value value, Unit u) {
+			if(value == localThis) return null;
+
+			if(value instanceof Local) {
+				Local local = (Local) value;
+
+				Data ret = localRepository.get(local);
+				if(ret != null) return ret;
+
+				// check if the local is defined as copy of a field
+				if(u != null) {
+					List<Unit> defs = duAnalysis.getDefsOfAt(local, u);
+					if(defs.size() == 1 && defs.get(0) instanceof AssignStmt && ((AssignStmt)defs.get(0)).getRightOp() instanceof FieldRef) {
+						FieldRef field = (FieldRef) ((AssignStmt)defs.get(0)).getRightOp();
+						logger.fine("Local " +  value + " (in statement " + u + ") is defined as copy of field " + field);
+						return Factory.singleton.get(field.getField());
+					}
+				}
+
+				ret = Factory.getData(null, local.getType(), false);
+				localRepository.put(local, ret);
+
+				return ret;
+			}
 
 			if(value instanceof FieldRef) return Factory.singleton.get(((FieldRef) value).getField());
 
-			if(value instanceof ArrayRef) return get(((ArrayRef) value).getBase());
+			if(value instanceof ArrayRef) return getData(((ArrayRef) value).getBase(), u);
 
 			return null;
 		}
@@ -1193,9 +1226,6 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 			if(v.getType() instanceof ArrayType) return null;
 
-			Data data = get(v);
-			if(data == null) return null;
-
 			if(v instanceof Local) {
 
 				if(v.equals(localThis))
@@ -1206,6 +1236,9 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					logger.fine(" Skipping instrumentation of use of " + v + " in " + u + ": only 1 reachable def def");
 					return null;
 				}
+
+				Data data = getData(v, u);
+				if(data == null) return null;
 
 				DataUse use = new DataUse(current, data, defs);
 				uses.add(use);
@@ -1227,6 +1260,9 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				return use;
 
 			} else if(v instanceof InstanceFieldRef) {
+
+				Data data = getData(v, u);
+				if(data == null) return null;
 
 				DataUse use = new DataUse(current, data, defs);
 				uses.add(use);
@@ -1262,6 +1298,9 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				return use;
 
 			} else if (v instanceof StaticFieldRef) {
+
+				Data data = getData(v, u);
+				if(data == null) return null;
 
 				DataUse use = new DataUse(current, data, defs);
 				uses.add(use);
@@ -1335,7 +1374,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			else if(stmt.getRightOp() instanceof DoubleConstant) value = ((DoubleConstant) stmt.getRightOp()).value;
 			else value = null;
 
-			final DataDef dataDef = new DataDef(current, get(leftOp), value);
+			final DataDef dataDef = new DataDef(current, getData(leftOp, null), value); // getData for a definition, hence the second parameter is null
 			manageDefs(dataDef);
 
 			// calculate the definition ID
@@ -1456,7 +1495,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				AssignStmt u = (AssignStmt) stmt;
 				if(u.getLeftOp().getType() instanceof ArrayType && u.getRightOp() instanceof InvokeExpr) {
 					Local leftOp = (Local) u.getLeftOp();
-					Data data = get(leftOp);
+					Data data = getData(leftOp, null); // this is for a definition, hence the second parameter is null
 
 					final DataDef def = new DataDef(current, data, null);
 					manageDefs(def);

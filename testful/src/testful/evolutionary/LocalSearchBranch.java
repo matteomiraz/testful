@@ -676,7 +676,6 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 					case Number: score += SCORE_NUMBER; break;
 					}
 
-					//TBD: field detection is not working: isField always returns false!
 					if(data.isParam()) score += SCORE_PARAM;
 					else if(data.isField()) score += SCORE_FIELD;
 				}
