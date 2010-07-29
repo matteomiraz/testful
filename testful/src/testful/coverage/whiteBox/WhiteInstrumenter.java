@@ -762,7 +762,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				// calculate distance (false)
 				newUnits.add(nop);
 				newUnits.add(Jimple.v().newIfStmt(Jimple.v().newNeExpr(localConditionTarget, IntConstant.v(falseBranch.getId())), after));
-				newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(0))));
+				newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(-1))));
 				newUnits.add(Jimple.v().newGotoStmt(after));
 			}
 
@@ -774,7 +774,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				// calculate distance (true)
 				Unit nop = Jimple.v().newNopStmt();
 				newUnits.add(Jimple.v().newIfStmt(Jimple.v().newNeExpr(localConditionTarget, IntConstant.v(trueBranch.getId())), nop));
-				newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(0))));
+				newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(-1))));
 				newUnits.add(Jimple.v().newGotoStmt(after));
 
 				// calculate distance (false)
@@ -940,7 +940,12 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				for(int i = 0; i < keys.length; i++) {
 					final int ctKey = keys[i];
 					newUnits.add(ctTargets[i]);
-					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(Math.abs(ctKey - key)))));
+
+					if(ctKey == key) // branch executed!
+						newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(-1.0))));
+					else
+						newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(Math.abs(ctKey - key)))));
+
 					newUnits.add(Jimple.v().newGotoStmt(lastNop));
 				}
 
@@ -978,7 +983,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 				{ // handle default target
 					newUnits.add(ctTargets[keys.length]);
-					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(0))));
+					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(-1))));
 					newUnits.add(Jimple.v().newGotoStmt(lastNop));
 				}
 			}

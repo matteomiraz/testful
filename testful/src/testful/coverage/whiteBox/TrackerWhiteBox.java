@@ -120,7 +120,7 @@ public class TrackerWhiteBox extends Tracker {
 	}
 
 	/**
-	 * Set the given distance as target distance
+	 * Set the given distance as target distance. -1 if the branch has been executed; >= 0 otherwise
 	 * @param distance the distance to reach the target
 	 */
 	public void setConditionTargetDistance(double distance) {
@@ -128,12 +128,12 @@ public class TrackerWhiteBox extends Tracker {
 	}
 
 	/**
-	 * Calculate the distance as 1 + | v1 - v2 |.<br>
+	 * The branch has not been executed; calculate the distance as | v1 - v2 |.<br>
 	 * @param v1 the first value
 	 * @param v2 the second value
 	 */
 	public void calculateConditionTargetDistance(double v1, double v2) {
-		condTarget.setDistance(Math.abs(v1 - v2)+1);
+		condTarget.setDistance(Math.abs(v1 - v2));
 	}
 
 	// -------------------------- Stack tracker ---------------------------------

@@ -18,6 +18,7 @@
 
 package testful.coverage.whiteBox;
 
+import testful.TestFul;
 import testful.coverage.CoverageInformation;
 
 /**
@@ -61,9 +62,11 @@ public class CoverageBranchTarget implements CoverageInformation {
 	}
 
 	void setDistance(double d) {
-		if(d < 0) {
-			new NullPointerException("Negative distance!").printStackTrace();
-		} else if(distance > d)
+		if(TestFul.DEBUG)
+			if(d < 0 && d != -1)
+				TestFul.debug("Invalid distance: " + d);
+
+		if(distance > d)
 			distance = d;
 	}
 
@@ -73,10 +76,9 @@ public class CoverageBranchTarget implements CoverageInformation {
 	@Override
 	public float getQuality() {
 		if(distance == Float.POSITIVE_INFINITY) return Float.NEGATIVE_INFINITY;
-		if(distance < 0) return 0;
+		if(distance < 0) return Float.POSITIVE_INFINITY;
 
-		if(distance == 0) return Float.POSITIVE_INFINITY;
-		return (float) (1.0f/distance);
+		return (float) (1.0/(distance+0.125));
 	}
 
 	@Override
