@@ -800,21 +800,21 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		expBB.add(41);
 		expBr.add(14);
 		distance.put(14,-1.0);
-		distance.put(15, 1.0); //was: 3.0
+		distance.put(15, 2.0);
 		expBB.add(43);
 		expBB.add(44);
 
 		//if(i <= 2)
 		expBB.add(45);
 		expBr.add(17);
-		distance.put(16, 1.0); //was: 4.0
+		distance.put(16, 3.0);
 		distance.put(17,-1.0);
 		expBB.add(46);
 
 		//if(i < 3)
 		expBB.add(49);
 		expBr.add(19);
-		distance.put(18, 1.0); //was: 5.0
+		distance.put(18, 4.0);
 		distance.put(19,-1.0);
 		expBB.add(50);
 
@@ -822,14 +822,14 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		expBB.add(53);
 		expBr.add(20);
 		distance.put(20,-1.0);
-		distance.put(21, 1.0); //was: 6.0
+		distance.put(21, 5.0);
 		expBB.add(55);
 		expBB.add(56);
 
 		//if(i != 5)
 		expBB.add(57);
 		expBr.add(23);
-		distance.put(22, 1.0); //was: 7.0
+		distance.put(22, 6.0);
 		distance.put(23,-1.0);
 		expBB.add(58);
 
@@ -867,21 +867,21 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		expBB.add(41);
 		expBr.add(14);
 		distance.put(14,-1.0);
-		distance.put(15, 1.0); //was:  2.0);
+		distance.put(15, 1.0);
 		expBB.add(43);
 		expBB.add(44);
 
 		//if(i <= 2)
 		expBB.add(45);
 		expBr.add(17);
-		distance.put(16, 1.0); //was:  3.0);
+		distance.put(16, 2.0);
 		distance.put(17,-1.0);
 		expBB.add(46);
 
 		//if(i < 3)
 		expBB.add(49);
 		expBr.add(19);
-		distance.put(18, 1.0); //was:  4.0);
+		distance.put(18, 3.0);
 		distance.put(19,-1.0);
 		expBB.add(50);
 
@@ -889,14 +889,14 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		expBB.add(53);
 		expBr.add(20);
 		distance.put(20,-1.0);
-		distance.put(21, 1.0); //was:  5.0);
+		distance.put(21, 4.0);
 		expBB.add(55);
 		expBB.add(56);
 
 		//if(i != 5)
 		expBB.add(57);
 		expBr.add(23);
-		distance.put(22, 1.0); //was: 6.0);
+		distance.put(22, 5.0);
 		distance.put(23,-1.0);
 		expBB.add(58);
 
@@ -942,14 +942,14 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		//if(i <= 2)
 		expBB.add(45);
 		expBr.add(17);
-		distance.put(16, 1.0); //was: 2.0);
+		distance.put(16, 1.0);
 		distance.put(17,-1.0);
 		expBB.add(46);
 
 		//if(i < 3)
 		expBB.add(49);
 		expBr.add(19);
-		distance.put(18, 1.0); //was: 3.0);
+		distance.put(18, 2.0);
 		distance.put(19,-1.0);
 		expBB.add(50);
 
@@ -957,14 +957,14 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		expBB.add(53);
 		expBr.add(20);
 		distance.put(20,-1.0);
-		distance.put(21, 1.0); //was: 4.0);
+		distance.put(21, 3.0);
 		expBB.add(55);
 		expBB.add(56);
 
 		//if(i != 5)
 		expBB.add(57);
 		expBr.add(23);
-		distance.put(22, 1.0); //was: 5.0);
+		distance.put(22, 4.0);
 		distance.put(23,-1.0);
 		expBB.add(58);
 
@@ -995,7 +995,7 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		//if(i >= 0)
 		expBB.add(37);
 		expBr.add(13);
-		distance.put(12, 1.0); //was: 3.0);
+		distance.put(12, 2.0);
 		distance.put(13,-1.0);
 		expBB.add(38);
 
@@ -1016,7 +1016,7 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		//if(i < 3)
 		expBB.add(49);
 		expBr.add(19);
-		distance.put(18, 1.0); //was: 2.0);
+		distance.put(18, 1.0);
 		distance.put(19,-1.0);
 		expBB.add(50);
 
@@ -1024,14 +1024,14 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		expBB.add(53);
 		expBr.add(20);
 		distance.put(20,-1.0);
-		distance.put(21, 1.0); //was: 3.0);
+		distance.put(21, 2.0);
 		expBB.add(55);
 		expBB.add(56);
 
 		//if(i != 5)
 		expBB.add(57);
 		expBr.add(23);
-		distance.put(22, 1.0); //was: 4.0);
+		distance.put(22, 3.0);
 		distance.put(23,-1.0);
 		expBB.add(58);
 
@@ -1062,14 +1062,14 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		//if(i >= 0)
 		expBB.add(37);
 		expBr.add(13);
-		distance.put(12, 1.0); //was:4.0);
+		distance.put(12, 3.0);
 		distance.put(13,-1.0);
 		expBB.add(38);
 
 		//if(i > 1)
 		expBB.add(41);
 		expBr.add(15);
-		distance.put(14, 1.0); //was: 3.0);
+		distance.put(14, 2.0);
 		distance.put(15,-1.0);
 		expBB.add(42);
 
@@ -1100,7 +1100,7 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		//if(i != 5)
 		expBB.add(57);
 		expBr.add(23);
-		distance.put(22, 1.0); //was: 3.0);
+		distance.put(22, 2.0);
 		distance.put(23,-1.0);
 		expBB.add(58);
 
@@ -1131,14 +1131,14 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		//if(i >= 0)
 		expBB.add(37);
 		expBr.add(13);
-		distance.put(12, 1.0); //was: 5.0);
+		distance.put(12, 4.0);
 		distance.put(13,-1.0);
 		expBB.add(38);
 
 		//if(i > 1)
 		expBB.add(41);
 		expBr.add(15);
-		distance.put(14, 1.0); //was: 4.0);
+		distance.put(14, 3.0);
 		distance.put(15,-1.0);
 		expBB.add(42);
 
@@ -1146,7 +1146,7 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		expBB.add(45);
 		expBr.add(16);
 		distance.put(16,-1.0);
-		distance.put(17, 1.0); //was: 3.0);
+		distance.put(17, 2.0);
 		expBB.add(47);
 		expBB.add(48);
 
@@ -1199,14 +1199,14 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		//if(i >= 0)
 		expBB.add(37);
 		expBr.add(13);
-		distance.put(12, 1.0); //was: 6.0);
+		distance.put(12, 5.0);
 		distance.put(13,-1.0);
 		expBB.add(38);
 
 		//if(i > 1)
 		expBB.add(41);
 		expBr.add(15);
-		distance.put(14, 1.0); //was: 5.0);
+		distance.put(14, 4.0);
 		distance.put(15,-1.0);
 		expBB.add(42);
 
@@ -1214,7 +1214,7 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		expBB.add(45);
 		expBr.add(16);
 		distance.put(16,-1.0);
-		distance.put(17, 1.0); //was: 4.0);
+		distance.put(17, 3.0);
 		expBB.add(47);
 		expBB.add(48);
 
@@ -1222,7 +1222,7 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		expBB.add(49);
 		expBr.add(18);
 		distance.put(18,-1.0);
-		distance.put(19, 1.0); //was: 3.0);
+		distance.put(19, 2.0);
 		expBB.add(51);
 		expBB.add(52);
 

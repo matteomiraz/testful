@@ -42,6 +42,7 @@ import java.util.logging.Logger;
 import soot.ArrayType;
 import soot.Body;
 import soot.BooleanType;
+import soot.ByteType;
 import soot.DoubleType;
 import soot.FloatType;
 import soot.IntType;
@@ -64,6 +65,9 @@ import soot.Value;
 import soot.ValueBox;
 import soot.jimple.ArrayRef;
 import soot.jimple.AssignStmt;
+import soot.jimple.CmpExpr;
+import soot.jimple.CmpgExpr;
+import soot.jimple.CmplExpr;
 import soot.jimple.ConditionExpr;
 import soot.jimple.DefinitionStmt;
 import soot.jimple.DoubleConstant;
@@ -682,6 +686,40 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			Value op2 = expr.getOp2();
 			Type type = op1.getType();
 
+			// check if this is a comparison between floats or doubles
+			if (type instanceof ByteType && op1 instanceof Local && op2 instanceof IntConstant && ((IntConstant)op2).value == 0) {
+				List<Unit> defs = duAnalysis.getDefsOfAt((Local) op1, u);
+
+				if(defs.size() == 1) {
+					Unit def = defs.get(0);
+
+					if (def instanceof AssignStmt) {
+						Value rightOp = ((AssignStmt)def).getRightOp();
+
+						if (rightOp instanceof CmplExpr) {
+							op1 = ((CmplExpr)rightOp).getOp1();
+							op2 = ((CmplExpr)rightOp).getOp2();
+							type = op1.getType();
+
+							logger.fine("The conditon " + u + " has been recognized as a comparison between " + op1 + " and " + op2);
+						} else if (rightOp instanceof CmpExpr) {
+							op1 = ((CmpExpr)rightOp).getOp1();
+							op2 = ((CmpExpr)rightOp).getOp2();
+							type = op1.getType();
+
+							logger.fine("The conditon " + u + " has been recognized as a comparison between " + op1 + " and " + op2);
+						} else if (rightOp instanceof CmpgExpr) {
+							op1 = ((CmpgExpr)rightOp).getOp1();
+							op2 = ((CmpgExpr)rightOp).getOp2();
+							type = op1.getType();
+
+							logger.fine("The conditon " + u + " has been recognized as a comparison between " + op1 + " and " + op2);
+						}
+
+					}
+				}
+			}
+
 			DataUse use1 = handleUse(newUnits, u, op1);
 			DataUse use2 = handleUse(newUnits, u, op2);
 
@@ -733,8 +771,13 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(1))));
 
 				} else if(type instanceof IntegerType || type instanceof LongType || type instanceof FloatType || type instanceof DoubleType) {
-					newUnits.add(Jimple.v().newAssignStmt(localTmpDouble1, Jimple.v().newCastExpr(op1, DoubleType.v())));
-					newUnits.add(Jimple.v().newAssignStmt(localTmpDouble2, Jimple.v().newCastExpr(op2, DoubleType.v())));
+
+					newUnits.add(Jimple.v().newAssignStmt(localTmpDouble1,
+							(op1.getType() instanceof DoubleType) ? op1 : Jimple.v().newCastExpr(op1, DoubleType.v())));
+
+					newUnits.add(Jimple.v().newAssignStmt(localTmpDouble2,
+							(op2.getType() instanceof DoubleType) ? op2 : Jimple.v().newCastExpr(op2, DoubleType.v())));
+
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, calculateConditionTargetDistance.makeRef(), localTmpDouble1, localTmpDouble2)));
 
 				} else if(type instanceof RefLikeType) {
@@ -785,8 +828,12 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(1))));
 
 				} else if(type instanceof IntegerType || type instanceof LongType || type instanceof FloatType || type instanceof DoubleType) {
-					newUnits.add(Jimple.v().newAssignStmt(localTmpDouble1, Jimple.v().newCastExpr(op1, DoubleType.v())));
-					newUnits.add(Jimple.v().newAssignStmt(localTmpDouble2, Jimple.v().newCastExpr(op2, DoubleType.v())));
+					newUnits.add(Jimple.v().newAssignStmt(localTmpDouble1,
+							(op1.getType() instanceof DoubleType) ? op1 : Jimple.v().newCastExpr(op1, DoubleType.v())));
+
+					newUnits.add(Jimple.v().newAssignStmt(localTmpDouble2,
+							(op2.getType() instanceof DoubleType) ? op2 : Jimple.v().newCastExpr(op2, DoubleType.v())));
+
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, calculateConditionTargetDistance.makeRef(), localTmpDouble1, localTmpDouble2)));
 
 				} else if(type instanceof RefLikeType) {
