@@ -80,6 +80,16 @@ public class CoverageDataFlow implements CoverageInformation {
 		this.duPairs = new LinkedHashSet<DefUse>(duPairs);
 	}
 
+	public Set<DataAccess> getDefsByUse(int useId) {
+		final Set<DataAccess> ret = new LinkedHashSet<DataAccess>();
+
+		for (DefUse du : duPairs)
+			if(du.getUse().getId() == useId)
+				ret.add(du.getDef());
+
+		return ret;
+	}
+
 	@Override
 	public boolean contains(CoverageInformation other) {
 		if(other instanceof CoverageDataFlow) {

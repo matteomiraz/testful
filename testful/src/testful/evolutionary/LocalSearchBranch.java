@@ -51,7 +51,9 @@ import testful.coverage.whiteBox.ConditionTargetDatum;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
 import testful.coverage.whiteBox.CoverageBranch;
 import testful.coverage.whiteBox.CoverageBranchTarget;
+import testful.coverage.whiteBox.CoverageDataFlow;
 import testful.coverage.whiteBox.Data;
+import testful.coverage.whiteBox.DataAccess;
 import testful.model.AssignPrimitive;
 import testful.model.Clazz;
 import testful.model.Operation;
@@ -167,8 +169,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 	public Solution<Operation> execute(Solution<Operation> solution) throws JMException {
 		try {
 			Collection<TestCoverage> tests = evalParts(solution);
-			BitSet execConds = getExecutedBranches(tests);
-			Set<TestWithScore> testScore = addSearchScore(tests, execConds);
+			Set<TestWithScore> testScore = addSearchScore(tests);
 			TestWithScore test = getBest(testScore);
 			if(test == null || test.score == null) return null;
 
@@ -193,7 +194,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			for(Solution<Operation> solution : solutionSet)
 				tests.addAll(evalParts(solution));
 
-			Set<TestWithScore> testScore = addSearchScore(tests, getExecutedBranches(tests));
+			Set<TestWithScore> testScore = addSearchScore(tests);
 			TestWithScore test = getBest(testScore);
 			if(test == null || test.score == null) return null;
 
@@ -546,18 +547,6 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 		return value;
 	}
 
-
-	private BitSet getExecutedBranches(Collection<TestCoverage> tests) {
-		BitSet ret = new BitSet();
-
-		for(TestCoverage testCoverage : tests) {
-			CoverageBranch cov = (CoverageBranch) testCoverage.getCoverage().get(CoverageBranch.KEY);
-			if(cov != null) ret.or(cov.getCoverage());
-		}
-
-		return ret;
-	}
-
 	private TestWithScore getBest(Set<TestWithScore> testScore) {
 
 		BranchScore max = null;
@@ -624,22 +613,31 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 		return tests;
 	}
 
-	private Set<TestWithScore> addSearchScore(Collection<TestCoverage> tests, BitSet execConds) {
-		Set<TestWithScore> ret = new TreeSet<TestWithScore>();
+	private Set<TestWithScore> addSearchScore(Collection<TestCoverage> tests) {
 
+		// calculate the executed branches
+		final BitSet execBranches = new BitSet();
+		for(TestCoverage t : tests) {
+			CoverageBranch cov = (CoverageBranch) t.getCoverage().get(CoverageBranch.KEY);
+			if(cov != null) execBranches.or(cov.getCoverage());
+		}
+
+		final Set<TestWithScore> ret = new TreeSet<TestWithScore>();
 		for(TestCoverage t : tests) {
 
-			BitSet cond = new BitSet();
-			CoverageBasicBlocks bbCov;
+			final CoverageBasicBlocks bbCov = (CoverageBasicBlocks) t.getCoverage().get(CoverageBasicBlocks.KEY);
+			if(bbCov == null) continue;
 
-			bbCov = (CoverageBasicBlocks) t.getCoverage().get(CoverageBasicBlocks.KEY);
-			if(bbCov != null) cond.or(problem.getWhiteAnalysis().getReachableBranches(bbCov.getCoverage()));
+			// retrieve the set of branches reachable (1st line) but not executed (2nd line)
+			final BitSet branches = (BitSet) problem.getWhiteAnalysis().getReachableBranches(bbCov.getCoverage()).clone();
+			branches.andNot(execBranches);
 
-			cond.andNot(execConds);
+			// if the set is empty, continue with the next branch
+			if(branches.isEmpty()) continue;
 
-			if(cond.isEmpty()) continue;
+			final CoverageDataFlow duCov = (CoverageDataFlow) t.getCoverage().get(CoverageDataFlow.KEY);
 
-			for (int branchId = cond.nextSetBit(0); branchId >= 0; branchId = cond.nextSetBit(branchId+1)) {
+			for (int branchId = branches.nextSetBit(0); branchId >= 0; branchId = branches.nextSetBit(branchId+1)) {
 
 				float score = 0;
 				if(attempts.containsKey(branchId))
@@ -669,7 +667,8 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 						if(data1.isParam()) score += SCORE_PARAM;
 						else if(data1.isField()) score += SCORE_FIELD;
 
-						// c.getUse1().getId()
+						Set<DataAccess> defs1 = duCov.getDefsByUse(c.getUse1().getId());
+						logger.finer("Condition " + branchId + " (use " + c.getUse1().getId() + ") has defs " + defs1);
 
 					} else { // 2 uses
 						score += SCORE_TWO_USES;
@@ -680,8 +679,9 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 						if(data1.isField()) score += SCORE_FIELD;
 						if(data2.isField()) score += SCORE_FIELD;
 
-						// c.getUse1().getId()
-						// c.getUse2().getId()
+						Set<DataAccess> defs1 = duCov.getDefsByUse(c.getUse1().getId());
+						Set<DataAccess> defs2 = duCov.getDefsByUse(c.getUse2().getId());
+						logger.finer("Condition " + branchId + " (uses " + c.getUse1().getId() + ", " + c.getUse2().getId() + ") has defs " + defs1 + "; " + defs2);
 
 					}
 				}

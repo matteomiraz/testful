@@ -128,11 +128,9 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 	/** SootMethod representation of TrackerWhiteBox.getConditionTargetId */
 	private static final SootMethod getConditionTargetId;
 	/** SootMethod representation of TrackerWhiteBox.setConditionTargetDistance(double) */
-	private static final SootMethod setConditionTargetDistance1;
-	/** SootMethod representation of TrackerWhiteBox.setConditionTargetDistance(double, double) */
-	private static final SootMethod setConditionTargetDistance2;
-	/** SootMethod representation of TrackerWhiteBox.setConditionTargetDistance(double, double) */
-	private static final SootMethod setConditionTargetDistance3;
+	private static final SootMethod setConditionTargetDistance;
+	/** SootMethod representation of TrackerWhiteBox.calculateConditionTargetDistance(double, double) */
+	private static final SootMethod calculateConditionTargetDistance;
 
 	/** SootMethod representation of TrackerWhiteBox.trackCall(int) */
 	private static final SootMethod trackCall;
@@ -176,9 +174,8 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		trackerBasicBlock = trackerClass.getMethodByName("trackBasicBlock");
 		trackBranch = trackerClass.getMethodByName("trackBranch");
 		getConditionTargetId = trackerClass.getMethodByName("getConditionTargetId");
-		setConditionTargetDistance1 = trackerClass.getMethodByName("setConditionTargetDistance1");
-		setConditionTargetDistance2 = trackerClass.getMethodByName("setConditionTargetDistance2");
-		setConditionTargetDistance3 = trackerClass.getMethodByName("setConditionTargetDistance3");
+		setConditionTargetDistance = trackerClass.getMethodByName("setConditionTargetDistance");
+		calculateConditionTargetDistance = trackerClass.getMethodByName("calculateConditionTargetDistance");
 
 		// contextual stuff
 		trackCall = trackerClass.getMethodByName("trackCall");
@@ -672,8 +669,6 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		}
 
 		public void process(Chain<Unit> newUnits, IfStmt u) {
-			DataUse use1 = null;
-			DataUse use2 = null;
 
 			if(!(u.getCondition() instanceof ConditionExpr)) {
 				logger.warning("Unknown condition: " + u.getCondition() + " (" + u.getCondition().getClass().getName() + ")");
@@ -687,19 +682,8 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			Value op2 = expr.getOp2();
 			Type type = op1.getType();
 
-			{
-				Data dop1 = getData(op1, u);
-				if(dop1 != null) {
-					use1 = new DataUse(current, dop1, defs);
-					uses.add(use1);
-				}
-
-				Data dop2 = getData(op2, u);
-				if(dop2 != null) {
-					use2 = new DataUse(current, dop2, defs);
-					uses.add(use2);
-				}
-			}
+			DataUse use1 = handleUse(newUnits, u, op1);
+			DataUse use2 = handleUse(newUnits, u, op2);
 
 			ConditionIf c = new ConditionIf(use1, use2, expr.toString());
 			current.setCondition(c);
@@ -746,12 +730,12 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				newUnits.add(Jimple.v().newIfStmt(Jimple.v().newNeExpr(localConditionTarget, IntConstant.v(trueBranch.getId())), nop));
 
 				if(type instanceof BooleanType) {
-					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance1.makeRef(), DoubleConstant.v(1))));
+					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(1))));
 
 				} else if(type instanceof IntegerType || type instanceof LongType || type instanceof FloatType || type instanceof DoubleType) {
 					newUnits.add(Jimple.v().newAssignStmt(localTmpDouble1, Jimple.v().newCastExpr(op1, DoubleType.v())));
 					newUnits.add(Jimple.v().newAssignStmt(localTmpDouble2, Jimple.v().newCastExpr(op2, DoubleType.v())));
-					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance3.makeRef(), localTmpDouble1, localTmpDouble2)));
+					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, calculateConditionTargetDistance.makeRef(), localTmpDouble1, localTmpDouble2)));
 
 				} else if(type instanceof RefLikeType) {
 
@@ -769,7 +753,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					newUnits.add(Jimple.v().newAssignStmt(localTmpDouble2, DoubleConstant.v(1)));
 					newUnits.add(isNull);
 
-					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance3.makeRef(), localTmpDouble1, localTmpDouble2)));
+					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, calculateConditionTargetDistance.makeRef(), localTmpDouble1, localTmpDouble2)));
 
 				} else logger.warning("Unknown operand type: " + type + " (" + type.getClass().getName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getName() + ")");
 
@@ -778,8 +762,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				// calculate distance (false)
 				newUnits.add(nop);
 				newUnits.add(Jimple.v().newIfStmt(Jimple.v().newNeExpr(localConditionTarget, IntConstant.v(falseBranch.getId())), after));
-				newUnits.add(Jimple.v().newAssignStmt(localTracker, Jimple.v().newStaticInvokeExpr(trackerSingleton.makeRef()))); // This is a fix for the SOOT bug!
-				newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance1.makeRef(), DoubleConstant.v(0))));
+				newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(0))));
 				newUnits.add(Jimple.v().newGotoStmt(after));
 			}
 
@@ -791,7 +774,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				// calculate distance (true)
 				Unit nop = Jimple.v().newNopStmt();
 				newUnits.add(Jimple.v().newIfStmt(Jimple.v().newNeExpr(localConditionTarget, IntConstant.v(trueBranch.getId())), nop));
-				newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance1.makeRef(), DoubleConstant.v(0))));
+				newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(0))));
 				newUnits.add(Jimple.v().newGotoStmt(after));
 
 				// calculate distance (false)
@@ -799,12 +782,12 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				newUnits.add(Jimple.v().newIfStmt(Jimple.v().newNeExpr(localConditionTarget, IntConstant.v(falseBranch.getId())), after));
 
 				if(type instanceof BooleanType) {
-					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance1.makeRef(), DoubleConstant.v(1))));
+					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(1))));
 
 				} else if(type instanceof IntegerType || type instanceof LongType || type instanceof FloatType || type instanceof DoubleType) {
 					newUnits.add(Jimple.v().newAssignStmt(localTmpDouble1, Jimple.v().newCastExpr(op1, DoubleType.v())));
 					newUnits.add(Jimple.v().newAssignStmt(localTmpDouble2, Jimple.v().newCastExpr(op2, DoubleType.v())));
-					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance3.makeRef(), localTmpDouble1, localTmpDouble2)));
+					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, calculateConditionTargetDistance.makeRef(), localTmpDouble1, localTmpDouble2)));
 
 				} else if(type instanceof RefLikeType) {
 
@@ -822,7 +805,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					newUnits.add(Jimple.v().newAssignStmt(localTmpDouble2, DoubleConstant.v(1)));
 					newUnits.add(isNull);
 
-					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance3.makeRef(), localTmpDouble1, localTmpDouble2)));
+					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, calculateConditionTargetDistance.makeRef(), localTmpDouble1, localTmpDouble2)));
 
 				} else logger.warning("Unknown operand type: " + type + " (" + type.getClass().getName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getName() + ")");
 
@@ -957,13 +940,13 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				for(int i = 0; i < keys.length; i++) {
 					final int ctKey = keys[i];
 					newUnits.add(ctTargets[i]);
-					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance1.makeRef(), DoubleConstant.v(Math.abs(ctKey - key)))));
+					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(Math.abs(ctKey - key)))));
 					newUnits.add(Jimple.v().newGotoStmt(lastNop));
 				}
 
 				{ // handle default target
 					newUnits.add(ctTargets[keys.length]);
-					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance1.makeRef(), DoubleConstant.v(switchDistanceToDefault(key, keyBranchId.keySet())))));
+					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(switchDistanceToDefault(key, keyBranchId.keySet())))));
 					newUnits.add(Jimple.v().newGotoStmt(lastNop));
 				}
 			}
@@ -989,13 +972,13 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					final int ctKey = keys[i];
 					newUnits.add(ctTargets[i]);
 					newUnits.add(Jimple.v().newAssignStmt(localTmpDouble1, Jimple.v().newCastExpr(keyValue, DoubleType.v())));
-					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance2.makeRef(), DoubleConstant.v(ctKey), localTmpDouble1)));
+					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, calculateConditionTargetDistance.makeRef(), DoubleConstant.v(ctKey), localTmpDouble1)));
 					newUnits.add(Jimple.v().newGotoStmt(lastNop));
 				}
 
 				{ // handle default target
 					newUnits.add(ctTargets[keys.length]);
-					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance1.makeRef(), DoubleConstant.v(0))));
+					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(0))));
 					newUnits.add(Jimple.v().newGotoStmt(lastNop));
 				}
 			}

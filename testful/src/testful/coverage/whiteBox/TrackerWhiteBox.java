@@ -123,27 +123,16 @@ public class TrackerWhiteBox extends Tracker {
 	 * Set the given distance as target distance
 	 * @param distance the distance to reach the target
 	 */
-	public void setConditionTargetDistance1(double distance) {
+	public void setConditionTargetDistance(double distance) {
 		condTarget.setDistance(distance);
 	}
 
 	/**
-	 * Set the distance as | v1 - v2 |.<br>
-	 * Use  this method to reach the true branch of >=, &lt;=, ==
+	 * Calculate the distance as 1 + | v1 - v2 |.<br>
 	 * @param v1 the first value
 	 * @param v2 the second value
 	 */
-	public void setConditionTargetDistance2(double v1, double v2) {
-		condTarget.setDistance(Math.abs(v1 - v2));
-	}
-
-	/**
-	 * Set the distance as 1 + | v1 - v2 |.<br>
-	 * Use  this method to reach the true branch of >, &lt;, !=
-	 * @param v1 the first value
-	 * @param v2 the second value
-	 */
-	public void setConditionTargetDistance3(double v1, double v2) {
+	public void calculateConditionTargetDistance(double v1, double v2) {
 		condTarget.setDistance(Math.abs(v1 - v2)+1);
 	}
 
