@@ -51,9 +51,7 @@ import testful.coverage.whiteBox.ConditionTargetDatum;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
 import testful.coverage.whiteBox.CoverageBranch;
 import testful.coverage.whiteBox.CoverageBranchTarget;
-import testful.coverage.whiteBox.CoverageDataFlow;
 import testful.coverage.whiteBox.Data;
-import testful.coverage.whiteBox.DataAccess;
 import testful.model.AssignPrimitive;
 import testful.model.Clazz;
 import testful.model.Operation;
@@ -635,8 +633,6 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			// if the set is empty, continue with the next branch
 			if(branches.isEmpty()) continue;
 
-			final CoverageDataFlow duCov = (CoverageDataFlow) t.getCoverage().get(CoverageDataFlow.KEY);
-
 			for (int branchId = branches.nextSetBit(0); branchId >= 0; branchId = branches.nextSetBit(branchId+1)) {
 
 				float score = 0;
@@ -667,9 +663,6 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 						if(data1.isParam()) score += SCORE_PARAM;
 						else if(data1.isField()) score += SCORE_FIELD;
 
-						Set<DataAccess> defs1 = duCov.getDefsByUse(c.getUse1().getId());
-						logger.finer("Condition " + branchId + " (use " + c.getUse1().getId() + ") has defs " + defs1);
-
 					} else { // 2 uses
 						score += SCORE_TWO_USES;
 
@@ -678,10 +671,6 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 						if(data1.isParam() || data2.isParam()) score += SCORE_PARAM;
 						if(data1.isField()) score += SCORE_FIELD;
 						if(data2.isField()) score += SCORE_FIELD;
-
-						Set<DataAccess> defs1 = duCov.getDefsByUse(c.getUse1().getId());
-						Set<DataAccess> defs2 = duCov.getDefsByUse(c.getUse2().getId());
-						logger.finer("Condition " + branchId + " (uses " + c.getUse1().getId() + ", " + c.getUse2().getId() + ") has defs " + defs1 + "; " + defs2);
 
 					}
 				}

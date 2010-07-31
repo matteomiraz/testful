@@ -23,46 +23,30 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import testful.TestFul;
 import testful.coverage.CoverageInformation;
 
 /**
- * Contains the coverage of the du-pairs
+ * Contains the coverage of the P-Uses (Predicate Uses).
  * @author matteo
  */
-public class CoverageDataFlow implements CoverageInformation {
+public class CoveragePUse implements CoverageInformation {
+	private static final long serialVersionUID = 344555259191283447L;
 
-	private static final long serialVersionUID = 5341830687067491212L;
-
-	public static class DefUse implements Serializable {
-		private static final long serialVersionUID = 2768652445227605157L;
+	public static class PUse implements Serializable {
+		private static final long serialVersionUID = 883324275937140071L;
 
 		/** the definition being used. If null, it is the default value (e.g., the auto-assigned 0 value for integers) */
 		private final ContextualId def;
-		/** the use. This must not be null */
-		private final ContextualId use;
+
+		private final int branchId;
 
 		private final int hashCode;
 
-		public DefUse(ContextualId def, ContextualId use) {
-			if(use == null) {
-				NullPointerException e = new NullPointerException("The use cannot be null");
-				TestFul.debug(e);
-				throw e;
-			}
-
+		public PUse(int branchId, ContextualId def) {
+			this.branchId = branchId;
 			this.def = def;
-			this.use = use;
 
-			hashCode = 31 * ((def == null) ? 0 : def.hashCode()) + use.hashCode();
-		}
-
-		public ContextualId getDef() {
-			return def;
-		}
-
-		public ContextualId getUse() {
-			return use;
+			hashCode = 521 * ((def == null) ? 0 : def.hashCode()) + branchId;
 		}
 
 		@Override
@@ -70,48 +54,56 @@ public class CoverageDataFlow implements CoverageInformation {
 			return hashCode;
 		}
 
+		/* (non-Javadoc)
+		 * @see java.lang.Object#equals(java.lang.Object)
+		 */
 		@Override
 		public boolean equals(Object obj) {
-			if(this == obj) return true;
-			if(obj == null) return false;
+			if (this == obj) return true;
 
-			if(!(obj instanceof DefUse)) return false;
-			DefUse other = (DefUse) obj;
+			if (obj == null) return false;
 
-			if(def == null) {
-				if(other.def != null) return false;
-			} else if(!def.equals(other.def)) return false;
+			if(!(obj instanceof PUse)) return false;
 
-			if(!use.equals(other.use)) return false;
-
+			PUse other = (PUse) obj;
+			if (branchId != other.branchId) return false;
+			if (def == null) {
+				if (other.def != null)
+					return false;
+			} else if (!def.equals(other.def))
+				return false;
 			return true;
 		}
 
+		/* (non-Javadoc)
+		 * @see java.lang.Object#toString()
+		 */
 		@Override
 		public String toString() {
-			return (def==null?"default[]":def) + "-"+ use;
+			return branchId + "(" + (def==null?"default[]":def) + ")";
 		}
 	}
 
-	public static String KEY = "du";
-	public static String NAME = "Def-Use Pairs";
+	public static String KEY = "pu";
+	public static String NAME = "P-Uses";
 
-	private final Set<DefUse> duPairs;
+	/** key: branchId, Value: definitions */
+	private final Set<PUse> coverage;
 
-	public CoverageDataFlow() {
-		duPairs = new LinkedHashSet<DefUse>();
+	public CoveragePUse() {
+		coverage = new LinkedHashSet<PUse>();
 	}
 
-	public CoverageDataFlow(Set<DefUse> duPairs) {
-		this.duPairs = new LinkedHashSet<DefUse>(duPairs);
+	public CoveragePUse(Set<PUse> cov) {
+		coverage = new LinkedHashSet<PUse>(cov);
 	}
 
 	@Override
 	public boolean contains(CoverageInformation other) {
-		if(other instanceof CoverageDataFlow) {
-			final CoverageDataFlow coverageDataFlow = (CoverageDataFlow) other;
+		if(other instanceof CoveragePUse) {
+			final CoveragePUse coverageDataFlow = (CoveragePUse) other;
 
-			if(!duPairs.containsAll(coverageDataFlow.duPairs)) return false;
+			if(!coverage.containsAll(coverageDataFlow.coverage)) return false;
 
 			return true;
 		}
@@ -120,7 +112,7 @@ public class CoverageDataFlow implements CoverageInformation {
 
 	@Override
 	public CoverageInformation createEmpty() {
-		return new CoverageDataFlow();
+		return new CoveragePUse();
 	}
 
 	@Override
@@ -135,29 +127,29 @@ public class CoverageDataFlow implements CoverageInformation {
 
 	@Override
 	public float getQuality() {
-		return duPairs.size();
+		return coverage.size();
 	}
 
 	@Override
 	public void merge(CoverageInformation other) {
-		if(other instanceof CoverageDataFlow) {
-			CoverageDataFlow coverageDataFlow = (CoverageDataFlow) other;
+		if(other instanceof CoveragePUse) {
+			CoveragePUse coverageDataFlow = (CoveragePUse) other;
 
-			duPairs.addAll(coverageDataFlow.duPairs);
+			coverage.addAll(coverageDataFlow.coverage);
 		}
 	}
 
 	@Override
-	public CoverageDataFlow clone() {
-		return new CoverageDataFlow(duPairs);
+	public CoveragePUse clone() {
+		return new CoveragePUse(coverage);
 	}
 
 	@Override
 	public String toString() {
-		String[] duStrings = new String[duPairs.size()];
+		String[] duStrings = new String[coverage.size()];
 
 		int i = 0;
-		for(DefUse du : duPairs)
+		for(PUse du : coverage)
 			duStrings[i++] = du.toString();
 
 		Arrays.sort(duStrings);

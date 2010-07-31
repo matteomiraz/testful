@@ -36,6 +36,7 @@ import testful.TestFul;
 import testful.coverage.CoverageInformation;
 import testful.coverage.Tracker;
 import testful.coverage.whiteBox.CoverageDataFlow.DefUse;
+import testful.coverage.whiteBox.CoveragePUse.PUse;
 import testful.utils.ElementManager;
 
 public class TrackerWhiteBox extends Tracker {
@@ -62,6 +63,7 @@ public class TrackerWhiteBox extends Tracker {
 		ret.put(new CoverageBasicBlocks(CoverageBasicBlocks.KEY, CoverageBasicBlocks.NAME, covBlocks));
 		ret.put(new CoverageBranch(CoverageBranch.KEY, CoverageBranch.NAME, covBranches));
 		ret.put(new CoverageDataFlow(defUse));
+		ret.put(new CoveragePUse(pUse));
 		ret.put(new CoverageDefExp(defExpo));
 
 		if(condTarget != null)
@@ -87,17 +89,18 @@ public class TrackerWhiteBox extends Tracker {
 		}
 
 		defUse = new LinkedHashSet<DefUse>();
-		defExpo = new LinkedHashMap<Stack, Set<DataAccess>>();
+		pUse = new LinkedHashSet<PUse>();
+		defExpo = new LinkedHashMap<Stack, Set<ContextualId>>();
 
 	}
 
-	// ---------------------- Basic Block coverage ------------------------------
+	// ---------------------- Basic Block coverage ----------------------------
 	private BitSet covBlocks;
 	public void trackBasicBlock(int blockId) {
 		covBlocks.set(blockId);
 	}
 
-	// ----------------------- Condition coverage  -------------------------------
+	// ----------------------- Condition coverage  ----------------------------
 	/** condition coverage */
 	private BitSet covBranches;
 
@@ -136,7 +139,7 @@ public class TrackerWhiteBox extends Tracker {
 		condTarget.setDistance(Math.abs(v1 - v2));
 	}
 
-	// -------------------------- Stack tracker ---------------------------------
+	// ------------------------ Context tracking ------------------------------
 	private static final Integer ONE = 1;
 
 	/** stores the number of calls to each method */
@@ -184,18 +187,29 @@ public class TrackerWhiteBox extends Tracker {
 		return stackCache;
 	}
 
-	// ------------------------ Def-Use coverage --------------------------------
-	public DataAccess getDataAccess(int id) {
-		return new DataAccess(id, getStack());
+	/**
+	 * Returns the Contextual Identification
+	 * @param id the non-contextual identification
+	 * @return the contextual identification
+	 */
+	public ContextualId getDataAccess(int id) {
+		return new ContextualId(id, getStack());
 	}
 
+	// ------------------------ Def-Use coverage ------------------------------
 	private Set<DefUse> defUse;
-	public void manageDefUse(DataAccess def, DataAccess use) {
+	public void manageDefUse(ContextualId def, ContextualId use) {
 		defUse.add(new DefUse(def, use));
 	}
 
+	// ------------------------ P-Use coverage --------------------------------
+	private Set<PUse> pUse;
+	public void managePUse(int branchId, ContextualId def) {
+		pUse.add(new PUse(branchId, def));
+	}
+
 	// ------------------------ Def exposition --------------------------------
-	private Map<Stack, Set<DataAccess>> defExpo;
+	private Map<Stack, Set<ContextualId>> defExpo;
 
 	private static final Integer VALUE = 1;
 	public void manageDefExposition(Object obj) {
@@ -205,9 +219,9 @@ public class TrackerWhiteBox extends Tracker {
 
 			final Stack stack = getStack(); //TODO: def-exposition does not work if we are using non-contextual analysis
 
-			Set<DataAccess> def = defExpo.get(stack);
+			Set<ContextualId> def = defExpo.get(stack);
 			if(def == null) {
-				def = new LinkedHashSet<DataAccess>();
+				def = new LinkedHashSet<ContextualId>();
 				defExpo.put(stack, def);
 			}
 
@@ -234,12 +248,12 @@ public class TrackerWhiteBox extends Tracker {
 		}
 	}
 
-	private void addAll(Set<DataAccess> def, Object[] objects) {
+	private void addAll(Set<ContextualId> def, Object[] objects) {
 		if(objects == null) return;
 
 		for (Object o : objects) {
 			if(o != null) {
-				if(o instanceof DataAccess) def.add((DataAccess) o);
+				if(o instanceof ContextualId) def.add((ContextualId) o);
 				else if(o.getClass().isArray()) addAll(def, (Object[]) o);
 				else logger.fine("DefExposer: unknown element: " + o + " - " + o.getClass().getName());
 			}
@@ -278,7 +292,7 @@ public class TrackerWhiteBox extends Tracker {
 
 	}
 
-	// ------------------------ Def-Array handling --------------------------------
+	// ------------------------ Def-Array handling ----------------------------
 	/**
 	 * creates an array of DataAccess, all with the same defId.<br>
 	 * Use this method when a new array (1 dimension) is created
@@ -286,11 +300,11 @@ public class TrackerWhiteBox extends Tracker {
 	 * @param id the id of the definition
 	 * @return the array containing the definitions (its length is len)
 	 */
-	public DataAccess[] newArrayDef(int len, int id) {
-		DataAccess[] ret = new DataAccess[len];
+	public ContextualId[] newArrayDef(int len, int id) {
+		ContextualId[] ret = new ContextualId[len];
 
 		//DataAccess is an immutable object... I can share it!
-		DataAccess d = getDataAccess(id);
+		ContextualId d = getDataAccess(id);
 		for(int i = 0; i < len; i++)
 			ret[i] = d;
 
@@ -305,15 +319,15 @@ public class TrackerWhiteBox extends Tracker {
 	 * @return the array containing the definitions (its lengths are those reported in len)
 	 */
 	public Object newMultiArrayDef(int[] len, int id) {
-		Object ret = Array.newInstance(DataAccess.class, len);
+		Object ret = Array.newInstance(ContextualId.class, len);
 
-		DataAccess d = getDataAccess(id);
+		ContextualId d = getDataAccess(id);
 		_newMultiArrayDef((Object[]) ret, id, len.length, d);
 
 		return ret;
 	}
 
-	private void _newMultiArrayDef(Object[] defs, int id, int dims, DataAccess d) {
+	private void _newMultiArrayDef(Object[] defs, int id, int dims, ContextualId d) {
 		if(dims > 1) {
 			for (int i = 0; i < defs.length; i++)
 				_newMultiArrayDef((Object[]) defs[i], id, dims-1, d);
@@ -341,21 +355,21 @@ public class TrackerWhiteBox extends Tracker {
 
 		// create DataAccess array types
 		Class<?>[] dataAccessArrayTypes = new Class[dim];
-		dataAccessArrayTypes[0] = DataAccess.class;
+		dataAccessArrayTypes[0] = ContextualId.class;
 		for(int i = 1; i < dim; i++)
 			dataAccessArrayTypes[i] = Array.newInstance(dataAccessArrayTypes[i-1], 0).getClass();
 
-		DataAccess d = getDataAccess(id);
+		ContextualId d = getDataAccess(id);
 
 		return _arrayAssignmentDef(o, dim, id, dataAccessArrayTypes, d);
 	}
 
-	private Object _arrayAssignmentDef(Object o, int dim, int id, Class<?>[] dataAccessArrayTypes, DataAccess d) {
+	private Object _arrayAssignmentDef(Object o, int dim, int id, Class<?>[] dataAccessArrayTypes, ContextualId d) {
 
 		if(o == null) return null;
 
 		if(dim == 1) {
-			DataAccess[] ret = new DataAccess[Array.getLength(o)];
+			ContextualId[] ret = new ContextualId[Array.getLength(o)];
 			for (int i = 0; i < ret.length; i++) ret[i] = d;
 			return ret;
 		}

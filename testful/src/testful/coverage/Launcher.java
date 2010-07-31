@@ -65,16 +65,35 @@ public class Launcher {
 			return context;
 		}
 
-		@Option(required = false, name = "-du", usage = "Collect Def-Use pairs")
-		private boolean duPairs = false;
-		public boolean isDuPairs() {
-			return duPairs;
+		public static enum DataFlowCoverage {
+
+			/** No Data Flow Coverage */
+			DISABLED,
+
+			/** all Def-Use pairs */
+			DU,
+
+			/** p-Use + all Def-Use pairs*/
+			PUSE,
+
+			/** Exposition of Definitions + p-Use + all Def-Use pairs*/
+			EXPDEF;
+
+			public boolean isPUse() {
+				switch (this) {
+				case PUSE:
+				case EXPDEF:
+					return true;
+				default:
+					return false;
+				}
+			}
 		}
 
-		@Option(required = false, name = "-de", usage = "Collect Def-Exposition")
-		private boolean defExposition = false;
-		public boolean isDefExposition() {
-			return duPairs && defExposition;
+		@Option(required = false, name = "-dataFlowCoverage", usage = "The data-flow coverage criterion to use")
+		private DataFlowCoverage dataFlowCoverage = DataFlowCoverage.DISABLED;
+		public DataFlowCoverage getDataFlowCoverage() {
+			return dataFlowCoverage;
 		}
 
 		/**
@@ -132,8 +151,6 @@ public class Launcher {
 			if(!classes.isEmpty()) n++;
 
 			if(n != 1) throw new CmdLineException(null, "You must use -project, -file, or provide one (or more) classes as argument");
-
-			if(defExposition && !duPairs) throw new CmdLineException(null, "Cannot calculate Def-Exposition without Def-Use pairs");
 		}
 	}
 

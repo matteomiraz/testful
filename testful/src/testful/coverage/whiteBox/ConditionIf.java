@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.coverage.whiteBox;
 
 public class ConditionIf extends Condition {

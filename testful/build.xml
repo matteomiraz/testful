@@ -427,8 +427,8 @@
 		<delete dir="${base}/testCut/instrumented" />
 		<java jar="${artifacts}/instrumenter.jar" fork="true">
 			<jvmarg value="-Dtestful.debug=true"/>
-			<arg value="-du"/>
-			<arg value="-de"/>
+			<arg value="-dataFlowCoverage"/>
+			<arg value="EXPDEF"/>
 
 			<arg value="-dir"/>
 			<arg value="${testCut}"/>
@@ -445,8 +445,19 @@
 
 		<java jar="${artifacts}/instrumenter.jar" fork="true">
 			<jvmarg value="-Dtestful.debug=true"/>
-			<arg value="-du"/>
-			<arg value="-de"/>
+			<arg value="-dataFlowCoverage"/>
+			<arg value="PUSE"/>
+
+			<arg value="-dir"/>
+			<arg value="${testCut}"/>
+
+			<arg value="test.coverage.PUse"/>
+		</java>
+
+		<java jar="${artifacts}/instrumenter.jar" fork="true">
+			<jvmarg value="-Dtestful.debug=true"/>
+			<arg value="-dataFlowCoverage"/>
+			<arg value="EXPDEF"/>
 
 			<arg value="-dir"/>
 			<arg value="${testCut}"/>
@@ -458,8 +469,8 @@
 		<java jar="${artifacts}/instrumenter.jar" fork="true">
 			<jvmarg value="-Dtestful.debug=true"/>
 			<arg value="-context"/>
-			<arg value="-du"/>
-			<arg value="-de"/>
+			<arg value="-dataFlowCoverage"/>
+			<arg value="EXPDEF"/>
 
 			<arg value="-dir"/>
 			<arg value="${testCut}"/>
@@ -475,7 +486,14 @@
 	<target name="test.instrumenter" depends="test.cut.compile, build.instrumenter" description="Test the instrumentation facility">
 		<java jar="${artifacts}/instrumenter.jar" fork="true" failonerror="true">
 			<jvmarg value="-Dtestful.debug=true"/>
-			<arg line="-du -de -dir ${testCut} test.instrumenter.Catches test.instrumenter.Super test.instrumenter.Synchronized" />
+			<arg value="-dataFlowCoverage"/>
+			<arg value="EXPDEF"/>
+			<arg value="-dir"/>
+			<arg value="${testCut}"/>
+
+			<arg value="test.instrumenter.Catches" />
+			<arg value="test.instrumenter.Super" />
+			<arg value="test.instrumenter.Synchronized" />
 		</java>
 	</target>
 

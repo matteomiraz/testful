@@ -20,10 +20,10 @@ public class CoverageDefExp implements CoverageInformation {
 	@Override
 	public String getName() { return NAME; }
 
-	private final Map<Stack, Set<DataAccess>> defExpo;
+	private final Map<Stack, Set<ContextualId>> defExpo;
 	private int quality;
 
-	public CoverageDefExp(Map<Stack, Set<DataAccess>> defExpo) {
+	public CoverageDefExp(Map<Stack, Set<ContextualId>> defExpo) {
 		this.defExpo = defExpo;
 
 		updateQuality();
@@ -31,7 +31,7 @@ public class CoverageDefExp implements CoverageInformation {
 
 	private void updateQuality() {
 		quality = 0;
-		for (Set<DataAccess> e : defExpo.values())
+		for (Set<ContextualId> e : defExpo.values())
 			quality += e.size();
 	}
 
@@ -43,10 +43,10 @@ public class CoverageDefExp implements CoverageInformation {
 		if(quality < o.quality) return false;
 
 		for (Stack deKey : o.defExpo.keySet()) {
-			Set<DataAccess> tde = defExpo.get(deKey);
+			Set<ContextualId> tde = defExpo.get(deKey);
 			if(tde == null) return false;
 
-			Set<DataAccess> ode = o.defExpo.get(deKey);
+			Set<ContextualId> ode = o.defExpo.get(deKey);
 			if(!tde.containsAll(ode)) return false;
 		}
 
@@ -55,7 +55,7 @@ public class CoverageDefExp implements CoverageInformation {
 
 	@Override
 	public CoverageInformation createEmpty() {
-		return new CoverageDefExp(new LinkedHashMap<Stack, Set<DataAccess>>());
+		return new CoverageDefExp(new LinkedHashMap<Stack, Set<ContextualId>>());
 	}
 
 	@Override
@@ -71,10 +71,10 @@ public class CoverageDefExp implements CoverageInformation {
 	@Override
 	public void merge(CoverageInformation other) {
 		if(other instanceof CoverageDefExp) {
-			for (Entry<Stack, Set<DataAccess>> e : ((CoverageDefExp) other).defExpo.entrySet()) {
-				Set<DataAccess> de = defExpo.get(e.getKey());
+			for (Entry<Stack, Set<ContextualId>> e : ((CoverageDefExp) other).defExpo.entrySet()) {
+				Set<ContextualId> de = defExpo.get(e.getKey());
 				if(de == null) {
-					de = new LinkedHashSet<DataAccess>();
+					de = new LinkedHashSet<ContextualId>();
 					defExpo.put(e.getKey(), de);
 				}
 				de.addAll(e.getValue());
@@ -88,7 +88,7 @@ public class CoverageDefExp implements CoverageInformation {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 
-		for (Entry<Stack, Set<DataAccess>> e : defExpo.entrySet()) {
+		for (Entry<Stack, Set<ContextualId>> e : defExpo.entrySet()) {
 			sb.append("stack:").append(e.getKey().toString()).append("\ndefs:").append(e.getValue().toString()).append("\n");
 		}
 

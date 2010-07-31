@@ -107,6 +107,7 @@ import soot.toolkits.scalar.UnitValueBoxPair;
 import soot.util.Chain;
 import testful.IConfigProject;
 import testful.coverage.Launcher.ConfigInstrumenter;
+import testful.coverage.Launcher.ConfigInstrumenter.DataFlowCoverage;
 import testful.coverage.soot.Instrumenter.UnifiedInstrumentator;
 import testful.coverage.soot.Skip;
 import testful.coverage.soot.SootUtils;
@@ -147,6 +148,9 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 	/** SootMethod representation of TrackerWhiteBox.manageDefUse(DataAccess, int, boolean) */
 	private static final SootMethod manageDefUse;
 
+	/** SootMethod representation of TrackerWhiteBox.managePUse(int branchId, ContextualId def) */
+	private static final SootMethod managePUse;
+
 	/** SootMethod representation of TrackerWhiteBox.manageDefExposition(Object) */
 	private static final SootMethod manageDefExposition;
 
@@ -184,8 +188,8 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		// contextual stuff
 		trackCall = trackerClass.getMethodByName("trackCall");
 		trackReturn = trackerClass.getMethodByName("trackReturn");
-		Scene.v().loadClassAndSupport(DataAccess.class.getName());
-		dataAccess = Scene.v().getSootClass(DataAccess.class.getName());
+		Scene.v().loadClassAndSupport(ContextualId.class.getName());
+		dataAccess = Scene.v().getSootClass(ContextualId.class.getName());
 		getDataAccess = trackerClass.getMethodByName("getDataAccess");
 
 		// Def-Use stuff
@@ -193,6 +197,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		newMultiArrayDef = trackerClass.getMethodByName("newMultiArrayDef");
 		arrayAssignmentDef = trackerClass.getMethodByName("arrayAssignmentDef");
 		manageDefUse = trackerClass.getMethodByName("manageDefUse");
+		managePUse = trackerClass.getMethodByName("managePUse");
 
 		// Def-Exposition stuff
 		Scene.v().loadClassAndSupport(DefExposer.class.getName());
@@ -250,9 +255,8 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 	@Override
 	public void preprocess(SootClass sClass) {
 
-
 		// du-tracking: add tracking fields
-		if(!config.isDuPairs()) return;
+		if(config.getDataFlowCoverage() == DataFlowCoverage.DISABLED) return;
 
 		final List<SootField> fields = new ArrayList<SootField>();
 		for(SootField f : sClass.getFields())
@@ -273,7 +277,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 
 		// def-exposition preprocessing: adding GET_FIELDS and __testful_get_defs__ methods
-		if(!config.isDefExposition()) return;
+		if(config.getDataFlowCoverage() != DataFlowCoverage.EXPDEF) return;
 
 		if(sClass.implementsInterface(DefExposer.class.getName())) return;
 
@@ -565,11 +569,12 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, trackCall.makeRef(), Arrays.asList(new Value[] { IntConstant.v(start.getId()) }))));
 
 			// def-use analysis
-			if(config.isDuPairs()) {
+			if(config.getDataFlowCoverage() != DataFlowCoverage.DISABLED) {
 
 				// track this definitions (if it is not a constructor)
-				if(config.isDefExposition() && localThis != null && !SootMethod.constructorName.equals(newBody.getMethod().getName()))
-					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, manageDefExposition.makeRef(), localThis)));
+				if(config.getDataFlowCoverage() == DataFlowCoverage.EXPDEF)
+					if(localThis != null && !SootMethod.constructorName.equals(newBody.getMethod().getName()))
+						newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, manageDefExposition.makeRef(), localThis)));
 
 				//Track parameters
 				for(int i = 0; i < paramDefs.length; i++) {
@@ -610,8 +615,9 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					}
 
 					// track parameter's definitions (if it is not a prim type)
-					if(config.isDefExposition() && !(type instanceof PrimType || type instanceof ArrayType))
-						newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, manageDefExposition.makeRef(), p)));
+					if(config.getDataFlowCoverage() == DataFlowCoverage.EXPDEF)
+						if(!(type instanceof PrimType || type instanceof ArrayType))
+							newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, manageDefExposition.makeRef(), p)));
 				}
 
 			}
@@ -720,8 +726,8 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				}
 			}
 
-			DataUse use1 = handleUse(newUnits, u, op1);
-			DataUse use2 = handleUse(newUnits, u, op2);
+			final DataUse use1 = handleUse(newUnits, u, op1);
+			final DataUse use2 = handleUse(newUnits, u, op2);
 
 			ConditionIf c = new ConditionIf(use1, use2, expr.toString());
 			current.setCondition(c);
@@ -762,6 +768,20 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 			{ // handle false
 				newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, trackBranch.makeRef(), IntConstant.v(falseBranch.getId()))));
+
+				if(config.getDataFlowCoverage().isPUse()) {
+					if(use1 != null) {
+						Local localDef = getTrackingDef(newUnits, op1, u);
+						if(localDef != null)
+							newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, managePUse.makeRef(), IntConstant.v(falseBranch.getId()), localDef)));
+					}
+
+					if(use2 != null) {
+						Local localDef = getTrackingDef(newUnits, op2, u);
+						if(localDef != null)
+							newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, managePUse.makeRef(), IntConstant.v(falseBranch.getId()), localDef)));
+					}
+				}
 
 				// calculate distance (true)
 				Unit nop = Jimple.v().newNopStmt();
@@ -813,6 +833,21 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 			{ // handle true
 				newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, trackBranch.makeRef(), IntConstant.v(trueBranch.getId()))));
+
+				if (config.getDataFlowCoverage().isPUse()) {
+
+					if (use1 != null) {
+						Local localDef = getTrackingDef(newUnits, op1, u);
+						if (localDef != null)
+							newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, managePUse.makeRef(),IntConstant.v(trueBranch.getId()),localDef)));
+					}
+
+					if (use2 != null) {
+						Local localDef = getTrackingDef(newUnits, op2, u);
+						if (localDef != null)
+							newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, managePUse.makeRef(),IntConstant.v(trueBranch.getId()),localDef)));
+					}
+				}
 
 				// calculate distance (true)
 				Unit nop = Jimple.v().newNopStmt();
@@ -908,7 +943,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			Unit lastNop = Jimple.v().newNopStmt();
 
 			newUnits.add(Jimple.v().newLookupSwitchStmt(key, lookupValues, targets, defaultTarget));
-			processSwitch(newUnits, key, keys, keyTarget, keyBranchId, defaultTarget, defaultBranchId, lastNop);
+			processSwitch(newUnits, u, key, keys, keyTarget, keyBranchId, defaultTarget, defaultBranchId, lastNop);
 			newUnits.add(lastNop);
 
 			current = null;
@@ -956,19 +991,25 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			Unit lastNop = Jimple.v().newNopStmt();
 
 			newUnits.add(Jimple.v().newTableSwitchStmt(key, u.getLowIndex(), u.getHighIndex(), targets, defaultTarget));
-			processSwitch(newUnits, key, keys, keyTarget, keyBranchId, defaultTarget, defaultBranchId, lastNop);
+			processSwitch(newUnits, u, key, keys, keyTarget, keyBranchId, defaultTarget, defaultBranchId, lastNop);
 			newUnits.add(lastNop);
 
 			current = null;
 		}
 
-		private void processSwitch(Chain<Unit> newUnits, Value keyValue, int[] keys, SortedMap<Integer, Unit> keyTarget, Map<Integer, Integer> keyBranchId, Unit defaultTarget, int defaultBranchId, Unit lastNop) {
+		private void processSwitch(Chain<Unit> newUnits, Unit switchUnit, Value keyValue, int[] keys, SortedMap<Integer, Unit> keyTarget, Map<Integer, Integer> keyBranchId, Unit defaultTarget, int defaultBranchId, Unit lastNop) {
+
 			for(final int key : keys) {
 				final Unit start = keyTarget.get(key);
 				final int branchId = keyBranchId.get(key);
 
 				newUnits.add(start);
 				newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, trackBranch.makeRef(), IntConstant.v(branchId))));
+
+				if(config.getDataFlowCoverage().isPUse()) {
+					final Local keyDef = getTrackingDef(newUnits, keyValue, switchUnit);
+					if(keyDef != null) newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, managePUse.makeRef(),IntConstant.v(branchId),keyDef)));
+				}
 
 				// track distance
 
@@ -1008,6 +1049,11 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				newUnits.add(defaultTarget);
 				newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, trackBranch.makeRef(), IntConstant.v(defaultBranchId))));
 
+				if(config.getDataFlowCoverage().isPUse()) {
+					final Local keyDef = getTrackingDef(newUnits, keyValue, switchUnit);
+					if(keyDef != null) newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, managePUse.makeRef(),IntConstant.v(defaultBranchId),keyDef)));
+				}
+
 				// track distance
 				IntConstant[] ctLookupValues = new IntConstant[keys.length + 1];
 				Unit[] ctTargets = new Unit[keys.length + 1];
@@ -1035,6 +1081,73 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				}
 			}
 
+		}
+
+		private Local getTrackingDef(Chain<Unit> newUnits, Value v, Unit u) {
+
+			if(v instanceof Local) {
+				if(v.equals(localThis)) return null;
+
+				// if the use has only one reaching definition, I can skip its tracking or check if it is a temporary variable
+				List<Unit> reachingDefs = duAnalysis.getDefsOfAt((Local) v, u);
+
+				if(reachingDefs.size() < 1) return null;
+				if(reachingDefs.size() == 1) {
+
+					// check if it is a temporary variable used to access a field
+					Unit def = reachingDefs.get(0);
+					if(def instanceof AssignStmt && (((AssignStmt)def).getRightOp() instanceof FieldRef) && duAnalysis.getUsesOf(def).size() == 1) {
+						logger.fine("Found temporary local " + v + " using the definition of " + ((AssignStmt)def).getRightOp() + " instead");
+						v = ((AssignStmt)def).getRightOp();
+
+					} else {
+
+						logger.fine(" Skipping instrumentation of use of " + v + " in " + u + ": only 1 reachable def-use");
+						return null;
+					}
+				}
+			}
+
+
+			if(v instanceof Local)
+				return getTrackingLocal((Local) v);
+
+			if(v instanceof InstanceFieldRef) {
+
+				try {
+					InstanceFieldRef fr = (InstanceFieldRef) v;
+					SootField field = fr.getField();
+					SootField tracker = field.getDeclaringClass().getFieldByName(getTracker(field.getName()));
+
+					newUnits.add(Jimple.v().newAssignStmt(localDataAccessD, Jimple.v().newInstanceFieldRef(fr.getBase(), tracker.makeRef())));
+
+					return localDataAccessD;
+
+				} catch (RuntimeException e) {
+					logger.log(Level.WARNING, "Tracking field not found: " + e.getMessage(), e);
+				}
+
+			}
+
+			if (v instanceof StaticFieldRef) {
+
+				try {
+					StaticFieldRef fr = (StaticFieldRef) v;
+					SootField field = fr.getField();
+					SootField tracker = field.getDeclaringClass().getFieldByName(getTracker(field.getName()));
+
+					newUnits.add(Jimple.v().newAssignStmt(localDataAccessD, Jimple.v().newStaticFieldRef(tracker.makeRef())));
+
+					return localDataAccessD;
+
+				} catch (RuntimeException e) {
+					logger.log(Level.WARNING, "Tracking field not found: " + e.getMessage(), e);
+				}
+
+			}
+
+
+			return null;
 		}
 
 		private int switchDistanceToDefault(int key, Set<Integer> keySet) {
@@ -1257,7 +1370,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		 */
 		private DataUse handleUse(Chain<Unit> newUnits, Unit u, Value v) {
 
-			if(!config.isDuPairs()) return null;
+			if(config.getDataFlowCoverage() == DataFlowCoverage.DISABLED) return null;
 
 			if(v.getType() instanceof ArrayType) return null;
 
@@ -1277,8 +1390,6 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 			if(v instanceof Local) {
 
-				if(v.equals(localThis)) return null;
-
 				// if the use has only one reaching definition, I can skip its tracking or check if it is a temporary variable
 				List<Unit> reachingDefs = duAnalysis.getDefsOfAt((Local) v, u);
 				if(reachingDefs.size() < 1) return null;
@@ -1287,14 +1398,19 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					// check if it is a temporary variable used to access a field
 					Unit def = reachingDefs.get(0);
 					if(def instanceof AssignStmt && (((AssignStmt)def).getRightOp() instanceof FieldRef) && duAnalysis.getUsesOf(def).size() == 1) {
-						Value field = ((AssignStmt)def).getRightOp();
-						logger.fine("Found temporary local " + v + " tracking uses of " + field + " instead");
-						return handleUse(newUnits, u, field);
-					}
+						logger.fine("Found temporary local " + v + " tracking uses of " + ((AssignStmt)def).getRightOp() + " instead");
+						v = ((AssignStmt)def).getRightOp();
 
-					logger.fine(" Skipping instrumentation of use of " + v + " in " + u + ": only 1 reachable def-use");
-					return null;
+					} else {
+
+						logger.fine("Skipping instrumentation of use of " + v + " in " + u + ": only 1 reachable def-use");
+						return null;
+					}
 				}
+			}
+
+			if(v instanceof Local) {
+				if(v.equals(localThis)) return null;
 
 				Data data = getData(v, u);
 				if(data == null) return null;
@@ -1404,7 +1520,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		 * @param stmt the unit being processed
 		 */
 		private void handleDef(Chain<Unit> newUnits, DefinitionStmt stmt) {
-			if(!config.isDuPairs()) return;
+			if(config.getDataFlowCoverage() == DataFlowCoverage.DISABLED) return ;
 
 			final Value leftOp = stmt.getLeftOp();
 			final Value rightOp = stmt.getRightOp();
@@ -1421,7 +1537,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					}
 				}
 				if(oneDef) {
-					logger.fine(" Skipping instrumentation of the definition of " + leftOp + " in " + stmt + ": it is the only definition for all of its uses");
+					logger.fine("Skipping instrumentation of the definition of " + leftOp + " in " + stmt + ": it is the only definition for all of its uses");
 					return;
 				}
 			}
@@ -1550,7 +1666,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		}
 
 		public void processPost(Chain<Unit> newUnits, Stmt stmt) {
-			if(config.isDuPairs() && (stmt instanceof AssignStmt)) {
+			if(config.getDataFlowCoverage() != DataFlowCoverage.DISABLED && (stmt instanceof AssignStmt)) {
 				AssignStmt u = (AssignStmt) stmt;
 				if(u.getLeftOp().getType() instanceof ArrayType && u.getRightOp() instanceof InvokeExpr) {
 					Local leftOp = (Local) u.getLeftOp();
