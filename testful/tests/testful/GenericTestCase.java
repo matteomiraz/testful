@@ -134,6 +134,22 @@ public abstract class GenericTestCase extends TestCase {
 			System.err.println("assertEquals(\"" + a[i].toString() + "\", " + var  + "[" + i + "].toString());");
 	}
 
+	public static void createCoverageAssertions(CoverageInformation cov) {
+		System.err.println("assertEquals(" + cov.getQuality() + "f, cov.getQuality());");
+		System.err.println("assertEquals(\"" + cov.toString().replaceAll("\n", "\\\\n") + "\", cov.toString());");
+	}
+
+	public static void createCoveragesAssertions(ElementManager<String, CoverageInformation> covs) {
+		for (CoverageInformation cov : covs) {
+			System.err.println("{");
+			System.err.println("  CoverageInformation cov = covs.get(" + cov.getClass().getCanonicalName() + ".KEY);");
+			System.err.println("  assertNotNull(cov);");
+			System.err.println("  assertEquals(" + cov.getQuality() + "f, cov.getQuality());");
+			System.err.println("  assertEquals(\"" + cov.toString().replaceAll("\n", "\\\\n") + "\", cov.toString());");
+			System.err.println("}");
+		}
+	}
+
 	public static Test createRandomTest(String cut, int lenght, long seed) throws RemoteException, ClassNotFoundException, TestfulException {
 		MersenneTwisterFast random = new MersenneTwisterFast(seed);
 

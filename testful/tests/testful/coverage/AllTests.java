@@ -34,6 +34,7 @@ public class AllTests {
 		suite.addTestSuite(FaultTestCase.class);
 		suite.addTestSuite(CoverageCFGTestCase.class);
 		suite.addTestSuite(CoverageDataFlowTestCase.class);
+		suite.addTestSuite(CoveragePUseTestCase.class);
 		suite.addTestSuite(StopperTestCase.class);
 		//$JUnit-END$
 

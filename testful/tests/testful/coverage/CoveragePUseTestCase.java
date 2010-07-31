@@ -38,7 +38,7 @@ import testful.utils.ElementManager;
  */
 public class CoveragePUseTestCase extends GenericTestCase {
 
-	public void testBase() throws Exception {
+	public void testFieldBase() throws Exception {
 		TestCoveragePUseCUT cut = new TestCoveragePUseCUT();
 		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
 				new CreateObject(cut.cuts[0], cut.cut_cns, new Reference[] { }),
@@ -48,30 +48,30 @@ public class CoveragePUseTestCase extends GenericTestCase {
 		{
 			CoverageBasicBlocks cov = (CoverageBasicBlocks) covs.get(CoverageBasicBlocks.KEY);
 			assertNotNull(cov);
-			assertEquals(5.0f, cov.getQuality());
-			assertEquals("4\n5\n17\n20\n21", cov.toString());
+			assertEquals(10.0f, cov.getQuality());
+			assertEquals("4\n5\n17\n20\n21\n24\n25\n26\n27\n31", cov.toString());
 		}
 		{
 			CoverageBranch cov = (CoverageBranch) covs.get(CoverageBranch.KEY);
 			assertNotNull(cov);
-			assertEquals(1.0f, cov.getQuality());
-			assertEquals("0", cov.toString());
+			assertEquals(3.0f, cov.getQuality());
+			assertEquals("0\n2\n4", cov.toString());
 		}
 		{
 			CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
 			assertNotNull(cov);
-			assertEquals(1.0f, cov.getQuality());
-			assertEquals("default[]-1[]", cov.toString());
+			assertEquals(3.0f, cov.getQuality());
+			assertEquals("default[]-1[]\ndefault[]-2[]\ndefault[]-3[]", cov.toString());
 		}
 		{
 			CoveragePUse cov = (CoveragePUse) covs.get(CoveragePUse.KEY);
 			assertNotNull(cov);
-			assertEquals(1.0f, cov.getQuality());
-			assertEquals("0(default[])", cov.toString());
+			assertEquals(3.0f, cov.getQuality());
+			assertEquals("0(default[])\n2(default[])\n4(default[])", cov.toString());
 		}
 	}
 
-	public void testZero() throws Exception {
+	public void testFieldZero() throws Exception {
 		TestCoveragePUseCUT cut = new TestCoveragePUseCUT();
 		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
 				new CreateObject(cut.cuts[0], cut.cut_cns, new Reference[] { }),
@@ -82,30 +82,30 @@ public class CoveragePUseTestCase extends GenericTestCase {
 		{
 			CoverageBasicBlocks cov = (CoverageBasicBlocks) covs.get(CoverageBasicBlocks.KEY);
 			assertNotNull(cov);
-			assertEquals(6.0f, cov.getQuality());
-			assertEquals("4\n5\n9\n17\n20\n21", cov.toString());
+			assertEquals(11.0f, cov.getQuality());
+			assertEquals("4\n5\n9\n17\n20\n21\n24\n25\n26\n27\n31", cov.toString());
 		}
 		{
 			CoverageBranch cov = (CoverageBranch) covs.get(CoverageBranch.KEY);
 			assertNotNull(cov);
-			assertEquals(1.0f, cov.getQuality());
-			assertEquals("0", cov.toString());
+			assertEquals(3.0f, cov.getQuality());
+			assertEquals("0\n2\n4", cov.toString());
 		}
 		{
 			CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
 			assertNotNull(cov);
-			assertEquals(1.0f, cov.getQuality());
-			assertEquals("1[]-1[]", cov.toString());
+			assertEquals(3.0f, cov.getQuality());
+			assertEquals("1[]-1[]\n1[]-3[]\n2[]-2[]", cov.toString());
 		}
 		{
 			CoveragePUse cov = (CoveragePUse) covs.get(CoveragePUse.KEY);
 			assertNotNull(cov);
-			assertEquals(1.0f, cov.getQuality());
-			assertEquals("0(1[])", cov.toString());
+			assertEquals(3.0f, cov.getQuality());
+			assertEquals("0(1[])\n2(2[])\n4(1[])", cov.toString());
 		}
 	}
 
-	public void testSetFalse() throws Exception {
+	public void testFieldSetFalse() throws Exception {
 		TestCoveragePUseCUT cut = new TestCoveragePUseCUT();
 		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
 				new CreateObject(cut.cuts[0], cut.cut_cns, new Reference[] { }),
@@ -117,30 +117,30 @@ public class CoveragePUseTestCase extends GenericTestCase {
 		{
 			CoverageBasicBlocks cov = (CoverageBasicBlocks) covs.get(CoverageBasicBlocks.KEY);
 			assertNotNull(cov);
-			assertEquals(6.0f, cov.getQuality());
-			assertEquals("4\n5\n13\n17\n20\n21", cov.toString());
+			assertEquals(11.0f, cov.getQuality());
+			assertEquals("4\n5\n13\n17\n20\n21\n24\n25\n26\n27\n31", cov.toString());
 		}
 		{
 			CoverageBranch cov = (CoverageBranch) covs.get(CoverageBranch.KEY);
 			assertNotNull(cov);
-			assertEquals(1.0f, cov.getQuality());
-			assertEquals("0", cov.toString());
+			assertEquals(3.0f, cov.getQuality());
+			assertEquals("0\n2\n4", cov.toString());
 		}
 		{
 			CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
 			assertNotNull(cov);
-			assertEquals(1.0f, cov.getQuality());
-			assertEquals("3[]-1[]", cov.toString());
+			assertEquals(3.0f, cov.getQuality());
+			assertEquals("4[]-1[]\n4[]-3[]\n5[]-2[]", cov.toString());
 		}
 		{
 			CoveragePUse cov = (CoveragePUse) covs.get(CoveragePUse.KEY);
 			assertNotNull(cov);
-			assertEquals(1.0f, cov.getQuality());
-			assertEquals("0(3[])", cov.toString());
+			assertEquals(3.0f, cov.getQuality());
+			assertEquals("0(4[])\n2(5[])\n4(4[])", cov.toString());
 		}
 	}
 
-	public void testFalseAll() throws Exception {
+	public void testFieldFalseAll() throws Exception {
 		TestCoveragePUseCUT cut = new TestCoveragePUseCUT();
 		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
 				new CreateObject(cut.cuts[0], cut.cut_cns, new Reference[] { }),
@@ -155,30 +155,30 @@ public class CoveragePUseTestCase extends GenericTestCase {
 		{
 			CoverageBasicBlocks cov = (CoverageBasicBlocks) covs.get(CoverageBasicBlocks.KEY);
 			assertNotNull(cov);
-			assertEquals(7.0f, cov.getQuality());
-			assertEquals("4\n5\n9\n13\n17\n20\n21", cov.toString());
+			assertEquals(12.0f, cov.getQuality());
+			assertEquals("4\n5\n9\n13\n17\n20\n21\n24\n25\n26\n27\n31", cov.toString());
 		}
 		{
 			CoverageBranch cov = (CoverageBranch) covs.get(CoverageBranch.KEY);
 			assertNotNull(cov);
-			assertEquals(1.0f, cov.getQuality());
-			assertEquals("0", cov.toString());
+			assertEquals(3.0f, cov.getQuality());
+			assertEquals("0\n2\n4", cov.toString());
 		}
 		{
 			CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
 			assertNotNull(cov);
-			assertEquals(3.0f, cov.getQuality());
-			assertEquals("1[]-1[]\n3[]-1[]\ndefault[]-1[]", cov.toString());
+			assertEquals(9.0f, cov.getQuality());
+			assertEquals("1[]-1[]\n1[]-3[]\n2[]-2[]\n4[]-1[]\n4[]-3[]\n5[]-2[]\ndefault[]-1[]\ndefault[]-2[]\ndefault[]-3[]", cov.toString());
 		}
 		{
 			CoveragePUse cov = (CoveragePUse) covs.get(CoveragePUse.KEY);
 			assertNotNull(cov);
-			assertEquals(3.0f, cov.getQuality());
-			assertEquals("0(1[])\n0(3[])\n0(default[])", cov.toString());
+			assertEquals(9.0f, cov.getQuality());
+			assertEquals("0(1[])\n0(4[])\n0(default[])\n2(2[])\n2(5[])\n2(default[])\n4(1[])\n4(4[])\n4(default[])", cov.toString());
 		}
 	}
 
-	public void testSetTrue() throws Exception {
+	public void testFieldSetTrue() throws Exception {
 		TestCoveragePUseCUT cut = new TestCoveragePUseCUT();
 		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
 				new CreateObject(cut.cuts[0], cut.cut_cns, new Reference[] { }),
@@ -190,30 +190,30 @@ public class CoveragePUseTestCase extends GenericTestCase {
 		{
 			CoverageBasicBlocks cov = (CoverageBasicBlocks) covs.get(CoverageBasicBlocks.KEY);
 			assertNotNull(cov);
-			assertEquals(7.0f, cov.getQuality());
-			assertEquals("4\n5\n13\n17\n18\n19\n21", cov.toString());
+			assertEquals(13.0f, cov.getQuality());
+			assertEquals("4\n5\n13\n17\n18\n19\n21\n22\n23\n25\n28\n29\n31", cov.toString());
 		}
 		{
 			CoverageBranch cov = (CoverageBranch) covs.get(CoverageBranch.KEY);
 			assertNotNull(cov);
-			assertEquals(1.0f, cov.getQuality());
-			assertEquals("1", cov.toString());
+			assertEquals(3.0f, cov.getQuality());
+			assertEquals("1\n3\n5", cov.toString());
 		}
 		{
 			CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
 			assertNotNull(cov);
-			assertEquals(1.0f, cov.getQuality());
-			assertEquals("3[]-1[]", cov.toString());
+			assertEquals(3.0f, cov.getQuality());
+			assertEquals("4[]-1[]\n4[]-3[]\n5[]-2[]", cov.toString());
 		}
 		{
 			CoveragePUse cov = (CoveragePUse) covs.get(CoveragePUse.KEY);
 			assertNotNull(cov);
-			assertEquals(1.0f, cov.getQuality());
-			assertEquals("1(3[])", cov.toString());
+			assertEquals(3.0f, cov.getQuality());
+			assertEquals("1(4[])\n3(5[])\n5(4[])", cov.toString());
 		}
 	}
 
-	public void testSetBoth() throws Exception {
+	public void testFieldSetBoth() throws Exception {
 		TestCoveragePUseCUT cut = new TestCoveragePUseCUT();
 		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
 				new CreateObject(cut.cuts[0], cut.cut_cns, new Reference[] { }),
@@ -227,30 +227,137 @@ public class CoveragePUseTestCase extends GenericTestCase {
 
 		{
 			CoverageBasicBlocks cov = (CoverageBasicBlocks) covs.get(CoverageBasicBlocks.KEY);
+			assertNotNull(cov);
+			assertEquals(17.0f, cov.getQuality());
+			assertEquals("4\n5\n13\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n31", cov.toString());
+		}
+		{
+			CoverageBranch cov = (CoverageBranch) covs.get(CoverageBranch.KEY);
+			assertNotNull(cov);
+			assertEquals(6.0f, cov.getQuality());
+			assertEquals("0\n1\n2\n3\n4\n5", cov.toString());
+		}
+		{
+			CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
+			assertNotNull(cov);
+			assertEquals(3.0f, cov.getQuality());
+			assertEquals("4[]-1[]\n4[]-3[]\n5[]-2[]", cov.toString());
+		}
+		{
+			CoveragePUse cov = (CoveragePUse) covs.get(CoveragePUse.KEY);
+			assertNotNull(cov);
+			assertEquals(6.0f, cov.getQuality());
+			assertEquals("0(4[])\n1(4[])\n2(5[])\n3(5[])\n4(4[])\n5(4[])", cov.toString());
+		}
+	}
+
+	public void testParamA() throws Exception {
+		TestCoveragePUseCUT cut = new TestCoveragePUseCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.ints[0], 1),
+				new AssignPrimitive(cut.ints[1], 0),
+				new AssignPrimitive(cut.ints[2], 0),
+				new Invoke(null, null, cut.ifParams, new Reference[] { cut.ints[0], cut.ints[1], cut.ints[2] }),
+		}));
+
+		{
+			CoverageInformation cov = covs.get(testful.coverage.whiteBox.CoverageBasicBlocks.KEY);
 			assertNotNull(cov);
 			assertEquals(8.0f, cov.getQuality());
-			assertEquals("4\n5\n13\n17\n18\n19\n20\n21", cov.toString());
+			assertEquals("35\n36\n38\n39\n40\n41\n42\n44", cov.toString());
 		}
 		{
-			CoverageBranch cov = (CoverageBranch) covs.get(CoverageBranch.KEY);
+			CoverageInformation cov = covs.get(testful.coverage.whiteBox.CoverageBranch.KEY);
 			assertNotNull(cov);
 			assertEquals(2.0f, cov.getQuality());
-			assertEquals("0\n1", cov.toString());
+			assertEquals("8\n10", cov.toString());
 		}
 		{
-			CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
+			CoverageInformation cov = covs.get(testful.coverage.whiteBox.CoverageDataFlow.KEY);
 			assertNotNull(cov);
-			assertEquals(1.0f, cov.getQuality());
-			assertEquals("3[]-1[]", cov.toString());
+			assertEquals(4.0f, cov.getQuality());
+			assertEquals("10[]-5[]\n10[]-7[]\n9[]-4[]\n9[]-6[]", cov.toString());
 		}
 		{
-			CoveragePUse cov = (CoveragePUse) covs.get(CoveragePUse.KEY);
+			CoverageInformation cov = covs.get(testful.coverage.whiteBox.CoveragePUse.KEY);
 			assertNotNull(cov);
 			assertEquals(2.0f, cov.getQuality());
-			assertEquals("0(3[])\n1(3[])", cov.toString());
+			assertEquals("10(10[])\n10(9[])", cov.toString());
+		}
+	}
+
+	public void testParamA1() throws Exception {
+		TestCoveragePUseCUT cut = new TestCoveragePUseCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.ints[0], 0),
+				new AssignPrimitive(cut.ints[1], 1),
+				new AssignPrimitive(cut.ints[2], 1),
+				new Invoke(null, null, cut.ifParams, new Reference[] { cut.ints[0], cut.ints[1], cut.ints[2] }),
+		}));
+
+		{
+			CoverageInformation cov = covs.get(testful.coverage.whiteBox.CoverageBasicBlocks.KEY);
+			assertNotNull(cov);
+			assertEquals(8.0f, cov.getQuality());
+			assertEquals("35\n37\n38\n39\n40\n41\n42\n44", cov.toString());
+		}
+		{
+			CoverageInformation cov = covs.get(testful.coverage.whiteBox.CoverageBranch.KEY);
+			assertNotNull(cov);
+			assertEquals(2.0f, cov.getQuality());
+			assertEquals("7\n10", cov.toString());
+		}
+		{
+			CoverageInformation cov = covs.get(testful.coverage.whiteBox.CoverageDataFlow.KEY);
+			assertNotNull(cov);
+			assertEquals(4.0f, cov.getQuality());
+			assertEquals("11[]-5[]\n11[]-7[]\n12[]-4[]\n12[]-6[]", cov.toString());
+		}
+		{
+			CoverageInformation cov = covs.get(testful.coverage.whiteBox.CoveragePUse.KEY);
+			assertNotNull(cov);
+			assertEquals(2.0f, cov.getQuality());
+			assertEquals("10(11[])\n10(12[])", cov.toString());
 		}
 	}
 
 
+	public void testParamAboth() throws Exception {
+		TestCoveragePUseCUT cut = new TestCoveragePUseCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.ints[0], 0),
+				new AssignPrimitive(cut.ints[1], 1),
+				new AssignPrimitive(cut.ints[2], 1),
+				new Invoke(null, null, cut.ifParams, new Reference[] { cut.ints[0], cut.ints[1], cut.ints[2] }),
+				new AssignPrimitive(cut.ints[0], 1),
+				new AssignPrimitive(cut.ints[1], 0),
+				new AssignPrimitive(cut.ints[2], 0),
+				new Invoke(null, null, cut.ifParams, new Reference[] { cut.ints[0], cut.ints[1], cut.ints[2] }),
+		}));
 
+		{
+			CoverageInformation cov = covs.get(testful.coverage.whiteBox.CoverageBasicBlocks.KEY);
+			assertNotNull(cov);
+			assertEquals(9.0f, cov.getQuality());
+			assertEquals("35\n36\n37\n38\n39\n40\n41\n42\n44", cov.toString());
+		}
+		{
+			CoverageInformation cov = covs.get(testful.coverage.whiteBox.CoverageBranch.KEY);
+			assertNotNull(cov);
+			assertEquals(3.0f, cov.getQuality());
+			assertEquals("7\n8\n10", cov.toString());
+		}
+		{
+			CoverageInformation cov = covs.get(testful.coverage.whiteBox.CoverageDataFlow.KEY);
+			assertNotNull(cov);
+			assertEquals(8.0f, cov.getQuality());
+			assertEquals("10[]-5[]\n10[]-7[]\n11[]-5[]\n11[]-7[]\n12[]-4[]\n12[]-6[]\n9[]-4[]\n9[]-6[]", cov.toString());
+		}
+		{
+			CoverageInformation cov = covs.get(testful.coverage.whiteBox.CoveragePUse.KEY);
+			assertNotNull(cov);
+			assertEquals(4.0f, cov.getQuality());
+			assertEquals("10(10[])\n10(11[])\n10(12[])\n10(9[])", cov.toString());
+		}
+	}
 }

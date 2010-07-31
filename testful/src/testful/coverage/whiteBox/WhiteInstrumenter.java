@@ -69,10 +69,12 @@ import soot.jimple.CmpExpr;
 import soot.jimple.CmpgExpr;
 import soot.jimple.CmplExpr;
 import soot.jimple.ConditionExpr;
+import soot.jimple.Constant;
 import soot.jimple.DefinitionStmt;
 import soot.jimple.DoubleConstant;
 import soot.jimple.EnterMonitorStmt;
 import soot.jimple.ExitMonitorStmt;
+import soot.jimple.Expr;
 import soot.jimple.FieldRef;
 import soot.jimple.FloatConstant;
 import soot.jimple.GotoStmt;
@@ -691,9 +693,10 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			Value op1 = expr.getOp1();
 			Value op2 = expr.getOp2();
 			Type type = op1.getType();
+			Unit useUnit = u;
 
 			// check if this is a comparison between floats or doubles
-			if (type instanceof ByteType && op1 instanceof Local && op2 instanceof IntConstant && ((IntConstant)op2).value == 0) {
+			if(type instanceof ByteType && op1 instanceof Local && op2 instanceof IntConstant && ((IntConstant)op2).value == 0) {
 				List<Unit> defs = duAnalysis.getDefsOfAt((Local) op1, u);
 
 				if(defs.size() == 1) {
@@ -706,18 +709,21 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 							op1 = ((CmplExpr)rightOp).getOp1();
 							op2 = ((CmplExpr)rightOp).getOp2();
 							type = op1.getType();
+							useUnit = def;
 
 							logger.fine("The conditon " + u + " has been recognized as a comparison between " + op1 + " and " + op2);
 						} else if (rightOp instanceof CmpExpr) {
 							op1 = ((CmpExpr)rightOp).getOp1();
 							op2 = ((CmpExpr)rightOp).getOp2();
 							type = op1.getType();
+							useUnit = def;
 
 							logger.fine("The conditon " + u + " has been recognized as a comparison between " + op1 + " and " + op2);
 						} else if (rightOp instanceof CmpgExpr) {
 							op1 = ((CmpgExpr)rightOp).getOp1();
 							op2 = ((CmpgExpr)rightOp).getOp2();
 							type = op1.getType();
+							useUnit = def;
 
 							logger.fine("The conditon " + u + " has been recognized as a comparison between " + op1 + " and " + op2);
 						}
@@ -726,8 +732,9 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				}
 			}
 
-			final DataUse use1 = handleUse(newUnits, u, op1);
-			final DataUse use2 = handleUse(newUnits, u, op2);
+			final DataUse use1 = handleUse(newUnits, op1, useUnit);
+
+			final DataUse use2 = handleUse(newUnits, op2, useUnit);
 
 			ConditionIf c = new ConditionIf(use1, use2, expr.toString());
 			current.setCondition(c);
@@ -769,15 +776,16 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			{ // handle false
 				newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, trackBranch.makeRef(), IntConstant.v(falseBranch.getId()))));
 
+
 				if(config.getDataFlowCoverage().isPUse()) {
 					if(use1 != null) {
-						Local localDef = getTrackingDef(newUnits, op1, u);
+						Local localDef = getTrackingDef(newUnits, op1, useUnit);
 						if(localDef != null)
 							newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, managePUse.makeRef(), IntConstant.v(falseBranch.getId()), localDef)));
 					}
 
 					if(use2 != null) {
-						Local localDef = getTrackingDef(newUnits, op2, u);
+						Local localDef = getTrackingDef(newUnits, op2, useUnit);
 						if(localDef != null)
 							newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, managePUse.makeRef(), IntConstant.v(falseBranch.getId()), localDef)));
 					}
@@ -837,13 +845,13 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				if (config.getDataFlowCoverage().isPUse()) {
 
 					if (use1 != null) {
-						Local localDef = getTrackingDef(newUnits, op1, u);
+						Local localDef = getTrackingDef(newUnits, op1, useUnit);
 						if (localDef != null)
 							newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, managePUse.makeRef(),IntConstant.v(trueBranch.getId()),localDef)));
 					}
 
 					if (use2 != null) {
-						Local localDef = getTrackingDef(newUnits, op2, u);
+						Local localDef = getTrackingDef(newUnits, op2, useUnit);
 						if (localDef != null)
 							newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, managePUse.makeRef(),IntConstant.v(trueBranch.getId()),localDef)));
 					}
@@ -904,7 +912,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		public void process(Chain<Unit> newUnits, LookupSwitchStmt u) {
 			final Value key = u.getKey();
 
-			final DataUse use = handleUse(newUnits, u, key);
+			final DataUse use = handleUse(newUnits, key, u);
 			ConditionSwitch c = new ConditionSwitch(use);
 			current.setCondition(c);
 
@@ -954,7 +962,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			final int lIndex = u.getLowIndex();
 			final int hIndex = u.getHighIndex();
 
-			DataUse use = handleUse(newUnits, u, key);
+			DataUse use = handleUse(newUnits, key, u);
 			ConditionSwitch c = new ConditionSwitch(use);
 			current.setCondition(c);
 
@@ -1356,37 +1364,65 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 			// take care of uses
 			if(!(stmt instanceof IfStmt || stmt instanceof TableSwitchStmt || stmt instanceof LookupSwitchStmt)) {
-				for(ValueBox use : stmt.getUseBoxes()) {
-					handleUse(newUnits, stmt, use.getValue());
+
+				if(useToInstrument(stmt)) {
+					for(ValueBox use : stmt.getUseBoxes()) {
+						handleUse(newUnits, use.getValue(), stmt);
+					}
 				}
 			}
+		}
+
+		private boolean useToInstrument(Unit u) {
+			if(u instanceof AssignStmt) {
+				@SuppressWarnings("unchecked")
+				final List<UnitValueBoxPair> uses = duAnalysis.getUsesOf(u);
+				final AssignStmt a = (AssignStmt) u;
+				final Value leftOp = a.getLeftOp();
+				final Value rightOp = a.getRightOp();
+
+				// Skipping field uses to define temporary variables
+				if(leftOp instanceof Local && rightOp instanceof FieldRef && uses.size() == 1) {
+
+					Unit use = uses.get(0).getUnit();
+					if(duAnalysis.getDefsOfAt((Local) leftOp, use).size() == 1) {
+						logger.fine("Skipped use of " + rightOp + ": it is assigned to the temporary local " + leftOp + ".");
+						return false;
+					}
+				}
+
+				// skipping floating-point number comparisons
+				if(leftOp instanceof Local && leftOp.getType() instanceof ByteType &&
+						(rightOp instanceof CmplExpr || rightOp instanceof CmpExpr || rightOp instanceof CmpgExpr) &&
+						uses.size() == 1) {
+
+					Unit use = uses.get(0).getUnit();
+					if(use instanceof IfStmt) {
+						logger.fine("Skipped use of " + rightOp + ": it is used as temporary value (" + leftOp + ") for floating-point comparison {" + use + "}.");
+						return false;
+					}
+				}
+			}
+
+			return true;
 		}
 
 		/**
 		 * Insert the instrumentation code to track the use
 		 * @param newUnits the new chain of operations
+		 * @param u the unit in which the variable is used.
+		 * 			This information is used to enable advanced controls (null to disable them).
 		 * @param v the variable to track
-		 * @param useId the id of the use
 		 */
-		private DataUse handleUse(Chain<Unit> newUnits, Unit u, Value v) {
+		private DataUse handleUse(Chain<Unit> newUnits, Value v, Unit u) {
 
 			if(config.getDataFlowCoverage() == DataFlowCoverage.DISABLED) return null;
 
+			if(v == null) return null;
+			if(v instanceof Constant) return null;
+			if(v instanceof Expr) return null;
 			if(v.getType() instanceof ArrayType) return null;
-
-			// skipping uses to define temporary variables
-			if(u instanceof AssignStmt &&
-					((AssignStmt) u).getLeftOp() instanceof Local && ((AssignStmt) u).getRightOp() instanceof FieldRef) {
-
-				@SuppressWarnings("unchecked")
-				List<UnitValueBoxPair> uses = duAnalysis.getUsesOf(u);
-				Local l = (Local) ((AssignStmt) u).getLeftOp();
-
-				if(uses.size() == 1 && duAnalysis.getDefsOfAt(l, uses.get(0).getUnit()).size() == 1) {
-					logger.fine("Skipped use of " + ((AssignStmt) u).getRightOp() + ": it is assigned to the temporary local " + l + ".");
-					return null;
-				}
-			}
+			if(v.equals(localThis)) return null;
 
 			if(v instanceof Local) {
 
@@ -1410,7 +1446,6 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			}
 
 			if(v instanceof Local) {
-				if(v.equals(localThis)) return null;
 
 				Data data = getData(v, u);
 				if(data == null) return null;

@@ -34,7 +34,7 @@ public class TestCoveragePUseCUT extends SingleTestCUT {
 
 	public final Constructorz cut_cns;
 
-	public final Methodz ifFieldGT10, setA, zero;
+	public final Methodz ifFieldGT10, ifParams, setA, zero;
 
 	public TestCoveragePUseCUT() throws Exception {
 		super("test.coverage.PUse");
@@ -50,10 +50,11 @@ public class TestCoveragePUseCUT extends SingleTestCUT {
 		assertEquals(1, cut.getConstructors().length);
 		assertEquals("test.coverage.PUse()", (cut_cns = cut.getConstructors()[0]).toString());
 
-		assertEquals(3, cut.getMethods().length);
+		assertEquals(4, cut.getMethods().length);
 		assertEquals("ifFieldGT10()", (ifFieldGT10 = cut.getMethods()[0]).toString());
-		assertEquals("setA(int)", (setA = cut.getMethods()[1]).toString());
-		assertEquals("zero()", (zero = cut.getMethods()[2]).toString());
+		assertEquals("ifParams(int, int, int)", (ifParams = cut.getMethods()[1]).toString());
+		assertEquals("setA(int)", (setA = cut.getMethods()[2]).toString());
+		assertEquals("zero()", (zero = cut.getMethods()[3]).toString());
 
 	}
 }
