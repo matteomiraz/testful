@@ -1261,14 +1261,38 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 			if(v.getType() instanceof ArrayType) return null;
 
+			// skipping uses to define temporary variables
+			if(u instanceof AssignStmt &&
+					((AssignStmt) u).getLeftOp() instanceof Local && ((AssignStmt) u).getRightOp() instanceof FieldRef) {
+
+				@SuppressWarnings("unchecked")
+				List<UnitValueBoxPair> uses = duAnalysis.getUsesOf(u);
+				Local l = (Local) ((AssignStmt) u).getLeftOp();
+
+				if(uses.size() == 1 && duAnalysis.getDefsOfAt(l, uses.get(0).getUnit()).size() == 1) {
+					logger.fine("Skipped use of " + ((AssignStmt) u).getRightOp() + ": it is assigned to the temporary local " + l + ".");
+					return null;
+				}
+			}
+
 			if(v instanceof Local) {
 
-				if(v.equals(localThis))
-					return null;
+				if(v.equals(localThis)) return null;
 
-				// if the use has only one reaching definition, I can skip its tracking
-				if(duAnalysis.getDefsOfAt((Local) v, u).size() <= 1) {
-					logger.fine(" Skipping instrumentation of use of " + v + " in " + u + ": only 1 reachable def def");
+				// if the use has only one reaching definition, I can skip its tracking or check if it is a temporary variable
+				List<Unit> reachingDefs = duAnalysis.getDefsOfAt((Local) v, u);
+				if(reachingDefs.size() < 1) return null;
+				if(reachingDefs.size() == 1) {
+
+					// check if it is a temporary variable used to access a field
+					Unit def = reachingDefs.get(0);
+					if(def instanceof AssignStmt && (((AssignStmt)def).getRightOp() instanceof FieldRef) && duAnalysis.getUsesOf(def).size() == 1) {
+						Value field = ((AssignStmt)def).getRightOp();
+						logger.fine("Found temporary local " + v + " tracking uses of " + field + " instead");
+						return handleUse(newUnits, u, field);
+					}
+
+					logger.fine(" Skipping instrumentation of use of " + v + " in " + u + ": only 1 reachable def-use");
 					return null;
 				}
 
