@@ -248,7 +248,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 			ElementManager<String, CoverageInformation> cov = problem.evaluate(problem.getTest(ops), data).get();
 			CoverageBranchTarget covCond = (CoverageBranchTarget) cov.get(CoverageBranchTarget.KEY);
-			if(covCond == null) covCond = new CoverageBranchTarget(branchId);
+			if(covCond == null) covCond = new CoverageBranchTarget(branchId, false, null);
 
 			if(LOG_FINE) logger.fine("coverageLocalSearch " + localSearchId + " branch=" + branchId + ";iter=" + (i+1) + ";cov=" + covCond.getQuality() + ";distance=" + covCond + ";len=" + ops.size());
 

@@ -81,11 +81,15 @@ public class TrackerWhiteBox extends Tracker {
 
 		ConditionTargetDatum condTargetDatum = (ConditionTargetDatum) Tracker.getDatum(ConditionTargetDatum.KEY);
 		if(condTargetDatum != null) {
+			condTarget = new CoverageBranchTarget(condTargetDatum);
 			condTargetId = condTargetDatum.getBranchId();
-			condTarget = new CoverageBranchTarget(condTargetId);
+			condTargetUse = condTargetDatum.isPUse();
+			condDefinitionId = condTargetDatum.getDefinitionId();
 		} else {
-			condTargetId = -1;
 			condTarget = null;
+			condTargetId = -1;
+			condTargetUse = false;
+			condDefinitionId  = null;
 		}
 
 		defUse = new LinkedHashSet<DefUse>();
@@ -104,16 +108,6 @@ public class TrackerWhiteBox extends Tracker {
 	/** condition coverage */
 	private BitSet covBranches;
 
-	/** id of the target; -1 if no target */
-	private int condTargetId;
-
-	/** target condition distance (condTarget != null <==> condTarget > -1 ) */
-	private CoverageBranchTarget condTarget;
-
-	public int getConditionTargetId() {
-		return condTargetId;
-	}
-
 	/**
 	 * Mark the branch as executed
 	 * @param branchId the id of the executed branch
@@ -122,12 +116,35 @@ public class TrackerWhiteBox extends Tracker {
 		covBranches.set(branchId);
 	}
 
+	// ------------------------ Local Search ----------------------------------
+
+	/** target condition distance (condTarget != null <==> condTarget > -1 ) */
+	private CoverageBranchTarget condTarget;
+
+	/** id of the target branch; -1 if no target branch */
+	private int condTargetId;
+
+	/** If true, targets a branch with a precise definition (i.e., a p-use) */
+	private boolean condTargetUse;
+
+	/** id of the definition to use in the target branch; null means default definition */
+	private ContextualId condDefinitionId;
+
+	/**
+	 * Returns the id of the target branch; -1 if no target branch
+	 * @return the id of the target branch; -1 if no target branch
+	 */
+	public int getConditionTargetId() {
+		return condTargetId;
+	}
+
 	/**
 	 * Set the given distance as target distance. -1 if the branch has been executed; >= 0 otherwise
 	 * @param distance the distance to reach the target
 	 */
-	public void setConditionTargetDistance(double distance) {
-		condTarget.setDistance(distance);
+	public void setConditionTargetDistance(double distance, ContextualId def) {
+		if(!condTargetUse || (condDefinitionId == null && def == null) || (condDefinitionId != null && condDefinitionId.equals(def)))
+			condTarget.setDistance(distance);
 	}
 
 	/**
@@ -135,8 +152,9 @@ public class TrackerWhiteBox extends Tracker {
 	 * @param v1 the first value
 	 * @param v2 the second value
 	 */
-	public void calculateConditionTargetDistance(double v1, double v2) {
-		condTarget.setDistance(Math.abs(v1 - v2));
+	public void calculateConditionTargetDistance(double v1, double v2, ContextualId def) {
+		if(!condTargetUse || (condDefinitionId == null && def == null) || (condDefinitionId != null && condDefinitionId.equals(def)))
+			condTarget.setDistance(Math.abs(v1 - v2));
 	}
 
 	// ------------------------ Context tracking ------------------------------
@@ -204,7 +222,7 @@ public class TrackerWhiteBox extends Tracker {
 
 	// ------------------------ P-Use coverage --------------------------------
 	private Set<PUse> pUse;
-	public void managePUse(int branchId, ContextualId def) {
+	public void trackPUse(int branchId, ContextualId def) {
 		pUse.add(new PUse(branchId, def));
 	}
 

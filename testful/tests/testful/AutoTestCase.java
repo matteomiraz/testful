@@ -49,7 +49,9 @@ public abstract class AutoTestCase extends GenericTestCase {
 				// "apache.FractionNoStatic",
 				"dummy.Simple",
 				"dummy.StateMachine",
-				"dummy.WhiteSample",
+				"test.coverage.ControlFlow",
+				"test.coverage.DataFlow",
+				"test.coverage.DataFlowCtx",
 				"test.coverage.Fault",
 				"test.coverage.Stopped",
 				"test.model.array.StringMatrix"

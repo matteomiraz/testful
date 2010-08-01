@@ -22,7 +22,8 @@ import testful.TestFul;
 import testful.coverage.CoverageInformation;
 
 /**
- * Measures the distance to execute a given branch.
+ * Measures the distance to execute a given branch, optionally
+ * using a precise definition.
  *
  * Suppose that the target is
  * <br><code>if (a > b) { // target }</code><br>
@@ -40,11 +41,23 @@ public class CoverageBranchTarget implements CoverageInformation {
 	public static String KEY = "tbr";
 
 	private final int branchId;
+
+	private boolean pUse;
+
+	/** the definition to use (null means default) */
+	private final ContextualId defId;
+
 	private double distance;
 
-	public CoverageBranchTarget(int branchId) {
+	public CoverageBranchTarget(int branchId, boolean pUse, ContextualId defId) {
 		this.branchId = branchId;
+		this.pUse = pUse;
+		this.defId = defId;
 		distance = Float.POSITIVE_INFINITY;
+	}
+
+	public CoverageBranchTarget(ConditionTargetDatum datum) {
+		this(datum.getBranchId(), datum.isPUse(), datum.getDefinitionId());
 	}
 
 	@Override
@@ -59,6 +72,10 @@ public class CoverageBranchTarget implements CoverageInformation {
 
 	public int getBranchId() {
 		return branchId;
+	}
+
+	public ContextualId getDefinitionId() {
+		return defId;
 	}
 
 	void setDistance(double d) {
@@ -104,12 +121,12 @@ public class CoverageBranchTarget implements CoverageInformation {
 
 	@Override
 	public CoverageBranchTarget createEmpty() {
-		return new CoverageBranchTarget(branchId);
+		return new CoverageBranchTarget(branchId, pUse, defId);
 	}
 
 	@Override
 	public CoverageBranchTarget clone() {
-		CoverageBranchTarget ret = new CoverageBranchTarget(branchId);
+		CoverageBranchTarget ret = new CoverageBranchTarget(branchId, pUse, defId);
 		ret.distance = distance;
 		return ret;
 	}

@@ -23,24 +23,18 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import testful.ConfigCut;
 import testful.GenericTestCase;
 import testful.coverage.whiteBox.ConditionTargetDatum;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
 import testful.coverage.whiteBox.CoverageBranch;
 import testful.coverage.whiteBox.CoverageBranchTarget;
 import testful.model.AssignPrimitive;
-import testful.model.Clazz;
-import testful.model.Constructorz;
 import testful.model.CreateObject;
 import testful.model.Invoke;
-import testful.model.Methodz;
 import testful.model.Operation;
 import testful.model.Reference;
-import testful.model.ReferenceFactory;
 import testful.model.Test;
-import testful.model.TestCluster;
-import testful.runner.TestfulClassLoader;
+import testful.testCut.TestCoverageControlFlowCUT;
 import testful.utils.ElementManager;
 
 /**
@@ -48,100 +42,6 @@ import testful.utils.ElementManager;
  * @author matteo
  */
 public class CoverageCFGTestCase extends GenericTestCase {
-
-	private TestCluster cluster;
-	private ReferenceFactory refFactory;
-
-	private Reference c0;
-	private Reference c1;
-	private Reference i0;
-	private Reference b0;
-	private Reference d0;
-
-	private Constructorz cns;
-
-	private Methodz intif;
-	private Methodz doubleif;
-	private Methodz boolif;
-	private Methodz objif;
-	private Methodz tSwitch;
-	private Methodz lSwitch;
-
-	@Override
-	protected void setUp() throws Exception {
-		super.setUp();
-
-		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
-		config.setCut("dummy.WhiteSample");
-		cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
-		refFactory = new ReferenceFactory(cluster, 2, 1);
-
-		Clazz cut = cluster.getCut();
-
-		Clazz iClazz = null;
-		Clazz bClazz = null;
-		Clazz dClazz = null;
-		for(Clazz clazz : cluster.getCluster()) {
-			if("java.lang.Boolean".equals(clazz.getClassName())) bClazz = clazz;
-			if("java.lang.Integer".equals(clazz.getClassName())) iClazz = clazz;
-			if("java.lang.Double".equals(clazz.getClassName()))  dClazz = clazz;
-		}
-
-		assertNotNull("cannot find boolean class", bClazz);
-		assertNotNull("cannot find integer class", iClazz);
-		assertNotNull("cannot find double class",  dClazz);
-
-		c0 = refFactory.getReferences(cut)[0];
-		c1 = refFactory.getReferences(cut)[1];
-		i0 = refFactory.getReferences(iClazz)[0];
-		b0 = refFactory.getReferences(bClazz)[0];
-		d0 = refFactory.getReferences(dClazz)[0];
-
-		cns = cut.getConstructors()[0];
-
-		intif = null;
-		doubleif = null;
-		boolif = null;
-		objif = null;
-		tSwitch = null;
-		lSwitch = null;
-		for(Methodz m : cut.getMethods()) {
-			if("intif".equals(m.getName())) intif = m;
-			if("doubleif".equals(m.getName())) doubleif = m;
-			if("boolif".equals(m.getName())) boolif = m;
-			if("objif".equals(m.getName())) objif = m;
-			if("tSwitch".equals(m.getName())) tSwitch = m;
-			if("lSwitch".equals(m.getName())) lSwitch = m;
-		}
-
-		assertNotNull("method not found", intif);
-		assertNotNull("method not found", doubleif);
-		assertNotNull("method not found", boolif);
-		assertNotNull("method not found", objif);
-		assertNotNull("method not found", tSwitch);
-		assertNotNull("method not found", lSwitch);
-	}
-
-	@Override
-	protected void tearDown() throws Exception {
-		cluster = null;
-		refFactory = null;
-
-		c0 = null;
-		c1 = null;
-		i0 = null;
-		b0 = null;
-		d0 = null;
-
-		cns = null;
-
-		intif = null;
-		doubleif = null;
-		boolif = null;
-		objif = null;
-		tSwitch = null;
-		lSwitch = null;
-	}
 
 	private void checkBBCov(ElementManager<String, CoverageInformation> cov, Set<Integer> expected) {
 		final CoverageBasicBlocks bbCov = (CoverageBasicBlocks) cov.get(CoverageBasicBlocks.KEY);
@@ -175,15 +75,12 @@ public class CoverageCFGTestCase extends GenericTestCase {
 	}
 
 	public void testTracktSwitchn1() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new AssignPrimitive(i0, -1),
-				new Invoke(null, c0, tSwitch, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new AssignPrimitive(cut.ints[0], -1),
+				new Invoke(null, cut.cuts[0], cut.tSwitch, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -205,21 +102,19 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		distance.put(37, 6.0); // case: 5
 		distance.put(38,-1.0); // default
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
 
 	public void testTracktSwitch0() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new AssignPrimitive(i0, 0),
-				new Invoke(null, c0, tSwitch, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new AssignPrimitive(cut.ints[0], 0),
+				new Invoke(null, cut.cuts[0], cut.tSwitch, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -244,21 +139,19 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		distance.put(37, 5.0); // case: 5
 		distance.put(38, 1.0); // default
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
 
 	public void testTracktSwitch1() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new AssignPrimitive(i0, 1),
-				new Invoke(null, c0, tSwitch, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new AssignPrimitive(cut.ints[0], 1),
+				new Invoke(null, cut.cuts[0], cut.tSwitch, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -282,21 +175,19 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		distance.put(37, 4.0); // case: 5
 		distance.put(38, 2.0); // default
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
 
 	public void testTracktSwitch2() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new AssignPrimitive(i0, 2),
-				new Invoke(null, c0, tSwitch, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new AssignPrimitive(cut.ints[0], 2),
+				new Invoke(null, cut.cuts[0], cut.tSwitch, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -319,21 +210,19 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		distance.put(37, 3.0); // case: 5
 		distance.put(38, 3.0); // default
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
 
 	public void testTracktSwitch3() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new AssignPrimitive(i0, 3),
-				new Invoke(null, c0, tSwitch, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new AssignPrimitive(cut.ints[0], 3),
+				new Invoke(null, cut.cuts[0], cut.tSwitch, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -354,6 +243,7 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		distance.put(37, 2.0); // case: 5
 		distance.put(38, 3.0); // default
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
@@ -361,15 +251,12 @@ public class CoverageCFGTestCase extends GenericTestCase {
 
 
 	public void testTracktSwitch4() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new AssignPrimitive(i0, 4),
-				new Invoke(null, c0, tSwitch, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new AssignPrimitive(cut.ints[0], 4),
+				new Invoke(null, cut.cuts[0], cut.tSwitch, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -391,6 +278,7 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		distance.put(37, 1.0); // case: 5
 		distance.put(38, 2.0); // default
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
@@ -398,15 +286,12 @@ public class CoverageCFGTestCase extends GenericTestCase {
 
 
 	public void testTracktSwitch5() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new AssignPrimitive(i0, 5),
-				new Invoke(null, c0, tSwitch, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new AssignPrimitive(cut.ints[0], 5),
+				new Invoke(null, cut.cuts[0], cut.tSwitch, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -428,6 +313,7 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		distance.put(37,-1.0); // case: 5
 		distance.put(38, 1.0); // default
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
@@ -435,15 +321,12 @@ public class CoverageCFGTestCase extends GenericTestCase {
 
 
 	public void testTracktSwitch6() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new AssignPrimitive(i0, 6),
-				new Invoke(null, c0, tSwitch, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new AssignPrimitive(cut.ints[0], 6),
+				new Invoke(null, cut.cuts[0], cut.tSwitch, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -465,6 +348,7 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		distance.put(37, 1.0); // case: 5
 		distance.put(38,-1.0); // default
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
@@ -472,14 +356,11 @@ public class CoverageCFGTestCase extends GenericTestCase {
 
 
 	public void testTrackIfObjSame() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new Invoke(null, c0, objif, new Reference[] { c0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.objif, new Reference[] { cut.cuts[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -505,6 +386,7 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		expBB.add(87);
 		expBB.add(88);
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
@@ -512,15 +394,12 @@ public class CoverageCFGTestCase extends GenericTestCase {
 
 
 	public void testTrackIfObjNotSame() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new CreateObject(c1, cns, new Reference[] { }),
-				new Invoke(null, c0, objif, new Reference[] { c1 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new CreateObject(cut.cuts[1], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.objif, new Reference[] { cut.cuts[1] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -546,20 +425,18 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		distance.put(31,-1.0);
 		expBB.add(86);
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
 
 	public void testTrackIfObjNotSameNull() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new Invoke(null, c0, objif, new Reference[] { c1 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.objif, new Reference[] { cut.cuts[1] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -585,22 +462,20 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		distance.put(31,-1.0);
 		expBB.add(86);
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
 
 	public void testTrackIfObjAll() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new Invoke(null, c0, objif, new Reference[] { c0 }),
-				new CreateObject(c1, cns, new Reference[] { }),
-				new Invoke(null, c0, objif, new Reference[] { c1 }),
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.objif, new Reference[] { cut.cuts[0] }),
+				new CreateObject(cut.cuts[1], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.objif, new Reference[] { cut.cuts[1] }),
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -631,23 +506,19 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		expBB.add(87);
 		expBB.add(88);
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
 
-
-
 	public void testTrackIfBoolTrue() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new AssignPrimitive(b0, true),
-				new Invoke(null, c0, boolif, new Reference[] { b0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new AssignPrimitive(cut.bools[0], true),
+				new Invoke(null, cut.cuts[0], cut.boolif, new Reference[] { cut.bools[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -673,22 +544,19 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		expBB.add(75);
 		expBB.add(76);
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
 
-
 	public void testTrackIfBoolFalse() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new AssignPrimitive(b0, false),
-				new Invoke(null, c0, boolif, new Reference[] { b0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new AssignPrimitive(cut.bools[0], false),
+				new Invoke(null, cut.cuts[0], cut.boolif, new Reference[] { cut.bools[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -714,24 +582,21 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		distance.put(27,-1.0);
 		expBB.add(74);
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
 
-
 	public void testTrackIfBoolAll() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new AssignPrimitive(b0, true),
-				new Invoke(null, c0, boolif, new Reference[] { b0 }),
-				new AssignPrimitive(b0, false),
-				new Invoke(null, c0, boolif, new Reference[] { b0 }),
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new AssignPrimitive(cut.bools[0], true),
+				new Invoke(null, cut.cuts[0], cut.boolif, new Reference[] { cut.bools[0] }),
+				new AssignPrimitive(cut.bools[0], false),
+				new Invoke(null, cut.cuts[0], cut.boolif, new Reference[] { cut.bools[0] }),
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -762,22 +627,19 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		expBB.add(75);
 		expBB.add(76);
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
 
-
 	public void testTrackIfDoublen1() throws Exception {
-		Operation[] ops = new Operation[] {
-				new AssignPrimitive(d0, -1.0),
-				new CreateObject(c0, cns, new Reference[] { }),
-				new Invoke(null, c0, doubleif, new Reference[] { d0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.doubles[0], -1.0),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.doubleif, new Reference[] { cut.doubles[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -833,19 +695,19 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		distance.put(23,-1.0);
 		expBB.add(58);
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
 
 	public void testTrackIfDouble0() throws Exception {
-		Operation[] ops = new Operation[] {
-				new AssignPrimitive(d0, 0.0),
-				new CreateObject(c0, cns, new Reference[] { }),
-				new Invoke(null, c0, doubleif, new Reference[] { d0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.doubles[0], 0.0),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.doubleif, new Reference[] { cut.doubles[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -907,13 +769,12 @@ public class CoverageCFGTestCase extends GenericTestCase {
 	}
 
 	public void testTrackIfDouble1() throws Exception {
-		Operation[] ops = new Operation[] {
-				new AssignPrimitive(d0, 1.0),
-				new CreateObject(c0, cns, new Reference[] { }),
-				new Invoke(null, c0, doubleif, new Reference[] { d0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.doubles[0], 1.0),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.doubleif, new Reference[] { cut.doubles[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -975,13 +836,12 @@ public class CoverageCFGTestCase extends GenericTestCase {
 	}
 
 	public void testTrackIfDouble2() throws Exception {
-		Operation[] ops = new Operation[] {
-				new AssignPrimitive(d0, 2.0),
-				new CreateObject(c0, cns, new Reference[] { }),
-				new Invoke(null, c0, doubleif, new Reference[] { d0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.doubles[0], 2.0),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.doubleif, new Reference[] { cut.doubles[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -1042,13 +902,12 @@ public class CoverageCFGTestCase extends GenericTestCase {
 	}
 
 	public void testTrackIfDouble3() throws Exception {
-		Operation[] ops = new Operation[] {
-				new AssignPrimitive(d0, 3.0),
-				new CreateObject(c0, cns, new Reference[] { }),
-				new Invoke(null, c0, doubleif, new Reference[] { d0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.doubles[0], 3.0),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.doubleif, new Reference[] { cut.doubles[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -1111,13 +970,12 @@ public class CoverageCFGTestCase extends GenericTestCase {
 	}
 
 	public void testTrackIfDouble4() throws Exception {
-		Operation[] ops = new Operation[] {
-				new AssignPrimitive(d0, 4.0),
-				new CreateObject(c0, cns, new Reference[] { }),
-				new Invoke(null, c0, doubleif, new Reference[] { d0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.doubles[0], 4.0),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.doubleif, new Reference[] { cut.doubles[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -1179,13 +1037,12 @@ public class CoverageCFGTestCase extends GenericTestCase {
 	}
 
 	public void testTrackIfDouble5() throws Exception {
-		Operation[] ops = new Operation[] {
-				new AssignPrimitive(d0, 5),
-				new CreateObject(c0, cns, new Reference[] { }),
-				new Invoke(null, c0, doubleif, new Reference[] { d0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.doubles[0], 5),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.doubleif, new Reference[] { cut.doubles[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -1249,25 +1106,24 @@ public class CoverageCFGTestCase extends GenericTestCase {
 	}
 
 	public void testTrackIfDoubleAll() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new AssignPrimitive(d0, -1),
-				new Invoke(null, c0, doubleif, new Reference[] { d0 }),
-				new AssignPrimitive(d0, 0),
-				new Invoke(null, c0, doubleif, new Reference[] { d0 }),
-				new AssignPrimitive(d0, 1),
-				new Invoke(null, c0, doubleif, new Reference[] { d0 }),
-				new AssignPrimitive(d0, 2),
-				new Invoke(null, c0, doubleif, new Reference[] { d0 }),
-				new AssignPrimitive(d0, 3),
-				new Invoke(null, c0, doubleif, new Reference[] { d0 }),
-				new AssignPrimitive(d0, 4),
-				new Invoke(null, c0, doubleif, new Reference[] { d0 }),
-				new AssignPrimitive(d0, 5),
-				new Invoke(null, c0, doubleif, new Reference[] { d0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new AssignPrimitive(cut.doubles[0], -1),
+				new Invoke(null, cut.cuts[0], cut.doubleif, new Reference[] { cut.doubles[0] }),
+				new AssignPrimitive(cut.doubles[0], 0),
+				new Invoke(null, cut.cuts[0], cut.doubleif, new Reference[] { cut.doubles[0] }),
+				new AssignPrimitive(cut.doubles[0], 1),
+				new Invoke(null, cut.cuts[0], cut.doubleif, new Reference[] { cut.doubles[0] }),
+				new AssignPrimitive(cut.doubles[0], 2),
+				new Invoke(null, cut.cuts[0], cut.doubleif, new Reference[] { cut.doubles[0] }),
+				new AssignPrimitive(cut.doubles[0], 3),
+				new Invoke(null, cut.cuts[0], cut.doubleif, new Reference[] { cut.doubles[0] }),
+				new AssignPrimitive(cut.doubles[0], 4),
+				new Invoke(null, cut.cuts[0], cut.doubleif, new Reference[] { cut.doubles[0] }),
+				new AssignPrimitive(cut.doubles[0], 5),
+				new Invoke(null, cut.cuts[0], cut.doubleif, new Reference[] { cut.doubles[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -1346,15 +1202,12 @@ public class CoverageCFGTestCase extends GenericTestCase {
 	}
 
 	public void testTrackIfIntn1() throws Exception {
-		Operation[] ops = new Operation[] {
-				new AssignPrimitive(i0, -1),
-				new CreateObject(c0, cns, new Reference[] { }),
-				new Invoke(null, c0, intif, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.ints[0], -1),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.intif, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -1410,19 +1263,19 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		distance.put(11,-1.0);
 		expBB.add(30);
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
 
 	public void testTrackIfInt0() throws Exception {
-		Operation[] ops = new Operation[] {
-				new AssignPrimitive(i0, 0),
-				new CreateObject(c0, cns, new Reference[] { }),
-				new Invoke(null, c0, intif, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.ints[0], 0),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.intif, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -1484,13 +1337,12 @@ public class CoverageCFGTestCase extends GenericTestCase {
 	}
 
 	public void testTrackIfInt1() throws Exception {
-		Operation[] ops = new Operation[] {
-				new AssignPrimitive(i0, 1),
-				new CreateObject(c0, cns, new Reference[] { }),
-				new Invoke(null, c0, intif, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.ints[0], 1),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.intif, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -1552,13 +1404,12 @@ public class CoverageCFGTestCase extends GenericTestCase {
 	}
 
 	public void testTrackIfInt2() throws Exception {
-		Operation[] ops = new Operation[] {
-				new AssignPrimitive(i0, 2),
-				new CreateObject(c0, cns, new Reference[] { }),
-				new Invoke(null, c0, intif, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.ints[0], 2),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.intif, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -1619,13 +1470,12 @@ public class CoverageCFGTestCase extends GenericTestCase {
 	}
 
 	public void testTrackIfInt3() throws Exception {
-		Operation[] ops = new Operation[] {
-				new AssignPrimitive(i0, 3),
-				new CreateObject(c0, cns, new Reference[] { }),
-				new Invoke(null, c0, intif, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.ints[0], 3),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.intif, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -1688,13 +1538,12 @@ public class CoverageCFGTestCase extends GenericTestCase {
 	}
 
 	public void testTrackIfInt4() throws Exception {
-		Operation[] ops = new Operation[] {
-				new AssignPrimitive(i0, 4),
-				new CreateObject(c0, cns, new Reference[] { }),
-				new Invoke(null, c0, intif, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.ints[0], 4),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.intif, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -1756,13 +1605,12 @@ public class CoverageCFGTestCase extends GenericTestCase {
 	}
 
 	public void testTrackIfInt5() throws Exception {
-		Operation[] ops = new Operation[] {
-				new AssignPrimitive(i0, 5),
-				new CreateObject(c0, cns, new Reference[] { }),
-				new Invoke(null, c0, intif, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.ints[0], 5),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.intif, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -1826,25 +1674,24 @@ public class CoverageCFGTestCase extends GenericTestCase {
 	}
 
 	public void testTrackIfIntAll() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new AssignPrimitive(i0, -1),
-				new Invoke(null, c0, intif, new Reference[] { i0 }),
-				new AssignPrimitive(i0, 0),
-				new Invoke(null, c0, intif, new Reference[] { i0 }),
-				new AssignPrimitive(i0, 1),
-				new Invoke(null, c0, intif, new Reference[] { i0 }),
-				new AssignPrimitive(i0, 2),
-				new Invoke(null, c0, intif, new Reference[] { i0 }),
-				new AssignPrimitive(i0, 3),
-				new Invoke(null, c0, intif, new Reference[] { i0 }),
-				new AssignPrimitive(i0, 4),
-				new Invoke(null, c0, intif, new Reference[] { i0 }),
-				new AssignPrimitive(i0, 5),
-				new Invoke(null, c0, intif, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new AssignPrimitive(cut.ints[0], -1),
+				new Invoke(null, cut.cuts[0], cut.intif, new Reference[] { cut.ints[0] }),
+				new AssignPrimitive(cut.ints[0], 0),
+				new Invoke(null, cut.cuts[0], cut.intif, new Reference[] { cut.ints[0] }),
+				new AssignPrimitive(cut.ints[0], 1),
+				new Invoke(null, cut.cuts[0], cut.intif, new Reference[] { cut.ints[0] }),
+				new AssignPrimitive(cut.ints[0], 2),
+				new Invoke(null, cut.cuts[0], cut.intif, new Reference[] { cut.ints[0] }),
+				new AssignPrimitive(cut.ints[0], 3),
+				new Invoke(null, cut.cuts[0], cut.intif, new Reference[] { cut.ints[0] }),
+				new AssignPrimitive(cut.ints[0], 4),
+				new Invoke(null, cut.cuts[0], cut.intif, new Reference[] { cut.ints[0] }),
+				new AssignPrimitive(cut.ints[0], 5),
+				new Invoke(null, cut.cuts[0], cut.intif, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -1923,15 +1770,12 @@ public class CoverageCFGTestCase extends GenericTestCase {
 	}
 
 	public void testTracklSwitchn1() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new AssignPrimitive(i0, -1),
-				new Invoke(null, c0, lSwitch, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new AssignPrimitive(cut.ints[0], -1),
+				new Invoke(null, cut.cuts[0], cut.lSwitch, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -1953,21 +1797,19 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		distance.put(44, 51.0); // case: 50
 		distance.put(45, -1.0); // default
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
 
 	public void testTracklSwitch0() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new AssignPrimitive(i0, 0),
-				new Invoke(null, c0, lSwitch, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new AssignPrimitive(cut.ints[0], 0),
+				new Invoke(null, cut.cuts[0], cut.lSwitch, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -1992,21 +1834,19 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		distance.put(44, 50.0); // case: 50
 		distance.put(45,  1.0); // default
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
 
 	public void testTracklSwitch10() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new AssignPrimitive(i0, 10),
-				new Invoke(null, c0, lSwitch, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new AssignPrimitive(cut.ints[0], 10),
+				new Invoke(null, cut.cuts[0], cut.lSwitch, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -2030,21 +1870,19 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		distance.put(44, 40.0); // case: 50
 		distance.put(45,  1.0); // default
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
 
 	public void testTracklSwitch20() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new AssignPrimitive(i0, 20),
-				new Invoke(null, c0, lSwitch, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new AssignPrimitive(cut.ints[0], 20),
+				new Invoke(null, cut.cuts[0], cut.lSwitch, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -2067,21 +1905,19 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		distance.put(44, 30.0); // case: 50
 		distance.put(45,  1.0); // default
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
 
 	public void testTracklSwitch30() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new AssignPrimitive(i0, 30),
-				new Invoke(null, c0, lSwitch, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new AssignPrimitive(cut.ints[0], 30),
+				new Invoke(null, cut.cuts[0], cut.lSwitch, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -2103,21 +1939,19 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		distance.put(44, 20.0); // case: 50
 		distance.put(45,  1.0); // default
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
 
 	public void testTracklSwitch40() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new AssignPrimitive(i0, 40),
-				new Invoke(null, c0, lSwitch, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new AssignPrimitive(cut.ints[0], 40),
+				new Invoke(null, cut.cuts[0], cut.lSwitch, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -2139,21 +1973,19 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		distance.put(44, 10.0); // case: 50
 		distance.put(45,  1.0); // default
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
 
 	public void testTracklSwitch50() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new AssignPrimitive(i0, 50),
-				new Invoke(null, c0, lSwitch, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new AssignPrimitive(cut.ints[0], 50),
+				new Invoke(null, cut.cuts[0], cut.lSwitch, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -2175,21 +2007,19 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		distance.put(44, -1.0); // case: 50
 		distance.put(45,  1.0); // default
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);
 	}
 
 	public void testTracklSwitch51() throws Exception {
-		Operation[] ops = new Operation[] {
-				new CreateObject(c0, cns, new Reference[] { }),
-				new AssignPrimitive(i0, 51),
-				new Invoke(null, c0, lSwitch, new Reference[] { i0 })
-		};
-
-		Test t = new Test(cluster, refFactory, ops);
-
-		ElementManager<String, CoverageInformation> cov = getCoverage(t);
+		TestCoverageControlFlowCUT cut = new TestCoverageControlFlowCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new AssignPrimitive(cut.ints[0], 51),
+				new Invoke(null, cut.cuts[0], cut.lSwitch, new Reference[] { cut.ints[0] })
+		});
 
 		Map<Integer, Double> distance = new HashMap<Integer, Double>();
 		Set<Integer> expBB = new HashSet<Integer>();
@@ -2211,6 +2041,7 @@ public class CoverageCFGTestCase extends GenericTestCase {
 		distance.put(44,  1.0); // case: 50
 		distance.put(45, -1.0); // default
 
+		ElementManager<String, CoverageInformation> cov = getCoverage(t);
 		checkBBCov(cov, expBB);
 		checkCondCov(cov, expBr);
 		checkDistance(t, distance);

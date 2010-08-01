@@ -1,21 +1,18 @@
 package test.coverage;
 
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-
 public class PUse {
 
-	private int a;
-	private double b;
+	private int a;		// default
+	private double b;	// default
 
 	public void zero() {
-		this.a = 0;
-		this.b = 0;
+		this.a = 0; // def 1
+		this.b = 0; // def 2
 	}
 
 	public void setA(int a) {
-		this.a = a;
-		this.b = a;
+		this.a = a;	// def 4
+		this.b = a;	// def 5
 	}
 
 	public void ifFieldGT10() {
@@ -41,10 +38,10 @@ public class PUse {
 	public static void ifParams(int p0, int p1, int p2) {
 		final int a, b;
 		if(p2 == 0) {
-			a = p0;
+			a = p0; // defs 9, 10
 			b = p1;
 		} else {
-			b = p0;
+			b = p0; // defs 11, 12
 			a = p1;
 		}
 

@@ -433,7 +433,7 @@
 			<arg value="-dir"/>
 			<arg value="${testCut}"/>
 
-			<arg value="dummy.WhiteSample"/>
+			<arg value="test.coverage.ControlFlow"/>
 			<arg value="test.coverage.Fault"/>
 			<arg value="dummy.Simple"/>
 			<arg value="dummy.StateMachine"/>

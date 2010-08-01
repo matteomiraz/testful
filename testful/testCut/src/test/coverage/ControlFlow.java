@@ -1,8 +1,8 @@
-package dummy;
+package test.coverage;
 
-public class WhiteSample {
+public class ControlFlow {
 
-	public WhiteSample() {
+	public ControlFlow() {
 		super(); 			// bb: 4
 							// bb: 5
 	}
@@ -69,7 +69,7 @@ public class WhiteSample {
 		return res;
 	}
 
-	public int objif(WhiteSample o) {
+	public int objif(ControlFlow o) {
 		int res = 0;
 
 		if(o == this) res++;// bb: 82		br: 29
