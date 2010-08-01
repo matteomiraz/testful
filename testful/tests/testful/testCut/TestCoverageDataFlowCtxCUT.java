@@ -34,7 +34,7 @@ public class TestCoverageDataFlowCtxCUT extends SingleTestCUT {
 
 	public final Constructorz cut_cns;
 
-	public final Methodz getA, getI, getIA, getIB, prova, setA, setI, setIA, setIB;
+	public final Methodz getA, getI, getIA, getIB, setA, setI, setIA, setIB, usePropagation;
 
 	public final Methodz i_getIA, i_getIB, i_setIA, i_setIB;
 
@@ -61,11 +61,11 @@ public class TestCoverageDataFlowCtxCUT extends SingleTestCUT {
 		assertEquals("getI()", (getI = cut.getMethods()[1]).toString());
 		assertEquals("getIA()", (getIA = cut.getMethods()[2]).toString());
 		assertEquals("getIB()", (getIB = cut.getMethods()[3]).toString());
-		assertEquals("prova(boolean)", (prova = cut.getMethods()[4]).toString());
-		assertEquals("setA(int)", (setA = cut.getMethods()[5]).toString());
-		assertEquals("setI(test.coverage.DataFlowCtx$Inner)", (setI = cut.getMethods()[6]).toString());
-		assertEquals("setIA(int)", (setIA = cut.getMethods()[7]).toString());
-		assertEquals("setIB(int)", (setIB = cut.getMethods()[8]).toString());
+		assertEquals("setA(int)", (setA = cut.getMethods()[4]).toString());
+		assertEquals("setI(test.coverage.DataFlowCtx$Inner)", (setI = cut.getMethods()[5]).toString());
+		assertEquals("setIA(int)", (setIA = cut.getMethods()[6]).toString());
+		assertEquals("setIB(int)", (setIB = cut.getMethods()[7]).toString());
+		assertEquals("usePropagation(boolean)", (usePropagation = cut.getMethods()[8]).toString());
 
 		assertEquals(4, IType.getMethods().length);
 		assertEquals("getIA()", (i_getIA = IType.getMethods()[0]).toString());

@@ -40,17 +40,16 @@ public class DataFlowCtx {
 	public int getIB()        { return i.getIB(); }
 	public void setIB(int ib) { i.setIB(ib);      }
 
-	public void prova(boolean b) {
+	public static void usePropagation(boolean d) {
 
-		int v = 0;
+		float v;  //defs
+		if(d) v = 1.0f;
+		else  v = 7.0f;
 
-		if (b) v = a;
+		if(d) Math.abs(v);
+		else Math.abs((int)v);
 
-		if(v > 0) {
-			done();
-		}
-	}
-
-	private void done() {
+		if(v == 7.0d) Math.abs(0);
+		else Math.abs(1);
 	}
 }

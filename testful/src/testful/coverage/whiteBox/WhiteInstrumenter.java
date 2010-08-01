@@ -65,6 +65,7 @@ import soot.Value;
 import soot.ValueBox;
 import soot.jimple.ArrayRef;
 import soot.jimple.AssignStmt;
+import soot.jimple.CastExpr;
 import soot.jimple.CmpExpr;
 import soot.jimple.CmpgExpr;
 import soot.jimple.CmplExpr;
@@ -588,9 +589,10 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 					// Consider the uses of the current definitions: if they do not have any additional definition, then it is possible to skip the du tracking
 					boolean oneDef = true;
-					for (Object unit : duAnalysis.getUsesOf(paramDefs[i])) {
-						UnitValueBoxPair u = (UnitValueBoxPair) unit;
-						if(duAnalysis.getDefsOfAt(p, u.getUnit()).size() > 1) {
+					@SuppressWarnings("unchecked")
+					List<UnitValueBoxPair> usesOf = duAnalysis.getUsesOf(paramDefs[i]);
+					for (UnitValueBoxPair unit : usesOf) {
+						if(duAnalysis.getDefsOfAt(p, unit.getUnit()).size() > 1) {
 							oneDef = false;
 							break;
 						}
@@ -733,7 +735,6 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			}
 
 			final DataUse use1 = handleUse(newUnits, op1, useUnit);
-
 			final DataUse use2 = handleUse(newUnits, op2, useUnit);
 
 			ConditionIf c = new ConditionIf(use1, use2, expr.toString());
@@ -1093,29 +1094,9 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 		private Local getTrackingDef(Chain<Unit> newUnits, Value v, Unit u) {
 
-			if(v instanceof Local) {
-				if(v.equals(localThis)) return null;
 
-				// if the use has only one reaching definition, I can skip its tracking or check if it is a temporary variable
-				List<Unit> reachingDefs = duAnalysis.getDefsOfAt((Local) v, u);
-
-				if(reachingDefs.size() < 1) return null;
-				if(reachingDefs.size() == 1) {
-
-					// check if it is a temporary variable used to access a field
-					Unit def = reachingDefs.get(0);
-					if(def instanceof AssignStmt && (((AssignStmt)def).getRightOp() instanceof FieldRef) && duAnalysis.getUsesOf(def).size() == 1) {
-						logger.fine("Found temporary local " + v + " using the definition of " + ((AssignStmt)def).getRightOp() + " instead");
-						v = ((AssignStmt)def).getRightOp();
-
-					} else {
-
-						logger.fine(" Skipping instrumentation of use of " + v + " in " + u + ": only 1 reachable def-use");
-						return null;
-					}
-				}
-			}
-
+			v = getRealUse(v, u);
+			if(v == null) return null;
 
 			if(v instanceof Local)
 				return getTrackingLocal((Local) v);
@@ -1233,37 +1214,29 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		 * Returns the Data for a given value.
 		 * For uses, it is possible to specify the current Unit and verify if the value is defined as the copy of a field.
 		 * @param value the value
-		 * @param u if not null and the value is a Local, search if there is exactly one definition reaching this use, and if it is an assignment of a field to the considered local
 		 * @return the Data for the value
 		 */
-		private Data getData(Value value, Unit u) {
-			if(value == localThis) return null;
+		private Data getData(Value value) {
+
+			if(value == null) return null;
+			if(value instanceof Constant) return null;
+			if(value instanceof Expr) return null;
+			if(value.equals(localThis)) return null;
 
 			if(value instanceof Local) {
 				Local local = (Local) value;
 
 				Data ret = localRepository.get(local);
-				if(ret != null) return ret;
-
-				// check if the local is defined as copy of a field
-				if(u != null) {
-					List<Unit> defs = duAnalysis.getDefsOfAt(local, u);
-					if(defs.size() == 1 && defs.get(0) instanceof AssignStmt && ((AssignStmt)defs.get(0)).getRightOp() instanceof FieldRef) {
-						FieldRef field = (FieldRef) ((AssignStmt)defs.get(0)).getRightOp();
-						logger.fine("Local " +  value + " (in statement " + u + ") is defined as copy of field " + field);
-						return Factory.singleton.get(field.getField());
-					}
+				if(ret == null) {
+					ret = Factory.getData(null, local.getType(), false);
+					localRepository.put(local, ret);
 				}
-
-				ret = Factory.getData(null, local.getType(), false);
-				localRepository.put(local, ret);
-
 				return ret;
 			}
 
 			if(value instanceof FieldRef) return Factory.singleton.get(((FieldRef) value).getField());
 
-			if(value instanceof ArrayRef) return getData(((ArrayRef) value).getBase(), u);
+			if(value instanceof ArrayRef) return getData(((ArrayRef) value).getBase());
 
 			return null;
 		}
@@ -1366,8 +1339,8 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			if(!(stmt instanceof IfStmt || stmt instanceof TableSwitchStmt || stmt instanceof LookupSwitchStmt)) {
 
 				if(useToInstrument(stmt)) {
-					for(ValueBox use : stmt.getUseBoxes()) {
-						handleUse(newUnits, use.getValue(), stmt);
+					for(ValueBox useBox : stmt.getUseBoxes()) {
+						handleUse(newUnits, useBox.getValue(), stmt);
 					}
 				}
 			}
@@ -1402,9 +1375,59 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 						return false;
 					}
 				}
+
+				// skipping casts assignments
+				if(leftOp instanceof Local && rightOp instanceof CastExpr) {
+					logger.fine("Skipped use of " + rightOp + ": it is just a cast of the value " + leftOp + ".");
+					return false;
+				}
 			}
 
 			return true;
+		}
+
+		private Value getRealUse(Value v, Unit u) {
+			if(v == null) return null;
+			if(v.equals(localThis)) return null;
+			if(v instanceof Constant) return null;
+			if(v instanceof Expr) return null;
+
+			if(u == null) return v;
+
+			if(v instanceof Local) {
+
+				List<Unit> reachingDefs = duAnalysis.getDefsOfAt((Local) v, u);
+
+				if(reachingDefs.size() < 1) return null;
+
+				// if the use has only one reaching definition, I can skip its tracking or check if it is a temporary variable
+				if(reachingDefs.size() == 1) {
+
+					// check if it is a temporary variable used to access a field
+					Unit def = reachingDefs.get(0);
+
+					if(def instanceof AssignStmt) {
+						AssignStmt a = (AssignStmt)def;
+						Value rightOp = a.getRightOp();
+
+						if((rightOp instanceof FieldRef) && duAnalysis.getUsesOf(def).size() == 1) {
+							logger.fine("Found temporary local " + v + " tracking uses of " + rightOp + " instead");
+							return getRealUse(rightOp, def);
+
+						} else if(rightOp instanceof CastExpr) {
+							Value op = ((CastExpr) rightOp).getOp();
+							logger.fine("Found cast " + u + ": tracking uses of " + op + " instead");
+							return getRealUse(op, def);
+
+						}
+					}
+
+					logger.fine("Skipping instrumentation of use of " + v + " in " + u + ": only 1 reachable def-use");
+					return null;
+				}
+			}
+
+			return v;
 		}
 
 		/**
@@ -1418,36 +1441,13 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 			if(config.getDataFlowCoverage() == DataFlowCoverage.DISABLED) return null;
 
+			v = getRealUse(v, u);
 			if(v == null) return null;
-			if(v instanceof Constant) return null;
-			if(v instanceof Expr) return null;
 			if(v.getType() instanceof ArrayType) return null;
-			if(v.equals(localThis)) return null;
 
 			if(v instanceof Local) {
 
-				// if the use has only one reaching definition, I can skip its tracking or check if it is a temporary variable
-				List<Unit> reachingDefs = duAnalysis.getDefsOfAt((Local) v, u);
-				if(reachingDefs.size() < 1) return null;
-				if(reachingDefs.size() == 1) {
-
-					// check if it is a temporary variable used to access a field
-					Unit def = reachingDefs.get(0);
-					if(def instanceof AssignStmt && (((AssignStmt)def).getRightOp() instanceof FieldRef) && duAnalysis.getUsesOf(def).size() == 1) {
-						logger.fine("Found temporary local " + v + " tracking uses of " + ((AssignStmt)def).getRightOp() + " instead");
-						v = ((AssignStmt)def).getRightOp();
-
-					} else {
-
-						logger.fine("Skipping instrumentation of use of " + v + " in " + u + ": only 1 reachable def-use");
-						return null;
-					}
-				}
-			}
-
-			if(v instanceof Local) {
-
-				Data data = getData(v, u);
+				Data data = getData(v);
 				if(data == null) return null;
 
 				DataUse use = new DataUse(current, data, defs);
@@ -1471,7 +1471,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 			} else if(v instanceof InstanceFieldRef) {
 
-				Data data = getData(v, u);
+				Data data = getData(v);
 				if(data == null) return null;
 
 				DataUse use = new DataUse(current, data, defs);
@@ -1509,7 +1509,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 			} else if (v instanceof StaticFieldRef) {
 
-				Data data = getData(v, u);
+				Data data = getData(v);
 				if(data == null) return null;
 
 				DataUse use = new DataUse(current, data, defs);
@@ -1564,9 +1564,10 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 				// Consider the uses of the current definitions: if they do not have any additional definition, then it is possible to skip the du tracking
 				boolean oneDef = true;
-				for (Object unit : duAnalysis.getUsesOf(stmt)) {
-					UnitValueBoxPair u = (UnitValueBoxPair) unit;
-					if(duAnalysis.getDefsOfAt((Local) leftOp, u.getUnit()).size() > 1) {
+				@SuppressWarnings("unchecked")
+				List<UnitValueBoxPair> usesOf = duAnalysis.getUsesOf(stmt);
+				for (UnitValueBoxPair unit : usesOf) {
+					if(duAnalysis.getDefsOfAt((Local) leftOp, unit.getUnit()).size() > 1) {
 						oneDef = false;
 						break;
 					}
@@ -1584,7 +1585,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			else if(stmt.getRightOp() instanceof DoubleConstant) value = ((DoubleConstant) stmt.getRightOp()).value;
 			else value = null;
 
-			final DataDef dataDef = new DataDef(current, getData(leftOp, null), value); // getData for a definition, hence the second parameter is null
+			final DataDef dataDef = new DataDef(current, getData(leftOp), value);
 			manageDefs(dataDef);
 
 			// calculate the definition ID
@@ -1705,7 +1706,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				AssignStmt u = (AssignStmt) stmt;
 				if(u.getLeftOp().getType() instanceof ArrayType && u.getRightOp() instanceof InvokeExpr) {
 					Local leftOp = (Local) u.getLeftOp();
-					Data data = getData(leftOp, null); // this is for a definition, hence the second parameter is null
+					Data data = getData(leftOp);
 
 					final DataDef def = new DataDef(current, data, null);
 					manageDefs(def);

@@ -80,4 +80,17 @@ public class DataFlow {
 		if(u) Math.abs(v); // use1
 		else  Math.abs(v); // use2
 	}
+
+	public static void usePropagation(boolean d) {
+
+		float v;  //defs
+		if(d) v = 1.0f;
+		else  v = 7.0f;
+
+		if(d) Math.abs(v);
+		else Math.abs((int)v);
+
+		if(v == 7.0d) Math.abs(0);
+		else Math.abs(1);
+	}
 }

@@ -368,7 +368,7 @@ public class CoverageDataFlowTestCase extends GenericTestCase {
 		CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
 		assertNotNull(cov);
 		assertEquals(3.0f, cov.getQuality());
-		assertEquals("1[]-2[]\n1[]-3[]\ndefault[]-10[]", cov.toString());
+		assertEquals("1[]-2[]\n1[]-3[]\ndefault[]-13[]", cov.toString());
 	}
 
 	public void testDataFlowIA1d() throws Exception {
@@ -383,7 +383,7 @@ public class CoverageDataFlowTestCase extends GenericTestCase {
 		CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
 		assertNotNull(cov);
 		assertEquals(2.0f, cov.getQuality());
-		assertEquals("1[]-2[]\ndefault[]-10[]", cov.toString());
+		assertEquals("1[]-2[]\ndefault[]-13[]", cov.toString());
 	}
 
 	public void testDataFlowIA1b() throws Exception {
@@ -399,7 +399,7 @@ public class CoverageDataFlowTestCase extends GenericTestCase {
 		CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
 		assertNotNull(cov);
 		assertEquals(3.0f, cov.getQuality());
-		assertEquals("1[]-2[]\n1[]-3[]\ndefault[]-10[]", cov.toString());
+		assertEquals("1[]-2[]\n1[]-3[]\ndefault[]-13[]", cov.toString());
 	}
 
 	public void testDataFlowIA2() throws Exception {
@@ -416,7 +416,7 @@ public class CoverageDataFlowTestCase extends GenericTestCase {
 		CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
 		assertNotNull(cov);
 		assertEquals(4.0f, cov.getQuality());
-		assertEquals("17[]-10[]\n1[]-2[]\n1[]-3[]\n1[]-4[]", cov.toString());
+		assertEquals("1[]-2[]\n1[]-3[]\n1[]-4[]\n20[]-13[]", cov.toString());
 	}
 
 	public void testDataFlowIA2d() throws Exception {
@@ -433,7 +433,7 @@ public class CoverageDataFlowTestCase extends GenericTestCase {
 		CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
 		assertNotNull(cov);
 		assertEquals(3.0f, cov.getQuality());
-		assertEquals("17[]-10[]\n1[]-2[]\n1[]-4[]", cov.toString());
+		assertEquals("1[]-2[]\n1[]-4[]\n20[]-13[]", cov.toString());
 	}
 
 	public void testDataFlowIA2b() throws Exception {
@@ -451,7 +451,33 @@ public class CoverageDataFlowTestCase extends GenericTestCase {
 		CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
 		assertNotNull(cov);
 		assertEquals(4.0f, cov.getQuality());
-		assertEquals("17[]-10[]\n1[]-2[]\n1[]-3[]\n1[]-4[]", cov.toString());
+		assertEquals("1[]-2[]\n1[]-3[]\n1[]-4[]\n20[]-13[]", cov.toString());
+	}
+
+	public void testDataFlowUsePropagation1() throws Exception {
+		TestCoverageDataFlowCUT cut = new TestCoverageDataFlowCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.bools[0], false),
+				new Invoke(null, null, cut.usePropagation, new Reference[] { cut.bools[0] }),
+		}));
+
+		CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
+		assertNotNull(cov);
+		assertEquals(2.0f, cov.getQuality());
+		assertEquals("18[]-11[]\n18[]-12[]", cov.toString());
+	}
+
+	public void testDataFlowUsePropagation2() throws Exception {
+		TestCoverageDataFlowCUT cut = new TestCoverageDataFlowCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.bools[0], true),
+				new Invoke(null, null, cut.usePropagation, new Reference[] { cut.bools[0] }),
+		}));
+
+		CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
+		assertNotNull(cov);
+		assertEquals(2.0f, cov.getQuality());
+		assertEquals("17[]-10[]\n17[]-12[]", cov.toString());
 	}
 
 	public void testDataFlowCtx() throws Exception {
@@ -541,7 +567,7 @@ public class CoverageDataFlowTestCase extends GenericTestCase {
 		CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
 		assertNotNull(cov);
 		assertEquals(3.0f, cov.getQuality());
-		assertEquals("1[1]-2[16]\n1[1]-3[24]\ndefault[]-9[24, 66]", cov.toString());
+		assertEquals("1[1]-2[16]\n1[1]-3[24]\ndefault[]-10[24, 70]", cov.toString());
 	}
 
 	public void testDataFlowCtxIA1d() throws Exception {
@@ -556,7 +582,7 @@ public class CoverageDataFlowTestCase extends GenericTestCase {
 		CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
 		assertNotNull(cov);
 		assertEquals(2.0f, cov.getQuality());
-		assertEquals("1[1]-2[16]\ndefault[]-9[66]", cov.toString());
+		assertEquals("1[1]-2[16]\ndefault[]-10[70]", cov.toString());
 	}
 
 	public void testDataFlowCtxIA1b() throws Exception {
@@ -572,7 +598,7 @@ public class CoverageDataFlowTestCase extends GenericTestCase {
 		CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
 		assertNotNull(cov);
 		assertEquals(4.0f, cov.getQuality());
-		assertEquals("1[1]-2[16]\n1[1]-3[24]\ndefault[]-9[24, 66]\ndefault[]-9[66]", cov.toString());
+		assertEquals("1[1]-2[16]\n1[1]-3[24]\ndefault[]-10[24, 70]\ndefault[]-10[70]", cov.toString());
 	}
 
 	public void testDataFlowCtxIA2() throws Exception {
@@ -589,7 +615,7 @@ public class CoverageDataFlowTestCase extends GenericTestCase {
 		CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
 		assertNotNull(cov);
 		assertEquals(4.0f, cov.getQuality());
-		assertEquals("12[30, 70]-9[24, 66]\n1[1]-2[16]\n1[1]-3[24]\n1[1]-4[30]", cov.toString());
+		assertEquals("12[30, 74]-10[24, 70]\n1[1]-2[16]\n1[1]-3[24]\n1[1]-4[30]", cov.toString());
 	}
 
 	public void testDataFlowCtxIA2d() throws Exception {
@@ -606,7 +632,7 @@ public class CoverageDataFlowTestCase extends GenericTestCase {
 		CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
 		assertNotNull(cov);
 		assertEquals(3.0f, cov.getQuality());
-		assertEquals("12[30, 70]-9[66]\n1[1]-2[16]\n1[1]-4[30]", cov.toString());
+		assertEquals("12[30, 74]-10[70]\n1[1]-2[16]\n1[1]-4[30]", cov.toString());
 	}
 
 	public void testDataFlowCtxIA2b() throws Exception {
@@ -624,6 +650,32 @@ public class CoverageDataFlowTestCase extends GenericTestCase {
 		CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
 		assertNotNull(cov);
 		assertEquals(5.0f, cov.getQuality());
-		assertEquals("12[30, 70]-9[24, 66]\n12[30, 70]-9[66]\n1[1]-2[16]\n1[1]-3[24]\n1[1]-4[30]", cov.toString());
+		assertEquals("12[30, 74]-10[24, 70]\n12[30, 74]-10[70]\n1[1]-2[16]\n1[1]-3[24]\n1[1]-4[30]", cov.toString());
+	}
+
+	public void testDataFlowCtxUsePropagation1() throws Exception {
+		TestCoverageDataFlowCtxCUT cut = new TestCoverageDataFlowCtxCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.bools[0], false),
+				new Invoke(null, null, cut.usePropagation, new Reference[] { cut.bools[0] }),
+		}));
+
+		CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
+		assertNotNull(cov);
+		assertEquals(2.0f, cov.getQuality());
+		assertEquals("10[48]-8[48]\n10[48]-9[48]", cov.toString());
+	}
+
+	public void testDataFlowCtxUsePropagation2() throws Exception {
+		TestCoverageDataFlowCtxCUT cut = new TestCoverageDataFlowCtxCUT();
+		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.bools[0], true),
+				new Invoke(null, null, cut.usePropagation, new Reference[] { cut.bools[0] }),
+		}));
+
+		CoverageDataFlow cov = (CoverageDataFlow) covs.get(CoverageDataFlow.KEY);
+		assertNotNull(cov);
+		assertEquals(2.0f, cov.getQuality());
+		assertEquals("9[48]-7[48]\n9[48]-9[48]", cov.toString());
 	}
 }
