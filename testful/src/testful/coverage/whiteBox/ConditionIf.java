@@ -26,13 +26,13 @@ public class ConditionIf extends Condition {
 
 	private transient String condition;
 
-	public ConditionIf(DataUse use1, DataUse use2, String condition) {
-		super(use1, use2);
+	public ConditionIf(int basicBlock, DataUse use1, DataUse use2, String condition) {
+		super(basicBlock, use1, use2);
 		this.condition = condition;
 	}
 
-	public ConditionIf(DataUse use) {
-		super(use);
+	public ConditionIf(int basicBlock, DataUse use) {
+		super(basicBlock, use);
 	}
 
 	void setTrueBranch(EdgeConditional trueBranch) {
@@ -49,6 +49,14 @@ public class ConditionIf extends Condition {
 
 	public EdgeConditional getFalseBranch() {
 		return falseBranch;
+	}
+
+	private transient int[] branches;
+	@Override
+	public int[] getBranches() {
+		if(branches == null)
+			branches = new int[] { trueBranch.getId(), falseBranch.getId() };
+		return branches;
 	}
 
 	/** Avaliable only on "fresh" analysis (transient) */

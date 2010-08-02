@@ -738,7 +738,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			final DataUse use1 = handleUse(newUnits, op1, useUnit);
 			final DataUse use2 = handleUse(newUnits, op2, useUnit);
 
-			ConditionIf c = new ConditionIf(use1, use2, expr.toString());
+			ConditionIf c = new ConditionIf(current.getId(), use1, use2, expr.toString());
 			current.setCondition(c);
 
 			EdgeConditional trueBranch = new EdgeConditional(current, c);
@@ -1114,7 +1114,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			final Value key = u.getKey();
 
 			final DataUse use = handleUse(newUnits, key, u);
-			ConditionSwitch c = new ConditionSwitch(use);
+			ConditionSwitch c = new ConditionSwitch(current.getId(), use);
 			current.setCondition(c);
 
 			List<IntConstant> lookupValues = new ArrayList<IntConstant>();
@@ -1129,7 +1129,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				lookupValues.add(IntConstant.v(value));
 
 				EdgeConditional edge = new EdgeConditional(current, c);
-				c.addBranch(value, edge);
+				c.addCase(value, edge);
 				add(edge, u.getTarget(i));
 				branches.set(edge.getId());
 				keyBranchId.put(value, edge.getId());
@@ -1143,7 +1143,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			Integer defaultBranchId;
 			{
 				EdgeConditional edge = new EdgeConditional(current, c);
-				c.setDefaultBranch(edge);
+				c.setDefaultCase(edge);
 				add(edge, u.getDefaultTarget());
 				branches.set(edge.getId());
 				defaultBranchId = edge.getId();
@@ -1164,7 +1164,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			final int hIndex = u.getHighIndex();
 
 			DataUse use = handleUse(newUnits, key, u);
-			ConditionSwitch c = new ConditionSwitch(use);
+			ConditionSwitch c = new ConditionSwitch(current.getId(), use);
 			current.setCondition(c);
 
 			int[] keys = new int[hIndex-lIndex+1];
@@ -1177,7 +1177,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				keys[idx] = value;
 
 				EdgeConditional edge = new EdgeConditional(current, c);
-				c.addBranch(value, edge);
+				c.addCase(value, edge);
 				add(edge, u.getTarget(idx));
 				branches.set(edge.getId());
 				keyBranchId.put(value, edge.getId());
@@ -1191,7 +1191,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			Integer defaultBranchId;
 			{
 				EdgeConditional edge = new EdgeConditional(current, c);
-				c.setDefaultBranch(edge);
+				c.setDefaultCase(edge);
 				add(edge, u.getDefaultTarget());
 				branches.set(edge.getId());
 				defaultBranchId = edge.getId();

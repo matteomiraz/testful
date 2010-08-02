@@ -21,7 +21,9 @@ package testful.coverage.whiteBox;
 import java.net.URL;
 import java.util.BitSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -59,74 +61,45 @@ public class WhiteBoxAnalysisData implements ClassData {
 	}
 
 	private transient BitSet conditionBlocks;
-	private transient Map<Integer, BitSet> mapBlockCondition;
-	public BitSet getReachableBranches(BitSet blockCoverage) {
-		if(conditionBlocks == null) {
-			conditionBlocks = new BitSet();
-			mapBlockCondition = new HashMap<Integer, BitSet>();
+	private transient Map<Integer, Condition> mapBlockCondition;
+	private transient Map<Integer, Condition> mapBranchCondition;
 
-			for(BlockClass bClass : classes.values()) {
-				for(Block block : bClass) {
-					Condition condition = block.getCondition();
-					if(condition != null) {
+	private void buildInternalState() {
 
-						BitSet branches = new BitSet();
-						if(condition instanceof ConditionIf) {
-							ConditionIf cIf = (ConditionIf) condition;
-							branches.set(cIf.getTrueBranch().getId());
-							branches.set(cIf.getFalseBranch().getId());
+		conditionBlocks = new BitSet();
+		mapBlockCondition = new HashMap<Integer, Condition>();
+		mapBranchCondition = new HashMap<Integer, Condition>();
 
-						} else if(condition instanceof ConditionSwitch) {
-							ConditionSwitch cSwi = (ConditionSwitch) condition;
-
-							branches.set(cSwi.getDefaultBranch().getId());
-							for(EdgeConditional br : cSwi.getBranches().values())
-								branches.set(br.getId());
-						}
-
-						conditionBlocks.set(block.getId());
-						mapBlockCondition.put(block.getId(), branches);
+		for(BlockClass bClass : classes.values()) {
+			for(Block block : bClass) {
+				Condition condition = block.getCondition();
+				if(condition != null) {
+					conditionBlocks.set(block.getId());
+					mapBlockCondition.put(block.getId(), condition);
+					for (int b : condition.getBranches()) {
+						mapBranchCondition.put(b, condition);
 					}
+
 				}
 			}
 		}
-
-		blockCoverage = (BitSet) blockCoverage.clone();
-		blockCoverage.and(conditionBlocks);
-
-		BitSet reachable = new BitSet();
-		for (int blockId = blockCoverage.nextSetBit(0); blockId >= 0; blockId = blockCoverage.nextSetBit(blockId+1))
-			reachable.or(mapBlockCondition.get(blockId));
-
-		return reachable;
 	}
 
-	private transient Map<Integer, Condition> mapBranchCondition;
-	public Condition getConditionFromBranch(int branchId) {
-		if(mapBranchCondition == null) {
-			mapBranchCondition = new HashMap<Integer, Condition>();
+	public Set<Condition> getEvaluatedConditions(BitSet blockCoverage) {
+		if(mapBlockCondition == null) buildInternalState();
 
-			for(BlockClass bClass : classes.values()) {
-				for(Block block : bClass) {
-					Condition condition = block.getCondition();
-					if(condition != null) {
+		BitSet bc = (BitSet) blockCoverage.clone();
+		bc.and(conditionBlocks);
 
-						if(condition instanceof ConditionIf) {
-							ConditionIf cIf = (ConditionIf) condition;
-							mapBranchCondition.put(cIf.getTrueBranch().getId(), cIf);
-							mapBranchCondition.put(cIf.getFalseBranch().getId(), cIf);
-
-						} else if(condition instanceof ConditionSwitch) {
-							ConditionSwitch cSwi = (ConditionSwitch) condition;
-
-							mapBranchCondition.put(cSwi.getDefaultBranch().getId(), cSwi);
-							for(EdgeConditional br : cSwi.getBranches().values())
-								mapBranchCondition.put(br.getId(), cSwi);
-						}
-					}
-				}
-			}
+		Set<Condition> ret = new HashSet<Condition>();
+		for (int blockId = bc.nextSetBit(0); blockId >= 0; blockId = bc.nextSetBit(blockId+1)) {
+			ret.add(mapBlockCondition.get(blockId));
 		}
+		return ret;
+	}
+
+	public Condition getConditionFromBranch(int branchId) {
+		if(mapBranchCondition == null) buildInternalState();
 
 		return mapBranchCondition.get(branchId);
 	}

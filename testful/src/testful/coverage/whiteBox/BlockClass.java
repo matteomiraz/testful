@@ -270,8 +270,8 @@ public class BlockClass extends Block implements Iterable<Block> {
 							else if(c == cIf.getFalseBranch()) sb.append(",label=\"").append(cIf.getCondition()).append(":False id=#").append(c.getId()).append("#\"");
 						} else if(condition instanceof ConditionSwitch) {
 							ConditionSwitch cSwi = (ConditionSwitch) condition;
-							if(c == cSwi.getDefaultBranch()) sb.append(",label=\"default id=#").append(c.getId()).append("#\"");
-							else for(Entry<Integer, EdgeConditional> entry : cSwi.getBranches().entrySet()) {
+							if(c == cSwi.getDefaultCase()) sb.append(",label=\"default id=#").append(c.getId()).append("#\"");
+							else for(Entry<Integer, EdgeConditional> entry : cSwi.getCases().entrySet()) {
 								if(entry.getValue() == c) {
 									sb.append(",label=\"case " + entry.getKey() + " id=#").append(c.getId()).append("#\"");
 									break;

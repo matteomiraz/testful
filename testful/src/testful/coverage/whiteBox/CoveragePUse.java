@@ -49,6 +49,20 @@ public class CoveragePUse implements CoverageInformation {
 			hashCode = 521 * ((def == null) ? 0 : def.hashCode()) + branchId;
 		}
 
+		/**
+		 * @return the branchId
+		 */
+		public int getBranchId() {
+			return branchId;
+		}
+
+		/**
+		 * @return the def
+		 */
+		public ContextualId getDef() {
+			return def;
+		}
+
 		@Override
 		public int hashCode() {
 			return hashCode;
@@ -96,6 +110,13 @@ public class CoveragePUse implements CoverageInformation {
 
 	public CoveragePUse(Set<PUse> cov) {
 		coverage = new LinkedHashSet<PUse>(cov);
+	}
+
+	/**
+	 * @return the coverage
+	 */
+	public Set<PUse> getCoverage() {
+		return coverage;
 	}
 
 	@Override

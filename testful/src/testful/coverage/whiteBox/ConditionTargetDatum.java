@@ -68,7 +68,7 @@ public class ConditionTargetDatum implements TrackerDatum {
 
 	@Override
 	public String toString() {
-		return "Branch: " + branchId + (pUse ? "; Definition: " + (defId == null ? "default" : defId) : "");
+		return branchId + (pUse ? ":" + (defId == null ? "default" : defId) : "");
 	}
 
 	@Override
