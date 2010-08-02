@@ -23,23 +23,20 @@ import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Set;
 
+import testful.TestFul;
+
 /**
  * Renders a variable or a field, able to store data
  *
  * @author matteo
  */
-public class Data implements Serializable {
+public class Data implements Serializable, Value {
 
 	private static final long serialVersionUID = -4042773236943535616L;
-
-	public enum Type {
-		Boolean, Character, Number, String, Array, Reference
-	}
 
 	private final int id;
 	private static int idGenerator = 0;
 
-	private final Type type;
 	private final String fieldName;
 
 	private final BitSet mask;
@@ -49,30 +46,21 @@ public class Data implements Serializable {
 	private boolean field;
 	private final boolean param;
 
-	private Data(String fieldName, Type type, boolean param) {
+	public Data(String fieldName, boolean param) {
 		id = idGenerator++;
-
-		this.type = type;
 
 		this.param = param;
 		this.fieldName = fieldName;
 		field = fieldName != null;
 
+		if(TestFul.DEBUG) {
+			if(field && param)
+				TestFul.debug("The data cannot be both a field and a parameter.");
+		}
+
 		mask = new BitSet();
 		defs = new HashSet<DataDef>();
 		uses = new HashSet<DataUse>();
-	}
-
-	public static Data getPrimitiveData(String fieldName, Type primType, boolean param) {
-		return new Data(fieldName, primType, param);
-	}
-
-	public static Data getReferenceData(String fieldName, boolean param) {
-		return new Data(fieldName, Type.Reference, param);
-	}
-
-	public static Data getArrayData(String fieldName, boolean param) {
-		return new Data(fieldName, Type.Array, param);
 	}
 
 	public int getId() {
@@ -97,10 +85,6 @@ public class Data implements Serializable {
 
 	public BitSet getMask() {
 		return (BitSet) mask.clone();
-	}
-
-	public Type getType() {
-		return type;
 	}
 
 	void addDef(DataDef def) {

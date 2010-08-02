@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.coverage.whiteBox;
 
 import java.util.HashMap;
@@ -24,7 +23,7 @@ import java.util.Map;
 
 public class ConditionSwitch extends Condition {
 
-	private static final long serialVersionUID = -8845331609006428322L;
+	private static final long serialVersionUID = -1921136469085209917L;
 
 	private static int idGenerator = 0;
 
@@ -32,8 +31,8 @@ public class ConditionSwitch extends Condition {
 	private final Map<Integer, EdgeConditional> cases = new HashMap<Integer, EdgeConditional>();
 	private EdgeConditional defaultCase;
 
-	public ConditionSwitch(int basicBlock, DataUse use) {
-		super(basicBlock, use);
+	public ConditionSwitch(int basicBlock, Value v, DataUse use) {
+		super(basicBlock, Type.Number, v, use);
 	}
 
 	public int getId() {

@@ -58,20 +58,24 @@ public class WhiteBoxAnalysisData implements ClassData {
 		conditionBlocks = null;
 		mapBlockCondition = null;
 		mapBranchCondition = null;
+		mapDataDefs = null;
 	}
 
 	private transient BitSet conditionBlocks;
 	private transient Map<Integer, Condition> mapBlockCondition;
 	private transient Map<Integer, Condition> mapBranchCondition;
+	private transient Map<Integer, DataDef> mapDataDefs;
 
 	private void buildInternalState() {
 
 		conditionBlocks = new BitSet();
 		mapBlockCondition = new HashMap<Integer, Condition>();
 		mapBranchCondition = new HashMap<Integer, Condition>();
+		mapDataDefs = new HashMap<Integer, DataDef>();
 
 		for(BlockClass bClass : classes.values()) {
 			for(Block block : bClass) {
+
 				Condition condition = block.getCondition();
 				if(condition != null) {
 					conditionBlocks.set(block.getId());
@@ -79,7 +83,12 @@ public class WhiteBoxAnalysisData implements ClassData {
 					for (int b : condition.getBranches()) {
 						mapBranchCondition.put(b, condition);
 					}
+				}
 
+				if(block instanceof BlockBasic) {
+					for (DataDef def : ((BlockBasic) block).getDefs()) {
+						mapDataDefs.put(def.getId(), def);
+					}
 				}
 			}
 		}
@@ -102,5 +111,11 @@ public class WhiteBoxAnalysisData implements ClassData {
 		if(mapBranchCondition == null) buildInternalState();
 
 		return mapBranchCondition.get(branchId);
+	}
+
+	public DataDef getDataDef(int defId) {
+		if(mapDataDefs == null) buildInternalState();
+
+		return mapDataDefs.get(defId);
 	}
 }

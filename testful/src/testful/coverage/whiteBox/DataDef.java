@@ -1,17 +1,17 @@
 /*
  * TestFul - http://code.google.com/p/testful/
  * Copyright (C) 2010  Matteo Miraz
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -25,7 +25,7 @@ import java.util.Set;
 
 public class DataDef implements Serializable {
 
-	private static final long serialVersionUID = -7674828835545817305L;
+	private static final long serialVersionUID = 6331611025925067694L;
 
 	private final int id;
 	private static int idGenerator = 1;
@@ -35,13 +35,13 @@ public class DataDef implements Serializable {
 
 	private BitSet killBitSet;
 
-	/** if the assignment is to a static value, this is the value */
-	private final Serializable value;
+	/** The value of the assignment (if a constant or a single variable) */
+	private final Value value;
 
-	public DataDef(Block block, Data data, Serializable value) {
+	public DataDef(Block block, Data data, Value value) {
 		id = idGenerator++;
 		this.block = block;
-		
+
 		this.data = data;
 		this.value = value;
 		data.addDef(this);
@@ -63,8 +63,8 @@ public class DataDef implements Serializable {
 	public Block getBlock() {
 		return block;
 	}
-	
-	public Serializable getValue() {
+
+	public Value getValue() {
 		return value;
 	}
 

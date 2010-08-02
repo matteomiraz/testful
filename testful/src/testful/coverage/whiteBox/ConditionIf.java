@@ -20,19 +20,16 @@ package testful.coverage.whiteBox;
 
 public class ConditionIf extends Condition {
 
-	private static final long serialVersionUID = -3003316502705186978L;
+	private static final long serialVersionUID = 6557549481414543790L;
+
 	private EdgeConditional trueBranch;
 	private EdgeConditional falseBranch;
 
 	private transient String condition;
 
-	public ConditionIf(int basicBlock, DataUse use1, DataUse use2, String condition) {
-		super(basicBlock, use1, use2);
+	public ConditionIf(String condition, int basicBlock, Type dataType, Value v1, DataUse use1, Value v2, DataUse use2) {
+		super(basicBlock, dataType, v1, use1, v2, use2);
 		this.condition = condition;
-	}
-
-	public ConditionIf(int basicBlock, DataUse use) {
-		super(basicBlock, use);
 	}
 
 	void setTrueBranch(EdgeConditional trueBranch) {

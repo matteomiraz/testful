@@ -56,6 +56,8 @@ import testful.coverage.whiteBox.CoverageBranchTarget;
 import testful.coverage.whiteBox.CoveragePUse;
 import testful.coverage.whiteBox.CoveragePUse.PUse;
 import testful.coverage.whiteBox.Data;
+import testful.coverage.whiteBox.DataDef;
+import testful.coverage.whiteBox.Value;
 import testful.model.AssignPrimitive;
 import testful.model.Clazz;
 import testful.model.Operation;
@@ -95,6 +97,8 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 	/** Number of attempts for operations able to reduce the branch distance */
 	private final int TTL_IMPROVEMENT  = 50;
 
+	private final float SCORE_IMPOSSIBLE = Float.NEGATIVE_INFINITY;
+
 	private final float SCORE_BOOL = 0;
 	private final float SCORE_ARRAY = 0;
 	private final float SCORE_REF = 0;
@@ -104,9 +108,10 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 	private final float SCORE_FIELD = -100;
 	private final float SCORE_PARAM =  200;
-	private final float SCORE_ZERO_USES = Float.NEGATIVE_INFINITY;
-	private final float SCORE_ONE_USE = 0;
-	private final float SCORE_TWO_USES = -100;
+
+	private final float SCORE_NO_USES  = 250;
+	private final float SCORE_ONE_USE  = 100;
+	private final float SCORE_TWO_USES = 0;
 
 	private final float SCORE_MISS_ATTEMPTS = -1000;
 
@@ -617,10 +622,10 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 		final Set<TestWithScore> ret = new TreeSet<TestWithScore>();
 		for(TestCoverage t : tests) {
+
 			final CoverageBasicBlocks bbCov = (CoverageBasicBlocks) t.getCoverage().get(CoverageBasicBlocks.KEY);
 			final CoverageBranch brCov = (CoverageBranch) t.getCoverage().get(CoverageBranch.KEY);
 			if(bbCov == null || brCov == null) continue;
-
 
 			// collect reachable branches, i.e., those branches whose condition has been evaluated
 			ElementManager<Integer, BranchTrack> reachableBranches = new ElementManager<Integer, LocalSearchBranch.BranchTrack>();
@@ -668,46 +673,48 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 				if(attempts.containsKey(target))
 					score += SCORE_MISS_ATTEMPTS * attempts.get(target);
 
-				if(target.isPUse())
+				if(target.isPUse()) {
 					score += SCORE_PUSE;
+
+					DataDef d = problem.getWhiteAnalysis().getDataDef(target.getDefinitionId().getId());
+					if(d.getValue() != null) ;
+				}
 
 				// score type, fields/var/params
 				Condition c = problem.getWhiteAnalysis().getConditionFromBranch(target.getBranchId());
 
-				//TODO: combine definitions & condition
+				switch(c.getType()) {
+				case Boolean: score += SCORE_BOOL; break;
+				case Array: score += SCORE_ARRAY; break;
+				case Reference: score += SCORE_REF; break;
+				case String:	score += SCORE_STRING; break;
+				case Character: score += SCORE_CHAR; break;
+				case Number: score += SCORE_NUMBER; break;
+				}
 
 				if(c.getUse1() == null) { // 0 uses
-					score += SCORE_ZERO_USES;
-
-				} else { // 1 or 2 uses
-
-					switch(c.getUse1().getData().getType()) {
-					case Boolean: score += SCORE_BOOL; break;
-					case Array: score += SCORE_ARRAY; break;
-					case Reference: score += SCORE_REF; break;
-					case String:	score += SCORE_STRING; break;
-					case Character: score += SCORE_CHAR; break;
-					case Number: score += SCORE_NUMBER; break;
-					}
-
-					if(c.getUse2() == null) { // 1 use
-						score += SCORE_ONE_USE;
-
-						Data data1 = c.getUse1().getData();
-						if(data1.isParam()) score += SCORE_PARAM;
-						else if(data1.isField()) score += SCORE_FIELD;
-
-					} else { // 2 uses
-						score += SCORE_TWO_USES;
-
-						Data data1 = c.getUse1().getData();
-						Data data2 = c.getUse2().getData();
-						if(data1.isParam() || data2.isParam()) score += SCORE_PARAM;
-						if(data1.isField()) score += SCORE_FIELD;
-						if(data2.isField()) score += SCORE_FIELD;
-
-					}
+					score += SCORE_NO_USES;
+				} else if(c.getUse2() == null) { // 1 use
+					score += SCORE_ONE_USE;
+				} else { // 2 uses
+					score += SCORE_TWO_USES;
 				}
+
+				Value v1 = c.getV1();
+				if(v1 != null && v1 instanceof Data) {
+					Data data = (Data) v1;
+					if(data.isParam()) score += SCORE_PARAM;
+					else if(data.isField()) score += SCORE_FIELD;
+				}
+
+				Value v2 = c.getV2();
+				if(v2 != null && v2 instanceof Data) {
+					Data data = (Data) v2;
+					if(data.isParam()) score += SCORE_PARAM;
+					else if(data.isField()) score += SCORE_FIELD;
+				}
+
+				// compare def with use in condition (to detect infeasible branches)
 
 				ret.add(new TestWithScore(t, target, score));
 			}

@@ -20,30 +20,46 @@ package testful.coverage.whiteBox;
 
 import java.io.Serializable;
 
+import testful.TestFul;
+
 public abstract class Condition implements Serializable {
 
-	private static final long serialVersionUID = -4617564017748515886L;
+	public enum Type {
+		Boolean, Character, Number, String, Array, Reference
+	}
 
 	private final int basicBlock;
+
+	private final Type type;
+
+	private final Value v1;
 	private final DataUse use1;
+
+	private final Value v2;
 	private final DataUse use2;
 
-	public Condition(int basicBlock, DataUse use1, DataUse use2) {
+	public Condition(int basicBlock, Type dataType, Value v1, DataUse use1, Value v2, DataUse use2) {
 		this.basicBlock = basicBlock;
-		if(use1 == null) {
-			this.use1 = use2;
-			this.use2 = null;
-		} else if(use2 == null) {
+		type = dataType;
+		if(use1 != null || use2 == null) {
+			this.v1 = v1;
 			this.use1 = use1;
-			this.use2 = null;
-		} else {
-			this.use1 = use1;
+			this.v2 = v2;
 			this.use2 = use2;
+		} else {
+			this.v1 = v2;
+			this.use1 = use2;
+			this.v2 = v1;
+			this.use2 = use1;
+		}
+
+		if(TestFul.DEBUG) {
+			if(type == null) TestFul.debug("Null type in " + basicBlock);
 		}
 	}
 
-	public Condition(int basicBlock, DataUse use) {
-		this(basicBlock, use, null);
+	public Condition(int basicBlock, Type dataType, Value v, DataUse use) {
+		this(basicBlock, dataType, v, use, null, null);
 	}
 
 	/**
@@ -55,13 +71,34 @@ public abstract class Condition implements Serializable {
 	}
 
 	/**
+	 * @return the type of the values involved in the comparison
+	 */
+	public Type getType() {
+		return type;
+	}
+
+	/**
 	 * Returns the outgoing branches
 	 * @return the outgoing branches
 	 */
 	public abstract int[] getBranches();
 
+	/**
+	 * @return the 1st value
+	 */
+	public Value getV1() {
+		return v1;
+	}
+
 	public DataUse getUse1() {
 		return use1;
+	}
+
+	/**
+	 * @return the 2nd value
+	 */
+	public Value getV2() {
+		return v2;
 	}
 
 	public DataUse getUse2() {
