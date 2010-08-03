@@ -1841,7 +1841,8 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			final soot.Value leftOp = stmt.getLeftOp();
 			final soot.Value rightOp = stmt.getRightOp();
 
-			if(leftOp instanceof Local) {
+			//TBD: optimize du tracking for arrays
+			if(leftOp instanceof Local && !(leftOp.getType() instanceof ArrayType)) {
 
 				// Consider the uses of the current definitions: if they do not have any additional definition, then it is possible to skip the du tracking
 				boolean oneDef = true;
