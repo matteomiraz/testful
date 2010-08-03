@@ -106,6 +106,46 @@ public class CoverageDataFlow implements CoverageInformation {
 		this.duPairs = new LinkedHashSet<DefUse>(duPairs);
 	}
 
+	public Set<ContextualId> getDefsOfUse(ContextualId use) {
+		Set<ContextualId> ret = new LinkedHashSet<ContextualId>();
+
+		for (DefUse du : duPairs)
+			if(du.getUse().equals(use))
+				ret.add(du.getDef());
+
+		return ret;
+	}
+
+	public Set<Integer> getDefsOfUse(int useId) {
+		Set<Integer> ret = new LinkedHashSet<Integer>();
+
+		for (DefUse du : duPairs)
+			if(du.getUse().getId() == useId)
+				ret.add(du.getDef() == null ? null : du.getDef().getId());
+
+		return ret;
+	}
+
+	public Set<ContextualId> getUsesOfDef(ContextualId def) {
+		Set<ContextualId> ret = new LinkedHashSet<ContextualId>();
+
+		for (DefUse du : duPairs)
+			if((def == null &&  du.getDef() == null) || (def != null && def.equals(du.getDef())))
+				ret.add(du.getUse());
+
+		return ret;
+	}
+
+	public Set<Integer> getDefsOfUse(Integer defId) {
+		Set<Integer> ret = new LinkedHashSet<Integer>();
+
+		for (DefUse du : duPairs)
+			if((defId == null &&  du.getDef() == null) || (defId != null && defId == du.getDef().getId()))
+				ret.add(du.getUse().getId());
+
+		return ret;
+	}
+
 	@Override
 	public boolean contains(CoverageInformation other) {
 		if(other instanceof CoverageDataFlow) {

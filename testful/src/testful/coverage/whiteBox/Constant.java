@@ -18,7 +18,6 @@
 
 package testful.coverage.whiteBox;
 
-import java.io.Serializable;
 
 /**
  * Contains a constant
@@ -27,25 +26,24 @@ import java.io.Serializable;
 public class Constant implements Value {
 	private static final long serialVersionUID = 5701544347609041344L;
 
-	private final Serializable value;
-	private final String type;
+	private final Number value;
 
-	public Constant(Serializable v) {
+	public Constant(Number v) {
 		value = v;
-		type = v != null ? v.getClass().getName() : null;
 	}
 
 	/**
 	 * @return the value
 	 */
-	public Serializable getValue() {
+	public Number getValue() {
 		return value;
 	}
 
-	/**
-	 * @return the type
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
 	 */
-	public String getType() {
-		return type;
+	@Override
+	public String toString() {
+		return value.toString();
 	}
 }

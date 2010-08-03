@@ -71,11 +71,14 @@ import soot.jimple.ConditionExpr;
 import soot.jimple.DefinitionStmt;
 import soot.jimple.DoubleConstant;
 import soot.jimple.EnterMonitorStmt;
+import soot.jimple.EqExpr;
 import soot.jimple.ExitMonitorStmt;
 import soot.jimple.Expr;
 import soot.jimple.FieldRef;
 import soot.jimple.FloatConstant;
+import soot.jimple.GeExpr;
 import soot.jimple.GotoStmt;
+import soot.jimple.GtExpr;
 import soot.jimple.IdentityStmt;
 import soot.jimple.IfStmt;
 import soot.jimple.InstanceFieldRef;
@@ -84,8 +87,11 @@ import soot.jimple.InvokeExpr;
 import soot.jimple.InvokeStmt;
 import soot.jimple.Jimple;
 import soot.jimple.JimpleBody;
+import soot.jimple.LeExpr;
 import soot.jimple.LongConstant;
 import soot.jimple.LookupSwitchStmt;
+import soot.jimple.LtExpr;
+import soot.jimple.NeExpr;
 import soot.jimple.NewArrayExpr;
 import soot.jimple.NewMultiArrayExpr;
 import soot.jimple.NullConstant;
@@ -113,6 +119,7 @@ import testful.coverage.Launcher.ConfigInstrumenter.DataFlowCoverage;
 import testful.coverage.soot.Instrumenter.UnifiedInstrumentator;
 import testful.coverage.soot.Skip;
 import testful.coverage.soot.SootUtils;
+import testful.coverage.whiteBox.ConditionIf.ConditionType;
 
 public class WhiteInstrumenter implements UnifiedInstrumentator {
 
@@ -405,33 +412,33 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		}
 	}
 
-	public static Condition.Type getType(soot.Value v) {
+	public static Condition.DataType getType(soot.Value v) {
 
 		Type type = v.getType();
 
 		if(type instanceof BooleanType)
-			return Condition.Type.Boolean;
+			return Condition.DataType.Boolean;
 
 		if(type instanceof CharType)
-			return Condition.Type.Character;
+			return Condition.DataType.Character;
 
 		if(type instanceof PrimType)
-			return Condition.Type.Number;
+			return Condition.DataType.Number;
 
 		if(type instanceof RefType) {
 			if(((RefType) type).getClassName().equals("java.lang.String"))
-				return Condition.Type.String;
+				return Condition.DataType.String;
 
-			return Condition.Type.Reference;
+			return Condition.DataType.Reference;
 		}
 
 		if(type instanceof ArrayType)
-			return Condition.Type.Array;
+			return Condition.DataType.Array;
 
 		if(TestFul.DEBUG)
 			TestFul.debug("Unknown data type: " + type);
 
-		return Condition.Type.Reference;
+		return Condition.DataType.Reference;
 	}
 
 	class Analyzer {
@@ -766,7 +773,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				}
 			}
 
-			Condition.Type condType = getType(op1);
+			Condition.DataType condDataType = getType(op1);
 
 			Value v1 = getValue(getRealUse(op1, useUnit, false));
 			Value v2 = getValue(getRealUse(op2, useUnit, false));
@@ -774,7 +781,16 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			final DataUse use1 = handleUse(newUnits, op1, useUnit);
 			final DataUse use2 = handleUse(newUnits, op2, useUnit);
 
-			ConditionIf c = new ConditionIf(expr.toString(), current.getId(), condType, v1, use1, v2, use2);
+			ConditionIf.ConditionType condType = null;
+			if(expr instanceof LtExpr) condType = ConditionType.LT;
+			if(expr instanceof LeExpr) condType = ConditionType.LE;
+			if(expr instanceof NeExpr) condType = ConditionType.NE;
+			if(expr instanceof EqExpr) condType = ConditionType.EQ;
+			if(expr instanceof GeExpr) condType = ConditionType.GE;
+			if(expr instanceof GtExpr) condType = ConditionType.GT;
+			if(TestFul.DEBUG && condType == null) TestFul.debug("Unknown condition type: " + expr + " (" + expr.getClass().getCanonicalName() + ")");
+
+			ConditionIf c = new ConditionIf(expr.toString(), current.getId(), condDataType, v1, use1, condType, v2, use2);
 			current.setCondition(c);
 
 			EdgeConditional trueBranch = new EdgeConditional(current, c);

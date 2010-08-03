@@ -34,6 +34,7 @@ public class ConditionTargetDatum implements TrackerDatum {
 
 	private final boolean pUse;
 
+	//TBD: if the comparison is between two variables, and both allow default initailization, I cannot distinguish between them
 	/** the definition to use (null if it doesn't care) */
 	private final ContextualId defId;
 

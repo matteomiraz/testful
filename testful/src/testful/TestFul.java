@@ -67,6 +67,7 @@ public class TestFul {
 	public static void debug(String message) {
 		if(DEBUG)
 			loggerDebug.warning(message);
+		//loggerDebug.log(Level.WARNING, message, new RuntimeException("Stack Trace"));
 	}
 
 	public static void debug(Throwable exc) {

@@ -20,6 +20,10 @@ package testful.coverage.whiteBox;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import testful.TestFul;
 
 public class ConditionSwitch extends Condition {
 
@@ -32,7 +36,7 @@ public class ConditionSwitch extends Condition {
 	private EdgeConditional defaultCase;
 
 	public ConditionSwitch(int basicBlock, Value v, DataUse use) {
-		super(basicBlock, Type.Number, v, use);
+		super(basicBlock, DataType.Number, v, use);
 	}
 
 	public int getId() {
@@ -55,6 +59,10 @@ public class ConditionSwitch extends Condition {
 		return cases;
 	}
 
+	public Set<Integer> getCaseValues() {
+		return cases.keySet();
+	}
+
 	private transient int[] branches;
 	@Override
 	public int[] getBranches() {
@@ -71,5 +79,19 @@ public class ConditionSwitch extends Condition {
 
 
 		return branches;
+	}
+
+	/**
+	 * Returns the value that the key must assume to take the chosen branch (null for the default branch).
+	 * @return the value that the key must assume to take the chosen branch (null for the default branch).
+	 */
+	public Integer getKeyValueByBrachId(int branchId) {
+		if(defaultCase != null && branchId == defaultCase.getId()) return null;
+
+		for (Entry<Integer, EdgeConditional> e : cases.entrySet())
+			if(e.getValue().getId() == branchId) return e.getKey();
+
+		if(TestFul.DEBUG) TestFul.debug("Invalid branch (" + branchId + ") cases: " + cases.keySet() + "; default: " + defaultCase);
+		return null;
 	}
 }

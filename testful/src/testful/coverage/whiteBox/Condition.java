@@ -24,13 +24,15 @@ import testful.TestFul;
 
 public abstract class Condition implements Serializable {
 
-	public enum Type {
+	private static final long serialVersionUID = -3414239172777795445L;
+
+	public enum DataType {
 		Boolean, Character, Number, String, Array, Reference
 	}
 
 	private final int basicBlock;
 
-	private final Type type;
+	private final DataType dataType;
 
 	private final Value v1;
 	private final DataUse use1;
@@ -38,27 +40,22 @@ public abstract class Condition implements Serializable {
 	private final Value v2;
 	private final DataUse use2;
 
-	public Condition(int basicBlock, Type dataType, Value v1, DataUse use1, Value v2, DataUse use2) {
+	public Condition(int basicBlock, DataType dataType, Value v1, DataUse use1, Value v2, DataUse use2) {
 		this.basicBlock = basicBlock;
-		type = dataType;
-		if(use1 != null || use2 == null) {
-			this.v1 = v1;
-			this.use1 = use1;
-			this.v2 = v2;
-			this.use2 = use2;
-		} else {
-			this.v1 = v2;
-			this.use1 = use2;
-			this.v2 = v1;
-			this.use2 = use1;
-		}
+		this.dataType = dataType;
+
+		this.v1 = v1;
+		this.use1 = use1;
+
+		this.v2 = v2;
+		this.use2 = use2;
 
 		if(TestFul.DEBUG) {
-			if(type == null) TestFul.debug("Null type in " + basicBlock);
+			if(dataType == null) TestFul.debug("Null type in condition in " + basicBlock);
 		}
 	}
 
-	public Condition(int basicBlock, Type dataType, Value v, DataUse use) {
+	public Condition(int basicBlock, DataType dataType, Value v, DataUse use) {
 		this(basicBlock, dataType, v, use, null, null);
 	}
 
@@ -73,8 +70,8 @@ public abstract class Condition implements Serializable {
 	/**
 	 * @return the type of the values involved in the comparison
 	 */
-	public Type getType() {
-		return type;
+	public DataType getType() {
+		return dataType;
 	}
 
 	/**

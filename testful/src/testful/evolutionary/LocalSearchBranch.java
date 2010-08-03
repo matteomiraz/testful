@@ -48,15 +48,22 @@ import testful.TestFul;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
 import testful.coverage.whiteBox.Condition;
+import testful.coverage.whiteBox.Condition.DataType;
+import testful.coverage.whiteBox.ConditionIf;
+import testful.coverage.whiteBox.ConditionIf.ConditionType;
+import testful.coverage.whiteBox.ConditionSwitch;
 import testful.coverage.whiteBox.ConditionTargetDatum;
+import testful.coverage.whiteBox.Constant;
 import testful.coverage.whiteBox.ContextualId;
 import testful.coverage.whiteBox.CoverageBasicBlocks;
 import testful.coverage.whiteBox.CoverageBranch;
 import testful.coverage.whiteBox.CoverageBranchTarget;
+import testful.coverage.whiteBox.CoverageDataFlow;
 import testful.coverage.whiteBox.CoveragePUse;
 import testful.coverage.whiteBox.CoveragePUse.PUse;
 import testful.coverage.whiteBox.Data;
 import testful.coverage.whiteBox.DataDef;
+import testful.coverage.whiteBox.DataUse;
 import testful.coverage.whiteBox.Value;
 import testful.model.AssignPrimitive;
 import testful.model.Clazz;
@@ -109,11 +116,13 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 	private final float SCORE_FIELD = -100;
 	private final float SCORE_PARAM =  200;
 
+	private final float SCORE_NO_DATA  =-250;
 	private final float SCORE_NO_USES  = 250;
 	private final float SCORE_ONE_USE  = 100;
 	private final float SCORE_TWO_USES = 0;
 
 	private final float SCORE_MISS_ATTEMPTS = -1000;
+	private final float SCORE_AMBIGUOUS = -2000;
 
 	// prefer branches never executed
 	private final float SCORE_PUSE = -500;
@@ -224,8 +233,9 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 		final ElementManager<String, CoverageInformation> covs = problem.evaluate(test.test, data).get();
 		CoverageBranchTarget covCondOrig = (CoverageBranchTarget)covs.get(CoverageBranchTarget.KEY);
 
-		logger.info("Selected target: " + test.target + " (score: " + test.score + " length: " + test.test.getTest().length + ")");
+		final boolean feasible = checkFeasibility(test.test, test.target) >= 0;
 
+		logger.info("Selected target: " + test.target + " (score: " + test.score + " length: " + test.test.getTest().length + ")");
 		if(LOG_FINE) logger.fine("coverageLocalSearch " + localSearchId + " target=" + test.target + ";iter=" + 0 + ";cov=" + covCondOrig.getQuality() + ";distance=" + covCondOrig + ";len=" + test.test.getTest().length);
 
 		List<Operation> opsOrig = new LinkedList<Operation>();
@@ -248,7 +258,8 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 			boolean canContinue = mutate(ops, pos);
 
-			ElementManager<String, CoverageInformation> cov = problem.evaluate(problem.getTest(ops), data).get();
+			final Test newTest = problem.getTest(ops);
+			ElementManager<String, CoverageInformation> cov = problem.evaluate(newTest, data).get();
 			CoverageBranchTarget covCond = (CoverageBranchTarget) cov.get(CoverageBranchTarget.KEY);
 			if(covCond == null) covCond = new CoverageBranchTarget(test.target.getBranchId(), test.target.isPUse(), test.target.getDefinitionId());
 
@@ -275,6 +286,11 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 				for (Operation o : ops)
 					sb.append("  " + o).append("\n");
 				logger.finest(sb.append("---").toString());
+			}
+
+			if(feasible && checkFeasibility(new TestCoverage(newTest, cov), test.target) < 0) {
+				logger.finer("Detected infeasible test");
+				continue;
 			}
 
 			if(covCond.getQuality() < covCondOrig.getQuality()) continue;
@@ -668,55 +684,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 			// calculate scores
 			for (ConditionTargetDatum target : targets) {
-				float score = 0;
-
-				if(attempts.containsKey(target))
-					score += SCORE_MISS_ATTEMPTS * attempts.get(target);
-
-				if(target.isPUse()) {
-					score += SCORE_PUSE;
-
-					DataDef d = problem.getWhiteAnalysis().getDataDef(target.getDefinitionId().getId());
-					if(d.getValue() != null) ;
-				}
-
-				// score type, fields/var/params
-				Condition c = problem.getWhiteAnalysis().getConditionFromBranch(target.getBranchId());
-
-				switch(c.getType()) {
-				case Boolean: score += SCORE_BOOL; break;
-				case Array: score += SCORE_ARRAY; break;
-				case Reference: score += SCORE_REF; break;
-				case String:	score += SCORE_STRING; break;
-				case Character: score += SCORE_CHAR; break;
-				case Number: score += SCORE_NUMBER; break;
-				}
-
-				if(c.getUse1() == null) { // 0 uses
-					score += SCORE_NO_USES;
-				} else if(c.getUse2() == null) { // 1 use
-					score += SCORE_ONE_USE;
-				} else { // 2 uses
-					score += SCORE_TWO_USES;
-				}
-
-				Value v1 = c.getV1();
-				if(v1 != null && v1 instanceof Data) {
-					Data data = (Data) v1;
-					if(data.isParam()) score += SCORE_PARAM;
-					else if(data.isField()) score += SCORE_FIELD;
-				}
-
-				Value v2 = c.getV2();
-				if(v2 != null && v2 instanceof Data) {
-					Data data = (Data) v2;
-					if(data.isParam()) score += SCORE_PARAM;
-					else if(data.isField()) score += SCORE_FIELD;
-				}
-
-				// compare def with use in condition (to detect infeasible branches)
-
-				ret.add(new TestWithScore(t, target, score));
+				ret.add(calculateScore(t, target));
 			}
 		}
 
@@ -732,6 +700,352 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 		}
 
 		return ret;
+	}
+
+	private TestWithScore calculateScore(TestCoverage t, ConditionTargetDatum target) {
+		final Condition c = problem.getWhiteAnalysis().getConditionFromBranch(target.getBranchId());
+		float score = 0;
+
+		if(attempts.containsKey(target))
+			score += SCORE_MISS_ATTEMPTS * attempts.get(target);
+
+		if(target.isPUse())
+			score += SCORE_PUSE;
+
+		switch(c.getType()) {
+		case Boolean: score += SCORE_BOOL; break;
+		case Array: score += SCORE_ARRAY; break;
+		case Reference: score += SCORE_REF; break;
+		case String:	score += SCORE_STRING; break;
+		case Character: score += SCORE_CHAR; break;
+		case Number: score += SCORE_NUMBER; break;
+		}
+
+		if(!(c.getV1() instanceof Data) && !(c.getV2() instanceof Data)) {
+			// it is not working on any data
+			score += SCORE_NO_DATA;
+
+		} else {
+			if(c.getUse1() == null && c.getUse2() == null) { // 0 uses
+				score += SCORE_NO_USES;
+			} else if(c.getUse1() != null ^ c.getUse2() != null) { // 1 use
+				score += SCORE_ONE_USE;
+			} else { // 2 uses
+				score += SCORE_TWO_USES;
+			}
+		}
+
+		Value v1 = c.getV1();
+		if(v1 != null && v1 instanceof Data) {
+			Data data = (Data) v1;
+			if(data.isParam()) score += SCORE_PARAM;
+			else if(data.isField()) score += SCORE_FIELD;
+		}
+
+		Value v2 = c.getV2();
+		if(v2 != null && v2 instanceof Data) {
+			Data data = (Data) v2;
+			if(data.isParam()) score += SCORE_PARAM;
+			else if(data.isField()) score += SCORE_FIELD;
+		}
+
+		score += checkFeasibility(t, target);
+
+		return new TestWithScore(t, target, score);
+	}
+
+	/**
+	 * Uses data flow analysis to determine whether a definition is able to reach a certain branch
+	 * @param t the test (with du coverage)
+	 * @param target the target to reach
+	 * @return the score (the higher the better). Negative Infinite means not feasible.
+	 */
+	private float checkFeasibility(TestCoverage t, ConditionTargetDatum target) {
+		final Condition c = problem.getWhiteAnalysis().getConditionFromBranch(target.getBranchId());
+		final DataType cType = c.getType();
+		final DataUse use1 = c.getUse1();
+		final DataUse use2 = c.getUse2();
+
+		// can work only on numbers and boolean values
+		if(cType != DataType.Boolean && cType != DataType.Character && cType != DataType.Number) return 0;
+
+		// and operates only if there is the du coverage
+		final CoverageDataFlow duCov = (CoverageDataFlow) t.getCoverage().get(CoverageDataFlow.KEY);
+		if(TestFul.DEBUG && target.isPUse() && duCov == null) TestFul.debug("Null DU coverage and p-use enabled.");
+		if(duCov == null) return 0;
+
+		if (target.isPUse()) {
+
+			if(use1 == null && use2 == null) {
+				if(TestFul.DEBUG) TestFul.debug("No uses in condition and p-use enabled");
+				return SCORE_AMBIGUOUS;
+
+			} else if(use1 != null && use2 == null) { // p-use is on use1
+				DataDef def1 = problem.getWhiteAnalysis().getDataDef(target.getDefinitionId().getId());
+				if(TestFul.DEBUG) {
+					if(def1 == null) TestFul.debug("Cannot retrieve definition for the chosen p-use (1)");
+					else if(def1.getData().getId() != use1.getData().getId()) TestFul.debug("Data mismatch (1)");
+				}
+
+				if(c instanceof ConditionIf) {
+
+					if(c.getV2() == null) return 0;
+
+					if(!(c.getV2() instanceof Constant) && !(c.getV2() instanceof Data)) {
+						if(TestFul.DEBUG) TestFul.debug("Ambiguous Value (1): " + c.getV2() + (c.getV2() == null ? "" : " (" + c.getV2().getClass().getCanonicalName() + ")"));
+						return SCORE_AMBIGUOUS;
+					}
+
+					return checkFeasibilityIf(
+							getStaticValue(def1),
+							((ConditionIf) c).getConditionType(),
+							getDynamicValues(duCov, c.getV2(), use2) );
+
+				} else if(c instanceof ConditionSwitch) {
+					return checkFeasibilitySwitch(getStaticValue(def1), target.getBranchId(), (ConditionSwitch) c);
+
+				} else {
+					if(TestFul.DEBUG) TestFul.debug("Unexpected contition type: " + c.getClass().getCanonicalName());
+					return SCORE_AMBIGUOUS;
+				}
+
+			} else if(use1 == null && use2 != null) { // p-use is on use2
+				if(!(c instanceof ConditionIf)) {
+					if(TestFul.DEBUG) TestFul.debug("Unexpected contition type: " + c.getClass().getCanonicalName());
+					return SCORE_AMBIGUOUS;
+				}
+
+				if(c.getV1() == null) return 0;
+
+				if(!(c.getV1() instanceof Constant) && !(c.getV1() instanceof Data)) {
+					if(TestFul.DEBUG) TestFul.debug("Ambiguous Value (2): " + c.getV1() + (c.getV1() == null ? "" : " (" + c.getV1().getClass().getCanonicalName() + ")"));
+					return SCORE_AMBIGUOUS;
+				}
+
+				DataDef def2 = problem.getWhiteAnalysis().getDataDef(target.getDefinitionId().getId());
+				if(TestFul.DEBUG) {
+					if(def2 == null) TestFul.debug("Cannot retrieve definition for the chosen p-use (2)");
+					else if(def2.getData().getId() != use2.getData().getId()) TestFul.debug("Data mismatch (2)");
+				}
+
+				return checkFeasibilityIf(
+						getDynamicValues(duCov, c.getV1(), use1),
+						((ConditionIf) c).getConditionType(),
+						getStaticValue(def2) );
+
+			} else { // use1 != null && use2 != null
+				if(!(c instanceof ConditionIf)) {
+					if(TestFul.DEBUG) TestFul.debug("Unexpected contition type: " + c.getClass().getCanonicalName());
+					return SCORE_AMBIGUOUS;
+				}
+
+				// This can happen with "if(this.field == other.field)"
+				if (use1.getId() == use2.getId())
+					return 0;
+
+				// TBD: better support of default initialization
+				if (target.getDefinitionId() == null) {
+					logger.fine("Skipping ambiguous default initialization " + target);
+					return SCORE_AMBIGUOUS;
+				}
+
+				DataDef def = problem.getWhiteAnalysis().getDataDef(target.getDefinitionId().getId());
+				if(def.getData().getId() == use1.getData().getId()) {
+					// p-use is on use1
+
+					DataDef def1 = problem.getWhiteAnalysis().getDataDef(target.getDefinitionId().getId());
+					if(TestFul.DEBUG) {
+						if(def1 == null) TestFul.debug("Cannot retrieve definition for the chosen p-use (3a)");
+						else if(def1.getData().getId() != use1.getData().getId()) TestFul.debug("Data mismatch (3a)");
+					}
+
+					if(c.getV2() == null) return 0;
+
+					if(!(c.getV2() instanceof Constant) && !(c.getV2() instanceof Data)) {
+						if(TestFul.DEBUG) TestFul.debug("Ambiguous Value (3a): " + c.getV2() + (c.getV2() == null ? "" : " (" + c.getV2().getClass().getCanonicalName() + ")"));
+						return SCORE_AMBIGUOUS;
+					}
+
+					return checkFeasibilityIf(
+							getStaticValue(def1),
+							((ConditionIf) c).getConditionType(),
+							getDynamicValues(duCov, c.getV2(), use2) );
+
+
+				} else if(def.getData().getId() == use2.getData().getId()) {
+					// p-use is on use2
+
+					if(c.getV1() == null) return 0;
+
+					if(!(c.getV1() instanceof Constant) && !(c.getV1() instanceof Data)) {
+						if(TestFul.DEBUG) TestFul.debug("Ambiguous Value (3b): " + c.getV1() + (c.getV1() == null ? "" : " (" + c.getV1().getClass().getCanonicalName() + ")"));
+						return SCORE_AMBIGUOUS;
+					}
+
+					DataDef def2 = problem.getWhiteAnalysis().getDataDef(target.getDefinitionId().getId());
+					if(TestFul.DEBUG) {
+						if(def2 == null) TestFul.debug("Cannot retrieve definition for the chosen p-use (3b)");
+						else if(def2.getData().getId() != use2.getData().getId()) TestFul.debug("Data mismatch (3b)");
+					}
+
+					return checkFeasibilityIf(
+							getDynamicValues(duCov, c.getV1(), use1),
+							((ConditionIf) c).getConditionType(),
+							getStaticValue(def2) );
+
+				} else {
+					if(TestFul.DEBUG) TestFul.debug("Data mismatch. Expected " + use1.getData().getId() + " or " + use2.getData().getId() + "; found: " + def.getData().getId());
+					return SCORE_AMBIGUOUS;
+				}
+			}
+		}
+
+		if(c.getV1() == null) return 0;
+
+		if(!(c.getV1() instanceof Constant) && !(c.getV1() instanceof Data)) {
+			if(TestFul.DEBUG) TestFul.debug("Ambiguous Value (4): " + c.getV1() + (c.getV1() == null ? "" : " (" + c.getV1().getClass().getCanonicalName() + ")"));
+			return SCORE_AMBIGUOUS;
+		}
+
+		if(c instanceof ConditionIf) {
+			if(c.getV2() == null) return 0;
+
+			if(!(c.getV2() instanceof Constant) && !(c.getV2() instanceof Data)) {
+				if(TestFul.DEBUG) TestFul.debug("Ambiguous Value (4b): " + c.getV2() + (c.getV2() == null ? "" : " (" + c.getV2().getClass().getCanonicalName() + ")"));
+				return SCORE_AMBIGUOUS;
+			}
+
+			return checkFeasibilityIf(
+					getDynamicValues(duCov, c.getV1(), use1),
+					((ConditionIf) c).getConditionType(),
+					getDynamicValues(duCov, c.getV2(), use2) );
+
+		} else if(c instanceof ConditionSwitch) {
+			return checkFeasibilitySwitch(getDynamicValues(duCov, c.getV1(), use1), target.getBranchId(), (ConditionSwitch) c);
+
+		} else {
+			if(TestFul.DEBUG) TestFul.debug("Unexpected contition type: " + c.getClass().getCanonicalName());
+			return SCORE_AMBIGUOUS;
+		}
+	}
+
+	/**
+	 * Check if a SWITCH condition is feasible or not
+	 * @param values
+	 * @param branchId
+	 * @param c
+	 * @return 0 if the branch is feasible; SCORE_IMPOSSIBLE if the branch is not feasible.
+	 */
+	private float checkFeasibilitySwitch(Set<Constant> values, int branchId, ConditionSwitch c) {
+		if(values == null)
+			return 0;
+
+		if(values.isEmpty()){
+			logger.finer("Empty values: switch " + branchId + " is impossible");
+			return SCORE_IMPOSSIBLE;
+		}
+
+		Integer keyValue = c.getKeyValueByBrachId(branchId);
+
+		if(keyValue != null) {
+			for (Constant value : values) {
+				if(value.getValue().intValue() == keyValue)
+					return 0;
+			}
+
+			if(LOG_FINER) logger.finer("Detected impossible branch: " + branchId + " with values " + values);
+			return SCORE_IMPOSSIBLE;
+		}
+
+		Set<Integer> cases = c.getCaseValues();
+		for (Constant value : values) {
+			if(!cases.contains(value.getValue().intValue()))
+				return 0;
+		}
+
+		if(LOG_FINER) logger.finer("Detected impossible branch: " + branchId + " with values " + values);
+		return SCORE_IMPOSSIBLE;
+	}
+
+	/**
+	 * Check if an IF condition is feasible or not
+	 * @param a the first set of values (null if there is any free variable)
+	 * @param t the type of the comparison
+	 * @param b the second set of values (null if there is any free variable)
+	 * @return 0 if the branch is feasible; SCORE_IMPOSSIBLE if the branch is not feasible.
+	 */
+	private float checkFeasibilityIf(Set<Constant> a, ConditionType t, Set<Constant> b) {
+		if(a == null || b == null) // Free variables means feasible condition
+			return 0;
+
+		if(a.isEmpty() ||  b.isEmpty()){
+			logger.finer("Empty values: if is impossible");
+			return SCORE_IMPOSSIBLE;
+		}
+
+		for (Constant v1 : a) {
+			for (Constant v2 : b) {
+				switch(t) {
+				case LT: if(v1.getValue().doubleValue() <  v2.getValue().doubleValue()) return 0;
+				case LE: if(v1.getValue().doubleValue() <= v2.getValue().doubleValue()) return 0;
+				case NE: if(v1.getValue().doubleValue() != v2.getValue().doubleValue()) return 0;
+				case EQ: if(v1.getValue().doubleValue() == v2.getValue().doubleValue()) return 0;
+				case GE: if(v1.getValue().doubleValue() >= v2.getValue().doubleValue()) return 0;
+				case GT: if(v1.getValue().doubleValue()  > v2.getValue().doubleValue()) return 0;
+				}
+			}
+		}
+		if(LOG_FINER) logger.finer("Detected impossible IF: " + a + " " + t + " " + b);
+		return SCORE_IMPOSSIBLE;
+	}
+
+	private Set<Constant> getStaticValue(DataDef def) {
+		if(def.getValue() == null) return null;
+		if(def.getValue() instanceof Data) return null;
+		if(def.getValue() instanceof Constant) {
+			Set<Constant> values = new HashSet<Constant>();
+			values.add((Constant) def.getValue());
+			return values;
+		}
+
+		if(TestFul.DEBUG)
+			TestFul.debug("Unexpected value: " + def.getValue().getClass().getCanonicalName());
+
+		return null;
+	}
+
+	private Set<Constant> getDynamicValues(CoverageDataFlow duCov, Value v, DataUse use) {
+		if(TestFul.DEBUG && (v == null || !(v instanceof Constant) && !(v instanceof Data)))
+			TestFul.debug("Invalid parameters for getDynamicValues");
+
+		if (v instanceof Constant) {
+			Set<Constant> values = new HashSet<Constant>();
+			values.add((Constant) v);
+			return values;
+		}
+
+		if(use == null)
+			return null; // the value is a data, with only 1 du feasible. Hence (constant propagation) it's a free variable!
+
+		Set<Constant> values = new HashSet<Constant>();
+		for (Integer defId : duCov.getDefsOfUse(use.getId())) {
+			if(defId == null) {
+				values.add(new Constant(0));
+
+			} else {
+				DataDef def = problem.getWhiteAnalysis().getDataDef(defId);
+				if(TestFul.DEBUG && def == null) TestFul.debug("Null DataDef for def " + defId);
+				if(def != null) {
+					if(def.getValue() == null || def.getValue() instanceof Data)
+						return null; // there is a free variable: the condition is feasible!
+
+					if(def.getValue() instanceof Constant)
+						values.add((Constant) def.getValue());
+				}
+			}
+		}
+
+		return values;
 	}
 
 	private static class BranchTrack implements ElementWithKey<Integer> {
