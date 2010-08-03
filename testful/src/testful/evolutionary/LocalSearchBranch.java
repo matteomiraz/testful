@@ -233,10 +233,16 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 		final ElementManager<String, CoverageInformation> covs = problem.evaluate(test.test, data).get();
 		CoverageBranchTarget covCondOrig = (CoverageBranchTarget)covs.get(CoverageBranchTarget.KEY);
 
-		final boolean feasible = checkFeasibility(test.test, test.target) >= 0;
+
+		final boolean branchFeasible;
+		{
+			CoverageDataFlow duCov = (CoverageDataFlow) test.test.getCoverage().get(CoverageDataFlow.KEY);
+			if(duCov == null) branchFeasible = false;
+			else branchFeasible = checkFeasibility(test.test, test.target, duCov) >= 0;
+		}
 
 		logger.info("Selected target: " + test.target + " (score: " + test.score + " length: " + test.test.getTest().length + ")");
-		if(LOG_FINE) logger.fine("coverageLocalSearch " + localSearchId + " target=" + test.target + ";iter=" + 0 + ";cov=" + covCondOrig.getQuality() + ";distance=" + covCondOrig + ";len=" + test.test.getTest().length);
+		if(LOG_FINE) logger.fine("coverageLocalSearch " + localSearchId + " target=" + test.target + ";iter=" + 0 + ";cov=" + covCondOrig.getQuality() + ";distance=" + covCondOrig + ";len=" + test.test.getTest().length + ";feasible=" + (branchFeasible ? "true" : "n/a"));
 
 		List<Operation> opsOrig = new LinkedList<Operation>();
 		for(Operation op : test.test.getTest())
@@ -263,7 +269,15 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			CoverageBranchTarget covCond = (CoverageBranchTarget) cov.get(CoverageBranchTarget.KEY);
 			if(covCond == null) covCond = new CoverageBranchTarget(test.target.getBranchId(), test.target.isPUse(), test.target.getDefinitionId());
 
-			if(LOG_FINE) logger.fine("coverageLocalSearch " + localSearchId + " target=" + test.target + ";iter=" + (i+1) + ";cov=" + covCond.getQuality() + ";distance=" + covCond + ";len=" + ops.size());
+
+			final boolean stillFeasible;
+			if(branchFeasible) {
+				CoverageDataFlow duCov = (CoverageDataFlow) test.test.getCoverage().get(CoverageDataFlow.KEY);
+				stillFeasible = duCov != null && checkFeasibility(new TestCoverage(newTest, cov), test.target, duCov) >= 0;
+			} else
+				stillFeasible = true;
+
+			if(LOG_FINE) logger.fine("coverageLocalSearch " + localSearchId + " target=" + test.target + ";iter=" + (i+1) + ";cov=" + covCond.getQuality() + ";distance=" + covCond + ";len=" + ops.size() + ";feasible=" + (branchFeasible ? stillFeasible : "n/a"));
 
 			if(LOG_FINEST) {
 				StringBuilder sb = new StringBuilder();
@@ -288,10 +302,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 				logger.finest(sb.append("---").toString());
 			}
 
-			if(feasible && checkFeasibility(new TestCoverage(newTest, cov), test.target) < 0) {
-				logger.finer("Detected infeasible test");
-				continue;
-			}
+			if(!stillFeasible) continue;
 
 			if(covCond.getQuality() < covCondOrig.getQuality()) continue;
 			if(covCond.getQuality() == covCondOrig.getQuality() && ops.size() >= opsOrig.size()) continue;
@@ -749,7 +760,9 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			else if(data.isField()) score += SCORE_FIELD;
 		}
 
-		score += checkFeasibility(t, target);
+		CoverageDataFlow duCov = (CoverageDataFlow) t.getCoverage().get(CoverageDataFlow.KEY);
+		if(duCov != null)
+			score += checkFeasibility(t, target, duCov);
 
 		return new TestWithScore(t, target, score);
 	}
@@ -758,9 +771,15 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 	 * Uses data flow analysis to determine whether a definition is able to reach a certain branch
 	 * @param t the test (with du coverage)
 	 * @param target the target to reach
+	 * @param duCov the def-use coverage (must not be null)
 	 * @return the score (the higher the better). Negative Infinite means not feasible.
 	 */
-	private float checkFeasibility(TestCoverage t, ConditionTargetDatum target) {
+	private float checkFeasibility(TestCoverage t, ConditionTargetDatum target, CoverageDataFlow duCov) {
+		if(duCov == null) {
+			if(TestFul.DEBUG) TestFul.debug("Null DU coverage.");
+			return SCORE_AMBIGUOUS;
+		}
+
 		final Condition c = problem.getWhiteAnalysis().getConditionFromBranch(target.getBranchId());
 		final DataType cType = c.getType();
 		final DataUse use1 = c.getUse1();
@@ -768,11 +787,6 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 		// can work only on numbers and boolean values
 		if(cType != DataType.Boolean && cType != DataType.Character && cType != DataType.Number) return 0;
-
-		// and operates only if there is the du coverage
-		final CoverageDataFlow duCov = (CoverageDataFlow) t.getCoverage().get(CoverageDataFlow.KEY);
-		if(TestFul.DEBUG && target.isPUse() && duCov == null) TestFul.debug("Null DU coverage and p-use enabled.");
-		if(duCov == null) return 0;
 
 		if (target.isPUse()) {
 
