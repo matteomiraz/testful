@@ -333,7 +333,7 @@
 			</manifest>
 			<fileset dir="${build.classes}">
 				<patternset>
-					<include name="version.txt"/>
+					<include name="revision.txt"/>
 					<patternset refid="auto"/>
 					<include name="jmetal/base/**/*.class"/>
 					<include name="jmetal/util/**/*.class"/>
