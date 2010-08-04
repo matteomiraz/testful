@@ -310,7 +310,7 @@ public class TrackerWhiteBox extends Tracker {
 
 	}
 
-	// ------------------------ Def-Array handling ----------------------------
+	// ------------------------ DU Array handling -----------------------------
 	/**
 	 * creates an array of DataAccess, all with the same defId.<br>
 	 * Use this method when a new array (1 dimension) is created
@@ -353,8 +353,6 @@ public class TrackerWhiteBox extends Tracker {
 			for (int i = 0; i < defs.length; i++)
 				defs[i] = d;
 		}
-
-
 	}
 
 	/**
@@ -403,4 +401,19 @@ public class TrackerWhiteBox extends Tracker {
 		return ret;
 	}
 
+	public void manageArrayDefUses(Object defs, ContextualId use) {
+		if(defs == null) return;
+
+		Class<?> c = defs.getClass();
+		if(c.isArray()) {
+			Object[] array = (Object[]) defs;
+			for (int i = 0; i < array.length; i++)
+				manageArrayDefUses(array[i], use);
+
+		} else {
+			if(TestFul.DEBUG && !(defs instanceof ContextualId)) TestFul.debug("_trackArrayDefUses: " + c.getCanonicalName() + " instead of a ContextualId");
+
+			manageDefUse((ContextualId) defs, use);
+		}
+	}
 }

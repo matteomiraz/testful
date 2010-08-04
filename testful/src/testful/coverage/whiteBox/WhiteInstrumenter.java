@@ -173,6 +173,9 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 	/** SootMethod representation of TrackerWhiteBox.arrayAssignmentDef(Object a, int id) */
 	private static final SootMethod arrayAssignmentDef;
 
+	/** SootMethod representation of TrackerWhiteBox.manageArrayDefUses(Object defs, ContextualId use) */
+	private static final SootMethod manageArrayDefUses;
+
 	static {
 		Scene.v().loadClassAndSupport(Object.class.getName());
 		objectClass  = Scene.v().getSootClass(Object.class.getName());
@@ -206,6 +209,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		newArrayDef = trackerClass.getMethodByName("newArrayDef");
 		newMultiArrayDef = trackerClass.getMethodByName("newMultiArrayDef");
 		arrayAssignmentDef = trackerClass.getMethodByName("arrayAssignmentDef");
+		manageArrayDefUses = trackerClass.getMethodByName("manageArrayDefUses");
 		manageDefUse = trackerClass.getMethodByName("manageDefUse");
 		trackPUse = trackerClass.getMethodByName("trackPUse");
 
@@ -435,8 +439,8 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		if(type instanceof ArrayType)
 			return Condition.DataType.Array;
 
-		if(TestFul.DEBUG)
-			TestFul.debug("Unknown data type: " + type);
+		if(TestFul.DEBUG) TestFul.debug("Unknown data type: " + type);
+
 
 		return Condition.DataType.Reference;
 	}
@@ -628,14 +632,22 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 					// Consider the uses of the current definitions: if they do not have any additional definition, then it is possible to skip the du tracking
 					boolean oneDef = true;
-					@SuppressWarnings("unchecked")
-					List<UnitValueBoxPair> usesOf = duAnalysis.getUsesOf(paramDefs[i]);
-					for (UnitValueBoxPair unit : usesOf) {
-						if(duAnalysis.getDefsOfAt(localParam, unit.getUnit()).size() > 1) {
-							oneDef = false;
-							break;
+
+					if(localParam.getType() instanceof ArrayType) {
+						//TBD: optimize du tracking for arrays
+						oneDef = false;
+
+					} else {
+						@SuppressWarnings("unchecked")
+						List<UnitValueBoxPair> usesOf = duAnalysis.getUsesOf(paramDefs[i]);
+						for (UnitValueBoxPair unit : usesOf) {
+							if(duAnalysis.getDefsOfAt(localParam, unit.getUnit()).size() > 1) {
+								oneDef = false;
+								break;
+							}
 						}
 					}
+
 					if(oneDef) {
 						logger.fine("Skipping instrumentation of the definition of parameter " + i + "(" + localParam + " in " + paramDefs[i] + "): it is the only definition for all of its uses");
 						continue;
@@ -700,8 +712,9 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				; // nothing to do
 			else if(op instanceof ExitMonitorStmt)
 				; // nothing to do
-			else
-				logger.warning("cannot analyze " + op + " (" + op.getClass().getName() + ")");
+			else {
+				if(TestFul.DEBUG) TestFul.debug("cannot analyze " + op + " (" + op.getClass().getName() + ")");
+			}
 		}
 
 		public void process(Chain<Unit> newUnits, AssignStmt u) {
@@ -724,7 +737,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		public void process(Chain<Unit> newUnits, IfStmt u) {
 
 			if(!(u.getCondition() instanceof ConditionExpr)) {
-				logger.warning("Unknown condition: " + u.getCondition() + " (" + u.getCondition().getClass().getName() + ")");
+				if(TestFul.DEBUG) TestFul.debug("Unknown condition: " + u.getCondition() + " (" + u.getCondition().getClass().getName() + ")");
 				current = null;
 				return;
 			}
@@ -734,14 +747,14 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			soot.Value op1 = expr.getOp1();
 			soot.Value op2 = expr.getOp2();
 			Type type = op1.getType();
-			Unit useUnit = u;
+			Stmt useStmt = u;
 
 			// check if this is a comparison between floats or doubles
 			if(type instanceof ByteType && op1 instanceof Local && op2 instanceof IntConstant && ((IntConstant)op2).value == 0) {
 				List<Unit> defs = duAnalysis.getDefsOfAt((Local) op1, u);
 
 				if(defs.size() == 1) {
-					Unit def = defs.get(0);
+					Stmt def = (Stmt) defs.get(0);
 
 					if (def instanceof AssignStmt) {
 						soot.Value rightOp = ((AssignStmt)def).getRightOp();
@@ -750,21 +763,21 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 							op1 = ((CmplExpr)rightOp).getOp1();
 							op2 = ((CmplExpr)rightOp).getOp2();
 							type = op1.getType();
-							useUnit = def;
+							useStmt = def;
 
 							logger.fine("The conditon " + u + " has been recognized as a comparison between " + op1 + " and " + op2);
 						} else if (rightOp instanceof CmpExpr) {
 							op1 = ((CmpExpr)rightOp).getOp1();
 							op2 = ((CmpExpr)rightOp).getOp2();
 							type = op1.getType();
-							useUnit = def;
+							useStmt = def;
 
 							logger.fine("The conditon " + u + " has been recognized as a comparison between " + op1 + " and " + op2);
 						} else if (rightOp instanceof CmpgExpr) {
 							op1 = ((CmpgExpr)rightOp).getOp1();
 							op2 = ((CmpgExpr)rightOp).getOp2();
 							type = op1.getType();
-							useUnit = def;
+							useStmt = def;
 
 							logger.fine("The conditon " + u + " has been recognized as a comparison between " + op1 + " and " + op2);
 						}
@@ -775,11 +788,11 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 			Condition.DataType condDataType = getType(op1);
 
-			Value v1 = getValue(getRealUse(op1, useUnit, false));
-			Value v2 = getValue(getRealUse(op2, useUnit, false));
+			Value v1 = getValue(getRealUse(op1, useStmt, false));
+			Value v2 = getValue(getRealUse(op2, useStmt, false));
 
-			final DataUse use1 = handleUse(newUnits, op1, useUnit);
-			final DataUse use2 = handleUse(newUnits, op2, useUnit);
+			final DataUse use1 = handleUse(newUnits, op1, useStmt);
+			final DataUse use2 = handleUse(newUnits, op2, useStmt);
 
 			ConditionIf.ConditionType condType = null;
 			if(expr instanceof LtExpr) condType = ConditionType.LT;
@@ -834,13 +847,13 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 				if(config.getDataFlowCoverage().isPUse()) {
 					if(use1 != null) {
-						Local localDef = getTrackingDef(newUnits, op1, useUnit);
+						Local localDef = getTrackingDef(newUnits, op1, useStmt);
 						if(localDef != null)
 							newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, trackPUse.makeRef(), IntConstant.v(falseBranch.getId()), localDef)));
 					}
 
 					if(use2 != null) {
-						Local localDef = getTrackingDef(newUnits, op2, useUnit);
+						Local localDef = getTrackingDef(newUnits, op2, useStmt);
 						if(localDef != null)
 							newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, trackPUse.makeRef(), IntConstant.v(falseBranch.getId()), localDef)));
 					}
@@ -855,7 +868,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					if(config.getDataFlowCoverage().isPUse()) {
 						boolean tracked = false;
 						if(use1 != null) {
-							Local localDef = getTrackingDef(newUnits, op1, useUnit);
+							Local localDef = getTrackingDef(newUnits, op1, useStmt);
 							if(localDef != null) {
 								tracked = true;
 								newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(1), localDef)));
@@ -863,7 +876,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 						}
 
 						if(use2 != null) {
-							Local localDef = getTrackingDef(newUnits, op2, useUnit);
+							Local localDef = getTrackingDef(newUnits, op2, useStmt);
 							if(localDef != null) {
 								tracked = true;
 								newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(1), localDef)));
@@ -889,7 +902,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					if(config.getDataFlowCoverage().isPUse()) {
 						boolean tracked = false;
 						if(use1 != null) {
-							Local localDef = getTrackingDef(newUnits, op1, useUnit);
+							Local localDef = getTrackingDef(newUnits, op1, useStmt);
 							if(localDef != null) {
 								tracked = true;
 								newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, calculateConditionTargetDistance.makeRef(), Arrays.asList(localTmpDouble1, localTmpDouble2, localDef))));
@@ -897,7 +910,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 						}
 
 						if(use2 != null) {
-							Local localDef = getTrackingDef(newUnits, op2, useUnit);
+							Local localDef = getTrackingDef(newUnits, op2, useStmt);
 							if(localDef != null) {
 								tracked = true;
 								newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, calculateConditionTargetDistance.makeRef(), Arrays.asList(localTmpDouble1, localTmpDouble2, localDef))));
@@ -931,7 +944,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					if(config.getDataFlowCoverage().isPUse()) {
 						boolean tracked = false;
 						if(use1 != null) {
-							Local localDef = getTrackingDef(newUnits, op1, useUnit);
+							Local localDef = getTrackingDef(newUnits, op1, useStmt);
 							if(localDef != null) {
 								tracked = true;
 								newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, calculateConditionTargetDistance.makeRef(), Arrays.asList(localTmpDouble1, localTmpDouble2, localDef))));
@@ -939,7 +952,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 						}
 
 						if(use2 != null) {
-							Local localDef = getTrackingDef(newUnits, op2, useUnit);
+							Local localDef = getTrackingDef(newUnits, op2, useStmt);
 							if(localDef != null) {
 								tracked = true;
 								newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, calculateConditionTargetDistance.makeRef(), Arrays.asList(localTmpDouble1, localTmpDouble2, localDef))));
@@ -954,7 +967,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 						newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, calculateConditionTargetDistance.makeRef(), Arrays.asList(localTmpDouble1, localTmpDouble2, NullConstant.v()))));
 					}
 
-				} else logger.warning("Unknown operand type: " + type + " (" + type.getClass().getName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getName() + ")");
+				} else if(TestFul.DEBUG) TestFul.debug("Unknown operand type: " + type + " (" + type.getClass().getName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getName() + ")");
 
 				newUnits.add(Jimple.v().newGotoStmt(after));
 
@@ -965,7 +978,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				if(config.getDataFlowCoverage().isPUse()) {
 					boolean tracked = false;
 					if(use1 != null) {
-						Local localDef = getTrackingDef(newUnits, op1, useUnit);
+						Local localDef = getTrackingDef(newUnits, op1, useStmt);
 						if(localDef != null) {
 							tracked = true;
 							newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(-1), localDef)));
@@ -973,7 +986,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					}
 
 					if(use2 != null) {
-						Local localDef = getTrackingDef(newUnits, op2, useUnit);
+						Local localDef = getTrackingDef(newUnits, op2, useStmt);
 						if(localDef != null) {
 							tracked = true;
 							newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(-1), localDef)));
@@ -999,13 +1012,13 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				if (config.getDataFlowCoverage().isPUse()) {
 
 					if (use1 != null) {
-						Local localDef = getTrackingDef(newUnits, op1, useUnit);
+						Local localDef = getTrackingDef(newUnits, op1, useStmt);
 						if (localDef != null)
 							newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, trackPUse.makeRef(),IntConstant.v(trueBranch.getId()),localDef)));
 					}
 
 					if (use2 != null) {
-						Local localDef = getTrackingDef(newUnits, op2, useUnit);
+						Local localDef = getTrackingDef(newUnits, op2, useStmt);
 						if (localDef != null)
 							newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, trackPUse.makeRef(),IntConstant.v(trueBranch.getId()),localDef)));
 					}
@@ -1018,7 +1031,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				if(config.getDataFlowCoverage().isPUse()) {
 					boolean tracked = false;
 					if(use1 != null) {
-						Local localDef = getTrackingDef(newUnits, op1, useUnit);
+						Local localDef = getTrackingDef(newUnits, op1, useStmt);
 						if(localDef != null) {
 							tracked = true;
 							newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(-1), localDef)));
@@ -1026,7 +1039,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					}
 
 					if(use2 != null) {
-						Local localDef = getTrackingDef(newUnits, op2, useUnit);
+						Local localDef = getTrackingDef(newUnits, op2, useStmt);
 						if(localDef != null) {
 							tracked = true;
 							newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(-1), localDef)));
@@ -1052,7 +1065,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					if(config.getDataFlowCoverage().isPUse()) {
 						boolean tracked = false;
 						if(use1 != null) {
-							Local localDef = getTrackingDef(newUnits, op1, useUnit);
+							Local localDef = getTrackingDef(newUnits, op1, useStmt);
 							if(localDef != null) {
 								tracked = true;
 								newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(1), localDef)));
@@ -1060,7 +1073,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 						}
 
 						if(use2 != null) {
-							Local localDef = getTrackingDef(newUnits, op2, useUnit);
+							Local localDef = getTrackingDef(newUnits, op2, useStmt);
 							if(localDef != null) {
 								tracked = true;
 								newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance.makeRef(), DoubleConstant.v(1), localDef)));
@@ -1085,7 +1098,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					if(config.getDataFlowCoverage().isPUse()) {
 						boolean tracked = false;
 						if(use1 != null) {
-							Local localDef = getTrackingDef(newUnits, op1, useUnit);
+							Local localDef = getTrackingDef(newUnits, op1, useStmt);
 							if(localDef != null) {
 								tracked = true;
 								newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, calculateConditionTargetDistance.makeRef(), Arrays.asList(localTmpDouble1, localTmpDouble2, localDef))));
@@ -1093,7 +1106,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 						}
 
 						if(use2 != null) {
-							Local localDef = getTrackingDef(newUnits, op2, useUnit);
+							Local localDef = getTrackingDef(newUnits, op2, useStmt);
 							if(localDef != null) {
 								tracked = true;
 								newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, calculateConditionTargetDistance.makeRef(), Arrays.asList(localTmpDouble1, localTmpDouble2, localDef))));
@@ -1127,7 +1140,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					if(config.getDataFlowCoverage().isPUse()) {
 						boolean tracked = false;
 						if(use1 != null) {
-							Local localDef = getTrackingDef(newUnits, op1, useUnit);
+							Local localDef = getTrackingDef(newUnits, op1, useStmt);
 							if(localDef != null) {
 								tracked = true;
 								newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, calculateConditionTargetDistance.makeRef(), Arrays.asList(localTmpDouble1, localTmpDouble2, localDef))));
@@ -1135,7 +1148,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 						}
 
 						if(use2 != null) {
-							Local localDef = getTrackingDef(newUnits, op2, useUnit);
+							Local localDef = getTrackingDef(newUnits, op2, useStmt);
 							if(localDef != null) {
 								tracked = true;
 								newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, calculateConditionTargetDistance.makeRef(), Arrays.asList(localTmpDouble1, localTmpDouble2, localDef))));
@@ -1150,7 +1163,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 						newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, calculateConditionTargetDistance.makeRef(), Arrays.asList(localTmpDouble1, localTmpDouble2, NullConstant.v()))));
 					}
 
-				} else logger.warning("Unknown operand type: " + type + " (" + type.getClass().getName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getName() + ")");
+				} else if(TestFul.DEBUG) TestFul.debug("Unknown operand type: " + type + " (" + type.getClass().getName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getName() + ")");
 
 				newUnits.add(Jimple.v().newGotoStmt(after));
 			}
@@ -1509,7 +1522,9 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 			if(v instanceof Expr) return null;
 
-			if(TestFul.DEBUG) TestFul.debug("Unknown Value type: " + v.getClass().getName());
+			if(v instanceof ArrayRef) return null;
+
+			if(TestFul.DEBUG) TestFul.debug("Unknown Value type: " + v + " (" + v.getClass().getName() + ")");
 			return null;
 		}
 
@@ -1718,13 +1733,56 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		 * 			This information is used to enable advanced controls (null to disable them).
 		 * @param v the variable to track
 		 */
-		private DataUse handleUse(Chain<Unit> newUnits, soot.Value v, Unit u) {
+		private DataUse handleUse(Chain<Unit> newUnits, soot.Value v, Stmt u) {
 
 			if(config.getDataFlowCoverage() == DataFlowCoverage.DISABLED) return null;
 
+			if(v == null) return null;
+			if(v.getType() instanceof ArrayType) {
+
+				// check if the all array is used (e.g., return array;)
+				boolean trackArrayUse = false;
+
+				if(u instanceof ReturnStmt) {
+					trackArrayUse = v.equals(((ReturnStmt) u).getOp());
+				}
+
+				if(u.containsInvokeExpr()) {
+					InvokeExpr invoke = u.getInvokeExpr();
+					for (int i = 0; !trackArrayUse && i < invoke.getArgCount(); i++) {
+						if(invoke.getArg(i).equals(v)) trackArrayUse = true;
+					}
+				}
+
+				if(trackArrayUse) {
+					if(TestFul.DEBUG && !(v instanceof Local)) TestFul.debug("handleArrayUse: " + v + " (" + u + ") was supposed to be a Local!");
+
+					Data data = getData(v);
+					if(data == null) return null;
+
+					DataUse use = new DataUse(current, data, defs);
+					uses.add(use);
+
+					newUnits.add(Jimple.v().newAssignStmt(
+							localDataAccessU,
+							Jimple.v().newVirtualInvokeExpr(
+									localTracker,
+									getDataAccess.makeRef(),
+									IntConstant.v(use.getId()))));
+
+					newUnits.add(Jimple.v().newInvokeStmt(
+							Jimple.v().newVirtualInvokeExpr(
+									localTracker,
+									manageArrayDefUses.makeRef(),
+									getTrackingLocal((Local)v),
+									localDataAccessU)));
+				}
+
+				return null;
+			}
+
 			v = getRealUse(v, u, true);
 			if(v == null) return null;
-			if(v.getType() instanceof ArrayType) return null;
 
 			if(v instanceof Local) {
 
@@ -1783,7 +1841,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 									localDataAccessU)));
 
 				} catch (RuntimeException e) {
-					logger.log(Level.WARNING, "Tracking field not found: " + e.getMessage(), e);
+					if(TestFul.DEBUG) TestFul.debug("Tracking field not found", e);
 				}
 
 				return use;
@@ -1820,7 +1878,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 									localDataAccessD,
 									localDataAccessU)));
 				} catch (RuntimeException e) {
-					logger.log(Level.WARNING, "Tracking field not found: " + e.getMessage(), e);
+					if(TestFul.DEBUG) TestFul.debug("Tracking field not found", e);
 				}
 
 				return use;
@@ -1839,7 +1897,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			if(config.getDataFlowCoverage() == DataFlowCoverage.DISABLED) return ;
 
 			final soot.Value leftOp = stmt.getLeftOp();
-			final soot.Value rightOp = stmt.getRightOp();
+			soot.Value rightOp = stmt.getRightOp();
 
 			//TBD: optimize du tracking for arrays
 			if(leftOp instanceof Local && !(leftOp.getType() instanceof ArrayType)) {
@@ -1867,6 +1925,27 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			soot.Value dataDefValue;
 			if(leftOp.getType() instanceof ArrayType) {
 				ArrayType type = (ArrayType) leftOp.getType();
+
+				if(rightOp instanceof CastExpr) {
+					CastExpr castExpr = (CastExpr) rightOp;
+
+					// if it is a cast between arrays with the same dimensions, use the casted variable
+					if(castExpr.getOp().getType() instanceof ArrayType &&
+							((ArrayType)castExpr.getOp().getType()).numDimensions == type.numDimensions) {
+						rightOp = castExpr.getOp();
+
+					} else {
+						// if it is a cast like this: Object[] arr = (Object []) obj;
+
+						Local tmpObj = getTmpObject();
+						Local tr = getTrackingLocal((Local) leftOp);
+
+						newUnits.add(Jimple.v().newAssignStmt(tmpObj, Jimple.v().newCastExpr(castExpr.getOp(), objectType)));
+						newUnits.add(Jimple.v().newAssignStmt(tmpObj, Jimple.v().newVirtualInvokeExpr(localTracker, arrayAssignmentDef.makeRef(), tmpObj, IntConstant.v(dataDef.getId()))));
+						newUnits.add(Jimple.v().newAssignStmt(tr, Jimple.v().newCastExpr(tmpObj, tr.getType())));
+						return;
+					}
+				}
 
 				if(rightOp instanceof Local) {
 					dataDefValue = getTrackingLocal((Local)rightOp);
@@ -1925,8 +2004,12 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					newUnits.add(Jimple.v().newAssignStmt(tmpObject,Jimple.v().newVirtualInvokeExpr(localTracker, newMultiArrayDef.makeRef(), Arrays.asList(arrInt, IntConstant.v(dataDef.getId())))));
 					newUnits.add(Jimple.v().newAssignStmt(dataDefValue, Jimple.v().newCastExpr(tmpObject, dataDefValue.getType())));
 
+				} else if (rightOp instanceof NullConstant) {
+					//dataDefValue = NullConstant.v(); //TBD: is better but generates bad code (Bad use of array type)
+					return;
+
 				} else {
-					logger.warning("Unable to handle array definition: " + leftOp + " - " + leftOp.getClass().getName());
+					if(TestFul.DEBUG) TestFul.debug("Unable to handle array definition: " + rightOp + " (" + rightOp.getClass().getName() + ") in " + stmt);
 
 					return;
 				}
@@ -1936,7 +2019,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				dataDefValue = localDataAccessD;
 				newUnits.add(Jimple.v().newAssignStmt(localDataAccessD, Jimple.v().newVirtualInvokeExpr(localTracker, getDataAccess.makeRef(), IntConstant.v(dataDef.getId()))));
 			} else {
-				logger.warning("Unable to handle: " + leftOp + " - " + leftOp.getClass().getName());
+				if(TestFul.DEBUG) TestFul.debug("Unable to handle: " + leftOp + " - " + leftOp.getClass().getName());
 				return;
 			}
 

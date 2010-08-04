@@ -195,15 +195,15 @@ public class BlockClass extends Block implements Iterable<Block> {
 		int iter = 0;
 		boolean run = true;
 
+		long start = System.nanoTime();
 		while(run) {
-			long start = System.currentTimeMillis();
+			iter++;
 			run = false;
 			for(Block b : this)
 				run |= b.updateData();
-
-			long end = System.currentTimeMillis();
-			logger.info("class " + name + " - DataFlow iteration: " + iter++ + " " + (end - start) + " ms");
 		}
+		long end = System.nanoTime();
+		logger.info("class " + name + ": " + iter + " data-flow iterations (" + (end - start)/1000000.0 + " ms)");
 	}
 
 	public String getDot() {
