@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -795,10 +796,13 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 				return SCORE_AMBIGUOUS;
 
 			} else if(use1 != null && use2 == null) { // p-use is on use1
-				DataDef def1 = problem.getWhiteAnalysis().getDataDef(target.getDefinitionId().getId());
-				if(TestFul.DEBUG) {
-					if(def1 == null) TestFul.debug("Cannot retrieve definition for the chosen p-use (1)");
-					else if(def1.getData().getId() != use1.getData().getId()) TestFul.debug("Data mismatch (1)");
+				DataDef def1 = null;
+				if(target.getDefinitionId() != null) {
+					def1 = problem.getWhiteAnalysis().getDataDef(target.getDefinitionId().getId());
+					if(TestFul.DEBUG) {
+						if(def1 == null) TestFul.debug("Cannot retrieve definition for the chosen p-use (1)");
+						else if(def1.getData().getId() != use1.getData().getId()) TestFul.debug("Data mismatch (1)");
+					}
 				}
 
 				if(c instanceof ConditionIf) {
@@ -836,10 +840,13 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 					return SCORE_AMBIGUOUS;
 				}
 
-				DataDef def2 = problem.getWhiteAnalysis().getDataDef(target.getDefinitionId().getId());
-				if(TestFul.DEBUG) {
-					if(def2 == null) TestFul.debug("Cannot retrieve definition for the chosen p-use (2)");
-					else if(def2.getData().getId() != use2.getData().getId()) TestFul.debug("Data mismatch (2)");
+				DataDef def2 = null;
+				if(target.getDefinitionId() != null) {
+					def2 = problem.getWhiteAnalysis().getDataDef(target.getDefinitionId().getId());
+					if(TestFul.DEBUG) {
+						if(def2 == null) TestFul.debug("Cannot retrieve definition for the chosen p-use (2)");
+						else if(def2.getData().getId() != use2.getData().getId()) TestFul.debug("Data mismatch (2)");
+					}
 				}
 
 				return checkFeasibilityIf(
@@ -1014,13 +1021,12 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 	}
 
 	private Set<Constant> getStaticValue(DataDef def) {
+		if(def == null) return Collections.singleton(new Constant(0));
+
 		if(def.getValue() == null) return null;
 		if(def.getValue() instanceof Data) return null;
-		if(def.getValue() instanceof Constant) {
-			Set<Constant> values = new HashSet<Constant>();
-			values.add((Constant) def.getValue());
-			return values;
-		}
+		if(def.getValue() instanceof Constant)
+			return Collections.singleton((Constant) def.getValue());
 
 		if(TestFul.DEBUG)
 			TestFul.debug("Unexpected value: " + def.getValue().getClass().getCanonicalName());

@@ -136,7 +136,7 @@ public class CoverageDataFlow implements CoverageInformation {
 		return ret;
 	}
 
-	public Set<Integer> getDefsOfUse(Integer defId) {
+	public Set<Integer> getUsesOfDef(Integer defId) {
 		Set<Integer> ret = new LinkedHashSet<Integer>();
 
 		for (DefUse du : duPairs)
