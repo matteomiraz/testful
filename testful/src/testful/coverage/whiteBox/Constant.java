@@ -18,7 +18,6 @@
 
 package testful.coverage.whiteBox;
 
-
 /**
  * Contains a constant
  * @author matteo

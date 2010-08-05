@@ -97,15 +97,10 @@ public class BlockClass extends Block implements Iterable<Block> {
 
 	private final Set<BlockFunctionEntry> methods;
 
-	final BitSet blocks;
-	final BitSet branches;
-
 	public BlockClass(String name, Set<Data> fields) {
 		this.name = name;
 		this.fields = fields;
 		methods = new HashSet<BlockFunctionEntry>();
-		blocks = new BitSet();
-		branches = new BitSet();
 	}
 
 	public String getName() {
@@ -122,14 +117,6 @@ public class BlockClass extends Block implements Iterable<Block> {
 
 	void addMethod(BlockFunctionEntry m) {
 		methods.add(m);
-	}
-
-	public BitSet getBlocks() {
-		return blocks;
-	}
-
-	public BitSet getBranches() {
-		return branches;
 	}
 
 	@Override

@@ -20,7 +20,6 @@ package testful.coverage.whiteBox;
 
 import java.io.Serializable;
 
-
 /**
  * Common interface to values
  * @author matteo

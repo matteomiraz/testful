@@ -23,7 +23,6 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
@@ -456,12 +455,6 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 		/** the end of the current method */
 		private final BlockFunctionExit end;
 
-		/** mark blocks belonging to the method being analyzed */
-		private final BitSet blocks;
-
-		/** mark conditions belonging to the method being analyzed */
-		private final BitSet branches;
-
 		/** the current building block */
 		private Block current = null;
 
@@ -573,8 +566,6 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			duAnalysis = CombinedDUAnalysis.v(unitGraph);
 
 			localRepository = new HashMap<Local, Data>();
-			blocks = clazz.blocks;
-			branches = clazz.branches;
 			done = new HashMap<Unit, Block>();
 			toLinkMap = new HashMap<Unit, Set<Edge>>();
 			deadCode = new HashSet<Unit>();
@@ -809,12 +800,10 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			EdgeConditional trueBranch = new EdgeConditional(current, c);
 			c.setTrueBranch(trueBranch);
 			add(trueBranch, u.getTarget());
-			branches.set(trueBranch.getId());
 
 			EdgeConditional falseBranch = new EdgeConditional(current, c);
 			c.setFalseBranch(falseBranch);
 			toLink = falseBranch;
-			branches.set(falseBranch.getId());
 
 			Unit after = Jimple.v().newNopStmt();
 			Unit handleTrue = Jimple.v().newNopStmt();
@@ -1196,7 +1185,6 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				EdgeConditional edge = new EdgeConditional(current, c);
 				c.addCase(value, edge);
 				add(edge, u.getTarget(i));
-				branches.set(edge.getId());
 				keyBranchId.put(value, edge.getId());
 
 				Unit target = Jimple.v().newNopStmt();
@@ -1210,7 +1198,6 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				EdgeConditional edge = new EdgeConditional(current, c);
 				c.setDefaultCase(edge);
 				add(edge, u.getDefaultTarget());
-				branches.set(edge.getId());
 				defaultBranchId = edge.getId();
 			}
 
@@ -1244,7 +1231,6 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				EdgeConditional edge = new EdgeConditional(current, c);
 				c.addCase(value, edge);
 				add(edge, u.getTarget(idx));
-				branches.set(edge.getId());
 				keyBranchId.put(value, edge.getId());
 
 				Unit target = Jimple.v().newNopStmt();
@@ -1258,7 +1244,6 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 				EdgeConditional edge = new EdgeConditional(current, c);
 				c.setDefaultCase(edge);
 				add(edge, u.getDefaultTarget());
-				branches.set(edge.getId());
 				defaultBranchId = edge.getId();
 			}
 
@@ -2096,7 +2081,6 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, trackerBasicBlock.makeRef(), Arrays.asList(new soot.Value[] { IntConstant.v(current.getId()) }))));
 
 			done.put(stmt, current);
-			blocks.set(current.getId());
 
 			// for each unchecked trap, create an exceptional edge
 			for(Trap t : activeTraps) {
