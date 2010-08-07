@@ -63,11 +63,13 @@ public abstract class TestReader {
 	}
 
 	public void read(List<String> fileNames) {
+		getLogger().fine("Reading " + fileNames.size() + " files");
 		for(String fileName : fileNames)
 			read(new File(fileName));
 	}
 
 	public void read(String[] fileNames) {
+		getLogger().fine("Reading " + fileNames.length + " files");
 		for(String fileName : fileNames)
 			read(new File(fileName));
 	}

@@ -119,7 +119,7 @@
 	<!-- =================================
           target: build
          ================================= -->
-	<target name="build" depends="build.shared,build.instrumenter,build.runner,build.testful,build.randomTest,build.junitRunner" description="Creater executable jars">
+	<target name="build" depends="build.shared,build.instrumenter,build.testful,build.randomTest,build.runner,build.junitRunner,build.junitCreator,build.coverageReporter" description="Creater executable jars">
 	</target>
 
 	<!-- - - - - - - - - - - - - - - - - -
@@ -214,6 +214,51 @@
 	</target>
 
 	<!-- =================================
+          target: build.randomTest
+         ================================= -->
+	<target name="build.randomTest" depends="compile" description="Crete runnable jar for random testing">
+		<mkdir dir="${artifacts}" />
+		<jar destfile="${artifacts}/randomTest.jar" filesetmanifest="mergewithoutmain" compress="true" index="true">
+			<manifest>
+				<attribute name="Built-By" value="${user.name}" />
+				<attribute name="Main-Class" value="testful.random.Launcher" />
+				<attribute name="Class-Path" value="." />
+			</manifest>
+			<fileset dir="${build.classes}">
+				<patternset>
+					<include name="revision.txt"/>
+					<patternset refid="auto" />
+					<include name="testful/random/**/*.class" />
+				</patternset>
+			</fileset>
+		</jar>
+	</target>
+
+	<!-- =================================
+          target: build.testful
+         ================================= -->
+	<target name="build.testful" depends="compile" description="Crete runnable jar for testful">
+		<mkdir dir="${artifacts}" />
+		<jar destfile="${artifacts}/testful.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Built-By" value="${user.name}"/>
+				<attribute name="Main-Class" value="testful.evolutionary.Launcher"/>
+				<attribute name="Class-Path" value="."/>
+			</manifest>
+			<fileset dir="${build.classes}">
+				<patternset>
+					<include name="revision.txt"/>
+					<patternset refid="auto"/>
+					<include name="jmetal/base/**/*.class"/>
+					<include name="jmetal/util/**/*.class"/>
+					<include name="testful/evolutionary/**/*.class"/>
+					<include name="testful/random/**/*.class"/>
+				</patternset>
+			</fileset>
+		</jar>
+	</target>
+
+	<!-- =================================
           target: build.shared
          ================================= -->
 	<target name="build.shared" depends="compile" description="Crete jar with shared classes">
@@ -300,46 +345,22 @@
 	</target>
 
 	<!-- =================================
-          target: build.randomTest
+          target: build.coverageReporter
          ================================= -->
-	<target name="build.randomTest" depends="compile" description="Crete runnable jar for random testing">
+	<target name="build.coverageReporter" depends="compile" description="Crete the jUnit runner">
 		<mkdir dir="${artifacts}" />
-		<jar destfile="${artifacts}/randomTest.jar" filesetmanifest="mergewithoutmain" compress="true" index="true">
+		<jar destfile="${artifacts}/coverageReporter.jar" filesetmanifest="mergewithoutmain">
 			<manifest>
 				<attribute name="Built-By" value="${user.name}" />
-				<attribute name="Main-Class" value="testful.random.Launcher" />
-				<attribute name="Class-Path" value="." />
+				<attribute name="Main-Class" value="testful.regression.TestCoverageReporter" />
 			</manifest>
 			<fileset dir="${build.classes}">
-				<patternset>
-					<include name="revision.txt"/>
-					<patternset refid="auto" />
-					<include name="testful/random/**/*.class" />
-				</patternset>
-			</fileset>
-		</jar>
-	</target>
-
-	<!-- =================================
-          target: build.testful
-         ================================= -->
-	<target name="build.testful" depends="compile" description="Crete runnable jar for testful">
-		<mkdir dir="${artifacts}" />
-		<jar destfile="${artifacts}/testful.jar" filesetmanifest="mergewithoutmain">
-			<manifest>
-				<attribute name="Built-By" value="${user.name}"/>
-				<attribute name="Main-Class" value="testful.evolutionary.Launcher"/>
-				<attribute name="Class-Path" value="."/>
-			</manifest>
-			<fileset dir="${build.classes}">
-				<patternset>
-					<include name="revision.txt"/>
-					<patternset refid="auto"/>
-					<include name="jmetal/base/**/*.class"/>
-					<include name="jmetal/util/**/*.class"/>
-					<include name="testful/evolutionary/**/*.class"/>
-					<include name="testful/random/**/*.class"/>
-				</patternset>
+				<include name="revision.txt"/>
+				<patternset refid="runner" />
+				<include name="testful/model/**" />
+				<include name="testful/coverage/**"/>
+				<include name="testful/regression/TestCoverageReporter*"/>
+				<include name="jmetal/base/Variable.class" />
 			</fileset>
 		</jar>
 	</target>

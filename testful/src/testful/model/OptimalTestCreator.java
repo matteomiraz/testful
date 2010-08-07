@@ -134,7 +134,14 @@ public class OptimalTestCreator {
 	public void log(Integer currentGeneration, long totInvocation, long time) {
 		if(!LOG_FINE) return;
 
-		StringBuilder sb = new StringBuilder("combinedCoverage ");
+		String logMessage = createLogMessage(currentGeneration, totInvocation, time);
+
+		logger.fine("combinedCoverage " + logMessage);
+	}
+
+	public String createLogMessage(Integer currentGeneration, long totInvocation, long time) {
+
+		StringBuilder sb = new StringBuilder();
 
 		sb.append("inv=").append(totInvocation);
 
@@ -152,6 +159,6 @@ public class OptimalTestCreator {
 		for (CoverageInformation cov : combinedCoverage)
 			sb.append(";").append(cov.getKey()).append("=").append(cov.getQuality());
 
-		logger.fine(sb.toString());
+		return sb.toString();
 	}
 }

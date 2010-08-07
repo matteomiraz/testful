@@ -23,12 +23,12 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
 
 import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
 
 import testful.ConfigProject;
 import testful.IConfigProject;
@@ -36,16 +36,13 @@ import testful.TestFul;
 import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
-import testful.model.OperationResult;
+import testful.model.OptimalTestCreator;
 import testful.model.Test;
 import testful.model.TestCoverage;
 import testful.model.TestReader;
 import testful.runner.ClassFinderCaching;
 import testful.runner.ClassFinderImpl;
-import testful.runner.Context;
-import testful.runner.IRunner;
 import testful.runner.RunnerPool;
-import testful.utils.ElementManager;
 
 /**
  * Executes one or more tests and monitor the coverage
@@ -53,24 +50,34 @@ import testful.utils.ElementManager;
  */
 public class TestCoverageReporter extends TestReader {
 
-	private static final Logger logger = Logger.getLogger("testful.regression");
-
 	private static class Config extends ConfigProject implements IConfigProject.Args4j {
+
+		@Option(required = false, name = "-write", usage = "For each tesst read, write a TestCoverage to disk")
+		private boolean write = false;
+
+		@Option(required = false, name = "-total", usage = "Print the total coverage")
+		private boolean total = false;
 
 		@Argument
 		private List<String> arguments = new ArrayList<String>();
 
 	}
 
-	private IRunner exec;
+	private final static TrackerDatum[] TRACKER_DATA = new TrackerDatum[] {};
+
+	private static final Logger logger = Logger.getLogger(TestCoverageReporter.class.getCanonicalName());
+	@Override public Logger getLogger() { return logger; }
+
+	private final Config config;
 	private final ClassFinderCaching finder;
+	private long numInvocations = 0;
+	private final OptimalTestCreator optimal;
 
-	public TestCoverageReporter(IConfigProject config) throws ClassNotFoundException {
+	public TestCoverageReporter(Config conf) throws ClassNotFoundException {
 		try {
-
-			exec = RunnerPool.getRunnerPool();
-			finder = new ClassFinderCaching(new ClassFinderImpl(config));
-
+			config = conf;
+			finder = new ClassFinderCaching(new ClassFinderImpl(conf));
+			optimal = new OptimalTestCreator();
 		} catch (RemoteException e) {
 			// never happens
 			logger.log(Level.WARNING, "Remote exception (should never happen): " + e.toString(), e);
@@ -82,7 +89,7 @@ public class TestCoverageReporter extends TestReader {
 		Config config = new Config();
 		TestFul.parseCommandLine(config, args, TestCoverageReporter.class, "Test coverage reporter");
 
-		if(config.isQuiet())
+		if(!config.isQuiet())
 			testful.TestFul.printHeader("Test coverage reporter");
 
 		TestFul.setupLogging(config);
@@ -90,8 +97,15 @@ public class TestCoverageReporter extends TestReader {
 		RunnerPool.getRunnerPool().startLocalWorkers();
 
 		try {
-			TestCoverageReporter coverage = new TestCoverageReporter(config);
-			coverage.read(config.arguments);
+			TestCoverageReporter covReporter = new TestCoverageReporter(config);
+
+			long start = System.currentTimeMillis();
+			covReporter.read(config.arguments);
+			long end = System.currentTimeMillis();
+
+			if(config.total)
+				covReporter.report(end - start);
+
 		} catch (ClassNotFoundException e) {
 			System.exit(1);
 		}
@@ -99,22 +113,25 @@ public class TestCoverageReporter extends TestReader {
 	}
 
 	@Override
-	protected void read(String fileName, Test test) {
+	protected void read(String fileName, Test t) {
 		try {
-			OperationResult.remove(test);
 
-			TrackerDatum[] data= new TrackerDatum[] {};
+			logger.info("EXecuting a test with " + t.getTest().length + " operations");
 
-			Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = CoverageExecutionManager.getContext(finder, test, data);
-			Future<ElementManager<String, CoverageInformation>> future = exec.execute(ctx);
-			ElementManager<String, CoverageInformation> coverage = future.get();
+			numInvocations += t.getTest().length;
+			TestCoverage tCov = new TestCoverage(t,
+					RunnerPool.getRunnerPool().execute(CoverageExecutionManager.getContext(finder, t, TRACKER_DATA)).get());
 
-			if(test instanceof TestCoverage)
-				for(CoverageInformation info : ((TestCoverage) test).getCoverage())
-					coverage.put(info);
+			optimal.update(tCov);
 
-			Test t = new TestCoverage(test.getCluster(), test.getReferenceFactory(), test.getTest(), coverage);
-			t.write(new GZIPOutputStream(new FileOutputStream(fileName + "-cov.ser.gz")));
+			if(config.write) {
+				if(t instanceof TestCoverage)
+					for(CoverageInformation info : ((TestCoverage) t).getCoverage())
+						tCov.getCoverage().put(info);
+
+				tCov.write(new GZIPOutputStream(new FileOutputStream(fileName + "-cov.ser.gz")));
+			}
+
 		} catch(IOException e) {
 			logger.log(Level.WARNING, "Cannot write the test " + fileName + ": " + e.getMessage(), e);
 		} catch(Throwable e) {
@@ -122,9 +139,8 @@ public class TestCoverageReporter extends TestReader {
 		}
 	}
 
-
-	@Override
-	public Logger getLogger() {
-		return logger;
+	public void report(long time) {
+		logger.info("coverage report: "  + optimal.createLogMessage(-1, numInvocations, time));
 	}
+
 }
