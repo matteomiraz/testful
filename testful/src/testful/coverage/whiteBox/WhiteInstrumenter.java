@@ -277,7 +277,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 		for (SootField f : fields) {
 			int modifiers = f.getModifiers();
-			if(Modifier.isFinal(modifiers)) modifiers -= Modifier.FINAL;
+			//if(Modifier.isFinal(modifiers)) modifiers -= Modifier.FINAL;
 
 			SootField trackField;
 			if(f.getType() instanceof ArrayType) {
