@@ -113,7 +113,7 @@ public class TestfulTestCase extends TestCase {
 			@Override
 			protected void read(String fileName, testful.model.Test test) {
 
-				logger.info("Testing " + fileName);
+				logger.info("Executing " + test.getTest().length + " operations, read from " + fileName);
 
 				// OperationResult.Verifier.insertOperationResultVerifier(test.getTest());
 

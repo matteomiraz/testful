@@ -18,12 +18,24 @@
 
 package testful.utils;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Manages a set of elements (&lt;T&gt;) with key (&lt;K&gt;). It allows one to
@@ -127,6 +139,60 @@ public class ElementManager<K, T extends ElementWithKey<K>> implements Iterable<
 	 */
 	public int size() {
 		return map.size();
+	}
+
+	/**
+	 * Writes the ElementManager to disk.
+	 * To use this method, all the contained elements must be serializable.
+	 * @param where the output file, if it ends with .gz, the objectStream is automatically compressed
+	 * @throws IOException thrown if there is any error during the write
+	 */
+	public void write(File where) throws IOException {
+		OutputStream out = null;
+		try {
+			out = new FileOutputStream(where);
+			if(where.getName().endsWith(".gz")) out = new GZIPOutputStream(out);
+
+			ObjectOutput os = new ObjectOutputStream(out);
+			os.writeObject(this);
+			os.close();
+
+		} finally {
+			if(out != null) {
+				try {
+					out.close();
+				} catch (IOException e) {
+				}
+			}
+		}
+	}
+
+	/**
+	 * Reads an ElementManager from disk.
+	 * @param where the input file, if it ends with .gz, the objectStream is automatically decompressed
+	 * @throws IOException thrown if there is any error during the read
+	 * @throws ClassNotFoundException if some classes cannot be found
+	 */
+	public static <K, T extends ElementWithKey<K>> ElementManager<K, T> read(File where) throws IOException, ClassNotFoundException {
+		InputStream in = null;
+		try {
+			in = new FileInputStream(where);
+			if(where.getName().endsWith(".gz")) in = new GZIPInputStream(in);
+
+			ObjectInput is = new ObjectInputStream(in);
+			@SuppressWarnings("unchecked")
+			ElementManager<K, T> read = (ElementManager<K, T>) is.readObject();
+			is.close();
+
+			return read;
+		} finally {
+			if(in != null) {
+				try {
+					in.close();
+				} catch (IOException e) {
+				}
+			}
+		}
 	}
 
 	/**

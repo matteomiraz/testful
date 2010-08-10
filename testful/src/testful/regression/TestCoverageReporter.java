@@ -18,6 +18,7 @@
 
 package testful.regression;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.rmi.RemoteException;
@@ -52,8 +53,11 @@ public class TestCoverageReporter extends TestReader {
 
 	private static class Config extends ConfigProject implements IConfigProject.Args4j {
 
-		@Option(required = false, name = "-write", usage = "For each tesst read, write a TestCoverage to disk")
-		private boolean write = false;
+		@Option(required = false, name = "-writeTest", usage = "For each test read, write a TestCoverage to disk")
+		private boolean writeTest = false;
+
+		@Option(required = false, name = "-writeCoverage", usage = "Write the (combined) binary coverage in this file")
+		private File writeCoverage;
 
 		@Option(required = false, name = "-total", usage = "Print the total coverage")
 		private boolean total = false;
@@ -106,6 +110,9 @@ public class TestCoverageReporter extends TestReader {
 			if(config.total)
 				covReporter.report(end - start);
 
+			if(config.writeCoverage != null)
+				covReporter.writeCoverage(config.writeCoverage);
+
 		} catch (ClassNotFoundException e) {
 			System.exit(1);
 		}
@@ -116,7 +123,7 @@ public class TestCoverageReporter extends TestReader {
 	protected void read(String fileName, Test t) {
 		try {
 
-			logger.info("EXecuting a test with " + t.getTest().length + " operations");
+			logger.info("Executing a test with " + t.getTest().length + " operations");
 
 			numInvocations += t.getTest().length;
 			TestCoverage tCov = new TestCoverage(t,
@@ -124,7 +131,7 @@ public class TestCoverageReporter extends TestReader {
 
 			optimal.update(tCov);
 
-			if(config.write) {
+			if(config.writeTest) {
 				if(t instanceof TestCoverage)
 					for(CoverageInformation info : ((TestCoverage) t).getCoverage())
 						tCov.getCoverage().put(info);
@@ -141,6 +148,14 @@ public class TestCoverageReporter extends TestReader {
 
 	public void report(long time) {
 		logger.info("coverage report: "  + optimal.createLogMessage(-1, numInvocations, time));
+	}
+
+	private void writeCoverage(File writeCoverage) {
+		try {
+			optimal.getCoverage().write(writeCoverage);
+		} catch (IOException e) {
+			logger.log(Level.WARNING, "Cannot write the combined coverage to " + writeCoverage + ": " + e.getMessage(), e);
+		}
 	}
 
 }
