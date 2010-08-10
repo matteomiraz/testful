@@ -314,6 +314,7 @@
 				<include name="revision.txt"/>
 				<patternset refid="runner" />
 				<include name="jmetal/base/Variable.class" />
+				<include name="testful/coverage/**/*" />
 				<include name="testful/model/**/*.class" />
 				<include name="testful/regression/*" />
 			</fileset>
