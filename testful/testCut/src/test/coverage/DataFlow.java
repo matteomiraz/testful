@@ -53,18 +53,15 @@ public class DataFlow {
 	}
 
 	/**
-	 * Also in this case the complete control-flow graph coverage ensures the complete data-flow graph coverage,
-	 * but the instrumentation is kept in this case.
-	 * In fact, if there is another use, the data-flow graph is not distinguable from the method local2Defs2Uses.
+	 * In this case the complete control-flow graph coverage does not ensure a complete data-flow graph coverage.
+	 * In fact, one definition can kill another other definition.
 	 */
 	public static void local2Defs1Use(boolean d) {
 
-		int v;
-		if(d) v = 0;        // def1
-		else  v = 1;        // def2
+		int v = 0;        	// def1
+		if(d) v = 1;        // def2
 
 		Math.abs(v);        // use
-		//Math.abs(v);      // another use and this becomes equal to local2Defs2Uses
 	}
 
 	/**

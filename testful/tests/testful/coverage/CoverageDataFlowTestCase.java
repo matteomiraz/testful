@@ -110,10 +110,10 @@ public class CoverageDataFlowTestCase extends GenericTestCase {
 	}
 
 	/** Checks that the du-pairs tracking is enabled */
-	public void testDataFlowlocal2Defs1UseTrue() throws Exception {
+	public void testDataFlowlocal2Defs1UseFalse() throws Exception {
 		TestCoverageDataFlowCUT cut = new TestCoverageDataFlowCUT();
 		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
-				new AssignPrimitive(cut.bools[0], true),
+				new AssignPrimitive(cut.bools[0], false),
 				new Invoke(null, null, cut.local2Defs1Use, new Reference[] { cut.bools[0] })
 		}));
 
@@ -128,16 +128,16 @@ public class CoverageDataFlowTestCase extends GenericTestCase {
 			CoverageBranch cov = (CoverageBranch) covs.get(CoverageBranch.KEY);
 			assertNotNull(cov);
 			assertEquals(1.0f, cov.getQuality());
-			assertEquals("3", cov.toString());
+			assertEquals("2", cov.toString());
 		}
 
 	}
 
 	/** Checks that the du-pairs tracking is enabled */
-	public void testDataFlowlocal2Defs1UseFalse() throws Exception {
+	public void testDataFlowlocal2Defs1UseTrue() throws Exception {
 		TestCoverageDataFlowCUT cut = new TestCoverageDataFlowCUT();
 		ElementManager<String, CoverageInformation> covs = getCoverage(new Test(cut.cluster, cut.refFactory, new Operation[] {
-				new AssignPrimitive(cut.bools[0], false),
+				new AssignPrimitive(cut.bools[0], true),
 				new Invoke(null, null, cut.local2Defs1Use, new Reference[] { cut.bools[0] })
 		}));
 
@@ -152,7 +152,7 @@ public class CoverageDataFlowTestCase extends GenericTestCase {
 			CoverageBranch cov = (CoverageBranch) covs.get(CoverageBranch.KEY);
 			assertNotNull(cov);
 			assertEquals(1.0f, cov.getQuality());
-			assertEquals("2", cov.toString());
+			assertEquals("3", cov.toString());
 		}
 	}
 
