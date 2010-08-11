@@ -33,6 +33,8 @@ import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlType;
 
+import testful.TestFul;
+
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(namespace = "http://testful.sourceforge.net/schema/1.2/testful.xsd", name = "method", propOrder = { "parameter", "extra" })
 public class XmlMethod implements Comparable<XmlMethod> {
@@ -40,7 +42,7 @@ public class XmlMethod implements Comparable<XmlMethod> {
 	private static final Logger logger = Logger.getLogger("testful.model.xml");
 
 	/** Default maximum execution time (in milliseconds) */
-	static final Integer MAX_EXEC_TIME = 500;
+	static final Integer MAX_EXEC_TIME = TestFul.getProperty(TestFul.PROPERTY_MAX_EXEC_TIME, 500);
 
 	@XmlEnum
 	@XmlType(namespace = "http://testful.sourceforge.net/schema/1.2/testful.xsd")
