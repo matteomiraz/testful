@@ -21,9 +21,9 @@ package testful.model;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import testful.TestFul;
+import testful.utils.JavaUtils;
 import ec.util.MersenneTwisterFast;
 
 public class AssignPrimitive extends Operation {
@@ -65,8 +65,8 @@ public class AssignPrimitive extends Operation {
 	@Override
 	public String toString() {
 		if(value == null) return ref + " = null";
-		else if(ref.getClazz() instanceof PrimitiveClazz)  return ref + " = " + ((PrimitiveClazz) ref.getClazz()).getCast() + getValueString(value);
-		else return ref + " = " + getValueString(value);
+		else if(ref.getClazz() instanceof PrimitiveClazz)  return ref + " = " + ((PrimitiveClazz) ref.getClazz()).getCast() + JavaUtils.escape(value);
+		else return ref + " = " + JavaUtils.escape(value);
 	}
 
 	@Override
@@ -74,47 +74,6 @@ public class AssignPrimitive extends Operation {
 		final AssignPrimitive ret = new AssignPrimitive(refFactory.adapt(ref), value);
 		ret.addInfo(this);
 		return ret;
-	}
-
-	public static String getValueString(Serializable value) {
-		if(value instanceof Double) {
-			Double d = (Double) value;
-			if(d.isNaN()) return "Double.NaN";
-			if(d.isInfinite()) if(d.doubleValue() > 0) return "Double.POSITIVE_INFINITY";
-			else return "Double.NEGATIVE_INFINITY";
-		} else if(value instanceof Float) {
-			Float f = (Float) value;
-			if(f.isNaN()) return "Float.NaN";
-			if(f.isInfinite()) if(f.doubleValue() > 0) return "Float.POSITIVE_INFINITY";
-			else return "Float.NEGATIVE_INFINITY";
-		} else if(value instanceof Character) {
-			int i = ((Character) value).charValue();
-			if(i != 0) return "((int) " + i + " /* " + value.toString() + " */ )";
-			else return "((int) " + i + ")";
-		} else if(value instanceof String) {
-
-			final String str = (String)value;
-			StringBuilder escaped = new StringBuilder();
-			for (int i = 0; i < str.length(); i++) {
-				char ch = str.charAt(i);
-
-				if(ch == '\b') escaped.append("\\b");		// \b
-				else if(ch == '\t') escaped.append("\\t");	// \t
-				else if(ch == '\n') escaped.append("\\n");	// \n
-				else if(ch == '\f') escaped.append("\\f");	// \f
-				else if(ch == '\r') escaped.append("\\r");	// \r
-				else if(ch == '\"') escaped.append("\\\"");	// "
-				else if(ch == '\'') escaped.append("\\\'");	// '
-				else if(ch == '\\') escaped.append("\\\\");	// \
-				else if(ch >= 32 && ch <= 126) escaped.append(ch);
-				else if(ch >= 0 && ch < 256) escaped.append("\\" + Integer.toOctalString(ch));
-				else Logger.getLogger("testful.model").fine("Cannot convert character #" + ((int) ch) + ": not in [0, 255]");
-			}
-
-			return "\"" + escaped.toString() + "\"";
-		}
-
-		return value.toString();
 	}
 
 	@Override

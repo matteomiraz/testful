@@ -47,6 +47,7 @@ import testful.random.RandomTestSplit;
 import testful.regression.JUnitTestGenerator;
 import testful.regression.TestSuiteReducer;
 import testful.runner.RunnerPool;
+import testful.runner.TestfulClassLoader;
 
 /**
  * Main TestFul class.
@@ -170,7 +171,15 @@ public class Launcher {
 			reducer.process(t);
 
 		/* convert tests to jUnit */
-		JUnitTestGenerator gen = new JUnitTestGenerator(config.getDirGeneratedTests(), true);
+		TestfulClassLoader classLoader;
+		try {
+			classLoader = new TestfulClassLoader(testfulProblem.getFinder());
+		} catch (RemoteException e) {
+			logger.log(Level.WARNING, "Remote exception (should never happen): " + e.toString(), e);
+			classLoader = null;
+		}
+
+		JUnitTestGenerator gen = new JUnitTestGenerator(config.getDirGeneratedTests(), classLoader, true);
 		gen.read(reducer.getOutput());
 		gen.writeSuite();
 

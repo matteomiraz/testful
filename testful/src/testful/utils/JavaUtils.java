@@ -16,14 +16,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.utils;
 
 import java.io.File;
+import java.lang.reflect.Modifier;
 import java.util.BitSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.logging.Logger;
 
 public class JavaUtils {
+
+	private static final Logger logger = Logger.getLogger("testful.utils");
 
 	/**
 	 * Check if the two arrays contains the same elements, in any order.<br>
@@ -81,4 +85,94 @@ public class JavaUtils {
 		return ret ;
 	}
 
+	public static boolean isPublic(Class<?> c) {
+		int mod = c.getModifiers();
+		if(!Modifier.isPublic(mod)) return false;
+		if(c.isAnonymousClass()) return false;
+
+		Class<?> enclosing = c.getEnclosingClass();
+		if(enclosing != null && !isPublic(enclosing)) return false;
+
+		return true;
+	}
+
+	public static String escape(Object value) {
+		if(value == null)
+			return "null";
+
+		if(value instanceof Boolean)
+			return value.toString();
+
+		if(value instanceof Byte)
+			return value.toString();
+
+		if(value instanceof Short)
+			return value.toString();
+
+		if(value instanceof Integer)
+			return value.toString();
+
+		if(value instanceof Long)
+			return value.toString() + "l";
+
+		if(value instanceof Float)
+			return JavaUtils.escape((Float) value);
+
+		if(value instanceof Double)
+			return JavaUtils.escape((Double) value);
+
+		if(value instanceof Character)
+			return JavaUtils.escape(((Character) value).charValue());
+
+		if(value instanceof String)
+			return JavaUtils.escape((String)value);
+
+		logger.warning("Cannot escape " + value.getClass().getName());
+		return value.toString();
+	}
+
+	public static String escape(final char orig)  {
+		if(orig == '\b') return "\\b";	// \b
+		if(orig == '\t') return "\\t";	// \t
+		if(orig == '\n') return "\\n";	// \n
+		if(orig == '\f') return "\\f";	// \f
+		if(orig == '\r') return "\\r";	// \r
+		if(orig == '\"') return "\\\"";	// "
+		if(orig == '\'') return "\\\'";	// '
+		if(orig == '\\') return "\\\\";	// \
+		if(orig >= 32 && orig <= 126) return Character.toString(orig);
+		if (orig > 0xffff) return "\\u" + Integer.toHexString(orig).toUpperCase(Locale.ENGLISH);
+		if (orig > 0xfff) return "\\u" + Integer.toHexString(orig).toUpperCase(Locale.ENGLISH);
+		if (orig > 0xff) return "\\u0" + Integer.toHexString(orig).toUpperCase(Locale.ENGLISH);
+		if (orig > 0xf) return "\\u00" + Integer.toHexString(orig).toUpperCase(Locale.ENGLISH);
+		return "\\u000" + Integer.toHexString(orig).toUpperCase(Locale.ENGLISH);
+	}
+
+	public static String escape(final String orig) {
+		StringBuilder escaped = new StringBuilder();
+		for (int i = 0; i < orig.length(); i++)
+			escaped.append(escape(orig.charAt(i)));
+
+		return "\"" + escaped.toString() + "\"";
+	}
+
+	public static String escape(final Double orig) {
+		if(orig.isNaN()) return "Double.NaN";
+		if(orig.isInfinite()) {
+			if(orig.doubleValue() > 0) return "Double.POSITIVE_INFINITY";
+			else return "Double.NEGATIVE_INFINITY";
+		}
+
+		return orig.toString();
+	}
+
+	public static String escape(final Float orig) {
+		if(orig.isNaN()) return "Float.NaN";
+		if(orig.isInfinite()) {
+			if(orig.doubleValue() > 0) return "Float.POSITIVE_INFINITY";
+			else return "Float.NEGATIVE_INFINITY";
+		}
+
+		return orig.toString();
+	}
 }
