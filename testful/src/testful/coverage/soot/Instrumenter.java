@@ -267,6 +267,11 @@ public class Instrumenter {
 		 * @param sClass the class being preprocessed
 		 */
 		public void preprocess(SootClass sClass) {
+			if(sClass.isInterface()) {
+				logger.warning("Skipping " + sClass.getName() + ": it is an interface");
+				return;
+			}
+
 			for(UnifiedInstrumentator i : instrumenters)
 				i.preprocess(sClass);
 		}
