@@ -53,11 +53,20 @@ public class Launcher {
 		@Option(required = false, name = "-project", usage = "Instrument all the classes of the project")
 		private boolean project;
 
+		@Option(required = false, name = "-ignorePackage", multiValued=true, usage = "When -project is used, ignore these packages")
+		private List<String> ignorePackage = new ArrayList<String>();
+
+		@Option(required = false, name = "-ignoreClass", multiValued=true, usage = "When -project is used, ignore these classes")
+		private List<String> ignoreClass = new ArrayList<String>();
+
 		@Option(required = false, name = "-file", usage = "Instrument the classes listed in the file")
 		private File file;
 
 		@Argument(required = false, multiValued = true, usage = "Instrument these classes")
 		private List<String> classes = new ArrayList<String>();
+
+		@Option(required = false, name = "-stopperOnly", usage = "Only run the testStopper and do not insert any coverage tracking")
+		private boolean stopperOnly;
 
 		@Option(required = false, name = "-context", usage = "Use Contextual Analysis (used in Def-Use analysis)")
 		private boolean context = false;
@@ -111,6 +120,34 @@ public class Launcher {
 		}
 
 		/**
+		 * @return the classes to ignore
+		 */
+		public List<String> getIgnoreClass() {
+			return ignoreClass;
+		}
+
+		/**
+		 * @param c the class to ignore
+		 */
+		public void addIgnoreClass(String c) {
+			ignoreClass.add(c);
+		}
+
+		/**
+		 * @return the ignorePackage
+		 */
+		public List<String> getIgnorePackage() {
+			return ignorePackage;
+		}
+
+		/**
+		 * @param p the package to ignore
+		 */
+		public void setIgnorePackage(String p) {
+			ignorePackage.add(p);
+		}
+
+		/**
 		 * @param file sets the file that contains the list of the class to instrument
 		 */
 		public void setFile(File file) {
@@ -151,6 +188,8 @@ public class Launcher {
 			if(!classes.isEmpty()) n++;
 
 			if(n != 1) throw new CmdLineException(null, "You must use -project, -file, or provide one (or more) classes as argument");
+
+			if(!project && !(ignoreClass.isEmpty() || ignorePackage.isEmpty())) throw new CmdLineException(null, "You can use -ignore only with -project.");
 		}
 	}
 
@@ -167,8 +206,7 @@ public class Launcher {
 		testful.TestFul.setupLogging(config);
 
 		try {
-			ClassFinderCaching finder = new ClassFinderCaching(new ClassFinderImpl(config.getDirCompiled()));
-			TestfulClassLoader tcl = new TestfulClassLoader(finder);
+			TestfulClassLoader tcl = new TestfulClassLoader(new ClassFinderCaching(new ClassFinderImpl(config)));
 
 			final List<String> toInstrument;
 			if(config.project) toInstrument = getProjectClasses(tcl, config);
@@ -177,10 +215,16 @@ public class Launcher {
 
 			Instrumenter.prepare(config, toInstrument);
 
-			Instrumenter.run(config, toInstrument,
-					new testful.coverage.whiteBox.WhiteInstrumenter(config),
-					testful.coverage.stopper.ExecutionStopperInstrumenter.singleton
-			);
+
+			if(config.stopperOnly) {
+				Instrumenter.run(config, toInstrument, testful.coverage.stopper.ExecutionStopperInstrumenter.singleton );
+			} else {
+				Instrumenter.run(config, toInstrument,
+						new testful.coverage.whiteBox.WhiteInstrumenter(config),
+						testful.coverage.stopper.ExecutionStopperInstrumenter.singleton
+				);
+			}
+
 		} catch (Exception e) {
 			logger.log(Level.WARNING, "Error during the instrumentation: " + e.getMessage(), e);
 			e.printStackTrace();
@@ -195,8 +239,8 @@ public class Launcher {
 	 * @param config the configuration of the current project
 	 * @return the collection with all the names of the classes in the current project
 	 */
-	private static List<String> getProjectClasses(ClassLoader loader, IConfigProject config) {
-		SortedSet<String> classes =  getProjectClasses(loader, new TreeSet<String>(), config.getDirCompiled(), config.getDirCompiled().getAbsolutePath());
+	private static List<String> getProjectClasses(ClassLoader loader, ConfigInstrumenter config) {
+		SortedSet<String> classes =  getProjectClasses(loader, new TreeSet<String>(), config.getDirCompiled(), config.getDirCompiled().getAbsolutePath(), config.getIgnorePackage(), config.getIgnoreClass());
 
 		List<String> ret = new ArrayList<String>();
 		for (String c : classes) ret.add(c);
@@ -208,13 +252,16 @@ public class Launcher {
 	 * @param ret the list of classes being built
 	 * @param dir the directory to analyze
 	 * @param base the base directory
+	 * @param ignore list of classes and packages to ignore
 	 */
-	private static SortedSet<String> getProjectClasses(ClassLoader loader, SortedSet<String> ret, File dir, String base) {
+	private static SortedSet<String> getProjectClasses(ClassLoader loader, SortedSet<String> ret, File dir, String base, List<String> ignorePackages, List<String> ignoreClasses) {
 		for (File f : dir.listFiles()) {
-			if(f.isDirectory()) getProjectClasses(loader, ret, f, base);
+			if(f.isDirectory()) getProjectClasses(loader, ret, f, base, ignorePackages, ignoreClasses);
 			else if(f.isFile() && f.getName().endsWith(".class")) {
 				final String fullName = f.getAbsolutePath();
 				final String className = fullName.substring(base.length()+1, fullName.length() - 6).replace(File.separatorChar, '.');
+
+				if(skip(ignorePackages, ignoreClasses, className)) continue;
 
 				try {
 					Class<?> c = loader.loadClass(className);
@@ -230,6 +277,24 @@ public class Launcher {
 		}
 
 		return ret;
+	}
+
+	private static boolean skip(List<String> ignorePackages, List<String> ignoreClasses, final String className) {
+		for (String i : ignoreClasses) {
+			if(className.equals(i)) {
+				logger.info("Ignoring " + className);
+				return true;
+			}
+		}
+
+		for (String i : ignorePackages) {
+			if(className.startsWith(i)) {
+				logger.info("Ignoring " + className + " (belongs to " + i + " package)");
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -253,5 +318,4 @@ public class Launcher {
 			r.close();
 		}
 	}
-
 }
