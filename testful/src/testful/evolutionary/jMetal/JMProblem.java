@@ -1,27 +1,34 @@
 package testful.evolutionary.jMetal;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import jmetal.base.Problem;
 import jmetal.base.Solution;
+import jmetal.base.operator.localSearch.LocalSearch;
 import jmetal.util.JMException;
-import jmetal.util.PseudoRandom;
 import testful.TestfulException;
 import testful.coverage.CoverageInformation;
 import testful.evolutionary.IConfigEvolutionary;
 import testful.model.Operation;
+import testful.model.ReferenceFactory;
 import testful.model.Test;
+import testful.model.TestCluster;
 import testful.model.TestCoverage;
+import testful.model.TestSuite;
 import testful.model.TestfulProblem;
+import testful.runner.ClassFinder;
 import testful.utils.ElementManager;
 
 public class JMProblem extends Problem<Operation> {
+
+	private static final Logger logger = Logger.getLogger("testful.evolutionary");
 
 	private static final long serialVersionUID = 1715317823344831168L;
 
@@ -68,7 +75,6 @@ public class JMProblem extends Problem<Operation> {
 	public int evaluate(Iterable<Solution<Operation>> set) throws JMException {
 		Map<Future<ElementManager<String, CoverageInformation>>, Solution<Operation>> futures = new LinkedHashMap<Future<ElementManager<String,CoverageInformation>>, Solution<Operation>>();
 
-		System.out.print("  Preparing...");
 		long start = System.nanoTime();
 
 		int n = 0;
@@ -77,12 +83,12 @@ public class JMProblem extends Problem<Operation> {
 				n++;
 				futures.put(problem.evaluate(solution.getDecisionVariables().variables_), solution);
 			} catch(TestfulException e) {
-				System.err.println("Error during the evaluation of an individual: " + e);
+				logger.log(Level.WARNING, "Error during the evaluation of an individual: " + e.getMessage(), e);
 			}
 		}
 
 		long prep = System.nanoTime();
-		System.out.printf(" done (%.2f ms) Evaluating...", (prep - start)/1000000.0);
+		logger.fine(String.format("Preparation time: %.2fms", (prep - start)/1000000.0));
 
 		try {
 			for(Entry<Future<ElementManager<String, CoverageInformation>>, Solution<Operation>> entry : futures.entrySet()) {
@@ -95,40 +101,63 @@ public class JMProblem extends Problem<Operation> {
 					solution.setObjective(i, fit[i]);
 			}
 		} catch(Exception e) {
+			logger.log(Level.WARNING, "Error during the evaluation of an individual: " + e.getMessage(), e);
 			throw new JMException(e);
 		}
 
 		long end = System.nanoTime();
-		System.out.printf(" done (%.2f ms)\n", (end-prep)/1000000.0);
+
+		logger.fine(String.format("Execution time: %.2fms", (end - prep)/1000000.0));
 
 		return n;
 	}
 
 
+	/**
+	 * Add tests to the reserve
+	 * @param tests the tests to add
+	 */
+	public void addReserve(TestSuite tests){
+		if(tests != null)
+			problem.addReserve(tests);
+	}
+
+	/**
+	 * Add a test to the reserve
+	 * @param test the test to add
+	 */
+	public void addReserve(TestCoverage test){
+		problem.addReserve(test);
+	}
+
 	@Override
 	public List<Operation> generateNewDecisionVariable() {
-		final int size = 10;
-		List<Operation> ret = new ArrayList<Operation>(size);
-
-		for (int i = 0; i < size; i++)
-			ret.add(Operation.randomlyGenerate(problem.getCluster(), problem.getRefFactory(), PseudoRandom.getMersenneTwisterFast()));
-
-		return ret;
-	}
-
-	TestfulProblem getProblem() {
-		return problem;
+		return problem.generateTest();
 	}
 
 	@Override
-	public void setCurrentGeneration(int currentGeneration) {
-		super.setCurrentGeneration(currentGeneration);
-		problem.doneGeneration(currentGeneration);
-		if(problem.getRunnerCaching().isEnabled()) System.out.println(problem.getRunnerCaching().toString());
+	public void setCurrentGeneration(int currentGeneration, long time) {
+		super.setCurrentGeneration(currentGeneration, time);
+		problem.doneGeneration(currentGeneration, time);
 	}
 
 	public Collection<TestCoverage> evaluate(Collection<Test> tests) throws InterruptedException {
 		return problem.evaluate(tests);
 	}
 
+	public LocalSearch<Operation> getLocalSearch() {
+		return new LocalSearchBranch(problem);
+	}
+
+	public TestCluster getCluster() {
+		return problem.getCluster();
+	}
+
+	public ReferenceFactory getRefFactory() {
+		return problem.getRefFactory();
+	}
+
+	public ClassFinder getFinder() {
+		return problem.getFinder();
+	}
 }

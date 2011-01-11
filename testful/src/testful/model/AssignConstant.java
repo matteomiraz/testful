@@ -3,17 +3,26 @@ package testful.model;
 import java.util.HashSet;
 import java.util.Set;
 
+import testful.TestFul;
 import ec.util.MersenneTwisterFast;
 
 public class AssignConstant extends Operation {
 
 	private static final long serialVersionUID = -3040251916711818748L;
-	
+
 	private final Reference ref;
 	private final StaticValue staticValue;
 
+	@SuppressWarnings("unused")
 	public AssignConstant(Reference ref, StaticValue staticValue) {
 		super();
+
+		if(TestFul.DEBUG && ref == null) {
+			final NullPointerException nullPointerException = new NullPointerException("REf cannot be null!");
+			nullPointerException.printStackTrace();
+			throw nullPointerException;
+		}
+
 		this.ref = ref;
 		this.staticValue = staticValue;
 	}
@@ -30,7 +39,7 @@ public class AssignConstant extends Operation {
 			final Clazz[] assignableTo = c.getAssignableTo();
 			if(assignableTo.length > 0) ref = refFactory.getReference(assignableTo[random.nextInt(assignableTo.length)], random);
 			else ref = refFactory.getReference(c, random);
-			
+
 			return new AssignConstant(ref, constants[random.nextInt(constants.length)]);
 		}
 
@@ -64,10 +73,10 @@ public class AssignConstant extends Operation {
 		if(!(obj instanceof AssignConstant)) return false;
 
 		AssignConstant other = (AssignConstant) obj;
-		return (ref == null ? other.ref == null : ref.equals(other.ref)) && 
-						(staticValue == null ? other.staticValue == null : staticValue.equals(other.staticValue));
+		return (ref == null ? other.ref == null : ref.equals(other.ref)) &&
+		(staticValue == null ? other.staticValue == null : staticValue.equals(other.staticValue));
 	}
-	
+
 	@Override
 	protected Set<Reference> calculateDefs() {
 		Set<Reference> defs = new HashSet<Reference>();
@@ -76,7 +85,7 @@ public class AssignConstant extends Operation {
 
 		return defs;
 	}
-	
+
 	@Override
 	protected Set<Reference> calculateUses() {
 		return emptyRefsSet;

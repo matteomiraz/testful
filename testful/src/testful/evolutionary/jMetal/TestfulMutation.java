@@ -25,7 +25,7 @@ public class TestfulMutation extends Mutation<Operation> {
 		this.probRemove = probRemove;
 	}
 
-	private float probSimplify = 0.5f;
+	private float probSimplify = 0.05f;
 	public void setProbSimplify(float probSimplify) {
 		this.probSimplify = probSimplify;
 	}
@@ -40,13 +40,11 @@ public class TestfulMutation extends Mutation<Operation> {
 		List<Operation> repr = solution.getDecisionVariables().variables_;
 
 		MersenneTwisterFast random = PseudoRandom.getMersenneTwisterFast();
-		TestCluster cluster = problem.getProblem().getCluster();
-		ReferenceFactory refFactory = problem.getProblem().getRefFactory();
+		TestCluster cluster = problem.getCluster();
+		ReferenceFactory refFactory = problem.getRefFactory();
 
 		if(repr.isEmpty()) {
-			//			if(random.nextBoolean(probability))
-			repr.add(Operation.randomlyGenerate(cluster, refFactory, random));
-
+			repr.addAll(problem.generateNewDecisionVariable());
 			return;
 		}
 

@@ -1,10 +1,9 @@
 package testful.evolutionary.jMetal;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.logging.Logger;
 
 import jmetal.base.Algorithm;
 import jmetal.base.Problem;
@@ -21,6 +20,9 @@ import jmetal.util.JMException;
 import jmetal.util.PseudoRandom;
 import jmetal.util.Ranking;
 import testful.IUpdate;
+import testful.utils.Time;
+import testful.utils.TimeCPU;
+import testful.utils.TimeWall;
 
 /**
  * This class implements the NSGA-II algorithm.
@@ -28,6 +30,8 @@ import testful.IUpdate;
 public class NSGAII<V extends Variable>
 extends Algorithm<V, Crossover<V>, Mutation<V>, Selection<V, Solution<V>>, LocalSearch<V>>
 implements IUpdate {
+
+	private static final Logger logger = Logger.getLogger("testful.evolutionary");
 
 	private static final long serialVersionUID = 4970928169851043408L;
 
@@ -43,9 +47,9 @@ implements IUpdate {
 		this.callbacks.remove(c);
 	}
 
-	private void update(long start, long current, long end, Map<String, Float> coverage) {
+	private void update(long start, long current, long end) {
 		for(Callback c : callbacks)
-			c.update(start, current, end, coverage);
+			c.update(start, current, end);
 	}
 
 	/** stores the problem  to solve */
@@ -80,9 +84,13 @@ implements IUpdate {
 		this.localSearchPeriod = localSearchPeriod;
 	}
 
-
 	public int getLocalSearchPeriod() {
 		return localSearchPeriod;
+	}
+
+	private boolean useCpuTime = false;
+	public void setUseCpuTime(boolean useCpuTime) {
+		this.useCpuTime = useCpuTime;
 	}
 
 	/**
@@ -93,8 +101,6 @@ implements IUpdate {
 	 */
 	@Override
 	public SolutionSet<V> execute() throws JMException {
-		long startTime = System.currentTimeMillis();
-
 		SolutionSet<V> population;
 		SolutionSet<V> union;
 
@@ -106,7 +112,22 @@ implements IUpdate {
 		population = new SolutionSet<V>(populationSize);
 		int evaluations = 0;
 
-		System.out.println("Evaluating generation 0");
+		int currentGeneration = 0;
+		problem_.setCurrentGeneration(currentGeneration++, 0);
+
+		Time time;
+		if(useCpuTime) {
+			try {
+				time = new TimeCPU();
+				logger.config("Using CPU time");
+			} catch (Exception e) {
+				time = new TimeWall();
+				logger.config("Using Wall Clock");
+			}
+		} else {
+			logger.config("Using Wall Clock");
+			time = new TimeWall();
+		}
 
 		// Create the initial solutionSet
 		for (int i = 0; i < populationSize; i++)
@@ -117,20 +138,18 @@ implements IUpdate {
 		for(Solution<V> solution : population)
 			problem_.evaluateConstraints(solution);
 
-		int currentGeneration = 0;
-		problem_.setCurrentGeneration(currentGeneration);
+		long currentTime = time.getCurrentMs();
+		problem_.setCurrentGeneration(currentGeneration++, currentTime);
 
 		// Generations ...
-		while ((System.currentTimeMillis() - startTime) < maxTime) {
-			currentGeneration++;
-
-			update(startTime, System.currentTimeMillis(), startTime+maxTime, new HashMap<String, Float>());
+		while (currentTime < maxTime) {
+			update(0, currentTime, maxTime);
 
 			// perform the improvement
 			if(improvement != null && currentGeneration % localSearchPeriod == 0) {
 				SolutionSet<V> front = new Ranking<V>(population).getSubfront(0);
 
-				System.out.println("Local search on fronteer (" + front.size() + ")");
+				logger.info("Local search on fronteer (" + front.size() + ")");
 
 				if(improvement instanceof LocalSearchPopulation<?>) {
 					SolutionSet<V> mutated = ((LocalSearchPopulation<V>)improvement).execute(front);
@@ -141,11 +160,15 @@ implements IUpdate {
 					solution = improvement.execute(solution);
 					if(solution != null) problem_.evaluate(solution);
 				}
-
-				problem_.setCurrentGeneration(currentGeneration++);
 			}
 
-			System.out.printf("Evaluating generation %d (%5.2f%%)\n", currentGeneration, + (100.0*(System.currentTimeMillis() - startTime) / maxTime));
+			final long remaining = (maxTime - currentTime) / 1000;
+
+			logger.info(String.format("(%5.2f%%) Evaluating generation %d - %d:%02d to go",
+					(100.0 * currentTime) / maxTime,
+					currentGeneration,
+					remaining / 60,
+					remaining % 60));
 
 			SolutionSet<V> offspringPopulation = new SolutionSet<V>(populationSize);
 
@@ -189,7 +212,6 @@ implements IUpdate {
 				final int n = offspringPopulation.size();
 				final int f = fronteer.size();
 
-				//TBD: try with fixed probabilities
 				final float k = 0.5f;
 				final float pf = k * INHERIT_PROBABILITY * n / (n + f*(k - 1.0f));
 				final float po = (pf / k) >= 1 ? 1 : pf / k;
@@ -255,7 +277,8 @@ implements IUpdate {
 				remain = 0;
 			} // if
 
-			problem_.setCurrentGeneration(currentGeneration);
+			currentTime = time.getCurrentMs();
+			problem_.setCurrentGeneration(currentGeneration++, currentTime);
 
 		} // while
 

@@ -12,6 +12,8 @@ import java.io.Serializable;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -43,7 +45,7 @@ public class AnalysisWhiteBox implements Serializable {
 			oo = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream(getFile(baseDir, className))));
 			oo.writeObject(this);
 		} catch(IOException e) {
-			System.err.println("Cannot write the white box data file: " + e);
+			Logger.getLogger("testful.coverage.whitebox").log(Level.WARNING, "Cannot write the white box data file: " + e.getMessage(), e);
 		} finally {
 			if(oo != null)
 				try {

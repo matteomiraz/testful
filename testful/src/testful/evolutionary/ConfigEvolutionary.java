@@ -30,21 +30,11 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	@Option(required = false, name = "-fitnessInheritance", usage = "Select the type of fitness inheritance")
 	private FitnessInheritance fitnessInheritance = FitnessInheritance.UNIFORM;
 
-	@Option(required = false, name = "-quiet", usage = "Be really quiet")
-	private boolean quiet;
+	@Option(required = false, name = "-smartAncestors", usage = "Use an enhanced initial population")
+	private int smartInitialPopulation = -1;
 
-	@Option(required = false, name = "-verbose", usage = "Be verbose")
-	private boolean verbose;
-
-	@Override
-	public boolean isQuiet() {
-		return quiet;
-	}
-
-	@Override
-	public boolean isVerbose() {
-		return verbose;
-	}
+	@Option(required = false, name = "-useCpuTime", usage = "Use CPU time instead of wall-clock time")
+	private boolean useCpuTime;
 
 	@Override
 	public int getLocalSearchPeriod() {
@@ -112,6 +102,11 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	}
 
 	@Override
+	public int getSmartInitialPopulation() {
+		return smartInitialPopulation;
+	}
+
+	@Override
 	public void setDisableBasicBlock(boolean disable) {
 		configFitness.setDisableBasicBlock(disable);
 	}
@@ -164,6 +159,11 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	@Override
 	public boolean isReload() {
 		return configGenerator.isReload();
+	}
+
+	@Override
+	public boolean isUseCpuTime() {
+		return useCpuTime;
 	}
 
 	@Override
@@ -281,6 +281,10 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 		configGenerator.setMaxTestLen(maxTestLen);
 	}
 
+	public void setSmartInitialPopulation(int smartInitialPopulation) {
+		this.smartInitialPopulation = smartInitialPopulation;
+	}
+
 	@Override
 	public List<String> getRemote() {
 		return configRunner.getRemote();
@@ -299,5 +303,35 @@ implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, ICo
 	@Override
 	public void disableLocalEvaluation(boolean disableLocalEvaluation) {
 		configRunner.disableLocalEvaluation(disableLocalEvaluation);
+	}
+
+	@Override
+	public boolean isQuiet() {
+		return configGenerator.isQuiet();
+	}
+
+	@Override
+	public void setQuiet(boolean quiet) {
+		configGenerator.setQuiet(quiet);
+	}
+
+	@Override
+	public File getLog() {
+		return configGenerator.getLog();
+	}
+
+	@Override
+	public void setLog(File log) {
+		configGenerator.setLog(log);
+	}
+
+	@Override
+	public LogLevel getLogLevel() {
+		return configGenerator.getLogLevel();
+	}
+
+	@Override
+	public void setLogLevel(LogLevel logLevel) {
+		configGenerator.setLogLevel(logLevel);
 	}
 }

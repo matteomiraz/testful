@@ -1,6 +1,5 @@
 package testful.coverage.behavior;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,11 +36,11 @@ import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
 import soot.util.Chain;
 import testful.IConfigProject;
-import testful.coverage.Instrumenter;
 import testful.model.xml.Parser;
 import testful.model.xml.XmlClass;
 import testful.model.xml.XmlMethod;
 import testful.model.xml.XmlMethod.Kind;
+import testful.utils.Instrumenter;
 
 public class BehaviorInstrumenter implements Instrumenter.UnifiedInstrumentator {
 
@@ -346,6 +345,6 @@ public class BehaviorInstrumenter implements Instrumenter.UnifiedInstrumentator 
 
 
 	@Override
-	public void done(File baseDir, String cutName) {
+	public void done(IConfigProject config, String cutName) {
 	}
 }

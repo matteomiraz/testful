@@ -26,8 +26,7 @@ public class Utils {
 			if(whiteData  != null)
 				ret.add(whiteData);
 		}
-		
+
 		return ret.toArray(new TrackerDatum[ret.size()]);
 	}
-
 }

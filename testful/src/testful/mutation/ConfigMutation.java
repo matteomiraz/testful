@@ -17,13 +17,8 @@ implements IConfigProject.Args4j, IConfigRunner.Args4j {
 
 	private final ConfigRunner runner = new ConfigRunner();
 
-	/** generated test directory */
-	@Option(required = false, name = "-out", usage = "Specify the directory in which generated mutants will be put")
-	private File dirOutput = new File("mutants");
-
-	public File getDirOutput() {
-		if(!dirOutput.isAbsolute()) dirOutput = new File(getDirBase(), dirOutput.getPath()).getAbsoluteFile();
-		return dirOutput;
+	public ConfigMutation() {
+		setDirInstrumented(new File("mutants"));
 	}
 
 	@Override
@@ -105,7 +100,7 @@ implements IConfigProject.Args4j, IConfigRunner.Args4j {
 		return !disableUoi;
 	}
 
-	@Argument
+	@Argument(usage="Tests to run")
 	private List<String> arguments = new ArrayList<String>();
 	public List<String> getArguments() {
 		return arguments;

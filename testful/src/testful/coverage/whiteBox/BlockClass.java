@@ -7,6 +7,7 @@ import java.util.LinkedHashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.Map.Entry;
+import java.util.logging.Logger;
 
 public class BlockClass extends Block implements Iterable<Block> {
 
@@ -18,18 +19,18 @@ public class BlockClass extends Block implements Iterable<Block> {
 	private final Set<Data> fields;
 
 	private final Set<BlockFunctionEntry> methods;
-	
+
 	final BitSet blocksCode, blocksContract;
 	final BitSet conditionsCode, conditionsContract;
 
 	public BlockClass(String name, Set<Data> fields) {
 		this.name = name;
 		this.fields = fields;
-		this.methods = new HashSet<BlockFunctionEntry>();
-		this.blocksCode = new BitSet();
-		this.blocksContract = new BitSet();
-		this.conditionsCode = new BitSet();
-		this.conditionsContract = new BitSet();
+		methods = new HashSet<BlockFunctionEntry>();
+		blocksCode = new BitSet();
+		blocksContract = new BitSet();
+		conditionsCode = new BitSet();
+		conditionsContract = new BitSet();
 	}
 
 	public String getName() {
@@ -47,7 +48,7 @@ public class BlockClass extends Block implements Iterable<Block> {
 	void addMethod(BlockFunctionEntry m) {
 		methods.add(m);
 	}
-	
+
 	public BitSet getBlocksCode() {
 		return blocksCode;
 	}
@@ -55,15 +56,15 @@ public class BlockClass extends Block implements Iterable<Block> {
 	public BitSet getBlocksContract() {
 		return blocksContract;
 	}
-	
+
 	public BitSet getConditionsContract() {
 		return conditionsContract;
 	}
-	
+
 	public BitSet getConditionsCode() {
 		return conditionsCode;
 	}
-	
+
 	@Override
 	public boolean updateData() {
 		BitSet oldIn = in;
@@ -108,11 +109,11 @@ public class BlockClass extends Block implements Iterable<Block> {
 
 					if(to != null && !considered.contains(to)) toConsider.add(to);
 				}
-				
+
 				if(ret instanceof BlockClass)
-					for(BlockFunctionEntry m : ((BlockClass) ret).getMethods()) 
+					for(BlockFunctionEntry m : ((BlockClass) ret).getMethods())
 						if(!considered.contains(m)) toConsider.add(m);
-				
+
 				return ret;
 			}
 
@@ -124,19 +125,20 @@ public class BlockClass extends Block implements Iterable<Block> {
 	}
 
 	public void performDataFlowAnalysis() {
-		boolean run = true;
+
+		final Logger logger = Logger.getLogger("testful.coverage.instrumenter.whitebox");
+
 		int iter = 0;
+		boolean run = true;
 
 		while(run) {
-			System.out.print("DataFlow iteration: " + iter++);
-
 			long start = System.currentTimeMillis();
 			run = false;
 			for(Block b : this)
 				run |= b.updateData();
 
 			long end = System.currentTimeMillis();
-			System.out.println(" " + (end - start) + " ms");
+			logger.info("DataFlow iteration: " + iter++ + " " + (end - start) + " ms");
 		}
 	}
 
@@ -212,10 +214,10 @@ public class BlockClass extends Block implements Iterable<Block> {
 								}
 							}
 						}
-						
-						
+
+
 						sb.append("]");
-						
+
 					} else if(e instanceof EdgeExceptional) {
 						EdgeExceptional c = (EdgeExceptional) e;
 						sb.append("[style=dashed,color=red,label=\"").append(c.getExceptionClass()).append("\"]");
@@ -231,11 +233,11 @@ public class BlockClass extends Block implements Iterable<Block> {
 
 	@SuppressWarnings("unused")
 	private void printDataAnalysis(Block b, StringBuilder sb) {
-//				sb.append("\\ninDefs:");
-//				BitSet bs = b.getIn();
-//				for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i+1)) {
-//					sb.append(" ").append(i);
-//				}
+		//				sb.append("\\ninDefs:");
+		//				BitSet bs = b.getIn();
+		//				for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i+1)) {
+		//					sb.append(" ").append(i);
+		//				}
 
 		//		if(b instanceof BlockClass) {
 		//			sb.append("\\nmask:");
@@ -265,25 +267,25 @@ public class BlockClass extends Block implements Iterable<Block> {
 					sb.append(" ").append(use).append("(").append(use.getDefUseNum()).append(")");
 				}
 
-//						sb.append("\\ngenDefs:");
-//						bs = ((BlockBasic) b).getGens();
-//						for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i+1)) {
-//							sb.append(" ").append(i);
-//						}
-//			
-//						sb.append("\\nkillDefs:");
-//						bs = ((BlockBasic) b).getKills();
-//						for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i+1)) {
-//							sb.append(" ").append(i);
-//						}
+			//						sb.append("\\ngenDefs:");
+			//						bs = ((BlockBasic) b).getGens();
+			//						for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i+1)) {
+			//							sb.append(" ").append(i);
+			//						}
+			//
+			//						sb.append("\\nkillDefs:");
+			//						bs = ((BlockBasic) b).getKills();
+			//						for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i+1)) {
+			//							sb.append(" ").append(i);
+			//						}
 
 		}
 
-//				sb.append("\\noutDefs:");
-//				bs = b.getOut();
-//				for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i+1)) {
-//					sb.append(" ").append(i);
-//				}
+		//				sb.append("\\noutDefs:");
+		//				bs = b.getOut();
+		//				for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i+1)) {
+		//					sb.append(" ").append(i);
+		//				}
 
 	}
 }

@@ -6,6 +6,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jmlspecs.jmlexec.runtime.PostconditionException;
 
@@ -20,10 +22,11 @@ import testful.model.InvariantViolationException;
 import testful.model.Invoke;
 import testful.model.Methodz;
 import testful.model.Operation;
-import testful.model.OperationPrimitiveResult;
+import testful.model.OperationResult;
 import testful.model.OperationStatus;
 import testful.model.PrimitiveClazz;
 import testful.model.Reference;
+import testful.model.ReferenceFactory;
 import testful.model.ResetRepository;
 import testful.model.StaticValue;
 import testful.model.Test;
@@ -42,15 +45,18 @@ import testful.runner.Executor;
 
 public class ReflectionExecutor implements Executor {
 
-	private static final long serialVersionUID = -1696826206324780022L;
+	private static final Logger logger = Logger.getLogger("testful.model.ReflectionExecutor");
 
-	private static final boolean DEBUG = false;
+	private static final long serialVersionUID = -1696826206324780022L;
 
 	/** types of elements in the repository */
 	private final Reference[] repositoryType;
 
 	/** Test cluster */
 	private final TestCluster cluster;
+
+	/** The reference factory */
+	private final ReferenceFactory referenceFactory;
 
 	/** the list of operations to perform */
 	private final Operation[] test;
@@ -63,7 +69,8 @@ public class ReflectionExecutor implements Executor {
 
 	public ReflectionExecutor(Test test) {
 		cluster = test.getCluster();
-		repositoryType = test.getReferenceFactory().getReferences();
+		referenceFactory = test.getReferenceFactory();
+		repositoryType = referenceFactory.getReferences();
 		this.test = test.getTest();
 	}
 
@@ -80,6 +87,10 @@ public class ReflectionExecutor implements Executor {
 		return cluster;
 	}
 
+	public ReferenceFactory getReferenceFactory() {
+		return referenceFactory;
+	}
+
 	@Override
 	public int execute(boolean stopOnBug) throws ClassNotFoundException {
 
@@ -89,35 +100,44 @@ public class ReflectionExecutor implements Executor {
 		Clazz cut = cluster.getCut();
 		cut.toJavaClass();
 
-		if(DEBUG) {
-			System.out.println("Cluster: \n" + cluster + "\n---" );
+		if(logger.isLoggable(Level.FINEST)) {
+			StringBuilder sb = new StringBuilder();
 
-			System.out.println("Executing:");
+			sb.append("Cluster: \n").append(cluster).append("\n---\n");
+
+			sb.append("Executing:\n");
 			for(Operation op : test)
-				System.out.println(op);
-			System.out.println("---");
+				sb.append(" ").append(op).append("\n");
 
+			logger.finest(sb.toString());
 		}
 
 		repository = new Object[repositoryType.length];
 		faults = new HashMap<Operation, FaultyExecutionException>();
 
-		for(Operation op : test)
+		for(Operation op : test) {
 			try {
+				if(logger.isLoggable(Level.FINEST)) {
+					logger.finest(toString());
+					logger.finest("Executing " + op);
+				}
+
 				perform(op);
 			} catch(FaultyExecutionException e) {
 				faults.put(op, e);
 				for(int i = 0; i < repository.length; i++)
 					repository[i] = null;
 
+				logger.log(Level.FINER, "Fault: " + e, e);
+
 				if(stopOnBug) break;
 			}
+		}
 
-			if(DEBUG)
-				System.out.println(this + "\n"
-						+ "=================================");
+		if(logger.isLoggable(Level.FINEST))
+			logger.finest(toString());
 
-			return faults.size();
+		return faults.size();
 	}
 
 
@@ -137,16 +157,19 @@ public class ReflectionExecutor implements Executor {
 			return repository[objRef.getId()];
 		} catch(Throwable e) {
 			// something very strange happens!
-			System.err.println("Reflection error in get(Reference): " + e);
+			logger.log(Level.WARNING, "Reflection error in get(Reference): " + e.getMessage(), e);
 
-			if(DEBUG) {
-				System.err.println("Ref: " + objRef.getClazz() + " :: " + objRef.getPos() + " (" + objRef.getId() + ")");
+			if(logger.isLoggable(Level.FINEST)) {
 
-				System.err.println("Repository: ");
+				StringBuilder sb = new StringBuilder();
+
+				sb.append("Ref: ").append(objRef.getClazz()).append(" :: ").append(objRef.getPos()).append(" (").append(objRef.getId()).append(")\n");
+
+				sb.append("Repository:\n");
 				for(Reference element : repositoryType)
-					System.err.println("  " + element.getId() + " (" + element.getClazz() + ":" + element.getPos() + ") = " + repository[element.getId()]);
+					sb.append("  ").append(element.getId()).append(" (").append(element.getClazz()).append(":").append(element.getPos()).append(") = ").append(repository[element.getId()]).append("\n");
 
-				e.printStackTrace();
+				logger.finest(sb.toString());
 			}
 
 			return null;
@@ -154,33 +177,27 @@ public class ReflectionExecutor implements Executor {
 	}
 
 	private void set(Operation op, Reference objRef, Object value) {
-		OperationPrimitiveResult opPrimResult = (OperationPrimitiveResult) op.getInfo(OperationPrimitiveResult.KEY);
-		if(opPrimResult != null) opPrimResult.setValue(value);
-
 		try {
 			repository[objRef.getId()] = value;
 		} catch(Throwable e) {
-			System.err.println("Reflection error in set(Reference): " + e);
+			logger.log(Level.WARNING, "Reflection error in set(Reference): " + e.getMessage(), e);
 
-			if(DEBUG) {
-				System.err.println("Ref: " + objRef.getClazz() + " :: " + objRef.getPos() + " (" + objRef.getId() + ")");
+			if(logger.isLoggable(Level.FINEST)) {
+				StringBuilder sb = new StringBuilder();
 
-				System.err.println("Repository: ");
+				sb.append("Ref: ").append(objRef.getClazz()).append(" :: ").append(objRef.getPos()).append(" (").append(objRef.getId()).append(")\n");
+
+				sb.append("Repository:\n");
 				for(Reference element : repositoryType)
-					System.err.println("  " + element.getId() + " (" + element.getClazz() + ":" + element.getPos() + ") = " + repository[element.getId()]);
+					sb.append("  ").append(element.getId()).append(" (").append(element.getClazz()).append(":").append(element.getPos()).append(") = ").append(repository[element.getId()]).append("\n");
 
-				e.printStackTrace();
+				logger.finest(sb.toString());
 			}
 			return;
 		}
 	}
 
 	private boolean perform(Operation op) throws FaultyExecutionException {
-		if(DEBUG) {
-			System.out.println(this);
-			System.out.println(op);
-			System.out.println("----");
-		}
 
 		if(op instanceof AssignPrimitive) return perform((AssignPrimitive) op);
 		else if(op instanceof AssignConstant) return perform((AssignConstant) op);
@@ -188,7 +205,7 @@ public class ReflectionExecutor implements Executor {
 		else if(op instanceof Invoke) return perform((Invoke) op);
 		else if(op instanceof ResetRepository) return perform((ResetRepository) op);
 		else {
-			System.err.println("Unknown operation: " + op.getClass().getCanonicalName() + " - " + op);
+			logger.warning("Unknown operation: " + op.getClass().getCanonicalName() + " - " + op);
 			return false;
 		}
 	}
@@ -245,10 +262,7 @@ public class ReflectionExecutor implements Executor {
 			} else // a valid exception is thrown
 				if(opStatus != null) opStatus.setExceptional(exc);
 		} catch(Throwable e) {
-			if(DEBUG) {
-				e.printStackTrace();
-				System.err.println("Reflection error in perform(CreateObject): " + e);
-			}
+			logger.log(Level.WARNING, "Reflection error in perform(CreateObject): " + e.getMessage(), e);
 
 			throw new ExceptionRaisedException(e);
 		}
@@ -258,6 +272,9 @@ public class ReflectionExecutor implements Executor {
 
 		// save results
 		if(targetPos != null) set(op, targetPos, newObject);
+
+		OperationResult opResult = (OperationResult) op.getInfo(OperationResult.KEY);
+		if(opResult != null) opResult.setValue(null, newObject, cluster);
 
 		return true;
 	}
@@ -285,11 +302,8 @@ public class ReflectionExecutor implements Executor {
 			return true;
 		} catch(Throwable e) {
 			// something very strange happens!
-			System.err.println("Reflection error in perform(AssignConstant)[1]: " + e);
-
-			if(DEBUG) e.printStackTrace();
-
-			return false;
+			logger.log(Level.WARNING, "Reflection error in perform(AssignConstant): " + e.getMessage(), e);
+			throw new ExceptionRaisedException(e);
 		}
 
 		// set to value
@@ -299,10 +313,7 @@ public class ReflectionExecutor implements Executor {
 			return true;
 		} catch(Throwable e) {
 			// something very strange happens!
-			if(DEBUG) {
-				System.err.println("Reflection error in perform(AssignConstant)[2]: " + e);
-				e.printStackTrace();
-			}
+			logger.log(Level.WARNING, "Reflection error in perform(AssignConstant): " + e.getMessage(), e);
 			throw new ExceptionRaisedException(e);
 		}
 	}
@@ -350,10 +361,7 @@ public class ReflectionExecutor implements Executor {
 			} else // a valid exception is thrown
 				if(opStatus != null) opStatus.setExceptional(exc);
 		} catch(Throwable e) {
-			if(DEBUG) {
-				System.err.println("Reflection error in perform(Invoke): " + e);
-				e.printStackTrace();
-			}
+			logger.log(Level.WARNING, "Reflection error in perform(Invoke): " + e.getMessage(), e);
 
 			throw new ExceptionRaisedException(e);
 		}
@@ -361,6 +369,9 @@ public class ReflectionExecutor implements Executor {
 		if(opStatus != null && opStatus.getStatus() != Status.EXCEPTIONAL) opStatus.setSuccessful();
 
 		if(targetPos != null) set(op, targetPos, newObject);
+
+		OperationResult opResult = (OperationResult) op.getInfo(OperationResult.KEY);
+		if(opResult != null) opResult.setValue(baseObject, newObject, cluster);
 
 		return true;
 	}

@@ -1,7 +1,6 @@
 package testful.coverage.bug;
 
-
-import java.io.File;
+import java.util.logging.Logger;
 
 import soot.Body;
 import soot.Local;
@@ -16,7 +15,8 @@ import soot.jimple.NullConstant;
 import soot.jimple.Stmt;
 import soot.tagkit.StringTag;
 import soot.util.Chain;
-import testful.coverage.Instrumenter.UnifiedInstrumentator;
+import testful.IConfigProject;
+import testful.utils.Instrumenter.UnifiedInstrumentator;
 
 /**
  * Instruments each method, in the following way:<br>
@@ -33,6 +33,8 @@ import testful.coverage.Instrumenter.UnifiedInstrumentator;
  */
 public class BugInstrumenter implements UnifiedInstrumentator {
 
+	private static final Logger logger = Logger.getLogger("testful.coverage.instrumenter.bug");
+
 	public static final BugInstrumenter singleton = new BugInstrumenter();
 
 	/** this local contains a copy of the tracker */
@@ -44,6 +46,8 @@ public class BugInstrumenter implements UnifiedInstrumentator {
 	private final SootMethod trackerProcess;
 
 	private BugInstrumenter() {
+		logger.config("Bug instrumenter loaded");
+
 		COVERAGE_TRACKER = BugTracker.class.getCanonicalName();
 		Scene.v().loadClassAndSupport(COVERAGE_TRACKER);
 		trackerClass = Scene.v().getSootClass(COVERAGE_TRACKER);
@@ -61,6 +65,8 @@ public class BugInstrumenter implements UnifiedInstrumentator {
 
 	@Override
 	public void init(Chain<Unit> newUnits, Body newBody, Body oldBody, boolean classWithContracts, boolean contractMethod) {
+		logger.finer(" processing " + newBody.getMethod().getName());
+
 		// skip non-public methods!!!
 		if(!newBody.getMethod().isPublic()) toSkip = true;
 
@@ -113,6 +119,6 @@ public class BugInstrumenter implements UnifiedInstrumentator {
 	}
 
 	@Override
-	public void done(File baseDir, String cutName) {
+	public void done(IConfigProject config, String cutName) {
 	}
 }

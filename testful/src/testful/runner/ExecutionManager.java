@@ -43,17 +43,16 @@ public abstract class ExecutionManager<T extends Serializable> {
 
 	/** the number of faults revealed */
 	protected Integer faults;
-	
+
 	/**
 	 * Create a new execution manager.<br/>
-	 * <b>NOTICE:</b> subclasses must have the same constructor (same parameters.
-	 * same order).
+	 * <b>NOTICE:</b> subclasses must have the same constructor (same parameters. same order).
 	 * @throws TestfulException if something really weird goes wrong
 	 */
 	public ExecutionManager(byte[] executorSerGz, byte[] trackerDataSerGz, boolean recycleClassloader) throws TestfulException {
 
 		this.recycleClassLoader = recycleClassloader;
-		
+
 		ClassLoader loader = this.getClass().getClassLoader();
 		if(!(loader instanceof TestfulClassLoader)) throw new ClassCastException("FATAL: The execution manager must be loaded using a testful class loader!");
 
@@ -68,16 +67,41 @@ public abstract class ExecutionManager<T extends Serializable> {
 				this.executor = (Executor) deserialize.invoke(null, executorSerGz, true);
 			else
 				this.executor = null;
-			
+
 			if(trackerDataSerGz != null) {
 				// Setup the tracker data
 				TrackerDatum[] data = (TrackerDatum[]) deserialize.invoke(null, trackerDataSerGz, true);
-	
+
 				Class<?> trackerDatum = loader.loadClass("testful.coverage.Tracker");
 				Method setup = trackerDatum.getMethod("setup", TrackerDatum[].class);
 				setup.invoke(null, new Object[] { data });
 			}
 		} catch(Throwable e) {
+			throw new TestfulException("Cannot setup the execution manager", e);
+		}
+	}
+
+	/**
+	 * Create a new execution manager.<br/>
+	 * <b>WARNING</b>: this method should be used only by other Execution Managers, and the class must be loaded through the testful class loader
+	 * @throws TestfulException if something really weird goes wrong
+	 */
+	public ExecutionManager(Executor executor, TrackerDatum[] data) throws TestfulException {
+
+		this.recycleClassLoader = true;
+
+		ClassLoader loader = this.getClass().getClassLoader();
+		if(!(loader instanceof TestfulClassLoader)) throw new ClassCastException("FATAL: The execution manager must be loaded using a testful class loader!");
+
+		this.classLoader = (TestfulClassLoader) loader;
+
+		this.executor = executor;
+
+		try {
+			Class<?> trackerDatum = loader.loadClass("testful.coverage.Tracker");
+			Method setup = trackerDatum.getMethod("setup", TrackerDatum[].class);
+			setup.invoke(null, new Object[] { data });
+		} catch (Throwable e) {
 			throw new TestfulException("Cannot setup the execution manager", e);
 		}
 	}

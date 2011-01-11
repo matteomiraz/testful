@@ -15,7 +15,6 @@ public class DataUse implements Serializable {
 
 	private final DataDef defInBlock;
 
-	//TBD: lavorare sui contesti
 	/**
 	 * Create a data usage
 	 * @param data the data being used
@@ -25,7 +24,7 @@ public class DataUse implements Serializable {
 		id = idGenerator++;
 
 		this.block = block;
-		
+
 		DataDef defInBlockTmp = null;
 		for(DataDef def : blockDefs)
 			if(def.getData() == data) {

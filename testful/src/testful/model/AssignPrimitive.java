@@ -4,17 +4,26 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
+import testful.TestFul;
 import ec.util.MersenneTwisterFast;
 
 public class AssignPrimitive extends Operation {
 
 	private static final long serialVersionUID = 5229328945478937607L;
-	
+
 	private final Reference ref;
 	private final Serializable value;
 
+	@SuppressWarnings("unused")
 	public AssignPrimitive(Reference ref, Serializable value) {
 		super();
+
+		if(TestFul.DEBUG && ref == null) {
+			final NullPointerException nullPointerException = new NullPointerException("REf cannot be null!");
+			nullPointerException.printStackTrace();
+			throw nullPointerException;
+		}
+
 		this.ref = ref;
 		this.value = value;
 	}
@@ -30,7 +39,7 @@ public class AssignPrimitive extends Operation {
 	@Override
 	public String toString() {
 		if(value == null) return ref + " = null";
-		else if(ref.getClazz() instanceof PrimitiveClazz) return ref + " = " + ((PrimitiveClazz) ref.getClazz()).getCast() + getValueString(value);
+		else if(ref.getClazz() instanceof PrimitiveClazz)  return ref + " = " + ((PrimitiveClazz) ref.getClazz()).getCast() + getValueString(value);
 		else return ref + " = " + getValueString(value);
 	}
 
@@ -71,10 +80,10 @@ public class AssignPrimitive extends Operation {
 		if(!(obj instanceof AssignPrimitive)) return false;
 
 		AssignPrimitive other = (AssignPrimitive) obj;
-		return (ref == null ? other.ref == null : ref.equals(other.ref)) && 
-					(value == null ? other.value == null : value.equals(other.value));
+		return (ref == null ? other.ref == null : ref.equals(other.ref)) &&
+		(value == null ? other.value == null : value.equals(other.value));
 	}
-	
+
 	@Override
 	protected Set<Reference> calculateDefs() {
 		Set<Reference> defs = new HashSet<Reference>();
@@ -84,14 +93,14 @@ public class AssignPrimitive extends Operation {
 
 		return defs;
 	}
-	
+
 	@Override
 	protected Set<Reference> calculateUses() {
 		return emptyRefsSet;
 	}
 
 	public static AssignPrimitive generate(Clazz c, TestCluster cluster, ReferenceFactory refFactory, MersenneTwisterFast random) {
-		if(c instanceof PrimitiveClazz) 
+		if(c instanceof PrimitiveClazz)
 			switch(((PrimitiveClazz) c).getType()) {
 			case BooleanClass:
 			case BooleanType:
@@ -124,7 +133,7 @@ public class AssignPrimitive extends Operation {
 			case ShortClass:
 			case ShortType:
 				return new AssignPrimitive(refFactory.getReference(c, random), getShort(random));
-		}
+			}
 
 		if(c.getClassName().equals(String.class.getCanonicalName())) return new AssignPrimitive(refFactory.getReference(c, random), getString(random));
 
@@ -139,16 +148,16 @@ public class AssignPrimitive extends Operation {
 		float nextFloat = r.nextFloat();
 
 		if(nextFloat < Operation.GEN_BASIC_VALUES) switch(r.nextInt(5)) {
-			case 0:
-				return 0;
-			case 1:
-				return 1;
-			case 2:
-				return -1;
-			case 3:
-				return Byte.MAX_VALUE;
-			case 4:
-				return Byte.MIN_VALUE;
+		case 0:
+			return 0;
+		case 1:
+			return 1;
+		case 2:
+			return -1;
+		case 3:
+			return Byte.MAX_VALUE;
+		case 4:
+			return Byte.MIN_VALUE;
 		}
 
 		if(nextFloat < Operation.GEN_BASIC_VALUES + Operation.LIMITED_VALUES) return (byte) (r.nextInt(21) - 10);
@@ -158,22 +167,22 @@ public class AssignPrimitive extends Operation {
 
 	private static final char[] SPECIAL_CHARACTERS = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
 		't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '.', ',', ';', ':', '-',
-		'+', '?', '!', '\'', '`', '"', '£', '$', '€', '%', '&', '/', '(', ')', '=', '^', '#', '°', '[', ']', '{', '}', '~' };
+		'+', '?', '!', '\'', '`', '"', 163, '$', 8364, '%', '&', '/', '(', ')', '=', '^', '#', 176, '[', ']', '{', '}', '~' };
 
 	private static char getCharacter(MersenneTwisterFast r) {
 		float nextFloat = r.nextFloat();
 
 		if(nextFloat < Operation.GEN_BASIC_VALUES) switch(r.nextInt(5)) {
-			case 0:
-				return '\0';
-			case 1:
-				return ' ';
-			case 2:
-				return '\n';
-			case 3:
-				return '\r';
-			default:
-				return '\t';
+		case 0:
+			return '\0';
+		case 1:
+			return ' ';
+		case 2:
+			return '\n';
+		case 3:
+			return '\r';
+		default:
+			return '\t';
 		}
 
 		if(nextFloat < Operation.GEN_BASIC_VALUES + Operation.LIMITED_VALUES) return SPECIAL_CHARACTERS[r.nextInt(SPECIAL_CHARACTERS.length)];
@@ -185,26 +194,26 @@ public class AssignPrimitive extends Operation {
 		float nextFloat = r.nextFloat();
 
 		if(nextFloat < Operation.GEN_BASIC_VALUES) switch(r.nextInt(10)) {
-			case 0:
-				return 0.0f;
-			case 1:
-				return 1.0f;
-			case 2:
-				return -1.0f;
-			case 3:
-				return Double.MAX_VALUE;
-			case 4:
-				return -1 * Double.MAX_VALUE;
-			case 5:
-				return Double.MIN_VALUE; // number closest to 0+
-			case 6:
-				return -1 * Double.MIN_VALUE; // number closest to 0-
-			case 7:
-				return Double.POSITIVE_INFINITY;
-			case 8:
-				return Double.NEGATIVE_INFINITY;
-			case 9:
-				return Double.NaN;
+		case 0:
+			return 0.0f;
+		case 1:
+			return 1.0f;
+		case 2:
+			return -1.0f;
+		case 3:
+			return Double.MAX_VALUE;
+		case 4:
+			return -1 * Double.MAX_VALUE;
+		case 5:
+			return Double.MIN_VALUE; // number closest to 0+
+		case 6:
+			return -1 * Double.MIN_VALUE; // number closest to 0-
+		case 7:
+			return Double.POSITIVE_INFINITY;
+		case 8:
+			return Double.NEGATIVE_INFINITY;
+		case 9:
+			return Double.NaN;
 		}
 
 		if(nextFloat < Operation.GEN_BASIC_VALUES + Operation.LIMITED_VALUES) return r.nextBoolean() ? 1 : -1 * r.nextDouble();
@@ -216,26 +225,26 @@ public class AssignPrimitive extends Operation {
 		float nextFloat = r.nextFloat();
 
 		if(nextFloat < Operation.GEN_BASIC_VALUES) switch(r.nextInt(10)) {
-			case 0:
-				return 0.0f;
-			case 1:
-				return 1.0f;
-			case 2:
-				return -1.0f;
-			case 3:
-				return Float.MAX_VALUE;
-			case 4:
-				return -1 * Float.MAX_VALUE;
-			case 5:
-				return Float.MIN_VALUE; // number closest to 0+
-			case 6:
-				return -1 * Float.MIN_VALUE; // number closest to 0+
-			case 7:
-				return Float.POSITIVE_INFINITY;
-			case 8:
-				return Float.NEGATIVE_INFINITY;
-			case 9:
-				return Float.NaN;
+		case 0:
+			return 0.0f;
+		case 1:
+			return 1.0f;
+		case 2:
+			return -1.0f;
+		case 3:
+			return Float.MAX_VALUE;
+		case 4:
+			return -1 * Float.MAX_VALUE;
+		case 5:
+			return Float.MIN_VALUE; // number closest to 0+
+		case 6:
+			return -1 * Float.MIN_VALUE; // number closest to 0+
+		case 7:
+			return Float.POSITIVE_INFINITY;
+		case 8:
+			return Float.NEGATIVE_INFINITY;
+		case 9:
+			return Float.NaN;
 		}
 
 		if(nextFloat < Operation.GEN_BASIC_VALUES + Operation.LIMITED_VALUES) return r.nextBoolean() ? 1 : -1 * r.nextFloat();
@@ -247,16 +256,16 @@ public class AssignPrimitive extends Operation {
 		float nextFloat = r.nextFloat();
 
 		if(nextFloat < Operation.GEN_BASIC_VALUES) switch(r.nextInt(5)) {
-			case 0:
-				return 0;
-			case 1:
-				return 1;
-			case 2:
-				return -1;
-			case 3:
-				return Integer.MAX_VALUE;
-			case 4:
-				return Integer.MIN_VALUE;
+		case 0:
+			return 0;
+		case 1:
+			return 1;
+		case 2:
+			return -1;
+		case 3:
+			return Integer.MAX_VALUE;
+		case 4:
+			return Integer.MIN_VALUE;
 		}
 
 		if(nextFloat < Operation.GEN_BASIC_VALUES + Operation.LIMITED_VALUES) return r.nextInt(21) - 10;
@@ -268,16 +277,16 @@ public class AssignPrimitive extends Operation {
 		float nextFloat = r.nextFloat();
 
 		if(nextFloat < Operation.GEN_BASIC_VALUES) switch(r.nextInt(5)) {
-			case 0:
-				return 0L;
-			case 1:
-				return 1L;
-			case 2:
-				return -1L;
-			case 3:
-				return Long.MAX_VALUE;
-			case 4:
-				return Long.MIN_VALUE;
+		case 0:
+			return 0L;
+		case 1:
+			return 1L;
+		case 2:
+			return -1L;
+		case 3:
+			return Long.MAX_VALUE;
+		case 4:
+			return Long.MIN_VALUE;
 		}
 
 		if(nextFloat < Operation.GEN_BASIC_VALUES + Operation.LIMITED_VALUES) return (long) r.nextInt(21) - 10;
@@ -289,16 +298,16 @@ public class AssignPrimitive extends Operation {
 		float nextFloat = r.nextFloat();
 
 		if(nextFloat < Operation.GEN_BASIC_VALUES) switch(r.nextInt(5)) {
-			case 0:
-				return 0;
-			case 1:
-				return 1;
-			case 2:
-				return -1;
-			case 3:
-				return Short.MAX_VALUE;
-			case 4:
-				return Short.MIN_VALUE;
+		case 0:
+			return 0;
+		case 1:
+			return 1;
+		case 2:
+			return -1;
+		case 3:
+			return Short.MAX_VALUE;
+		case 4:
+			return Short.MIN_VALUE;
 		}
 
 		if(nextFloat < Operation.GEN_BASIC_VALUES + Operation.LIMITED_VALUES) return (short) (r.nextInt(21) - 10);

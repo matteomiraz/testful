@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import soot.Body;
 import soot.BooleanType;
@@ -61,10 +63,13 @@ import soot.jimple.Stmt;
 import soot.jimple.TableSwitchStmt;
 import soot.jimple.ThrowStmt;
 import soot.util.Chain;
-import testful.coverage.Instrumenter;
+import testful.IConfigProject;
 import testful.utils.SootUtils;
+import testful.utils.Instrumenter.UnifiedInstrumentator;
 
-public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
+public class WhiteInstrumenter implements UnifiedInstrumentator {
+
+	private static final Logger logger = Logger.getLogger("testful.coverage.instrumenter.white");
 
 	private static SootClass exceptionClass;
 	private static SootClass runtimeExceptionClass;
@@ -106,7 +111,9 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 	}
 
 	public static final WhiteInstrumenter singleton = new WhiteInstrumenter();
-	private WhiteInstrumenter() { }
+	private WhiteInstrumenter() {
+		logger.config("Bug instrumenter loaded");
+	}
 
 	private Analyzer analyzer;
 
@@ -117,6 +124,8 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 
 	@Override
 	public void init(Chain<Unit> newUnits, Body newBody, Body oldBody, boolean classWithContracts, boolean contractMethod) {
+		logger.finer(" processing " + newBody.getMethod().getName());
+
 		// some useful constants
 		final SootMethod method = newBody.getMethod();
 		final SootClass sClass = method.getDeclaringClass();
@@ -137,10 +146,6 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 		newBody.getLocals().add(localTmpDouble2);
 
 		analyzer = new Analyzer(newUnits, clazz, newBody, contractMethod, newBody.getTraps(), oldBody.getTraps());
-
-		//TBD: gli array!!!!
-
-		//TODO: configurazioni ( defs e nulls)
 	}
 
 	@Override
@@ -168,7 +173,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 	}
 
 	@Override
-	public void done(File baseDir, String cutName) {
+	public void done(IConfigProject config, String cutName) {
 		AnalysisWhiteBox sa = new AnalysisWhiteBox();
 
 		for(BlockClass c : Factory.singleton.getClasses())
@@ -176,14 +181,14 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 				c.performDataFlowAnalysis();
 				sa.addClass(c);
 
-				PrintWriter writer = new PrintWriter(new File(baseDir, c.getName().replace('.', File.separatorChar) + ".dot"));
+				PrintWriter writer = new PrintWriter(new File(config.getDirInstrumented(), c.getName().replace('.', File.separatorChar) + ".dot"));
 				writer.println(c.getDot());
 				writer.close();
 			} catch(FileNotFoundException e) {
-				System.err.println("Cannot create the class diagram: " + e);
+				logger.log(Level.WARNING, "Cannot create the class diagram: " + e.getMessage(), e);
 			}
 
-			sa.write(baseDir, cutName);
+			sa.write(config.getDirInstrumented(), cutName);
 	}
 
 	class Analyzer {
@@ -192,7 +197,6 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 
 		/** the local that stores this */
 		private final Local localThis;
-
 
 		/** the begin of the current method */
 		private final BlockFunctionEntry start;
@@ -307,7 +311,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 			else if(op instanceof ThrowStmt)
 				process(newUnits, (ThrowStmt) op);
 			else
-				System.err.println("WARNING: cannot analyze " + op + " (" + op.getClass().getCanonicalName() + ")");
+				logger.warning("cannot analyze " + op + " (" + op.getClass().getCanonicalName() + ")");
 		}
 
 		public void process(Chain<Unit> newUnits, AssignStmt u) {
@@ -342,7 +346,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 			DataUse use2 = null;
 
 			if(!(u.getCondition() instanceof ConditionExpr)) {
-				System.err.println("Unknown condition: " + u.getCondition() + " (" + u.getCondition().getClass().getCanonicalName() + ")");
+				logger.warning("Unknown condition: " + u.getCondition() + " (" + u.getCondition().getClass().getCanonicalName() + ")");
 				current = null;
 				return;
 			}
@@ -437,8 +441,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance3.makeRef(), localTmpDouble1, localTmpDouble2)));
 
-				} else System.err.println("Unknown operand type: " + type + " (" + type.getClass().getCanonicalName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getCanonicalName() + ")");
-
+				} else logger.warning("Unknown operand type: " + type + " (" + type.getClass().getCanonicalName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getCanonicalName() + ")");
 
 				newUnits.add(Jimple.v().newGotoStmt(after));
 
@@ -490,7 +493,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 
 					newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, setConditionTargetDistance3.makeRef(), localTmpDouble1, localTmpDouble2)));
 
-				} else System.err.println("Unknown operand type: " + type + " (" + type.getClass().getCanonicalName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getCanonicalName() + ")");
+				} else logger.warning("Unknown operand type: " + type + " (" + type.getClass().getCanonicalName() + ") / " + op2.getType() + " (" + op2.getType().getClass().getCanonicalName() + ")");
 
 				newUnits.add(Jimple.v().newGotoStmt(after));
 			}
@@ -714,7 +717,7 @@ public class WhiteInstrumenter implements Instrumenter.UnifiedInstrumentator {
 
 		public void finalCheck() {
 			for(Unit w : deadCode)
-				System.err.println("ERROR: block starting from " + w + " seems dead!");
+				logger.warning("ERROR: block starting from " + w + " seems dead!");
 		}
 
 		private Data get(Local l, boolean param) {

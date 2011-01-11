@@ -16,7 +16,7 @@ public class Clazz implements Serializable {
 
 	/** true if it is an abstract class or an interface */
 	private final boolean isAbstract;
-	
+
 	private transient Class<?> javaClass;
 	private final String name;
 	private final boolean hasContracts;
@@ -43,31 +43,34 @@ public class Clazz implements Serializable {
 	private Clazz[] subClasses = new Clazz[0];
 
 	private final int hashCode;
-	
+
 	Clazz(TestCluster cluster, Class<?> type) {
 		javaClass = type;
 		name = type.getCanonicalName();
 		this.cluster = cluster;
 		hasContracts = org.jmlspecs.jmlrac.runtime.JMLCheckable.class.isAssignableFrom(type);
-		
-		this.isAbstract = type.isInterface() || Modifier.isAbstract(type.getModifiers());
-		
-		this.hashCode = name.hashCode();
+
+		isAbstract = type.isInterface() || Modifier.isAbstract(type.getModifiers());
+
+		hashCode = name.hashCode();
 	}
 
 	void setup(XmlClass xml) throws SecurityException, ClassNotFoundException {
 		// calculate methodz
-		Set<Methodz> list = new HashSet<Methodz>();
+		Set<Methodz> mlist = new HashSet<Methodz>();
 		for(Method meth : toJavaClass().getMethods())
 			if(!Methodz.toSkip(meth)) // add the method to the set
-				list.add(new Methodz(cluster, this, meth, xml != null ? xml.getMethod(meth) : null));
-		methods = list.toArray(new Methodz[list.size()]);
+				mlist.add(new Methodz(cluster, this, meth, xml != null ? xml.getMethod(meth) : null));
+
+		methods = mlist.toArray(new Methodz[mlist.size()]);
 
 		// calculate constructorz
-		int i = 0;
-		constructors = new Constructorz[toJavaClass().getConstructors().length];
+		Set<Constructorz> clist = new HashSet<Constructorz>();
 		for(Constructor<?> c : toJavaClass().getConstructors())
-			constructors[i++] = new Constructorz(cluster, c, xml != null ? xml.getConstructor(c) : null);
+			if(Modifier.isPublic(c.getModifiers()))
+				clist.add(new Constructorz(cluster, c, xml != null ? xml.getConstructor(c) : null));
+
+		constructors = clist.toArray(new Constructorz[clist.size()]);
 	}
 
 	/**
@@ -77,7 +80,7 @@ public class Clazz implements Serializable {
 	public boolean isAbstract() {
 		return isAbstract;
 	}
-	
+
 	public Class<?> toJavaClass() throws ClassNotFoundException {
 		if(javaClass == null) javaClass = cluster.loadClass(name);
 

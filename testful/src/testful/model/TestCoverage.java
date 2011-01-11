@@ -23,4 +23,15 @@ public class TestCoverage extends Test {
 	public ElementManager<String, CoverageInformation> getCoverage() {
 		return coverage;
 	}
+	/**
+	 * @author Tudor
+	 * @return a score for the existing Test (the higher, the better)
+	 */
+	public float getRating(){
+		float ret = 0;
+		for (CoverageInformation i : this.getCoverage()){
+			ret += i.getQuality();
+		}
+		return ret;
+	}
 }
