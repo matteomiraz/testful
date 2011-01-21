@@ -24,6 +24,7 @@ import java.lang.reflect.Method;
 import testful.TestfulException;
 import testful.coverage.TrackerDatum;
 import testful.utils.Cloner;
+import testful.utils.Timer;
 
 /**
  * Embodies the execution environment of the test. Manages the supply of
@@ -49,6 +50,8 @@ import testful.utils.Cloner;
  */
 public abstract class ExecutionManager<T extends Serializable> {
 
+	private static final Timer timer = Timer.getTimer();
+
 	protected final boolean recycleClassLoader;
 
 	protected final TestfulClassLoader classLoader;
@@ -68,6 +71,8 @@ public abstract class ExecutionManager<T extends Serializable> {
 	 * @throws TestfulException if something really weird goes wrong
 	 */
 	public ExecutionManager(byte[] executorSerGz, byte[] trackerDataSerGz, boolean recycleClassloader) throws TestfulException {
+
+		timer.start("ex.0.deserialization");
 
 		this.recycleClassLoader = recycleClassloader;
 
@@ -94,8 +99,11 @@ public abstract class ExecutionManager<T extends Serializable> {
 				Method setup = trackerDatum.getMethod("setup", TrackerDatum[].class);
 				setup.invoke(null, new Object[] { data });
 			}
+
 		} catch(Throwable e) {
 			throw new TestfulException("Cannot setup the execution manager", e);
+		} finally {
+			timer.stop();
 		}
 	}
 

@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import testful.coverage.TrackerDatum;
 import testful.utils.Cloner;
+import testful.utils.Timer;
 
 /**
  * This class is able to set-up the evaluation context of the test (i.e. the
@@ -36,6 +37,8 @@ import testful.utils.Cloner;
 public class Context<R extends Serializable, M extends ExecutionManager<R>> implements Serializable {
 
 	private static final long serialVersionUID = 1615872139934821021L;
+
+	private static final Timer timer = Timer.getTimer();
 
 	private final static String ID_PREFIX = UUID.randomUUID().toString();
 	private final static AtomicLong ID_SUFFIX = new AtomicLong(0);
@@ -61,16 +64,17 @@ public class Context<R extends Serializable, M extends ExecutionManager<R>> impl
 	 * @param data the tracker data
 	 */
 	public Context(Class<M> execManager, ClassFinder cf, Executor executor, TrackerDatum ... data) {
-		this(execManager, cf, Cloner.serializeWithCache(executor, true), Cloner.serializeWithCache(data, true));
-	}
 
-	public Context(Class<M> execManager, ClassFinder cf, byte[] executorSerGz, byte[] trackerDataSerGz) {
+		timer.start("ex.0.serialization");
+
 		this.id = ID_PREFIX + ":" + ID_SUFFIX.incrementAndGet();
 
 		this.classFinder = cf;
 		this.execManager = execManager.getName();
-		this.executorSerGz = executorSerGz;
-		this.trackerDataSerGz = trackerDataSerGz;
+		this.executorSerGz = Cloner.serializeWithCache(executor, true);
+		this.trackerDataSerGz = Cloner.serializeWithCache(data, true);
+
+		timer.stop();
 	}
 
 	public boolean isRecycleClassLoader() {

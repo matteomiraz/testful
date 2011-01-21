@@ -55,6 +55,9 @@ public class TestFul {
 	/** Set the maximum execution time for methods and constructors (long; default: 500) */
 	public static final String PROPERTY_MAX_EXEC_TIME = "testful.maxExecTime";
 
+	/** Monitor Testful to collect internal execution performances */
+	public static final String PROPERTY_MONITOR_PERFORMANCE = "testful.monitorPerformance";
+
 	// ---------- end of testful's properties ----------
 
 	// ------------------- debug -----------------------

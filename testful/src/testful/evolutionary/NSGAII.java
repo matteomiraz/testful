@@ -40,6 +40,7 @@ import jmetal.util.PseudoRandom;
 import jmetal.util.Ranking;
 import testful.IUpdate;
 import testful.evolutionary.IConfigEvolutionary.FitnessInheritance;
+import testful.utils.Timer;
 
 /**
  * This class implements the NSGA-II algorithm. Adapted from JMetal.
@@ -133,6 +134,9 @@ implements IUpdate {
 	public SolutionSet<V> execute() throws JMException {
 		SolutionSet<V> population;
 		SolutionSet<V> union;
+		Timer timer = Timer.getTimer();
+
+		timer.start("nsga.initialization");
 
 		//Read the parameters
 		final int populationSize = getPopulationSize();
@@ -149,12 +153,17 @@ implements IUpdate {
 		for (int i = 0; i < populationSize; i++)
 			population.add(new Solution<V>(problem_));
 
+		timer.stop();
+
 		// Evaluating initial population
+		timer.start("nsga.execution");
 		logger.info(String.format("(%5.2f%%) Generation 0 (initial population) - %s to go", getTerminationCriterion().getProgressPercent(), getTerminationCriterion().getRemaining()));
 		evaluations += problem_.evaluate(population);
 
 		for(Solution<V> solution : population)
 			problem_.evaluateConstraints(solution);
+
+		timer.stop();
 
 		// Generations ...
 		while (!getTerminationCriterion().isTerminated()) {
@@ -166,6 +175,7 @@ implements IUpdate {
 			// perform the improvement
 			if(improvement != null && currentGeneration % localSearchPeriod == 0) {
 
+				timer.start("nsga.localSearch");
 				if(localSearchNum == 0 && improvement instanceof LocalSearchPopulation<?>) {
 					SolutionSet<V> front = new Ranking<V>(population).getSubfront(0);
 					logger.info("Local search on fronteer (" + front.size() + ")");
@@ -180,12 +190,14 @@ implements IUpdate {
 						if(solution != null) problem_.evaluate(solution);
 					}
 				}
+				timer.stop();
+
 				continue;
 			}
 
-			SolutionSet<V> offspringPopulation = new SolutionSet<V>(populationSize);
-
 			// Create the offSpring solutionSet
+			timer.start("nsga.offSpring_creation");
+			SolutionSet<V> offspringPopulation = new SolutionSet<V>(populationSize);
 			for (int i = 0; i < (populationSize / 2); i++) {
 				//obtain parents
 				Solution<V> parent1 = selectionOperator.execute(population);
@@ -197,21 +209,25 @@ implements IUpdate {
 				offspringPopulation.add(offSpring[1]);
 				evaluations += 2;
 			}
+			timer.stop();
 
 			// select individuals to evaluate
 			Iterable<Solution<V>> toEval = offspringPopulation;
 
 			switch (inherit) {
 			case UNIFORM:
+				timer.start("nsga.fitnessInheritance_uniform");
 				List<Solution<V>> tmpu = new ArrayList<Solution<V>>();
 				for(Solution<V> s : offspringPopulation)
 					if(!PseudoRandom.getMersenneTwisterFast().nextBoolean(INHERIT_PROBABILITY))
 						tmpu.add(s);
 
 				toEval = tmpu;
+				timer.stop();
 				break;
 
 			case FRONTEER:
+				timer.start("nsga.fitnessInheritance_uniform");
 				List<Solution<V>> tmpf = new ArrayList<Solution<V>>();
 
 				final Ranking<V> ranking = new Ranking<V>(population);
@@ -242,20 +258,27 @@ implements IUpdate {
 				}
 
 				toEval = tmpf;
+				timer.stop();
 				break;
 			}
 
-
 			// evaluate individuals
+			timer.start("nsga.execution");
 			problem_.evaluate(toEval);
-			for(Solution<V> solution : toEval)
-				problem_.evaluateConstraints(solution);
+			for(Solution<V> solution : toEval) problem_.evaluateConstraints(solution);
+			timer.stop();
 
 			// Create the solutionSet union of solutionSet and offSpring
+			timer.start("nsga.union");
 			union = population.union(offspringPopulation);
+			timer.stop();
 
 			// Ranking the union
+			timer.start("nsga.ranking");
 			Ranking<V> ranking = new Ranking<V>(union);
+			timer.stop();
+
+			timer.start("nsga.selection");
 
 			int remain = populationSize;
 			int index = 0;
@@ -289,6 +312,8 @@ implements IUpdate {
 
 				remain = 0;
 			} // if
+
+			timer.stop(); // nsga2-selection
 
 		} // while
 
