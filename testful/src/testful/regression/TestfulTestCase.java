@@ -38,10 +38,11 @@ import testful.TestFul;
 import testful.TestfulException;
 import testful.model.TestReader;
 import testful.model.executor.ReflectionExecutor;
-import testful.runner.ClassFinder;
-import testful.runner.ClassFinderCaching;
-import testful.runner.ClassFinderImpl;
+import testful.runner.ClassType;
 import testful.runner.Context;
+import testful.runner.DataFinder;
+import testful.runner.DataFinderCaching;
+import testful.runner.DataFinderImpl;
 import testful.runner.ExecutionManager;
 import testful.runner.RunnerPool;
 
@@ -59,14 +60,14 @@ public class TestfulTestCase extends TestCase {
 
 	private static final Logger logger = Logger.getLogger("testful.regression");
 
-	private final ClassFinder finder;
+	private final DataFinder finder;
 	private final List<String> tests;
 
 	public TestfulTestCase(Config config) throws ClassNotFoundException {
 		super("testFul"); // the name of the method to run
 
 		try {
-			finder = new ClassFinderCaching(new ClassFinderImpl(config));
+			finder = new DataFinderCaching(new DataFinderImpl(new ClassType(config)));
 		} catch (RemoteException e) {
 			// never happens
 			logger.log(Level.WARNING, "Remote exception (should never happen): " + e.toString(), e);

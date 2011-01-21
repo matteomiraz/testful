@@ -36,7 +36,8 @@ import testful.ConfigCut;
 import testful.IConfigCut;
 import testful.IConfigProject;
 import testful.TestFul;
-import testful.runner.ClassFinderImpl;
+import testful.runner.ClassType;
+import testful.runner.DataFinderImpl;
 import testful.runner.TestfulClassLoader;
 
 public class Parser {
@@ -100,7 +101,7 @@ public class Parser {
 		TestFul.parseCommandLine(config, args, Parser.class, "XML Creator");
 		testful.TestFul.setupLogging(config);
 
-		final TestfulClassLoader loader = new TestfulClassLoader(new ClassFinderImpl(config));
+		final TestfulClassLoader loader = new TestfulClassLoader(new DataFinderImpl(new ClassType(config)));
 
 		try {
 			Class<?> clazz = loader.loadClass(config.getCut());

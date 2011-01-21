@@ -29,7 +29,7 @@ import testful.model.ReferenceFactory;
 import testful.model.TestCluster;
 import testful.model.transformation.Splitter;
 import testful.model.transformation.Splitter.Listener;
-import testful.runner.ClassFinder;
+import testful.runner.DataFinder;
 import testful.utils.ElementManager;
 import testful.utils.SimpleEntry;
 
@@ -37,7 +37,7 @@ public class RandomTestSplit extends RandomTest {
 
 	private final Splitter simplifier;
 
-	public RandomTestSplit(File logDirectory, ClassFinder finder, boolean reload, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
+	public RandomTestSplit(File logDirectory, DataFinder finder, boolean reload, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
 		super(logDirectory, finder, reload, cluster, refFactory, seed, data);
 
 		simplifier = new Splitter(true, cluster, refFactory);

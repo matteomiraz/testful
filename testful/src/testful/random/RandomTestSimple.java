@@ -27,7 +27,7 @@ import testful.coverage.TrackerDatum;
 import testful.model.Operation;
 import testful.model.ReferenceFactory;
 import testful.model.TestCluster;
-import testful.runner.ClassFinder;
+import testful.runner.DataFinder;
 import testful.utils.ElementManager;
 import testful.utils.SimpleEntry;
 
@@ -35,7 +35,7 @@ public class RandomTestSimple extends RandomTest {
 
 	private final int TEST_SIZE = 500;
 
-	public RandomTestSimple(File logDirectory, ClassFinder finder, boolean reload, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
+	public RandomTestSimple(File logDirectory, DataFinder finder, boolean reload, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
 		super(logDirectory, finder, reload, cluster, refFactory, seed, data);
 	}
 

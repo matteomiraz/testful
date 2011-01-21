@@ -62,7 +62,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	private final static long MIN_AGE = 15 * 60 * 1000; // 15 min
 	private final static long MIN_UNUSED = 5 * 60 * 1000; //  5 min
 
-	private final CachingMap<String, ClassFinder> classFinders;
+	private final CachingMap<String, DataFinder> classFinders;
 	private final CachingMap<String, Queue<TestfulClassLoader>> classLoaders;
 
 	private AtomicLong executedJobs = new AtomicLong();
@@ -77,7 +77,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 		tests = new ArrayBlockingQueue<Context<?, ?>>(buffer);
 		results = new ConcurrentHashMap<String, ITestRepository>();
 
-		classFinders = new CachingMap<String, ClassFinder>(MAX_ELEMS, MIN_AGE, MIN_UNUSED);
+		classFinders = new CachingMap<String, DataFinder>(MAX_ELEMS, MIN_AGE, MIN_UNUSED);
 		classLoaders = new CachingMap<String, Queue<TestfulClassLoader>>(MAX_ELEMS, MIN_AGE, MIN_UNUSED);
 
 		if(cpu < 0) cpu = Runtime.getRuntime().availableProcessors();
@@ -178,15 +178,15 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	}
 
 	public TestfulClassLoader getClassLoader(Context<?, ?> ctx) throws RemoteException {
-		ClassFinder classFinder = ctx.getClassFinder();
+		DataFinder classFinder = ctx.getClassFinder();
 		String key = classFinder.getKey();
 
-		Cacheable<ClassFinder> finder;
+		Cacheable<DataFinder> finder;
 		synchronized(classFinders) {
 			finder = classFinders.get(key);
 			if(finder == null) {
-				if(classFinder instanceof ClassFinderCaching) finder = new Cacheable<ClassFinder>(classFinder);
-				else finder = new Cacheable<ClassFinder>(new ClassFinderCaching(classFinder));
+				if(classFinder instanceof DataFinderCaching) finder = new Cacheable<DataFinder>(classFinder);
+				else finder = new Cacheable<DataFinder>(new DataFinderCaching(classFinder));
 
 				classFinders.put(key, finder);
 			}

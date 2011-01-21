@@ -30,9 +30,10 @@ import testful.coverage.CoverageInformation;
 import testful.model.Operation;
 import testful.model.ReferenceFactory;
 import testful.model.TestCluster;
-import testful.runner.ClassFinder;
-import testful.runner.ClassFinderCaching;
-import testful.runner.ClassFinderImpl;
+import testful.runner.ClassType;
+import testful.runner.DataFinder;
+import testful.runner.DataFinderCaching;
+import testful.runner.DataFinderImpl;
 import testful.runner.RunnerPool;
 import testful.runner.TestfulClassLoader;
 import testful.utils.ElementManager;
@@ -64,10 +65,10 @@ public class Launcher {
 	public static void run(IConfigRandom config) throws TestfulException {
 		RunnerPool.getRunnerPool().config(config);
 
-		ClassFinder finder;
+		DataFinder finder;
 		TestCluster tc;
 		try {
-			finder = new ClassFinderCaching(new ClassFinderImpl(config));
+			finder = new DataFinderCaching(new DataFinderImpl(new ClassType(config)));
 			tc = new TestCluster(new TestfulClassLoader(finder), config);
 		} catch (RemoteException e) {
 			// never happens

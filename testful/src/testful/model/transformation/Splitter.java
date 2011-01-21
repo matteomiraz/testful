@@ -56,7 +56,7 @@ import testful.model.ResetRepository;
 import testful.model.Test;
 import testful.model.TestCluster;
 import testful.model.TestCoverage;
-import testful.runner.ClassFinder;
+import testful.runner.DataFinder;
 import testful.runner.RunnerPool;
 import testful.utils.ElementManager;
 
@@ -137,7 +137,7 @@ public class Splitter {
 		}
 	}
 
-	public static Test splitAndMinimize(final Test orig, ClassFinder finder, TrackerDatum ... data) {
+	public static Test splitAndMinimize(final Test orig, DataFinder finder, TrackerDatum ... data) {
 
 		final List<Test> res = new ArrayList<Test>();
 		Splitter splitter = new Splitter(true, orig.getCluster(), orig.getReferenceFactory(), new Listener() {

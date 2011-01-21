@@ -38,10 +38,11 @@ import testful.model.OperationPosition;
 import testful.model.ReferenceFactory;
 import testful.model.Test;
 import testful.model.TestCluster;
-import testful.runner.ClassFinder;
-import testful.runner.ClassFinderCaching;
-import testful.runner.ClassFinderImpl;
+import testful.runner.ClassType;
 import testful.runner.Context;
+import testful.runner.DataFinder;
+import testful.runner.DataFinderCaching;
+import testful.runner.DataFinderImpl;
 import testful.runner.IRunner;
 import testful.runner.RunnerPool;
 import testful.runner.TestfulClassLoader;
@@ -68,11 +69,11 @@ public abstract class GenericTestCase extends TestCase {
 	}
 
 	//-------------------------- class finder --------------------------------
-	private static final ClassFinderCaching finder;
+	private static final DataFinderCaching finder;
 	static {
-		ClassFinderCaching tmp;
+		DataFinderCaching tmp;
 		try {
-			tmp = new ClassFinderCaching(new ClassFinderImpl(getConfig()));
+			tmp = new DataFinderCaching(new DataFinderImpl(new ClassType(getConfig())));
 		} catch (RemoteException e) {
 			tmp = null;
 			fail(e.getMessage());
@@ -80,7 +81,7 @@ public abstract class GenericTestCase extends TestCase {
 		finder = tmp;
 	}
 	/** Returns the class finder for the TestCut */
-	public static ClassFinder getFinder() {
+	public static DataFinder getFinder() {
 		return finder;
 	}
 

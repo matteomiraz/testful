@@ -17,10 +17,11 @@ import testful.coverage.stopper.ExecutionStopperInstrumenter;
 import testful.model.Test;
 import testful.model.TestCoverage;
 import testful.model.TestReader;
-import testful.runner.ClassFinder;
-import testful.runner.ClassFinderCaching;
-import testful.runner.ClassFinderImpl;
+import testful.runner.ClassType;
 import testful.runner.Context;
+import testful.runner.DataFinder;
+import testful.runner.DataFinderCaching;
+import testful.runner.DataFinderImpl;
 import testful.runner.IRunner;
 import testful.runner.RunnerPool;
 import testful.utils.ElementManager;
@@ -67,7 +68,7 @@ public class Launcher {
 		try {
 			IRunner exec = RunnerPool.getRunnerPool();
 
-			ClassFinder finder = new ClassFinderCaching(new ClassFinderImpl(config));
+			DataFinder finder = new DataFinderCaching(new DataFinderImpl(new ClassType(config)));
 
 			MutationRunner mutationRunner = new MutationRunner(exec, finder, config.isReload());
 			mutationRunner.read(config.getArguments());
@@ -95,13 +96,13 @@ public class Launcher {
 		private final boolean reload;
 
 		private final BlockingQueue<MutJob> submitted;
-		private final ClassFinder finder;
+		private final DataFinder finder;
 		private final IRunner exec;
 		private boolean done = false;
 
 		private final Thread futureWaiter;
 
-		public MutationRunner(IRunner exec, ClassFinder finder, boolean reload) throws SecurityException {
+		public MutationRunner(IRunner exec, DataFinder finder, boolean reload) throws SecurityException {
 			this.reload = reload;
 			this.exec = exec;
 			submitted = new ArrayBlockingQueue<MutJob>(50);

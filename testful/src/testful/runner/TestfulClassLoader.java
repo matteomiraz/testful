@@ -71,12 +71,12 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 	private static long idGenerator = 0;
 
 	private final long id;
-	private final ClassFinder finder;
+	private final DataFinder finder;
 	private final Set<String> loaded;
 	private boolean isWarmedUp = false;
 	private final String key;
 
-	public TestfulClassLoader(ClassFinder finder) throws RemoteException {
+	public TestfulClassLoader(DataFinder finder) throws RemoteException {
 		super(superClassLoader);
 
 		id = idGenerator++;
@@ -90,7 +90,7 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 		return new TestfulClassLoader(finder);
 	}
 
-	public ClassFinder getFinder() {
+	public DataFinder getFinder() {
 		return finder;
 	}
 
@@ -104,7 +104,8 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 	@Override
 	public Class<?> findClass(String name) throws ClassNotFoundException {
 		try {
-			byte[] b = finder.getClass(name);
+			byte[] b = finder.getData(ClassType.NAME, name);
+			if(b == null) throw new ClassNotFoundException("Cannot find class " + name);
 			Class<?> c = defineClass(name, b, 0, b.length);
 			loaded.add(name);
 			return c;

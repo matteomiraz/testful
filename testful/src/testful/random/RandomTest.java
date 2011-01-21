@@ -39,7 +39,7 @@ import testful.model.Test;
 import testful.model.TestCluster;
 import testful.model.TestCoverage;
 import testful.model.TestSuite;
-import testful.runner.ClassFinder;
+import testful.runner.DataFinder;
 import testful.runner.Context;
 import testful.runner.RunnerPool;
 import testful.utils.ElementManager;
@@ -58,7 +58,7 @@ public abstract class RandomTest {
 
 	protected final BlockingQueue<Entry<Operation[], Future<ElementManager<String, CoverageInformation>>>> tests = new LinkedBlockingQueue<Entry<Operation[], Future<ElementManager<String, CoverageInformation>>>>();
 	private final OptimalTestCreator optimal;
-	private final ClassFinder finder;
+	private final DataFinder finder;
 	private final boolean reload;
 	private final TrackerDatum[] data;
 
@@ -68,7 +68,7 @@ public abstract class RandomTest {
 
 	protected final File logDirectory;
 
-	public RandomTest(File logDirectory, ClassFinder finder, boolean reload, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
+	public RandomTest(File logDirectory, DataFinder finder, boolean reload, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
 		this.logDirectory = logDirectory;
 		optimal = new OptimalTestCreator();
 

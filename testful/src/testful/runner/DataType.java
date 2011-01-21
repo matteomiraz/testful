@@ -1,6 +1,6 @@
 /*
  * TestFul - http://code.google.com/p/testful/
- * Copyright (C) 2010  Matteo Miraz
+ * Copyright (C) 2011 Matteo Miraz
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,17 +18,25 @@
 
 package testful.runner;
 
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 /**
- * Allows one to retrieve the bytecode of a class.
- *
+ * Represents a type of information, and allows to find its elements
  * @author matteo
  */
-public interface ClassFinder extends Remote {
+public interface DataType {
 
-	public String getKey() throws RemoteException;
+	/**
+	 * Returns the name of this type of data
+	 * @return the name of this type of data
+	 */
+	public String getName();
 
-	public byte[] getClass(String name) throws ClassNotFoundException, RemoteException;
+	/**
+	 * Returns an extra info
+	 * @param id the id of the information
+	 * @return the payload containing the information
+	 */
+	public byte[] getData(String id) throws RemoteException;
+
 }

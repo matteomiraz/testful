@@ -61,8 +61,9 @@ import testful.model.transformation.SimplifierStatic;
 import testful.model.transformation.SingleStaticAssignment;
 import testful.model.transformation.TestTransformation;
 import testful.model.transformation.TestTransformationPipeline;
-import testful.runner.ClassFinderCaching;
-import testful.runner.ClassFinderImpl;
+import testful.runner.ClassType;
+import testful.runner.DataFinderCaching;
+import testful.runner.DataFinderImpl;
 import testful.runner.RunnerPool;
 import testful.runner.TestfulClassLoader;
 import testful.utils.ElementManager;
@@ -621,10 +622,10 @@ public class JUnitTestGenerator extends TestReader {
 		TestFul.setupLogging(config);
 		RunnerPool.getRunnerPool().config(config);
 
-		ClassFinderCaching finder = null;
+		DataFinderCaching finder = null;
 		TestfulClassLoader loader = null;
 		try {
-			finder = new ClassFinderCaching(new ClassFinderImpl(config));
+			finder = new DataFinderCaching(new DataFinderImpl(new ClassType(config)));
 			loader = new TestfulClassLoader(finder);
 		} catch (RemoteException e) {
 			// never happens

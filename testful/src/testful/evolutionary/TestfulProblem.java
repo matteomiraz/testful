@@ -41,9 +41,10 @@ import testful.model.Test;
 import testful.model.TestCluster;
 import testful.model.TestCoverage;
 import testful.model.TestSuite;
-import testful.runner.ClassFinderCaching;
-import testful.runner.ClassFinderImpl;
+import testful.runner.ClassType;
 import testful.runner.Context;
+import testful.runner.DataFinderCaching;
+import testful.runner.DataFinderImpl;
 import testful.runner.RunnerPool;
 import testful.runner.TestfulClassLoader;
 import testful.utils.ElementManager;
@@ -58,7 +59,7 @@ public class TestfulProblem implements Serializable {
 
 	private static final Logger logger = Logger.getLogger("testful.evolutionary");
 
-	private final ClassFinderCaching finder;
+	private final DataFinderCaching finder;
 	private final TestCluster cluster;
 	private final ReferenceFactory refFactory;
 	private final WhiteBoxAnalysisData whiteAnalysis;
@@ -75,11 +76,13 @@ public class TestfulProblem implements Serializable {
 		try {
 			reload = config.isReload();
 
-			final ClassFinderImpl finderImpl = new ClassFinderImpl(config);
-			whiteAnalysis = new WhiteBoxAnalysisData();
-			finderImpl.addClassData(whiteAnalysis);
+			final ClassType classType = new ClassType(config);
+			final DataFinderImpl finderImpl = new DataFinderImpl(classType);
 
-			finder = new ClassFinderCaching(finderImpl);
+			whiteAnalysis = new WhiteBoxAnalysisData();
+			classType.addClassData(whiteAnalysis);
+
+			finder = new DataFinderCaching(finderImpl);
 			TestfulClassLoader tcl = new TestfulClassLoader(finder);
 
 			cluster = new TestCluster(tcl, config);
@@ -104,7 +107,7 @@ public class TestfulProblem implements Serializable {
 		return refFactory;
 	}
 
-	public ClassFinderCaching getFinder() {
+	public DataFinderCaching getFinder() {
 		return finder;
 	}
 

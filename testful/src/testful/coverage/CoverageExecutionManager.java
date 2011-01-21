@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 
 import testful.TestfulException;
 import testful.model.Test;
-import testful.runner.ClassFinder;
+import testful.runner.DataFinder;
 import testful.runner.Context;
 import testful.runner.ExecutionManager;
 import testful.runner.Executor;
@@ -32,7 +32,7 @@ public class CoverageExecutionManager extends ExecutionManager<ElementManager<St
 
 	private static final Logger logger = Logger.getLogger("testful.coverage");
 
-	public static Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> getContext(ClassFinder finder, Test test, TrackerDatum ... data) {
+	public static Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> getContext(DataFinder finder, Test test, TrackerDatum ... data) {
 		Executor executor = new testful.model.executor.ReflectionExecutor(test);
 		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = new Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager>(CoverageExecutionManager.class, finder, executor, data);
 		ctx.setStopOnBug(false);

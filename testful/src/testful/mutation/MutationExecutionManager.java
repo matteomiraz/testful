@@ -13,7 +13,7 @@ import testful.model.Operation;
 import testful.model.OperationResult;
 import testful.model.Test;
 import testful.model.executor.ReflectionExecutor;
-import testful.runner.ClassFinder;
+import testful.runner.DataFinder;
 import testful.runner.Context;
 import testful.runner.ExecutionManager;
 import testful.runner.Executor;
@@ -31,7 +31,7 @@ public class MutationExecutionManager extends ExecutionManager<MutationCoverage>
 
 	private static Logger logger = Logger.getLogger("testful.mutation");
 
-	public static Context<MutationCoverage, MutationExecutionManager> getContext(ClassFinder finder, Test test, TrackerDatum ... data) {
+	public static Context<MutationCoverage, MutationExecutionManager> getContext(DataFinder finder, Test test, TrackerDatum ... data) {
 		Executor executor = new ReflectionExecutor(test);
 		return new Context<MutationCoverage, MutationExecutionManager>(MutationExecutionManager.class, finder, executor, data);
 	}

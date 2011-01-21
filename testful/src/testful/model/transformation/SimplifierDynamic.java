@@ -32,7 +32,7 @@ import testful.model.OperationResult;
 import testful.model.ResetRepository;
 import testful.model.Test;
 import testful.model.TestExecutionManager;
-import testful.runner.ClassFinder;
+import testful.runner.DataFinder;
 
 /**
  * Use dynamic analysis ({@link OperationResult}) to simplify a test:
@@ -74,7 +74,7 @@ public class SimplifierDynamic implements TestTransformation {
 	 * Like method <code>Test perform(Test test)</code>,
 	 * but automatically calculates the {@link OperationResult} Information.
 	 */
-	public Test perform(ClassFinder finder, Test orig) throws InterruptedException, ExecutionException {
+	public Test perform(DataFinder finder, Test orig) throws InterruptedException, ExecutionException {
 		Operation[] ops = Arrays.copyOf(orig.getTest(), orig.getTest().length);
 
 		OperationResult.insert(ops);

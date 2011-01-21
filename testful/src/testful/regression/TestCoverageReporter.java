@@ -41,8 +41,9 @@ import testful.model.OptimalTestCreator;
 import testful.model.Test;
 import testful.model.TestCoverage;
 import testful.model.TestReader;
-import testful.runner.ClassFinderCaching;
-import testful.runner.ClassFinderImpl;
+import testful.runner.ClassType;
+import testful.runner.DataFinderCaching;
+import testful.runner.DataFinderImpl;
 import testful.runner.RunnerPool;
 
 /**
@@ -73,14 +74,14 @@ public class TestCoverageReporter extends TestReader {
 	@Override public Logger getLogger() { return logger; }
 
 	private final Config config;
-	private final ClassFinderCaching finder;
+	private final DataFinderCaching finder;
 	private long numInvocations = 0;
 	private final OptimalTestCreator optimal;
 
 	public TestCoverageReporter(Config conf) throws ClassNotFoundException {
 		try {
 			config = conf;
-			finder = new ClassFinderCaching(new ClassFinderImpl(conf));
+			finder = new DataFinderCaching(new DataFinderImpl(new ClassType(conf)));
 			optimal = new OptimalTestCreator();
 		} catch (RemoteException e) {
 			// never happens

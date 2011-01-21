@@ -131,17 +131,17 @@ public class TestCluster implements Serializable {
 	private transient ClassRegistry registry;
 	private transient TestfulClassLoader classLoader;
 
-	private transient Map<String, XmlClass> xml;
-
 	public TestCluster(TestfulClassLoader classLoader, IConfigCut config) throws ClassNotFoundException {
 		Set<Clazz> clusterBuilder = new TreeSet<Clazz>();
 		Set<Clazz> toDo = new HashSet<Clazz>();
+		Map<String,XmlClass> xml = new HashMap<String, XmlClass>();
+
 		registry = new ClassRegistry();
 		this.classLoader = classLoader;
 
 		cut = getRegistry().getClazz(classLoader.loadClass(config.getCut()));
 		clusterBuilder.add(cut);
-		addClazz(toDo, cut, config);
+		addClazz(toDo, cut, config, xml);
 
 		// adding aux classes (as declared in xmls descriptors)
 		while(!toDo.isEmpty()) {
@@ -155,7 +155,7 @@ public class TestCluster implements Serializable {
 
 			if(!clusterBuilder.contains(clazz)) {
 				clusterBuilder.add(clazz);
-				addClazz(toDo, clazz, config);
+				addClazz(toDo, clazz, config, xml);
 			}
 
 			XmlClass xmlClass = xml.get(clazz.getClassName());
@@ -213,12 +213,11 @@ public class TestCluster implements Serializable {
 		}
 	}
 
-	private void addClazz(Set<Clazz> todo, Clazz clazz, IConfigCut config) throws ClassNotFoundException {
+	private void addClazz(Set<Clazz> todo, Clazz clazz, IConfigCut config, Map<String, XmlClass> xml) throws ClassNotFoundException {
 		todo.add(clazz);
 
 		Class<?> javaClass = clazz.toJavaClass();
 
-		if(xml == null) xml = new HashMap<String, XmlClass>();
 		XmlClass xmlClass = xml.get(clazz.getClassName());
 		if(xmlClass == null) {
 			xmlClass = XmlClass.get(config, javaClass);

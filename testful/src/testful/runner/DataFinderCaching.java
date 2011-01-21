@@ -22,6 +22,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedHashSet;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,12 +30,13 @@ import java.util.logging.Logger;
 import testful.utils.CachingMap;
 import testful.utils.CachingMap.Cacheable;
 
-public class ClassFinderCaching implements ClassFinder {
+public class DataFinderCaching implements DataFinder {
 
 	private static Logger logger = Logger.getLogger("testful.executor.classloader");
 	private static final boolean LOG_FINER = logger.isLoggable(Level.FINER);
+	private static final boolean LOG_FINEST = logger.isLoggable(Level.FINEST);
 
-	private final static int MAX_ELEMS = 1000;
+	private final static int MAX_ELEMS = 3000;
 	private final static long MIN_AGE = 15 * 60 * 1000; // 15 min
 	private final static long MIN_UNUSED = 5 * 60 * 1000; //  5 min
 
@@ -42,9 +44,9 @@ public class ClassFinderCaching implements ClassFinder {
 	private final CachingMap<String, byte[]> cache;
 	private final Set<String> missing;
 
-	private final ClassFinder finder;
+	private final DataFinder finder;
 
-	public ClassFinderCaching(ClassFinder classFinder) throws RemoteException {
+	public DataFinderCaching(DataFinder classFinder) throws RemoteException {
 
 		cache = new CachingMap<String, byte[]>(MAX_ELEMS, MIN_AGE, MIN_UNUSED);
 		missing = new LinkedHashSet<String>();
@@ -66,36 +68,45 @@ public class ClassFinderCaching implements ClassFinder {
 		return key;
 	}
 
+	/* (non-Javadoc)
+	 * @see testful.runner.DataFinder#getData(java.lang.String, java.lang.String)
+	 */
 	@Override
-	public byte[] getClass(String name) throws ClassNotFoundException, RemoteException {
-		if(name == null) {
-			ClassNotFoundException exc = new ClassNotFoundException("Cannot find the <null> class");
+	public byte[] getData(String type, String id) throws RemoteException {
+		if(type == null || id == null) {
+			NoSuchElementException exc = new NoSuchElementException("Cannot find element " + type + " " + id);
 			logger.log(Level.WARNING, exc.getMessage(), exc);
-			throw exc;
+			return null;
 		}
+
+		final String name = type + "#" + id;
 
 		CachingMap.Cacheable<byte[]> tmp = cache.get(name);
 		if(tmp != null) {
-			logger.finest("(" + key + ") serving cached class " + name);
+			if(LOG_FINEST) logger.finest("(" + key + ") serving cached element " + name);
 			return tmp.getElement();
 		}
 
 		if(missing.contains(name)) {
-			logger.log(Level.FINEST, "(" + key + ") cannot retrieve class " + name + " (cached)");
-			throw new ClassNotFoundException("Cannot retrieve the class " + name + " (cached)");
+			if(LOG_FINEST) logger.log(Level.FINEST, "(" + key + ") cannot retrieve element " + name + " (cached)");
+			return null;
 		}
 
 		try {
-			byte[] buff = finder.getClass(name);
-			cache.put(name, new Cacheable<byte[]>(buff));
-			if(LOG_FINER) logger.finer("(" + key + ") serving retrieved class " + name);
+			byte[] buff = finder.getData(type, id);
+
+			if(buff == null) {
+				if(LOG_FINER) logger.finer("(" + key + ") serving retrieved element " + name + " (missing)");
+				missing.add(name);
+			} else {
+				if(LOG_FINER) logger.finer("(" + key + ") serving retrieved element " + name);
+				cache.put(name, new Cacheable<byte[]>(buff));
+			}
+
 			return buff;
-		} catch(ClassNotFoundException e) {
-			missing.add(name);
-			throw e;
 		} catch(RemoteException e) {
-			logger.log(Level.WARNING, "(" + key + ") cannot retrieve class " + name, e);
-			throw new ClassNotFoundException("Cannot retrieve the class " + name, e);
+			logger.log(Level.WARNING, "(" + key + ") cannot retrieve element " + name, e);
+			return null;
 		}
 	}
 

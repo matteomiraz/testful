@@ -23,7 +23,7 @@ import java.util.concurrent.ExecutionException;
 import testful.TestfulException;
 import testful.coverage.TrackerDatum;
 import testful.model.executor.ReflectionExecutor;
-import testful.runner.ClassFinder;
+import testful.runner.DataFinder;
 import testful.runner.Context;
 import testful.runner.ExecutionManager;
 import testful.runner.RunnerPool;
@@ -51,7 +51,7 @@ public class TestExecutionManager extends ExecutionManager<Operation[]> {
 	@Override
 	protected void warmUp() {}
 
-	public static Operation[] execute(ClassFinder finder, Test test, TrackerDatum ... data) throws InterruptedException, ExecutionException {
+	public static Operation[] execute(DataFinder finder, Test test, TrackerDatum ... data) throws InterruptedException, ExecutionException {
 		Context<Operation[], TestExecutionManager> ctx =  new Context<Operation[], TestExecutionManager>(TestExecutionManager.class, finder, new ReflectionExecutor(test), data);
 		ctx.setStopOnBug(false);
 		ctx.setRecycleClassLoader(true);
@@ -64,7 +64,7 @@ public class TestExecutionManager extends ExecutionManager<Operation[]> {
 		return ops;
 	}
 
-	public static Test executeTest(ClassFinder finder, Test test, TrackerDatum ... data) throws InterruptedException, ExecutionException {
+	public static Test executeTest(DataFinder finder, Test test, TrackerDatum ... data) throws InterruptedException, ExecutionException {
 		Context<Operation[], TestExecutionManager> ctx =  new Context<Operation[], TestExecutionManager>(TestExecutionManager.class, finder, new ReflectionExecutor(test), data);
 		ctx.setStopOnBug(false);
 		ctx.setRecycleClassLoader(true);

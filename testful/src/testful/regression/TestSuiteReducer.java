@@ -51,10 +51,11 @@ import testful.model.transformation.SimplifierStatic;
 import testful.model.transformation.Splitter;
 import testful.model.transformation.TestTransformation;
 import testful.model.transformation.TestTransformationPipeline;
-import testful.runner.ClassFinder;
-import testful.runner.ClassFinderCaching;
-import testful.runner.ClassFinderImpl;
+import testful.runner.ClassType;
 import testful.runner.Context;
+import testful.runner.DataFinder;
+import testful.runner.DataFinderCaching;
+import testful.runner.DataFinderImpl;
 import testful.runner.RunnerPool;
 import testful.utils.ElementManager;
 
@@ -71,10 +72,10 @@ public class TestSuiteReducer {
 	);
 
 	private final OptimalTestCreator optimal = new OptimalTestCreator();
-	private final ClassFinder finder;
+	private final DataFinder finder;
 	private final TrackerDatum[] data;
 
-	public TestSuiteReducer(ClassFinder finder, TrackerDatum[] data) {
+	public TestSuiteReducer(DataFinder finder, TrackerDatum[] data) {
 		this.finder = finder;
 		this.data = data;
 	}
@@ -120,7 +121,7 @@ public class TestSuiteReducer {
 
 	// -------------------- static version ------------
 
-	public static Collection<TestCoverage> reduce(ClassFinder finder, List<String> tests) {
+	public static Collection<TestCoverage> reduce(DataFinder finder, List<String> tests) {
 		final TestSuiteReducer reducer = new TestSuiteReducer(finder, new TrackerDatum[0]);
 		new TestReader() {
 
@@ -185,9 +186,9 @@ public class TestSuiteReducer {
 
 		RunnerPool.getRunnerPool().config(config);
 
-		ClassFinderCaching finder = null;
+		DataFinderCaching finder = null;
 		try {
-			finder = new ClassFinderCaching(new ClassFinderImpl(config));
+			finder = new DataFinderCaching(new DataFinderImpl(new ClassType(config)));
 		} catch (RemoteException e) {
 			// never happens
 			logger.log(Level.WARNING, "Remote exception (should never happen): " + e.toString(), e);

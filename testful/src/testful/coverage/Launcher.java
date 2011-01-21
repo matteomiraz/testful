@@ -37,8 +37,9 @@ import testful.ConfigProject;
 import testful.IConfigProject;
 import testful.TestFul;
 import testful.coverage.soot.Instrumenter;
-import testful.runner.ClassFinderCaching;
-import testful.runner.ClassFinderImpl;
+import testful.runner.ClassType;
+import testful.runner.DataFinderCaching;
+import testful.runner.DataFinderImpl;
 import testful.runner.TestfulClassLoader;
 
 /**
@@ -206,7 +207,7 @@ public class Launcher {
 		testful.TestFul.setupLogging(config);
 
 		try {
-			TestfulClassLoader tcl = new TestfulClassLoader(new ClassFinderCaching(new ClassFinderImpl(config)));
+			TestfulClassLoader tcl = new TestfulClassLoader(new DataFinderCaching(new DataFinderImpl(new ClassType(config))));
 
 			final List<String> toInstrument;
 			if(config.project) toInstrument = getProjectClasses(tcl, config);

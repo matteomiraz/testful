@@ -36,9 +36,10 @@ import testful.model.OperationResult.Status;
 import testful.model.Test;
 import testful.model.TestExecutionManager;
 import testful.model.TestReader;
-import testful.runner.ClassFinder;
-import testful.runner.ClassFinderCaching;
-import testful.runner.ClassFinderImpl;
+import testful.runner.ClassType;
+import testful.runner.DataFinder;
+import testful.runner.DataFinderCaching;
+import testful.runner.DataFinderImpl;
 import testful.runner.RunnerPool;
 
 /**
@@ -60,7 +61,7 @@ public class Replay extends TestReader {
 
 	private final boolean exitOnBug;
 
-	private ClassFinder finder;
+	private DataFinder finder;
 
 	public static void main(String[] args) {
 
@@ -88,7 +89,7 @@ public class Replay extends TestReader {
 		this.exitOnBug = exitOnBug;
 
 		try {
-			finder = new ClassFinderCaching(new ClassFinderImpl(config));
+			finder = new DataFinderCaching(new DataFinderImpl(new ClassType(config)));
 		} catch (RemoteException e) {
 			// never happens
 			logger.log(Level.WARNING, "Remote exception (should never happen): " + e.toString(), e);

@@ -189,7 +189,8 @@
 				<include name="testful/coverage/**/*.class" />
 				<include name="testful/model/**/*.class" />
 				<include name="testful/utils/**/*.class" />
-				<include name="testful/runner/ClassFinder*.class" />
+				<include name="testful/runner/DataFinder*.class" />
+				<include name="testful/runner/*Type.class" />
 				<include name="testful/runner/TestfulClassLoader*.class" />
 				<include name="testful/TestFul.class" />
 				<include name="testful/TestFul$*.class" />

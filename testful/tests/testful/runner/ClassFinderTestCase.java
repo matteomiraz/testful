@@ -35,40 +35,36 @@ public class ClassFinderTestCase extends GenericTestCase {
 	public void testBase() throws Exception {
 		ConfigProject config = new ConfigProject(GenericTestCase.getConfig());
 
-		try {
-			ClassFinderImpl finder = new ClassFinderImpl(config);
-			finder.addClassData(new ClassData() {
-				@Override
-				public void load(String className, URL classFile) {
-					if("JDOMAbout".equals(className))
-						fail("JDOMAbout loaded from " + classFile.toString());
-				}
-			});
+		ClassType classType = new ClassType(config);
+		DataFinderImpl finder = new DataFinderImpl(classType);
+		classType.addClassData(new ClassData() {
+			@Override
+			public void load(String className, URL classFile) {
+				if("JDOMAbout".equals(className))
+					fail("JDOMAbout loaded from " + classFile.toString());
+			}
+		});
 
-			finder.getClass("JDOMAbout");
-			fail("JDOMAbout should not be found");
-		} catch (ClassNotFoundException e) {
-		}
+		byte[] b = finder.getData(ClassType.NAME, "JDOMAbout");
+		assertNull("JDOMAbout should not be found", b);
 	}
 
 	public void testWrongJar() throws Exception {
 		ConfigProject config = new ConfigProject(GenericTestCase.getConfig());
 		config.addLibrary(new File("lib/jmetal.jar").getAbsoluteFile());
 
-		try {
-			ClassFinderImpl finder = new ClassFinderImpl(config);
-			finder.addClassData(new ClassData() {
-				@Override
-				public void load(String className, URL classFile) {
-					if("JDOMAbout".equals(className))
-						fail("JDOMAbout loaded from " + classFile.toString());
-				}
-			});
+		ClassType classType = new ClassType(config);
+		DataFinderImpl finder = new DataFinderImpl(classType);
+		classType.addClassData(new ClassData() {
+			@Override
+			public void load(String className, URL classFile) {
+				if("JDOMAbout".equals(className))
+					fail("JDOMAbout loaded from " + classFile.toString());
+			}
+		});
 
-			finder.getClass("JDOMAbout");
-			fail("JDOMAbout should not be found");
-		} catch (ClassNotFoundException e) {
-		}
+		byte[] b = finder.getData(ClassType.NAME, "JDOMAbout");
+		assertNull("JDOMAbout should not be found", b);
 	}
 
 	public void testFirstJar() throws Exception {
@@ -76,22 +72,18 @@ public class ClassFinderTestCase extends GenericTestCase {
 		final File lib = new File("lib/jdom.jar").getAbsoluteFile();
 		config.addLibrary(lib);
 
-		try {
-			ClassFinderImpl finder = new ClassFinderImpl(config);
-			finder.addClassData(new ClassData() {
-				@Override
-				public void load(String className, URL classFile) {
-					if("JDOMAbout".equals(className))
-						assertEquals("jar:file:" + lib.getAbsolutePath() + "!/JDOMAbout.class", classFile.toString());
-				}
-			});
+		ClassType classType = new ClassType(config);
+		DataFinderImpl finder = new DataFinderImpl(classType);
+		classType.addClassData(new ClassData() {
+			@Override
+			public void load(String className, URL classFile) {
+				if("JDOMAbout".equals(className))
+					assertEquals("jar:file:" + lib.getAbsolutePath() + "!/JDOMAbout.class", classFile.toString());
+			}
+		});
 
-			byte[] c = finder.getClass("JDOMAbout");
-			assertNotNull(c);
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-			fail(e.getMessage());
-		}
+		byte[] c = finder.getData(ClassType.NAME, "JDOMAbout");
+		assertNotNull(c);
 	}
 
 	public void testSecondJar() throws Exception {
@@ -100,21 +92,18 @@ public class ClassFinderTestCase extends GenericTestCase {
 		final File lib = new File("lib/jdom.jar").getAbsoluteFile();
 		config.addLibrary(lib);
 
-		try {
-			ClassFinderImpl finder = new ClassFinderImpl(config);
-			finder.addClassData(new ClassData() {
-				@Override
-				public void load(String className, URL classFile) {
-					if("JDOMAbout".equals(className))
-						assertEquals("jar:file:" + lib.getAbsolutePath() + "!/JDOMAbout.class", classFile.toString());
-				}
-			});
+		ClassType classType = new ClassType(config);
+		DataFinderImpl finder = new DataFinderImpl(classType);
+		classType.addClassData(new ClassData() {
+			@Override
+			public void load(String className, URL classFile) {
+				if("JDOMAbout".equals(className))
+					assertEquals("jar:file:" + lib.getAbsolutePath() + "!/JDOMAbout.class", classFile.toString());
+			}
+		});
 
-			byte[] c = finder.getClass("JDOMAbout");
-			assertNotNull(c);
-		} catch (ClassNotFoundException e) {
-			fail(e.getMessage());
-		}
+		byte[] c = finder.getData(ClassType.NAME, "JDOMAbout");
+		assertNotNull(c);
 	}
 
 	public void testInnerClass() throws Exception {

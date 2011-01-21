@@ -1,6 +1,6 @@
 /*
  * TestFul - http://code.google.com/p/testful/
- * Copyright (C) 2010  Matteo Miraz
+ * Copyright (C) 2011 Matteo Miraz
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,10 +24,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,54 +34,49 @@ import testful.utils.ByteReader;
 import testful.utils.JavaUtils;
 
 /**
- * Retrieve the bytecode of classes.
- *
+ * TODO describe me!
  * @author matteo
  */
-public class ClassFinderImpl implements ClassFinder {
+public class ClassType implements DataType {
+	public static final String NAME = "bytecode";
 
 	private static Logger logger = Logger.getLogger("testful.executor.classloader");
 	private static final boolean LOG_FINER = logger.isLoggable(Level.FINER);
+	private static final ClassLoader classLoader = DataFinderImpl.class.getClassLoader();
 
-	private static final ClassLoader classLoader = ClassFinderImpl.class.getClassLoader();
-
-	private final String key;
 	private final File[] where;
 	private final Collection<ClassData> data = new ArrayList<ClassData>();
 
-	public ClassFinderImpl(IConfigProject config) {
+
+	public ClassType(IConfigProject config) {
 		this(JavaUtils.merge(config.getDirInstrumented(), config.getDirCompiled(), config.getLibraries()));
 	}
 
-	public ClassFinderImpl(File ... where) {
+	public ClassType(File ... where) {
 		this.where = where;
+	}
 
-		key = UUID.randomUUID().toString();
-
-		try {
-			UnicastRemoteObject.exportObject(this, 0);
-		} catch(Exception e) {
-			logger.warning("Unable to use the classloader " + toString() + " in a remote context: " + e);
-		}
+	@Override
+	public String getName() {
+		return NAME;
 	}
 
 	public void addClassData(ClassData d) {
 		data.add(d);
 	}
 
-	@Override
-	public String getKey() throws RemoteException {
-		return key;
-	}
 
+	/* (non-Javadoc)
+	 * @see testful.runner.DataType#getData(java.lang.String)
+	 */
 	@Override
-	public synchronized byte[] getClass(String name) throws ClassNotFoundException {
+	public byte[] getData(String name) throws RemoteException {
 		// try looking in the where class directories
 		{
 			try {
 				URL classURL = searchClassFile(name);
 				byte[] ret = ByteReader.readBytes(classURL.openStream());
-				if(LOG_FINER) logger.finer("(" + key + ") serving class " + name + " from " + classURL);
+				if(LOG_FINER) logger.finer("serving class " + name + " from " + classURL);
 
 				for (ClassData datum : data)
 					datum.load(name, classURL);
@@ -104,18 +97,17 @@ public class ClassFinderImpl implements ClassFinder {
 				try {
 					byte[] ret = ByteReader.readBytes(resource.openStream());
 					if(ret != null) {
-						if(LOG_FINER) logger.finer("(" + key + ") serving class " + name + " from " + resource);
+						if(LOG_FINER) logger.finer("serving class " + name + " from " + resource);
 						return ret;
 					}
 				} catch(IOException e) {
-					logger.log(Level.WARNING, "(" + key + ") " + "cannot load class " + name + " from " + resource + ": " + e.getMessage(), e);
+					logger.log(Level.WARNING, "cannot load class " + name + " from " + resource + ": " + e.getMessage(), e);
 				}
 			}
 		}
 
-		final String msg = "cannot find class " + name;
-		logger.warning("(" + key + ") " + msg);
-		throw new ClassNotFoundException(msg);
+		logger.warning("cannot find class " + name);
+		return null;
 	}
 
 	/**
@@ -139,10 +131,10 @@ public class ClassFinderImpl implements ClassFinder {
 						try {
 							return w.toURI().toURL();
 						} catch (MalformedURLException e) {
-							logger.log(Level.WARNING, "(" + key + ") found " + name + " in " + w.getAbsolutePath() + ", but cannot transform to a valid URL", e);
+							logger.log(Level.WARNING, "found " + name + " in " + w.getAbsolutePath() + ", but cannot transform to a valid URL", e);
 						}
 					} else {
-						logger.warning("(" + key + ") found " + name + " in " + w.getAbsolutePath() + ", but cannot read it");
+						logger.warning("found " + name + " in " + w.getAbsolutePath() + ", but cannot read it");
 					}
 				}
 			}
@@ -150,9 +142,9 @@ public class ClassFinderImpl implements ClassFinder {
 			// if it is a jar, create the jar:<element>!/urlClass URL
 			if(element.isFile()) {
 				if(!element.getName().endsWith(".jar"))
-					logger.warning("(" + key + ") classpath entry " + element.getAbsolutePath() + " is a file, but it does not ends with .jar");
+					logger.warning("classpath entry " + element.getAbsolutePath() + " is a file, but it does not ends with .jar");
 				else if(!element.canRead())
-					logger.warning("(" + key + ") but cannot read classpath entry " + element.getAbsolutePath());
+					logger.warning("cannot read classpath entry " + element.getAbsolutePath());
 				else {
 					try {
 						final URL url = new URL("jar:" + element.toURI().toURL().toString() + "!/" + urlName);
@@ -162,7 +154,7 @@ public class ClassFinderImpl implements ClassFinder {
 
 						return url;
 					} catch (MalformedURLException e) {
-						logger.log(Level.WARNING, "(" + key + ") found " + name + " in " + element.getAbsolutePath() + ", but cannot transform to a valid URL", e);
+						logger.log(Level.WARNING, "found " + name + " in " + element.getAbsolutePath() + ", but cannot transform to a valid URL", e);
 					} catch (IOException e) {
 					}
 				}
