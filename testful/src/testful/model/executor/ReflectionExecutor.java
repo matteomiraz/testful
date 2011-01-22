@@ -18,6 +18,10 @@
 
 package testful.model.executor;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -58,8 +62,14 @@ import testful.utils.Timer2;
  *
  * @author matteo
  */
+public class ReflectionExecutor implements Executor, Externalizable {
 
-public class ReflectionExecutor implements Executor {
+	static final TestfulClassLoader testfulClassLoader;
+	static {
+		ClassLoader classLoader = ReflectionExecutor.class.getClassLoader();
+		if(classLoader instanceof TestfulClassLoader) testfulClassLoader = (TestfulClassLoader) classLoader;
+		else testfulClassLoader = null;
+	}
 
 	private static final Logger logger = Logger.getLogger("testful.model.ReflectionExecutor");
 	private static final boolean LOGGER_FINE   = logger.isLoggable(Level.FINE);
@@ -72,16 +82,17 @@ public class ReflectionExecutor implements Executor {
 	private static final boolean DISCOVER_FAULTS = TestFul.getProperty(TestFul.PROPERTY_FAULT_DETECT, true);
 
 	// uses the system property of the testful's JVM (and not the one of the workers)
-	private final boolean discoverFaults = DISCOVER_FAULTS;
+	/** true if the fault detection is enabled. <br/><b>DO NOT redefine this field!</b>*/
+	private boolean discoverFaults = DISCOVER_FAULTS;
 
-	/** types of elements in the repository */
-	private final Reference[] repositoryType;
+	/** types of elements in the repository. <br/><b>DO NOT redefine this field!</b> */
+	private Reference[] repositoryType;
 
-	/** Test cluster */
-	private final TestCluster cluster;
+	/** Test cluster. <br/><b>DO NOT redefine this field!</b> */
+	private TestCluster cluster;
 
-	/** the list of operations to perform */
-	private final Operation[] test;
+	/** the list of operations to perform. <br/><b>DO NOT redefine this field!</b> */
+	private Operation[] test;
 
 	/** The internal object repository */
 	private transient Object[] repository;
@@ -91,6 +102,9 @@ public class ReflectionExecutor implements Executor {
 		repositoryType = test.getReferenceFactory().getReferences();
 		this.test = test.getTest();
 	}
+
+	/** Constructor for Externalizable interface. DO NOT USE THIS CONSTRUCTOR. */
+	public ReflectionExecutor() { }
 
 	@Override
 	public int getTestLength() {
@@ -102,19 +116,11 @@ public class ReflectionExecutor implements Executor {
 		return test;
 	}
 
-	public TestCluster getCluster() {
-		return cluster;
-	}
-
 	private static final String TIMER_PREFIX = "exec";
 
 	private static Timer2 timer = Timer2.getRootTimer(TIMER_PREFIX + ".1");
 
-	private static Timer2 timer_pre = timer.getSubTimer(TIMER_PREFIX + ".2.pre");
-	private static Timer2 timer_pre_load = timer_pre.getSubTimer(TIMER_PREFIX + ".2.pre.load");
-	private static Timer2 timer_pre_clust = timer_pre.getSubTimer(TIMER_PREFIX + ".2.pre.clust");
-	private static Timer2 timer_pre_cut = timer_pre.getSubTimer(TIMER_PREFIX + ".2.pre.cut");
-	private static Timer2 timer_pre_stop = timer_pre.getSubTimer(TIMER_PREFIX + ".2.pre.stop");
+	private static Timer2 timer_pre_stop = timer.getSubTimer(TIMER_PREFIX + ".2.preStop");
 
 	private static Timer2 timer_post = timer.getSubTimer(TIMER_PREFIX + ".6.post");
 	private static Timer2 timer_post_stop = timer_post.getSubTimer(TIMER_PREFIX + ".6.post.stop");
@@ -138,30 +144,13 @@ public class ReflectionExecutor implements Executor {
 	@Override
 	public int execute(boolean stopOnBug) throws ClassNotFoundException, ClassCastException {
 
+		if(testfulClassLoader == null)
+			throw new ClassNotFoundException("The executor must be loaded using the TestfulClassLoader!");
+
 		timer.start();
-
-		timer_pre.start();
-
-		timer_pre_load.start();
-		final ClassLoader classLoader = this.getClass().getClassLoader();
-		if(!(classLoader instanceof TestfulClassLoader))
-			throw new ClassCastException("The executor must be loaded using the TestfulClassLoader!");
-		timer_pre_load.stop();
-
-		timer_pre_clust.start();
-		cluster.clearCache();
-		cluster.setClassLoader((TestfulClassLoader) classLoader);
-		timer_pre_clust.stop();
-
-		timer_pre_cut.start();
-		Clazz cut = cluster.getCut();
-		cut.toJavaClass();
-		timer_pre_cut.stop();
 
 		if(LOGGER_FINEST) {
 			StringBuilder sb = new StringBuilder();
-
-			sb.append("Cluster: \n").append(cluster.toString()).append("\n---\n");
 
 			sb.append("Executing:\n");
 			for(Operation op : test)
@@ -182,8 +171,6 @@ public class ReflectionExecutor implements Executor {
 		timer_pre_stop.start();
 		final Stopper stopper = new Stopper();
 		timer_pre_stop.stop();
-
-		timer_pre.stop();
 
 		for(Operation op : test) {
 
@@ -598,5 +585,34 @@ public class ReflectionExecutor implements Executor {
 			ret.append("  ").append(String.format("%2d", element.getId())).append(" (").append(element.getClazz()).append(":").append(element.getPos()).append(") = ").append(repository[element.getId()]).append("\n");
 
 		return ret.toString();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
+	 */
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeBoolean(discoverFaults);
+		out.writeObject(repositoryType);
+		out.writeObject(cluster);
+		out.writeObject(test);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
+	 */
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+
+		if(testfulClassLoader == null)
+			throw new ClassNotFoundException("The executor must be loaded using the TestfulClassLoader!");
+
+		discoverFaults = in.readBoolean();
+		repositoryType = (Reference[]) in.readObject();
+		cluster = (TestCluster) in.readObject();
+		test = (Operation[]) in.readObject();
+
+		cluster.setClassLoader(testfulClassLoader);
+		testfulClassLoader.loadClass(cluster.getCut().getClassName());
 	}
 }
