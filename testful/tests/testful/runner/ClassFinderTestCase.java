@@ -117,13 +117,7 @@ public class ClassFinderTestCase extends GenericTestCase {
 		tc.setClassLoader(classLoader);
 
 		assertEquals(2, tc.getCluster().length);
-
-		assertNotNull(tc.getCluster(0).toJavaClass());
-		assertEquals("test.model.cluster.testInnerClass.Container", tc.getCluster()[0].toString());
-		assertEquals("test.model.cluster.testInnerClass.Container", tc.getCluster()[0].toJavaClass().getName());
-
-		assertNotNull(tc.getCluster(1).toJavaClass());
-		assertEquals("test.model.cluster.testInnerClass.Container$Contained", tc.getCluster()[1].toString());
-		assertEquals("test.model.cluster.testInnerClass.Container$Contained", tc.getCluster()[1].toJavaClass().getName());
+		assertEquals("test.model.cluster.testInnerClass.Container", tc.getCluster()[0].getClassName());
+		assertEquals("test.model.cluster.testInnerClass.Container$Contained", tc.getCluster()[1].getClassName());
 	}
 }

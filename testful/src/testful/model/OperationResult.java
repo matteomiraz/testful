@@ -191,13 +191,15 @@ public class OperationResult extends OperationInformation {
 				object = saveObject(o);
 
 				observers = new HashMap<String, Serializable>();
-				Clazz clazz = cluster.getClass(o.getClass());
+				Clazz clazz = cluster.getClazz(type);
 				if(clazz != null) {
 					for (Methodz m : clazz.getMethods()) {
 						if(m.getParameterTypes().length == 0 && m.getMethodInformation().getType() == MethodInformation.Kind.OBSERVER) {
-							Method method = m.toMethod();
 
 							try {
+								//TODO: verify if this class is loaded with the Testful ClassLoader
+								Method method = ClazzRegistry.singleton.getMethod(m);
+
 								Object res = method.invoke(o);
 								Serializable res1 = saveObject(res);
 								if(res1 != null)

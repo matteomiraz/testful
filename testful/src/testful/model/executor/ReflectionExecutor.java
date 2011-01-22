@@ -24,6 +24,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.logging.Level;
@@ -35,6 +36,7 @@ import testful.coverage.stopper.Stopper;
 import testful.model.AssignConstant;
 import testful.model.AssignPrimitive;
 import testful.model.Clazz;
+import testful.model.ClazzRegistry;
 import testful.model.Constructorz;
 import testful.model.CreateObject;
 import testful.model.Invoke;
@@ -342,7 +344,13 @@ public class ReflectionExecutor implements Executor, Externalizable {
 			Constructorz constructor = op.getConstructor();
 			Reference[] params = op.getParams();
 
-			Constructor<?> cons = constructor.toConstructor();
+			Constructor<?> cons;
+			try {
+				cons = ClazzRegistry.singleton.getConstructor(constructor);
+			} catch (Exception exc) {
+				logger.log(Level.WARNING, exc.getMessage(), exc);
+				throw new TestfulInternalException.Impl(exc);
+			}
 
 			// initialize input parameters
 			Clazz[] constructozParamsType = constructor.getParameterTypes();
@@ -468,7 +476,8 @@ public class ReflectionExecutor implements Executor, Externalizable {
 				try {
 					timer_assignConstantCut.start();
 
-					Object newObject = value.toField().get(null);
+					Field field = ClazzRegistry.singleton.getField(value);
+					Object newObject = field.get(null);
 					set(ref, newObject);
 				} finally {
 					timer_assignConstantCut.stop();
@@ -495,7 +504,7 @@ public class ReflectionExecutor implements Executor, Externalizable {
 			final Clazz[] paramsTypes = method.getParameterTypes();
 			final OperationResult opRes = (OperationResult) op.getInfo(OperationResult.KEY);
 
-			final Method m = method.toMethod();
+			final Method m = ClazzRegistry.singleton.getMethod(method);
 			final Object[] args = new Object[params.length];
 
 			final Object baseObject;
@@ -607,12 +616,16 @@ public class ReflectionExecutor implements Executor, Externalizable {
 		if(testfulClassLoader == null)
 			throw new ClassNotFoundException("The executor must be loaded using the TestfulClassLoader!");
 
+		if(ClazzRegistry.singleton == null)
+			throw new ClassNotFoundException("The clazz Registry must be loaded using the TestfulClassLoader!");
+
 		discoverFaults = in.readBoolean();
 		repositoryType = (Reference[]) in.readObject();
 		cluster = (TestCluster) in.readObject();
 		test = (Operation[]) in.readObject();
 
 		cluster.setClassLoader(testfulClassLoader);
-		testfulClassLoader.loadClass(cluster.getCut().getClassName());
+
+		ClazzRegistry.singleton.getClass(cluster.getCut());
 	}
 }

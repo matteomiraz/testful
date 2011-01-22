@@ -31,7 +31,14 @@ public final class PrimitiveClazz extends Clazz {
 
 	public static enum PrimTypes {
 
-		BooleanClass, BooleanType, ByteClass, ByteType, CharacterClass, CharacterType, DoubleClass, DoubleType, FloatClass, FloatType, IntegerClass, IntegerType, LongClass, LongType, ShortClass, ShortType;
+		BooleanClass, BooleanType,
+		ByteClass, ByteType,
+		CharacterClass, CharacterType,
+		DoubleClass, DoubleType,
+		FloatClass, FloatType,
+		IntegerClass, IntegerType,
+		LongClass, LongType,
+		ShortClass, ShortType;
 
 		public static PrimTypes valueOf(Class<?> c) {
 			if(Boolean.class == c) return BooleanClass;
@@ -62,57 +69,11 @@ public final class PrimitiveClazz extends Clazz {
 			return null;
 		}
 
-		public Class<?> toClass() {
-			switch(this) {
-			case BooleanClass:
-				return Boolean.class;
-			case BooleanType:
-				return Boolean.TYPE;
-
-			case ByteClass:
-				return Byte.class;
-			case ByteType:
-				return Byte.TYPE;
-
-			case CharacterClass:
-				return Character.class;
-			case CharacterType:
-				return Character.TYPE;
-
-			case DoubleClass:
-				return Double.class;
-			case DoubleType:
-				return Double.TYPE;
-
-			case FloatClass:
-				return Float.class;
-			case FloatType:
-				return Float.TYPE;
-
-			case IntegerClass:
-				return Integer.class;
-			case IntegerType:
-				return Integer.TYPE;
-
-			case LongClass:
-				return Long.class;
-			case LongType:
-				return Long.TYPE;
-
-			case ShortClass:
-				return Short.class;
-			case ShortType:
-				return Short.TYPE;
-
-			default:
-				logger.warning("Primitive type not known: " + this);
-				return null;
-			}
-		}
-
 		boolean isClass() {
-			return this == PrimTypes.BooleanClass || this == PrimTypes.ByteClass || this == PrimTypes.CharacterClass || this == PrimTypes.ShortClass || this == PrimTypes.IntegerClass
-			|| this == PrimTypes.LongClass || this == PrimTypes.FloatClass || this == PrimTypes.DoubleClass;
+			return this == PrimTypes.BooleanClass || this == PrimTypes.ByteClass ||
+			this == PrimTypes.CharacterClass || this == PrimTypes.ShortClass ||
+			this == PrimTypes.IntegerClass || this == PrimTypes.LongClass ||
+			this == PrimTypes.FloatClass || this == PrimTypes.DoubleClass;
 		}
 
 		PrimTypes other() {
@@ -162,6 +123,60 @@ public final class PrimitiveClazz extends Clazz {
 				return null;
 			}
 		}
+
+
+		/* (non-Javadoc)
+		 * @see java.lang.Enum#toString()
+		 */
+		@Override
+		public String toString() {
+			switch(this) {
+			case BooleanClass:
+				return Boolean.class.getName();
+			case BooleanType:
+				return Boolean.TYPE.getName();
+
+			case ByteClass:
+				return Byte.class.getName();
+			case ByteType:
+				return Byte.TYPE.getName();
+
+			case CharacterClass:
+				return Character.class.getName();
+			case CharacterType:
+				return Character.TYPE.getName();
+
+			case DoubleClass:
+				return Double.class.getName();
+			case DoubleType:
+				return Double.TYPE.getName();
+
+			case FloatClass:
+				return Float.class.getName();
+			case FloatType:
+				return Float.TYPE.getName();
+
+			case IntegerClass:
+				return Integer.class.getName();
+			case IntegerType:
+				return Integer.TYPE.getName();
+
+			case LongClass:
+				return Long.class.getName();
+			case LongType:
+				return Long.TYPE.getName();
+
+			case ShortClass:
+				return Short.class.getName();
+			case ShortType:
+				return Short.TYPE.getName();
+
+			default:
+				logger.warning("Primitive type not known: " + this);
+				return null;
+			}
+
+		}
 	};
 
 	private final PrimTypes realType;
@@ -176,7 +191,7 @@ public final class PrimitiveClazz extends Clazz {
 	 * @param type : the Class type (e.g., Integer)
 	 */
 	private PrimitiveClazz(TestCluster cluster, PrimTypes type, Clazz[] assignableTo) {
-		super(cluster, type.toClass());
+		super(cluster, type.toString(), false);
 		realType = type;
 		this.assignableTo = assignableTo;
 		PrimitiveClazz other = new PrimitiveClazz(this);
@@ -186,36 +201,12 @@ public final class PrimitiveClazz extends Clazz {
 	}
 
 	private PrimitiveClazz(PrimitiveClazz other) {
-		super(other.cluster, other.realType.other().toClass());
+		super(other.cluster, other.realType.other().toString(), false);
 		realType = other.realType.other();
 		assignableTo = other.assignableTo;
 
 		clazzObject = realType.isClass() ? this : other;
 		clazzType = realType.isClass() ? other : this;
-	}
-
-	public PrimitiveClazz(TestCluster cluster, Class<?> type, Clazz[] assignableTo, PrimitiveClazz other) {
-		super(cluster, type);
-		realType = PrimTypes.valueOf(type);
-		this.assignableTo = assignableTo;
-
-		if(realType.isClass()) {
-			clazzObject = this;
-			clazzType = other;
-		} else {
-			clazzObject = other;
-			clazzType = this;
-		}
-	}
-
-	@Override
-	public boolean isAbstract() {
-		return false;
-	}
-
-	@Override
-	public Class<?> toJavaClass() {
-		return realType.toClass();
 	}
 
 	@Override
@@ -281,7 +272,7 @@ public final class PrimitiveClazz extends Clazz {
 	}
 
 	@Override
-	void calculateAssignableTo() throws ClassNotFoundException {
+	void calculateAssignableTo(ClazzRegistry registry) throws ClassNotFoundException {
 		Set<Clazz> builder = new TreeSet<Clazz>();
 
 		// process primitive types (equivalent primitive types are stored in assignableTo)
@@ -291,7 +282,7 @@ public final class PrimitiveClazz extends Clazz {
 		// process superclasses and interfaces
 		Set<Class<?>> todo = new HashSet<Class<?>>();
 
-		Class<?> c = toJavaClass();
+		Class<?> c = registry.getClass(this);
 		if(c.isInterface()) todo.add(c);
 		while(c != null) {
 			Clazz clazz = cluster.getRegistry().getClazzIfExists(c);

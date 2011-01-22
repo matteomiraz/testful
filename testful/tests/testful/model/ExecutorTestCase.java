@@ -20,7 +20,9 @@ public class ExecutorTestCase extends GenericTestCase {
 	public void testFraction() throws Exception {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("dummy.Fraction");
-		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), config);
+		TestfulClassLoader testfulClassLoader = new TestfulClassLoader(getFinder());
+		ClazzRegistry registry = new ClazzRegistry(testfulClassLoader);
+		TestCluster cluster = new TestCluster(testfulClassLoader, config);
 		ReferenceFactory refFactory = new ReferenceFactory(cluster, 4, 4);
 
 		Clazz cut = cluster.getCut();
@@ -39,7 +41,7 @@ public class ExecutorTestCase extends GenericTestCase {
 		Reference f1 = refFactory.getReferences(cut)[1];
 		Reference f3 = refFactory.getReferences(cut)[3];
 
-		Field THREE_FIFTHS = cut.toJavaClass().getField("THREE_FIFTHS");
+		Field THREE_FIFTHS = registry.getClass(cut).getField("THREE_FIFTHS");
 
 		Methodz compareTo = null;
 		Methodz divide = null;

@@ -48,8 +48,6 @@ public class Methodz implements Serializable, Comparable<Methodz> {
 
 	private final String fullMethodName;
 
-	private transient Method method = null;
-
 	private final MethodInformation info;
 
 	Methodz(TestCluster cluster, Clazz clazz, Method m, XmlMethod xml) {
@@ -64,8 +62,7 @@ public class Methodz implements Serializable, Comparable<Methodz> {
 		else
 			returnType = cluster.getRegistry().getClazz(m.getReturnType());
 
-		method = m;
-		isStatic = Modifier.isStatic(method.getModifiers());
+		isStatic = Modifier.isStatic(m.getModifiers());
 		maxExecutionTime = xml.getMaxExecTime();
 
 		List<XmlParameter> paramsXml = xml.getParameter();
@@ -93,32 +90,12 @@ public class Methodz implements Serializable, Comparable<Methodz> {
 		return info;
 	}
 
-	public Method toMethod() {
-		if(method == null) {
-			try {
-				method = clazz.toJavaClass().getMethod(name, Clazz.convert(params));
-			} catch(Exception e) {
-				return null; // never happens
-			}
-		}
-		return method;
-	}
-
-	/** Clear the cache: discard the Method reference */
-	public void clearCache() {
-		method = null;
-	}
-
 	public String getName() {
 		return name;
 	}
 
 	public String getFullMethodName() {
 		return fullMethodName;
-	}
-
-	public String getShortMethodName() {
-		return toMethod().getName();
 	}
 
 	public Clazz[] getParameterTypes() {

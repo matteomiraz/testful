@@ -21,7 +21,6 @@ package testful.model;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -34,12 +33,9 @@ import testful.model.xml.XmlMethod;
 public class Clazz implements Serializable, Comparable<Clazz> {
 	private static final long serialVersionUID = 5752705690732971069L;
 
-	private static final boolean PRINT_VERBOSE = false;
-
 	/** true if it is an abstract class or an interface */
 	private final boolean isAbstract;
 
-	private transient Class<?> javaClass;
 	private final String name;
 	protected final TestCluster cluster;
 
@@ -65,17 +61,15 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 
 	private final int hashCode;
 
-	Clazz(TestCluster cluster, Class<?> type) {
-		javaClass = type;
-		name = type.getName();
+	Clazz(TestCluster cluster, String name, boolean isAbstract) {
+		this.name = name;
 		this.cluster = cluster;
-
-		isAbstract = type.isInterface() || Modifier.isAbstract(type.getModifiers());
+		this.isAbstract = isAbstract;
 
 		hashCode = name.hashCode();
 	}
 
-	void calculateMethods(XmlClass xml) throws SecurityException, ClassNotFoundException {
+	void calculateMethods(XmlClass xml, ClazzRegistry registry) throws SecurityException, ClassNotFoundException {
 
 		// if the XML is null (i.e., it is a primitive class)
 		// do not consider methods of the class
@@ -87,7 +81,7 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 
 		// calculate methodz
 		Set<Methodz> mlist = new TreeSet<Methodz>();
-		for(Method meth : toJavaClass().getMethods()) {
+		for(Method meth : registry.getClass(this).getMethods()) {
 			final XmlMethod xmlMethod = xml.getMethod(meth);
 			if(xmlMethod != null && !xmlMethod.isSkip())
 				mlist.add(new Methodz(cluster, this, meth, xmlMethod));
@@ -101,7 +95,7 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 
 		} else {
 			Set<Constructorz> clist = new TreeSet<Constructorz>();
-			for(Constructor<?> cns : toJavaClass().getConstructors()) {
+			for(Constructor<?> cns : registry.getClass(this).getConstructors()) {
 				final XmlConstructor xmlCns = xml.getConstructor(cns);
 				if(xmlCns != null && !xmlCns.isSkip())
 					clist.add(new Constructorz(cluster, cns, xmlCns));
@@ -119,58 +113,13 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 		return isAbstract;
 	}
 
-	public Class<?> toJavaClass() throws ClassNotFoundException {
-		if(javaClass == null) javaClass = cluster.loadClass(name);
-
-		return javaClass;
-	}
-
-	/**
-	 * Clear the cache: discard the Class reference and forces constructors,
-	 * methods, and staticValues to discard their cache
-	 */
-	public void clearCache() {
-		javaClass = null;
-
-		if (constructors != null) {
-			for (Constructorz cns : constructors)
-				cns.clearCache();
-		}
-
-
-		if (methods != null) {
-			for (Methodz m : methods)
-				m.clearCache();
-		}
-
-		if (constants != null) {
-			for (StaticValue c : constants)
-				c.clearCache();
-		}
-	}
-
 	public Clazz getReferenceClazz() {
 		return this;
 	}
 
 	@Override
 	public String toString() {
-		if(!PRINT_VERBOSE) return name;
-		else {
-			StringBuilder sb = new StringBuilder();
-			sb.append(name).append("\n");
-
-			if(constants != null) for(StaticValue sv : constants)
-				sb.append("  sv : ").append(sv).append("\n");
-
-			if(constructors != null) for(Constructorz cns : constructors)
-				sb.append("  cns: ").append(cns).append("\n");
-
-			if(methods != null) for(Methodz meth : methods)
-				sb.append("  meth: ").append(meth).append("\n");
-
-			return sb.toString();
-		}
+		return name;
 	}
 
 	public String getClassName() {
@@ -193,13 +142,13 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 		return constructors;
 	}
 
-	void calculateAssignableTo() throws ClassNotFoundException {
+	void calculateAssignableTo(ClazzRegistry registry) throws ClassNotFoundException {
 		Set<Clazz> destinoBuilder = new TreeSet<Clazz>();
 
 		/** store all interfaces to process which the class implements */
 		Set<Class<?>> todo = new HashSet<Class<?>>();
 
-		Class<?> c = toJavaClass();
+		Class<?> c = registry.getClass(this);
 		if(c.isInterface()) todo.add(c);
 		while(c != null) {
 			Clazz clazz = cluster.getRegistry().getClazzIfExists(c);
@@ -235,13 +184,6 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 
 	public Clazz[] getSubClasses() {
 		return subClasses;
-	}
-
-	public static Class<?>[] convert(Clazz[] c) throws ClassNotFoundException {
-		Class<?>[] ret = new Class<?>[c.length];
-		for(int i = 0; i < c.length; i++)
-			ret[i] = c[i].toJavaClass();
-		return ret;
 	}
 
 	static void insertInterfaceWithParents(Set<Class<?>> set, Class<?> i) {

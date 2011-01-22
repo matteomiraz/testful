@@ -37,13 +37,10 @@ public class StaticValue implements Serializable, Comparable<StaticValue> {
 	/** type name of the field (e.g. Class Foo { int field; } => field) */
 	private final String name;
 
-	private transient Field field;
-
 	StaticValue(TestCluster cluster, Field f) {
 		type = cluster.getRegistry().getClazz(f.getType());
 		declaringClass = cluster.getRegistry().getClazz(f.getDeclaringClass());
 		name = f.getName();
-		field = f;
 	}
 
 	/**
@@ -72,27 +69,6 @@ public class StaticValue implements Serializable, Comparable<StaticValue> {
 	 */
 	public String getName() {
 		return name;
-	}
-
-	/**
-	 * Returns the field using the java reflection API
-	 *
-	 * @return the "Field" object
-	 */
-	public Field toField() {
-		if(field == null) try {
-			field = declaringClass.toJavaClass().getField(name);
-		} catch(Exception e) {
-			// this should never happens!
-			e.printStackTrace();
-		}
-
-		return field;
-	}
-
-	/** Clear the cache: discard the Field reference */
-	public void clearCache() {
-		field = null;
 	}
 
 	@Override

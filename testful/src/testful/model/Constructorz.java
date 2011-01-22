@@ -40,13 +40,10 @@ public class Constructorz implements Serializable, Comparable<Constructorz> {
 	/** The maximum execution time (in milliseconds) */
 	private final int maxExecutionTime;
 
-	private transient Constructor<?> constructor = null;
-
 	Constructorz(TestCluster cluster, Constructor<?> c, XmlConstructor xml) {
 		clazz = cluster.getRegistry().getClazz(c.getDeclaringClass());
 		params = cluster.getRegistry().convert(c.getParameterTypes());
 
-		constructor = c;
 		fullConstructorName = c.toGenericString();
 		maxExecutionTime = xml.getMaxExecTime();
 
@@ -73,23 +70,6 @@ public class Constructorz implements Serializable, Comparable<Constructorz> {
 
 	public MethodInformation getMethodInformation() {
 		return info;
-	}
-
-	public Constructor<?> toConstructor() {
-		if(constructor == null) {
-			try {
-				constructor = clazz.toJavaClass().getConstructor(Clazz.convert(params));
-			} catch(Exception e) {
-				e.printStackTrace();
-				return null; // never happens
-			}
-		}
-		return constructor;
-	}
-
-	/** Clear the cache: discard the Constructor reference */
-	public void clearCache() {
-		constructor = null;
 	}
 
 	public String getFullConstructorName() {
