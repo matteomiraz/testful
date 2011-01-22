@@ -190,8 +190,8 @@ public final class PrimitiveClazz extends Clazz {
 	 * @param cluster : the test cluster
 	 * @param type : the Class type (e.g., Integer)
 	 */
-	private PrimitiveClazz(TestCluster cluster, PrimTypes type, Clazz[] assignableTo) {
-		super(cluster, type.toString(), false);
+	private PrimitiveClazz(PrimTypes type, Clazz[] assignableTo) {
+		super(type.toString(), false);
 		realType = type;
 		this.assignableTo = assignableTo;
 		PrimitiveClazz other = new PrimitiveClazz(this);
@@ -201,7 +201,7 @@ public final class PrimitiveClazz extends Clazz {
 	}
 
 	private PrimitiveClazz(PrimitiveClazz other) {
-		super(other.cluster, other.realType.other().toString(), false);
+		super(other.realType.other().toString(), false);
 		realType = other.realType.other();
 		assignableTo = other.assignableTo;
 
@@ -230,41 +230,41 @@ public final class PrimitiveClazz extends Clazz {
 		return "(" + clazzType.getClassName() + ")";
 	}
 
-	static PrimitiveClazz[] createPrimitive(TestCluster cluster) {
+	static PrimitiveClazz[] createPrimitive() {
 		PrimitiveClazz[] ret = new PrimitiveClazz[16];
 
 		PrimitiveClazz[] equiv = new PrimitiveClazz[2];
-		PrimitiveClazz o = new PrimitiveClazz(cluster, PrimTypes.BooleanClass, equiv);
+		PrimitiveClazz o = new PrimitiveClazz(PrimTypes.BooleanClass, equiv);
 		ret[0] = equiv[0] = o.clazzObject;
 		ret[1] = equiv[1] = o.clazzType;
 
 		equiv = new PrimitiveClazz[2];
-		PrimitiveClazz c = new PrimitiveClazz(cluster, PrimTypes.CharacterClass, equiv);
+		PrimitiveClazz c = new PrimitiveClazz(PrimTypes.CharacterClass, equiv);
 		ret[2] = equiv[0] = c.clazzObject;
 		ret[3] = equiv[1] = c.clazzType;
 
 		equiv = new PrimitiveClazz[12];
-		PrimitiveClazz b = new PrimitiveClazz(cluster, PrimTypes.ByteClass, equiv);
+		PrimitiveClazz b = new PrimitiveClazz(PrimTypes.ByteClass, equiv);
 		ret[4] = equiv[0] = b.clazzObject;
 		ret[5] = equiv[1] = b.clazzType;
 
-		PrimitiveClazz i = new PrimitiveClazz(cluster, PrimTypes.IntegerClass, equiv);;
+		PrimitiveClazz i = new PrimitiveClazz(PrimTypes.IntegerClass, equiv);;
 		ret[6] = equiv[2] = i.clazzObject;
 		ret[7] = equiv[3] = i.clazzType;
 
-		PrimitiveClazz s = new PrimitiveClazz(cluster, PrimTypes.ShortClass, equiv);
+		PrimitiveClazz s = new PrimitiveClazz(PrimTypes.ShortClass, equiv);
 		ret[8] = equiv[4] = s.clazzObject;
 		ret[9] = equiv[5] = s.clazzType;
 
-		PrimitiveClazz l = new PrimitiveClazz(cluster, PrimTypes.LongClass, equiv);
+		PrimitiveClazz l = new PrimitiveClazz(PrimTypes.LongClass, equiv);
 		ret[10] = equiv[6] = l.clazzObject;
 		ret[11] = equiv[7] = l.clazzType;
 
-		PrimitiveClazz f = new PrimitiveClazz(cluster, PrimTypes.FloatClass, equiv);
+		PrimitiveClazz f = new PrimitiveClazz(PrimTypes.FloatClass, equiv);
 		ret[12] = equiv[8] = f.clazzObject;
 		ret[13] = equiv[9] = f.clazzType;
 
-		PrimitiveClazz d = new PrimitiveClazz(cluster, PrimTypes.DoubleClass, equiv);
+		PrimitiveClazz d = new PrimitiveClazz(PrimTypes.DoubleClass, equiv);
 		ret[14] = equiv[10] = d.clazzObject;
 		ret[15] = equiv[11] = d.clazzType;
 
@@ -272,7 +272,7 @@ public final class PrimitiveClazz extends Clazz {
 	}
 
 	@Override
-	void calculateAssignableTo(ClazzRegistry registry) throws ClassNotFoundException {
+	void calculateAssignableTo(TestCluster cluster, ClazzRegistry registry) throws ClassNotFoundException {
 		Set<Clazz> builder = new TreeSet<Clazz>();
 
 		// process primitive types (equivalent primitive types are stored in assignableTo)

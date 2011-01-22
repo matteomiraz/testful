@@ -58,7 +58,7 @@ public class TestCluster implements Serializable {
 			registry = new HashMap<Class<?>, Clazz>();
 
 			try {
-				for(PrimitiveClazz c : PrimitiveClazz.createPrimitive(TestCluster.this))
+				for(PrimitiveClazz c : PrimitiveClazz.createPrimitive())
 					registry.put(clazzRegistry.getClass(c), c);
 			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block
@@ -76,7 +76,7 @@ public class TestCluster implements Serializable {
 		public Clazz getClazz(Class<?> type) {
 			Clazz ret = registry.get(type);
 			if(ret == null) {
-				ret = new Clazz(TestCluster.this, type.getName(), type.isInterface() || Modifier.isAbstract(type.getModifiers()));
+				ret = new Clazz(type.getName(), type.isInterface() || Modifier.isAbstract(type.getModifiers()));
 				registry.put(type, ret);
 			}
 			return ret;
@@ -182,14 +182,14 @@ public class TestCluster implements Serializable {
 		cluster = clusterBuilder.toArray(new Clazz[clusterBuilder.size()]);
 
 		for(Clazz c : cluster)
-			c.calculateMethods(xml.get(c.getClassName()), clazzRegistry);
+			c.calculateMethods(this, xml.get(c.getClassName()), clazzRegistry);
 
 		// for each known class
 		all = registry.registry.values().toArray(new Clazz[registry.registry.size()]);
 		Arrays.sort(all);
 
 		for(Clazz c : all)
-			c.calculateAssignableTo(clazzRegistry);
+			c.calculateAssignableTo(this, clazzRegistry);
 
 		calculateConstants();
 

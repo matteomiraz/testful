@@ -37,7 +37,6 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 	private final boolean isAbstract;
 
 	private final String name;
-	protected final TestCluster cluster;
 
 	/** constructor of the clazz */
 	private Constructorz[] constructors;
@@ -61,15 +60,14 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 
 	private final int hashCode;
 
-	Clazz(TestCluster cluster, String name, boolean isAbstract) {
+	Clazz(String name, boolean isAbstract) {
 		this.name = name;
-		this.cluster = cluster;
 		this.isAbstract = isAbstract;
 
 		hashCode = name.hashCode();
 	}
 
-	void calculateMethods(XmlClass xml, ClazzRegistry registry) throws SecurityException, ClassNotFoundException {
+	void calculateMethods(TestCluster cluster, XmlClass xml, ClazzRegistry registry) throws SecurityException, ClassNotFoundException {
 
 		// if the XML is null (i.e., it is a primitive class)
 		// do not consider methods of the class
@@ -142,7 +140,7 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 		return constructors;
 	}
 
-	void calculateAssignableTo(ClazzRegistry registry) throws ClassNotFoundException {
+	void calculateAssignableTo(TestCluster cluster, ClazzRegistry registry) throws ClassNotFoundException {
 		Set<Clazz> destinoBuilder = new TreeSet<Clazz>();
 
 		/** store all interfaces to process which the class implements */
