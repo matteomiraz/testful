@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
+import testful.model.TestCluster.ClassRegistry;
 import testful.model.xml.XmlClass;
 import testful.model.xml.XmlConstructor;
 import testful.model.xml.XmlMethod;
@@ -67,7 +68,7 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 		hashCode = name.hashCode();
 	}
 
-	void calculateMethods(TestCluster cluster, XmlClass xml, ClazzRegistry registry) throws SecurityException, ClassNotFoundException {
+	void calculateMethods(TestCluster cluster, XmlClass xml, ClazzRegistry registry, ClassRegistry classRegistry) throws SecurityException, ClassNotFoundException {
 
 		// if the XML is null (i.e., it is a primitive class)
 		// do not consider methods of the class
@@ -82,7 +83,7 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 		for(Method meth : registry.getClass(this).getMethods()) {
 			final XmlMethod xmlMethod = xml.getMethod(meth);
 			if(xmlMethod != null && !xmlMethod.isSkip())
-				mlist.add(new Methodz(cluster, this, meth, xmlMethod));
+				mlist.add(new Methodz(cluster, this, meth, xmlMethod, classRegistry));
 		}
 		methods = mlist.toArray(new Methodz[mlist.size()]);
 		Arrays.sort(methods);
@@ -96,7 +97,7 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 			for(Constructor<?> cns : registry.getClass(this).getConstructors()) {
 				final XmlConstructor xmlCns = xml.getConstructor(cns);
 				if(xmlCns != null && !xmlCns.isSkip())
-					clist.add(new Constructorz(cluster, cns, xmlCns));
+					clist.add(new Constructorz(cluster, cns, xmlCns, classRegistry));
 			}
 			constructors = clist.toArray(new Constructorz[clist.size()]);
 			Arrays.sort(constructors);
@@ -140,16 +141,16 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 		return constructors;
 	}
 
-	void calculateAssignableTo(TestCluster cluster, ClazzRegistry registry) throws ClassNotFoundException {
+	void calculateAssignableTo(TestCluster cluster, ClazzRegistry clazzRegistry, ClassRegistry registry) throws ClassNotFoundException {
 		Set<Clazz> destinoBuilder = new TreeSet<Clazz>();
 
 		/** store all interfaces to process which the class implements */
 		Set<Class<?>> todo = new HashSet<Class<?>>();
 
-		Class<?> c = registry.getClass(this);
+		Class<?> c = clazzRegistry.getClass(this);
 		if(c.isInterface()) todo.add(c);
 		while(c != null) {
-			Clazz clazz = cluster.getRegistry().getClazzIfExists(c);
+			Clazz clazz = registry.getClazzIfExists(c);
 			if(cluster.contains(clazz)) destinoBuilder.add(clazz);
 
 			for(Class<?> i : c.getInterfaces())
@@ -161,7 +162,7 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 		Set<Class<?>> done = new HashSet<Class<?>>();
 		for(Class<?> i : todo)
 			if(!done.contains(i)) {
-				Clazz clazz = cluster.getRegistry().getClazzIfExists(i);
+				Clazz clazz = registry.getClazzIfExists(i);
 				if(cluster.contains(clazz)) {
 					done.add(i);
 					destinoBuilder.add(clazz);

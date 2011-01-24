@@ -197,7 +197,6 @@ public class OperationResult extends OperationInformation {
 						if(m.getParameterTypes().length == 0 && m.getMethodInformation().getType() == MethodInformation.Kind.OBSERVER) {
 
 							try {
-								//TODO: verify if this class is loaded with the Testful ClassLoader
 								Method method = ClazzRegistry.singleton.getMethod(m);
 
 								Object res = method.invoke(o);

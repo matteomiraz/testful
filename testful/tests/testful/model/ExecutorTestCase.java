@@ -1,6 +1,5 @@
 package testful.model;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,9 +18,8 @@ public class ExecutorTestCase extends GenericTestCase {
 
 	public void testFraction() throws Exception {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
-		config.setCut("dummy.Fraction");
+		config.setCut("apache.Fraction");
 		TestfulClassLoader testfulClassLoader = new TestfulClassLoader(getFinder());
-		ClazzRegistry registry = new ClazzRegistry(testfulClassLoader);
 		TestCluster cluster = new TestCluster(testfulClassLoader, config);
 		ReferenceFactory refFactory = new ReferenceFactory(cluster, 4, 4);
 
@@ -41,8 +39,6 @@ public class ExecutorTestCase extends GenericTestCase {
 		Reference f1 = refFactory.getReferences(cut)[1];
 		Reference f3 = refFactory.getReferences(cut)[3];
 
-		Field THREE_FIFTHS = registry.getClass(cut).getField("THREE_FIFTHS");
-
 		Methodz compareTo = null;
 		Methodz divide = null;
 		for(Methodz m : cut.getMethods()) {
@@ -50,10 +46,12 @@ public class ExecutorTestCase extends GenericTestCase {
 			if("divide".equals(m.getName())) divide = m;
 		}
 
+		StaticValue THREE_FIFTHS = cut.getConstants()[7];
+		assertEquals("apache.Fraction.THREE_FIFTHS", THREE_FIFTHS.toString());
 
 		Operation[] ops1 = new Operation[] {
 				new AssignPrimitive(i0, 0),
-				new AssignConstant(f1, new StaticValue(cluster, THREE_FIFTHS)),
+				new AssignConstant(f1, THREE_FIFTHS),
 				new Invoke(i0, f1, compareTo, new Reference[] { f3 }),
 				new Invoke(f0, f1, divide, new Reference[] { i0 })
 		};
@@ -62,7 +60,7 @@ public class ExecutorTestCase extends GenericTestCase {
 
 		Operation[] ops2 = new Operation[] {
 				new AssignPrimitive(i0, 0),
-				new AssignConstant(f1, new StaticValue(cluster, THREE_FIFTHS)),
+				new AssignConstant(f1, THREE_FIFTHS),
 				new Invoke(i0, f1, compareTo, new Reference[] { f3 }),
 				new Invoke(f0, f1, divide, new Reference[] { i0 })
 		};

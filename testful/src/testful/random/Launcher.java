@@ -77,8 +77,6 @@ public class Launcher {
 			throw new TestfulException("Cannot find some classes: " + e);
 		}
 
-		tc.clearCache();
-
 		ReferenceFactory refFactory = new ReferenceFactory(tc, config.getNumVarCut(), config.getNumVar());
 
 		RandomTest rt = null;

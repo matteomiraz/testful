@@ -86,7 +86,6 @@ public class TestfulProblem implements Serializable {
 			TestfulClassLoader tcl = new TestfulClassLoader(finder);
 
 			cluster = new TestCluster(tcl, config);
-			cluster.clearCache();
 
 			data = new TrackerDatum[0];
 

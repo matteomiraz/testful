@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import testful.model.MethodInformation.ParameterInformation;
+import testful.model.TestCluster.ClassRegistry;
 import testful.model.xml.XmlMethod;
 import testful.model.xml.XmlParameter;
 
@@ -50,17 +51,17 @@ public class Methodz implements Serializable, Comparable<Methodz> {
 
 	private final MethodInformation info;
 
-	Methodz(TestCluster cluster, Clazz clazz, Method m, XmlMethod xml) {
+	Methodz(TestCluster cluster, Clazz clazz, Method m, XmlMethod xml, ClassRegistry classRegistry) {
 		this.clazz = clazz;
 		name = m.getName();
 		fullMethodName = m.toGenericString();
-		params = cluster.getRegistry().convert(m.getParameterTypes());
+		params = classRegistry.convert(m.getParameterTypes());
 
 		// ISSUE #1: if you need array support, vote here: http://code.google.com/p/testful/issues/detail?id=1
 		if(m.getReturnType() ==  Void.TYPE || m.getReturnType().isArray() || m.getReturnType().isEnum())
 			returnType = null;
 		else
-			returnType = cluster.getRegistry().getClazz(m.getReturnType());
+			returnType = classRegistry.getClazz(m.getReturnType());
 
 		isStatic = Modifier.isStatic(m.getModifiers());
 		maxExecutionTime = xml.getMaxExecTime();

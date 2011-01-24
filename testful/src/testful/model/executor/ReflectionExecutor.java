@@ -53,7 +53,6 @@ import testful.model.faults.FaultyExecutionException;
 import testful.model.faults.PreconditionViolationException;
 import testful.model.faults.TestfulInternalException;
 import testful.runner.Executor;
-import testful.runner.TestfulClassLoader;
 import testful.utils.Timer2;
 
 /**
@@ -65,13 +64,6 @@ import testful.utils.Timer2;
  * @author matteo
  */
 public class ReflectionExecutor implements Executor, Externalizable {
-
-	static final TestfulClassLoader testfulClassLoader;
-	static {
-		ClassLoader classLoader = ReflectionExecutor.class.getClassLoader();
-		if(classLoader instanceof TestfulClassLoader) testfulClassLoader = (TestfulClassLoader) classLoader;
-		else testfulClassLoader = null;
-	}
 
 	private static final Logger logger = Logger.getLogger("testful.model.ReflectionExecutor");
 	private static final boolean LOGGER_FINE   = logger.isLoggable(Level.FINE);
@@ -146,8 +138,11 @@ public class ReflectionExecutor implements Executor, Externalizable {
 	@Override
 	public int execute(boolean stopOnBug) throws ClassNotFoundException, ClassCastException {
 
-		if(testfulClassLoader == null)
-			throw new ClassNotFoundException("The executor must be loaded using the TestfulClassLoader!");
+		if(ClazzRegistry.singleton == null) {
+			ClassNotFoundException exc = new ClassNotFoundException("The executor must be loaded using the TestfulClassLoader!");
+			logger.log(Level.WARNING, exc.getMessage(), exc);
+			throw exc;
+		}
 
 		timer.start();
 
@@ -613,18 +608,13 @@ public class ReflectionExecutor implements Executor, Externalizable {
 	@Override
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
 
-		if(testfulClassLoader == null)
-			throw new ClassNotFoundException("The executor must be loaded using the TestfulClassLoader!");
-
 		if(ClazzRegistry.singleton == null)
-			throw new ClassNotFoundException("The clazz Registry must be loaded using the TestfulClassLoader!");
+			throw new ClassNotFoundException("The executor must be loaded using the TestfulClassLoader!");
 
 		discoverFaults = in.readBoolean();
 		repositoryType = (Reference[]) in.readObject();
 		cluster = (TestCluster) in.readObject();
 		test = (Operation[]) in.readObject();
-
-		cluster.setClassLoader(testfulClassLoader);
 
 		ClazzRegistry.singleton.getClass(cluster.getCut());
 	}

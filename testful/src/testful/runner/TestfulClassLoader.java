@@ -53,6 +53,7 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 	private static final String[] TESTFUL_PACKAGES = {
 		"testful.coverage",
 		"testful.model.executor",
+		"testful.model.OperationResult",
 		"org.apache.commons.jexl"
 	};
 

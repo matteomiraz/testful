@@ -21,6 +21,8 @@ package testful.model;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 
+import testful.model.TestCluster.ClassRegistry;
+
 /**
  * StaticValues render constants declared in classes.
  *
@@ -37,9 +39,9 @@ public class StaticValue implements Serializable, Comparable<StaticValue> {
 	/** type name of the field (e.g. Class Foo { int field; } => field) */
 	private final String name;
 
-	StaticValue(TestCluster cluster, Field f) {
-		type = cluster.getRegistry().getClazz(f.getType());
-		declaringClass = cluster.getRegistry().getClazz(f.getDeclaringClass());
+	StaticValue(TestCluster cluster, Field f, ClassRegistry classRegistry) {
+		type = classRegistry.getClazz(f.getType());
+		declaringClass = classRegistry.getClazz(f.getDeclaringClass());
 		name = f.getName();
 	}
 

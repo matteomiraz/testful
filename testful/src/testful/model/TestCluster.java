@@ -48,29 +48,21 @@ public class TestCluster implements Serializable {
 
 	private static final long serialVersionUID = -3821344984330181680L;
 
-	public class ClassRegistry {
+	public static class ClassRegistry {
 
 		/** For each class retrieve the corresponding Clazz */
 		private final Map<Class<?>, Clazz> registry;
 
 		/** creates an empty registry (with primitive types loaded) */
-		public ClassRegistry() {
+		public ClassRegistry(ClazzRegistry clazzRegistry) {
 			registry = new HashMap<Class<?>, Clazz>();
 
 			try {
 				for(PrimitiveClazz c : PrimitiveClazz.createPrimitive())
 					registry.put(clazzRegistry.getClass(c), c);
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				// never happens
 			}
-		}
-
-		public ClassRegistry(Clazz[] all) throws ClassNotFoundException {
-			registry = new HashMap<Class<?>, Clazz>();
-
-			for(Clazz c : all)
-				registry.put(clazzRegistry.getClass(c), c);
 		}
 
 		public Clazz getClazz(Class<?> type) {
@@ -84,11 +76,6 @@ public class TestCluster implements Serializable {
 
 		public Clazz getClazzIfExists(Class<?> type) {
 			return registry.get(type);
-		}
-
-		/** to use only when the test cluster is restored from a serialized version */
-		void addClazz(Clazz c) throws ClassNotFoundException {
-			registry.put(clazzRegistry.getClass(c), c);
 		}
 
 		public Clazz[] convert(Class<?>[] c) {
@@ -134,23 +121,17 @@ public class TestCluster implements Serializable {
 	/** All known classes */
 	private final Clazz[] all;
 
-	private transient ClassRegistry registry;
-	private transient TestfulClassLoader classLoader;
-	private transient ClazzRegistry clazzRegistry;
-
-	public TestCluster(TestfulClassLoader testfulClassLoader, IConfigCut config) throws ClassNotFoundException {
+	public TestCluster(TestfulClassLoader classLoader, IConfigCut config) throws ClassNotFoundException {
 		SortedSet<Clazz> clusterBuilder = new TreeSet<Clazz>();
 		Set<Clazz> toDo = new HashSet<Clazz>();
 		Map<String,XmlClass> xml = new HashMap<String, XmlClass>();
 
-		classLoader = testfulClassLoader;
-		clazzRegistry = new ClazzRegistry(testfulClassLoader);
+		ClazzRegistry clazzRegistry = new ClazzRegistry(classLoader);
+		ClassRegistry classRegistry = new ClassRegistry(clazzRegistry);
 
-		registry = new ClassRegistry();
-
-		cut = getRegistry().getClazz(classLoader.loadClass(config.getCut()));
+		cut = classRegistry.getClazz(classLoader.loadClass(config.getCut()));
 		clusterBuilder.add(cut);
-		addClazz(toDo, cut, config, xml);
+		addClazz(toDo, cut, config, xml, classRegistry, clazzRegistry);
 
 		// adding aux classes (as declared in xmls descriptors)
 		while(!toDo.isEmpty()) {
@@ -164,13 +145,13 @@ public class TestCluster implements Serializable {
 
 			if(!clusterBuilder.contains(clazz)) {
 				clusterBuilder.add(clazz);
-				addClazz(toDo, clazz, config, xml);
+				addClazz(toDo, clazz, config, xml, classRegistry, clazzRegistry);
 			}
 
 			XmlClass xmlClass = xml.get(clazz.getClassName());
 			if(xmlClass != null) {
 				for(String aux : xmlClass.getCluster()) {
-					final Clazz clusterClazz = getRegistry().getClazz(classLoader.loadClass(aux));
+					final Clazz clusterClazz = classRegistry.getClazz(classLoader.loadClass(aux));
 					if(!clusterBuilder.contains(clusterClazz))
 						toDo.add(clusterClazz);
 				}
@@ -182,18 +163,18 @@ public class TestCluster implements Serializable {
 		cluster = clusterBuilder.toArray(new Clazz[clusterBuilder.size()]);
 
 		for(Clazz c : cluster)
-			c.calculateMethods(this, xml.get(c.getClassName()), clazzRegistry);
+			c.calculateMethods(this, xml.get(c.getClassName()), clazzRegistry, classRegistry);
 
 		// for each known class
-		all = registry.registry.values().toArray(new Clazz[registry.registry.size()]);
+		all = classRegistry.registry.values().toArray(new Clazz[classRegistry.registry.size()]);
 		Arrays.sort(all);
 
 		for(Clazz c : all)
-			c.calculateAssignableTo(this, clazzRegistry);
+			c.calculateAssignableTo(this, clazzRegistry, classRegistry);
 
-		calculateConstants();
+		calculateConstants(classRegistry, clazzRegistry);
 
-		calculateSubClasses();
+		calculateSubClasses(classRegistry, clazzRegistry);
 
 		if(logger.isLoggable(Level.CONFIG)) {
 			StringBuilder sb = new StringBuilder("Test Cluster:");
@@ -222,7 +203,7 @@ public class TestCluster implements Serializable {
 		}
 	}
 
-	private void addClazz(Set<Clazz> todo, Clazz clazz, IConfigCut config, Map<String, XmlClass> xml) throws ClassNotFoundException {
+	private void addClazz(Set<Clazz> todo, Clazz clazz, IConfigCut config, Map<String, XmlClass> xml, ClassRegistry registry, ClazzRegistry clazzRegistry) throws ClassNotFoundException {
 		todo.add(clazz);
 
 		Class<?> javaClass = clazzRegistry.getClass(clazz);
@@ -237,7 +218,7 @@ public class TestCluster implements Serializable {
 		// Include types used in public fields
 		for(Field f : javaClass.getFields()) {
 			if(!skipField(f))
-				getRegistry().getClazz(f.getType());
+				registry.getClazz(f.getType());
 		}
 
 		// Consider constructors
@@ -245,7 +226,7 @@ public class TestCluster implements Serializable {
 			XmlConstructor xmlCns = xmlClass.getConstructor(cns);
 			if(xmlCns != null && !xmlCns.isSkip())
 				for(Class<?> param : cns.getParameterTypes())
-					todo.add(getRegistry().getClazz(param));
+					todo.add(registry.getClazz(param));
 		}
 
 		// Consider methods
@@ -257,7 +238,7 @@ public class TestCluster implements Serializable {
 
 				// add input parameters to the test cluster
 				for(Class<?> param : meth.getParameterTypes())
-					todo.add(getRegistry().getClazz(param));
+					todo.add(registry.getClazz(param));
 			}
 		}
 	}
@@ -320,29 +301,6 @@ public class TestCluster implements Serializable {
 		}
 	}
 
-	/**
-	 * When the testCluster is de-serialized, use this method to set the
-	 * classLoader
-	 */
-	public void setClassLoader(TestfulClassLoader classLoader) throws ClassNotFoundException {
-		if(this.classLoader == classLoader) return;
-
-		clearCache();
-		this.classLoader = classLoader;
-		clazzRegistry = new ClazzRegistry(classLoader);
-		registry = new ClassRegistry(all);
-	}
-
-	/**
-	 * discards the cached
-	 * <code>Class<code>es, making the testCluster like a deserialized one.
-	 */
-	public void clearCache() {
-		registry = null;
-		classLoader = null;
-		clazzRegistry = null;
-	}
-
 	public String[] getClasses() {
 		String[] ret = new String[cluster.length];
 
@@ -353,30 +311,11 @@ public class TestCluster implements Serializable {
 	}
 
 	public Clazz getClazz(String name) {
-		int idx = Arrays.binarySearch(cluster, name);
-		if(idx > 0) return cluster[idx];
+		for (Clazz c : cluster) {
+			if(c.getClassName().equals(name))
+				return c;
+		}
 		return null;
-	}
-
-	public ClassRegistry getRegistry() {
-		if(registry == null) // if loaded from a serialized version, fill the registry!
-			try {
-				registry = new ClassRegistry(all);
-			} catch(ClassNotFoundException e) {
-				logger.log(Level.SEVERE, "Cannot create the registry: " + e.getMessage(), e);
-
-				registry = new ClassRegistry();
-			}
-
-			return registry;
-	}
-
-	//TODO: e i tipi primitivi?
-	public Clazz[] getClazzes(Class<?>[] c) {
-		Clazz[] ret = new Clazz[c.length];
-		for(int i = 0; i < c.length; i++)
-			ret[i] = getClazz(c[i].getName());
-		return ret;
 	}
 
 	public int getClusterSize() {
@@ -415,7 +354,7 @@ public class TestCluster implements Serializable {
 	}
 
 	/** requires: destino is calculated */
-	private void calculateConstants() throws SecurityException, ClassNotFoundException {
+	private void calculateConstants(ClassRegistry classRegistry, ClazzRegistry clazzRegistry) throws SecurityException, ClassNotFoundException {
 		Map<Clazz, Set<StaticValue>> fieldMap = new HashMap<Clazz, Set<StaticValue>>();
 
 		for(Clazz cz : cluster) {
@@ -424,7 +363,7 @@ public class TestCluster implements Serializable {
 
 				if(skipField(field)) continue;
 
-				Clazz fieldClazz = registry.getClazzIfExists(fieldType);
+				Clazz fieldClazz = classRegistry.getClazzIfExists(fieldType);
 				if(fieldClazz == null) continue;
 
 				for(Clazz d : fieldClazz.getAssignableTo()) {
@@ -434,7 +373,7 @@ public class TestCluster implements Serializable {
 							fields = new TreeSet<StaticValue>();
 							fieldMap.put(d, fields);
 						}
-						fields.add(new StaticValue(this, field));
+						fields.add(new StaticValue(this, field, classRegistry));
 					}
 				}
 			}
@@ -465,7 +404,7 @@ public class TestCluster implements Serializable {
 		return false;
 	}
 
-	private void calculateSubClasses() throws ClassNotFoundException {
+	private void calculateSubClasses(ClassRegistry registry, ClazzRegistry clazzRegistry) throws ClassNotFoundException {
 		// Father => sons
 		Map<Clazz, Set<Clazz>> sonMap = new HashMap<Clazz, Set<Clazz>>();
 

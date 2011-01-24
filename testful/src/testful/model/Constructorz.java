@@ -25,6 +25,7 @@ import java.util.List;
 
 import testful.model.MethodInformation.Kind;
 import testful.model.MethodInformation.ParameterInformation;
+import testful.model.TestCluster.ClassRegistry;
 import testful.model.xml.XmlConstructor;
 import testful.model.xml.XmlParameter;
 
@@ -40,9 +41,9 @@ public class Constructorz implements Serializable, Comparable<Constructorz> {
 	/** The maximum execution time (in milliseconds) */
 	private final int maxExecutionTime;
 
-	Constructorz(TestCluster cluster, Constructor<?> c, XmlConstructor xml) {
-		clazz = cluster.getRegistry().getClazz(c.getDeclaringClass());
-		params = cluster.getRegistry().convert(c.getParameterTypes());
+	Constructorz(TestCluster cluster, Constructor<?> c, XmlConstructor xml, ClassRegistry classRegistry) {
+		clazz = classRegistry.getClazz(c.getDeclaringClass());
+		params = classRegistry.convert(c.getParameterTypes());
 
 		fullConstructorName = c.toGenericString();
 		maxExecutionTime = xml.getMaxExecTime();

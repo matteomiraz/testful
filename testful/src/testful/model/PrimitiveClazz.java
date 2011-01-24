@@ -23,6 +23,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
+import testful.model.TestCluster.ClassRegistry;
+
 public final class PrimitiveClazz extends Clazz {
 
 	private static final Logger logger = Logger.getLogger("testful.model");
@@ -272,7 +274,7 @@ public final class PrimitiveClazz extends Clazz {
 	}
 
 	@Override
-	void calculateAssignableTo(TestCluster cluster, ClazzRegistry registry) throws ClassNotFoundException {
+	void calculateAssignableTo(TestCluster cluster, ClazzRegistry registry, ClassRegistry classRegistry) throws ClassNotFoundException {
 		Set<Clazz> builder = new TreeSet<Clazz>();
 
 		// process primitive types (equivalent primitive types are stored in assignableTo)
@@ -285,7 +287,7 @@ public final class PrimitiveClazz extends Clazz {
 		Class<?> c = registry.getClass(this);
 		if(c.isInterface()) todo.add(c);
 		while(c != null) {
-			Clazz clazz = cluster.getRegistry().getClazzIfExists(c);
+			Clazz clazz = classRegistry.getClazzIfExists(c);
 			if(cluster.contains(clazz)) builder.add(clazz);
 
 			for(Class<?> i : c.getInterfaces())
@@ -297,7 +299,7 @@ public final class PrimitiveClazz extends Clazz {
 		Set<Class<?>> done = new HashSet<Class<?>>();
 		for(Class<?> i : todo)
 			if(!done.contains(i)) {
-				Clazz clazz = cluster.getRegistry().getClazzIfExists(i);
+				Clazz clazz = classRegistry.getClazzIfExists(i);
 				if(cluster.contains(clazz)) {
 					done.add(i);
 					builder.add(clazz);
