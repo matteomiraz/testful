@@ -19,33 +19,29 @@
 package testful.model;
 
 import java.io.Serializable;
-import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.List;
 
 import testful.model.MethodInformation.Kind;
 import testful.model.MethodInformation.ParameterInformation;
-import testful.model.TestCluster.ClassRegistry;
 import testful.model.xml.XmlConstructor;
 import testful.model.xml.XmlParameter;
 
 public class Constructorz implements Serializable, Comparable<Constructorz> {
 
-	private static final long serialVersionUID = -6107876679557652859L;
+	private static final long serialVersionUID = 5191767105810286511L;
 
 	private final Clazz clazz;
 	private final Clazz[] params;
 	private final MethodInformation info;
-	private final String fullConstructorName;
 
 	/** The maximum execution time (in milliseconds) */
 	private final int maxExecutionTime;
 
-	Constructorz(TestCluster cluster, Constructor<?> c, XmlConstructor xml, ClassRegistry classRegistry) {
-		clazz = classRegistry.getClazz(c.getDeclaringClass());
-		params = classRegistry.convert(c.getParameterTypes());
+	Constructorz(Clazz clazz, Clazz[] params, XmlConstructor xml) {
+		this.clazz = clazz;
+		this.params = params;
 
-		fullConstructorName = c.toGenericString();
 		maxExecutionTime = xml.getMaxExecTime();
 
 		List<XmlParameter> paramsXml = xml.getParameter();
@@ -71,10 +67,6 @@ public class Constructorz implements Serializable, Comparable<Constructorz> {
 
 	public MethodInformation getMethodInformation() {
 		return info;
-	}
-
-	public String getFullConstructorName() {
-		return fullConstructorName;
 	}
 
 	public String getShortConstructorName() {

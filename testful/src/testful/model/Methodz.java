@@ -19,13 +19,10 @@
 package testful.model;
 
 import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.List;
 
 import testful.model.MethodInformation.ParameterInformation;
-import testful.model.TestCluster.ClassRegistry;
 import testful.model.xml.XmlMethod;
 import testful.model.xml.XmlParameter;
 
@@ -36,7 +33,7 @@ import testful.model.xml.XmlParameter;
  */
 public class Methodz implements Serializable, Comparable<Methodz> {
 
-	private static final long serialVersionUID = -6044812551106557800L;
+	private static final long serialVersionUID = -6215844840936041441L;
 
 	private final Clazz clazz;
 	private final String name;
@@ -47,23 +44,15 @@ public class Methodz implements Serializable, Comparable<Methodz> {
 	/** The maximum execution time (in milliseconds) */
 	private final int maxExecutionTime;
 
-	private final String fullMethodName;
-
 	private final MethodInformation info;
 
-	Methodz(TestCluster cluster, Clazz clazz, Method m, XmlMethod xml, ClassRegistry classRegistry) {
+	Methodz(boolean _static, Clazz returnType, Clazz clazz, String name, Clazz[] params, XmlMethod xml) {
 		this.clazz = clazz;
-		name = m.getName();
-		fullMethodName = m.toGenericString();
-		params = classRegistry.convert(m.getParameterTypes());
+		this.name = name;
+		this.params = params;
+		this.returnType = returnType;
 
-		// ISSUE #1: if you need array support, vote here: http://code.google.com/p/testful/issues/detail?id=1
-		if(m.getReturnType() ==  Void.TYPE || m.getReturnType().isArray() || m.getReturnType().isEnum())
-			returnType = null;
-		else
-			returnType = classRegistry.getClazz(m.getReturnType());
-
-		isStatic = Modifier.isStatic(m.getModifiers());
+		isStatic = _static;
 		maxExecutionTime = xml.getMaxExecTime();
 
 		List<XmlParameter> paramsXml = xml.getParameter();
@@ -93,10 +82,6 @@ public class Methodz implements Serializable, Comparable<Methodz> {
 
 	public String getName() {
 		return name;
-	}
-
-	public String getFullMethodName() {
-		return fullMethodName;
 	}
 
 	public Clazz[] getParameterTypes() {

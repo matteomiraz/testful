@@ -65,8 +65,8 @@ public class ReorganizerTestCase extends GenericTestCase {
 					new CreateObject(cut.cuts[2], cut.cns, new Reference[]{ }),
 					new CreateObject(cut.cuts[3], cut.cns, new Reference[] { }),
 					new CreateObject(cut.objects[3], cut.oCns, new Reference[]{ }),
-					new Invoke(cut.ints[0], cut.cuts[3], cut.oAbs, new Reference[]{ }),
 					new Invoke(null, cut.cuts[2], cut.compare, new Reference[] { cut.objects[3] }),
+					new Invoke(cut.ints[0], cut.cuts[3], cut.oAbs, new Reference[]{ }),
 					new Invoke(cut.ints[2], cut.cuts[2], cut.oAbs, new Reference[] { })
 				}
 		};

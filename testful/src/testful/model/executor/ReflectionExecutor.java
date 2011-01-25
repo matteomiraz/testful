@@ -211,8 +211,8 @@ public class ReflectionExecutor implements Executor, Externalizable {
 					float length = (System.nanoTime() - start) / 1000000.0f;
 
 					final String name;
-					if(op instanceof CreateObject) name = ((CreateObject)op).getConstructor().getFullConstructorName();
-					else if(op instanceof Invoke) name = ((Invoke)op).getMethod().getFullMethodName();
+					if(op instanceof CreateObject) name = ((CreateObject)op).getConstructor().toString();
+					else if(op instanceof Invoke) name = ((Invoke)op).getMethod().toString();
 					else name = "";
 
 					logger.finer(String.format("OpExecution %.3f ms (%5.2f%%) %s", length, (100 * length / maxExecTime), name));

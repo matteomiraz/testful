@@ -21,18 +21,25 @@ package testful.model;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
-import testful.model.TestCluster.ClassRegistry;
+import testful.model.TestCluster.Builder;
 import testful.model.xml.XmlClass;
 import testful.model.xml.XmlConstructor;
 import testful.model.xml.XmlMethod;
+import testful.utils.ElementWithKey;
 
-public class Clazz implements Serializable, Comparable<Clazz> {
-	private static final long serialVersionUID = 5752705690732971069L;
+public class Clazz implements Serializable, Comparable<Clazz>, ElementWithKey<String> {
+
+	private static final long serialVersionUID = -2661635029405835812L;
+
+	private static final Clazz[] NO_CLAZZES = new Clazz[0];
+	private static final StaticValue[] NO_CONSTANTS = new StaticValue[0];
+	private static final Constructorz[] NO_CONSTRUCTORS = new Constructorz[0];
+	private static final Methodz[] NO_METHODS = new Methodz[0];
 
 	/** true if it is an abstract class or an interface */
 	private final boolean isAbstract;
@@ -40,24 +47,24 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 	private final String name;
 
 	/** constructor of the clazz */
-	private Constructorz[] constructors;
+	private Constructorz[] constructors = NO_CONSTRUCTORS;
 
 	/** methods of the clazz */
-	private Methodz[] methods;
+	private Methodz[] methods = NO_METHODS;
 
 	/** constant assignable to the class */
-	private StaticValue[] constants = new StaticValue[0];
+	private StaticValue[] constants = NO_CONSTANTS;
 
 	/**
 	 * where can I store this class?<br>
 	 * <i>Calculated by TestCluster.setup()</i>
 	 */
-	protected Clazz[] assignableTo = new Clazz[0];
+	protected Clazz[] assignableTo = NO_CLAZZES;
 	/**
 	 * what can I use instead of this class?<br>
 	 * <i>Calculated by TestCluster.setup()</i>
 	 */
-	private Clazz[] subClasses = new Clazz[0];
+	private Clazz[] subClasses = NO_CLAZZES;
 
 	private final int hashCode;
 
@@ -68,22 +75,29 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 		hashCode = name.hashCode();
 	}
 
-	void calculateMethods(TestCluster cluster, XmlClass xml, ClazzRegistry registry, ClassRegistry classRegistry) throws SecurityException, ClassNotFoundException {
+	void calculateMethods(Class<?> javaClass, XmlClass xml, Builder builder) throws SecurityException {
 
 		// if the XML is null (i.e., it is a primitive class)
 		// do not consider methods of the class
 		if(xml == null) {
-			methods = new Methodz[0];
-			constructors = new Constructorz[0];
 			return;
 		}
 
 		// calculate methodz
 		Set<Methodz> mlist = new TreeSet<Methodz>();
-		for(Method meth : registry.getClass(this).getMethods()) {
+		for(Method meth : javaClass.getMethods()) {
 			final XmlMethod xmlMethod = xml.getMethod(meth);
-			if(xmlMethod != null && !xmlMethod.isSkip())
-				mlist.add(new Methodz(cluster, this, meth, xmlMethod, classRegistry));
+			if(xmlMethod != null && !xmlMethod.isSkip()) {
+
+				Clazz returnType;
+				// ISSUE #1: if you need array support, vote here: http://code.google.com/p/testful/issues/detail?id=1
+				if(meth.getReturnType() ==  Void.TYPE || meth.getReturnType().isArray() || meth.getReturnType().isEnum())
+					returnType = null;
+				else
+					returnType = builder.get(meth.getReturnType());
+
+				mlist.add(new Methodz(Modifier.isStatic(meth.getModifiers()), returnType, this, meth.getName(), builder.get(meth.getParameterTypes()), xmlMethod));
+			}
 		}
 		methods = mlist.toArray(new Methodz[mlist.size()]);
 		Arrays.sort(methods);
@@ -94,10 +108,10 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 
 		} else {
 			Set<Constructorz> clist = new TreeSet<Constructorz>();
-			for(Constructor<?> cns : registry.getClass(this).getConstructors()) {
+			for(Constructor<?> cns : javaClass.getConstructors()) {
 				final XmlConstructor xmlCns = xml.getConstructor(cns);
 				if(xmlCns != null && !xmlCns.isSkip())
-					clist.add(new Constructorz(cluster, cns, xmlCns, classRegistry));
+					clist.add(new Constructorz(this, builder.get(cns.getParameterTypes()), xmlCns));
 			}
 			constructors = clist.toArray(new Constructorz[clist.size()]);
 			Arrays.sort(constructors);
@@ -125,6 +139,11 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 		return name;
 	}
 
+	@Override
+	public String getKey() {
+		return name;
+	}
+
 	void setConstants(StaticValue[] constants) {
 		this.constants = constants;
 	}
@@ -141,35 +160,8 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 		return constructors;
 	}
 
-	void calculateAssignableTo(TestCluster cluster, ClazzRegistry clazzRegistry, ClassRegistry registry) throws ClassNotFoundException {
-		Set<Clazz> destinoBuilder = new TreeSet<Clazz>();
-
-		/** store all interfaces to process which the class implements */
-		Set<Class<?>> todo = new HashSet<Class<?>>();
-
-		Class<?> c = clazzRegistry.getClass(this);
-		if(c.isInterface()) todo.add(c);
-		while(c != null) {
-			Clazz clazz = registry.getClazzIfExists(c);
-			if(cluster.contains(clazz)) destinoBuilder.add(clazz);
-
-			for(Class<?> i : c.getInterfaces())
-				insertInterfaceWithParents(todo, i);
-
-			c = c.getSuperclass();
-		}
-
-		Set<Class<?>> done = new HashSet<Class<?>>();
-		for(Class<?> i : todo)
-			if(!done.contains(i)) {
-				Clazz clazz = registry.getClazzIfExists(i);
-				if(cluster.contains(clazz)) {
-					done.add(i);
-					destinoBuilder.add(clazz);
-				}
-			}
-
-		assignableTo = destinoBuilder.toArray(new Clazz[destinoBuilder.size()]);
+	void setAssignableTo(Clazz[] assignableTo) {
+		this.assignableTo = assignableTo;
 	}
 
 	/** Retrieve the clazz belonging to the cluster, able to store this type */
@@ -185,10 +177,12 @@ public class Clazz implements Serializable, Comparable<Clazz> {
 		return subClasses;
 	}
 
-	static void insertInterfaceWithParents(Set<Class<?>> set, Class<?> i) {
-		if(set.add(i)) // if i is a new interface
-			for(Class<?> ext : i.getInterfaces())
-				insertInterfaceWithParents(set, ext);
+	/* (non-Javadoc)
+	 * @see java.lang.Object#clone()
+	 */
+	@Override
+	public Clazz clone() throws CloneNotSupportedException {
+		return this;
 	}
 
 	@Override

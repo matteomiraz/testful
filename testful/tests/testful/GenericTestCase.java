@@ -130,6 +130,13 @@ public abstract class GenericTestCase extends TestCase {
 	//------------------------- Utility methods ------------------------------
 
 	public static <T> void createArrayAssertions(T[] a, String var) {
+		System.err.println("\n// " + var);
+
+		if(a == null) {
+			System.err.println("assertNull("+ var +");");
+			return;
+		}
+
 		System.err.println("assertEquals(" + a.length + ", " + var + ".length);");
 		for (int i = 0; i < a.length; i++)
 			System.err.println("assertEquals(\"" + a[i].toString() + "\", " + var  + "[" + i + "].toString());");

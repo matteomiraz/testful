@@ -29,13 +29,213 @@ public class RepeatableTestCase extends GenericTestCase {
 
 	public void testClusterApache() throws Exception {
 		ApacheFractionCUT cut = new ApacheFractionCUT();
-		String[] classes = cut.cluster.getClasses();
+		Clazz[] cluster = cut.cluster.getCluster();
 
-		assertEquals(4, classes.length);
-		assertEquals("apache.Fraction", classes[0]);
-		assertEquals("java.lang.Double", classes[1]);
-		assertEquals("java.lang.Integer", classes[2]);
-		assertEquals("java.lang.Object", classes[3]);
+		assertEquals(4, cluster.length);
+
+		assertEquals("apache.Fraction", cluster[0].getClassName());
+		assertEquals("apache.Fraction", cluster[0].getReferenceClazz().getClassName());
+
+		// cluster[0].getSubClasses()
+		assertEquals(0, cluster[0].getSubClasses().length);
+
+		// cluster[0].getAssignableTo()
+		assertEquals(2, cluster[0].getAssignableTo().length);
+		assertEquals("apache.Fraction", cluster[0].getAssignableTo()[0].toString());
+		assertEquals("java.lang.Object", cluster[0].getAssignableTo()[1].toString());
+
+		// cluster[0].getConstants()
+		assertEquals(14, cluster[0].getConstants().length);
+		assertEquals("apache.Fraction.FOUR_FIFTHS", cluster[0].getConstants()[0].toString());
+		assertEquals("apache.Fraction.MINUS_ONE", cluster[0].getConstants()[1].toString());
+		assertEquals("apache.Fraction.ONE", cluster[0].getConstants()[2].toString());
+		assertEquals("apache.Fraction.ONE_FIFTH", cluster[0].getConstants()[3].toString());
+		assertEquals("apache.Fraction.ONE_HALF", cluster[0].getConstants()[4].toString());
+		assertEquals("apache.Fraction.ONE_QUARTER", cluster[0].getConstants()[5].toString());
+		assertEquals("apache.Fraction.ONE_THIRD", cluster[0].getConstants()[6].toString());
+		assertEquals("apache.Fraction.THREE_FIFTHS", cluster[0].getConstants()[7].toString());
+		assertEquals("apache.Fraction.THREE_QUARTERS", cluster[0].getConstants()[8].toString());
+		assertEquals("apache.Fraction.TWO", cluster[0].getConstants()[9].toString());
+		assertEquals("apache.Fraction.TWO_FIFTHS", cluster[0].getConstants()[10].toString());
+		assertEquals("apache.Fraction.TWO_QUARTERS", cluster[0].getConstants()[11].toString());
+		assertEquals("apache.Fraction.TWO_THIRDS", cluster[0].getConstants()[12].toString());
+		assertEquals("apache.Fraction.ZERO", cluster[0].getConstants()[13].toString());
+
+		// cluster[0].getConstructors()
+		assertEquals(5, cluster[0].getConstructors().length);
+		assertEquals("apache.Fraction(double)", cluster[0].getConstructors()[0].toString());
+		assertEquals("apache.Fraction(int)", cluster[0].getConstructors()[1].toString());
+		assertEquals("apache.Fraction(double, int)", cluster[0].getConstructors()[2].toString());
+		assertEquals("apache.Fraction(int, int)", cluster[0].getConstructors()[3].toString());
+		assertEquals("apache.Fraction(double, double, int)", cluster[0].getConstructors()[4].toString());
+
+		// cluster[0].getMethods()
+		assertEquals(23, cluster[0].getMethods().length);
+		assertEquals("abs()", cluster[0].getMethods()[0].toString());
+		assertEquals("add(apache.Fraction)", cluster[0].getMethods()[1].toString());
+		assertEquals("add(int)", cluster[0].getMethods()[2].toString());
+		assertEquals("byteValue()", cluster[0].getMethods()[3].toString());
+		assertEquals("compareTo(apache.Fraction)", cluster[0].getMethods()[4].toString());
+		assertEquals("divide(apache.Fraction)", cluster[0].getMethods()[5].toString());
+		assertEquals("divide(int)", cluster[0].getMethods()[6].toString());
+		assertEquals("doubleValue()", cluster[0].getMethods()[7].toString());
+		assertEquals("equals(java.lang.Object)", cluster[0].getMethods()[8].toString());
+		assertEquals("floatValue()", cluster[0].getMethods()[9].toString());
+		assertEquals("getDenominator()", cluster[0].getMethods()[10].toString());
+		assertEquals("getNumerator()", cluster[0].getMethods()[11].toString());
+		assertEquals("hashCode()", cluster[0].getMethods()[12].toString());
+		assertEquals("intValue()", cluster[0].getMethods()[13].toString());
+		assertEquals("longValue()", cluster[0].getMethods()[14].toString());
+		assertEquals("multiply(apache.Fraction)", cluster[0].getMethods()[15].toString());
+		assertEquals("multiply(int)", cluster[0].getMethods()[16].toString());
+		assertEquals("negate()", cluster[0].getMethods()[17].toString());
+		assertEquals("reciprocal()", cluster[0].getMethods()[18].toString());
+		assertEquals("shortValue()", cluster[0].getMethods()[19].toString());
+		assertEquals("subtract(apache.Fraction)", cluster[0].getMethods()[20].toString());
+		assertEquals("subtract(int)", cluster[0].getMethods()[21].toString());
+		assertEquals("toString()", cluster[0].getMethods()[22].toString());
+
+
+		assertEquals("java.lang.Double", cluster[1].getClassName());
+		assertEquals("java.lang.Double", cluster[1].getReferenceClazz().getClassName());
+
+		// cluster[1].getSubClasses()
+		assertEquals(0, cluster[1].getSubClasses().length);
+
+		// cluster[1].getAssignableTo()
+		assertEquals(3, cluster[1].getAssignableTo().length);
+		assertEquals("java.lang.Double", cluster[1].getAssignableTo()[0].toString());
+		assertEquals("java.lang.Integer", cluster[1].getAssignableTo()[1].toString());
+		assertEquals("java.lang.Object", cluster[1].getAssignableTo()[2].toString());
+
+		// cluster[1].getConstants()
+		assertEquals(9, cluster[1].getConstants().length);
+		assertEquals("java.lang.Double.MAX_EXPONENT", cluster[1].getConstants()[0].toString());
+		assertEquals("java.lang.Double.MAX_VALUE", cluster[1].getConstants()[1].toString());
+		assertEquals("java.lang.Double.MIN_EXPONENT", cluster[1].getConstants()[2].toString());
+		assertEquals("java.lang.Double.MIN_NORMAL", cluster[1].getConstants()[3].toString());
+		assertEquals("java.lang.Double.MIN_VALUE", cluster[1].getConstants()[4].toString());
+		assertEquals("java.lang.Double.NEGATIVE_INFINITY", cluster[1].getConstants()[5].toString());
+		assertEquals("java.lang.Double.NaN", cluster[1].getConstants()[6].toString());
+		assertEquals("java.lang.Double.POSITIVE_INFINITY", cluster[1].getConstants()[7].toString());
+		assertEquals("java.lang.Double.SIZE", cluster[1].getConstants()[8].toString());
+
+		// cluster[1].getConstructors()
+		assertEquals(0, cluster[1].getConstructors().length);
+
+		// cluster[1].getMethods()
+		assertEquals(0, cluster[1].getMethods().length);
+
+
+		assertEquals("double", ((PrimitiveClazz)cluster[1]).getPrimitiveClazz().getClassName());
+		assertEquals("java.lang.Double", ((PrimitiveClazz)cluster[1]).getPrimitiveClazz().getReferenceClazz().getClassName());
+
+		// ((PrimitiveClazz)cluster[1]).getPrimitiveClazz().getSubClasses()
+		assertEquals(0, ((PrimitiveClazz)cluster[1]).getPrimitiveClazz().getSubClasses().length);
+
+		// ((PrimitiveClazz)cluster[1]).getPrimitiveClazz().getAssignableTo()
+		assertEquals(2, ((PrimitiveClazz)cluster[1]).getPrimitiveClazz().getAssignableTo().length);
+		assertEquals("java.lang.Double", ((PrimitiveClazz)cluster[1]).getPrimitiveClazz().getAssignableTo()[0].toString());
+		assertEquals("java.lang.Integer", ((PrimitiveClazz)cluster[1]).getPrimitiveClazz().getAssignableTo()[1].toString());
+
+		// ((PrimitiveClazz)cluster[1]).getPrimitiveClazz().getConstants()
+		assertEquals(0, ((PrimitiveClazz)cluster[1]).getPrimitiveClazz().getConstants().length);
+
+		// ((PrimitiveClazz)cluster[1]).getPrimitiveClazz().getConstructors()
+		assertEquals(0, ((PrimitiveClazz)cluster[1]).getPrimitiveClazz().getConstructors().length);
+
+		// ((PrimitiveClazz)cluster[1]).getPrimitiveClazz().getMethods()
+		assertEquals(0, ((PrimitiveClazz)cluster[1]).getPrimitiveClazz().getMethods().length);
+
+
+		assertEquals("java.lang.Integer", cluster[2].getClassName());
+		assertEquals("java.lang.Integer", cluster[2].getReferenceClazz().getClassName());
+
+		// cluster[2].getSubClasses()
+		assertEquals(0, cluster[2].getSubClasses().length);
+
+		// cluster[2].getAssignableTo()
+		assertEquals(3, cluster[2].getAssignableTo().length);
+		assertEquals("java.lang.Double", cluster[2].getAssignableTo()[0].toString());
+		assertEquals("java.lang.Integer", cluster[2].getAssignableTo()[1].toString());
+		assertEquals("java.lang.Object", cluster[2].getAssignableTo()[2].toString());
+
+		// cluster[2].getConstants()
+		assertEquals(9, cluster[2].getConstants().length);
+		assertEquals("java.lang.Double.MAX_EXPONENT", cluster[2].getConstants()[0].toString());
+		assertEquals("java.lang.Double.MAX_VALUE", cluster[2].getConstants()[1].toString());
+		assertEquals("java.lang.Double.MIN_EXPONENT", cluster[2].getConstants()[2].toString());
+		assertEquals("java.lang.Double.MIN_NORMAL", cluster[2].getConstants()[3].toString());
+		assertEquals("java.lang.Double.MIN_VALUE", cluster[2].getConstants()[4].toString());
+		assertEquals("java.lang.Double.NEGATIVE_INFINITY", cluster[2].getConstants()[5].toString());
+		assertEquals("java.lang.Double.NaN", cluster[2].getConstants()[6].toString());
+		assertEquals("java.lang.Double.POSITIVE_INFINITY", cluster[2].getConstants()[7].toString());
+		assertEquals("java.lang.Double.SIZE", cluster[2].getConstants()[8].toString());
+
+		// cluster[2].getConstructors()
+		assertEquals(0, cluster[2].getConstructors().length);
+
+		// cluster[2].getMethods()
+		assertEquals(0, cluster[2].getMethods().length);
+
+
+		assertEquals("int", ((PrimitiveClazz)cluster[2]).getPrimitiveClazz().getClassName());
+		assertEquals("java.lang.Integer", ((PrimitiveClazz)cluster[2]).getPrimitiveClazz().getReferenceClazz().getClassName());
+
+		// ((PrimitiveClazz)cluster[2]).getPrimitiveClazz().getSubClasses()
+		assertEquals(0, ((PrimitiveClazz)cluster[2]).getPrimitiveClazz().getSubClasses().length);
+
+		// ((PrimitiveClazz)cluster[2]).getPrimitiveClazz().getAssignableTo()
+		assertEquals(2, ((PrimitiveClazz)cluster[2]).getPrimitiveClazz().getAssignableTo().length);
+		assertEquals("java.lang.Double", ((PrimitiveClazz)cluster[2]).getPrimitiveClazz().getAssignableTo()[0].toString());
+		assertEquals("java.lang.Integer", ((PrimitiveClazz)cluster[2]).getPrimitiveClazz().getAssignableTo()[1].toString());
+
+		// ((PrimitiveClazz)cluster[2]).getPrimitiveClazz().getConstants()
+		assertEquals(0, ((PrimitiveClazz)cluster[2]).getPrimitiveClazz().getConstants().length);
+
+		// ((PrimitiveClazz)cluster[2]).getPrimitiveClazz().getConstructors()
+		assertEquals(0, ((PrimitiveClazz)cluster[2]).getPrimitiveClazz().getConstructors().length);
+
+		// ((PrimitiveClazz)cluster[2]).getPrimitiveClazz().getMethods()
+		assertEquals(0, ((PrimitiveClazz)cluster[2]).getPrimitiveClazz().getMethods().length);
+
+
+		assertEquals("java.lang.Object", cluster[3].getClassName());
+		assertEquals("java.lang.Object", cluster[3].getReferenceClazz().getClassName());
+
+		// cluster[3].getSubClasses()
+		assertEquals(3, cluster[3].getSubClasses().length);
+		assertEquals("apache.Fraction", cluster[3].getSubClasses()[0].toString());
+		assertEquals("java.lang.Double", cluster[3].getSubClasses()[1].toString());
+		assertEquals("java.lang.Integer", cluster[3].getSubClasses()[2].toString());
+
+		// cluster[3].getAssignableTo()
+		assertEquals(1, cluster[3].getAssignableTo().length);
+		assertEquals("java.lang.Object", cluster[3].getAssignableTo()[0].toString());
+
+		// cluster[3].getConstants()
+		assertEquals(14, cluster[3].getConstants().length);
+		assertEquals("apache.Fraction.FOUR_FIFTHS", cluster[3].getConstants()[0].toString());
+		assertEquals("apache.Fraction.MINUS_ONE", cluster[3].getConstants()[1].toString());
+		assertEquals("apache.Fraction.ONE", cluster[3].getConstants()[2].toString());
+		assertEquals("apache.Fraction.ONE_FIFTH", cluster[3].getConstants()[3].toString());
+		assertEquals("apache.Fraction.ONE_HALF", cluster[3].getConstants()[4].toString());
+		assertEquals("apache.Fraction.ONE_QUARTER", cluster[3].getConstants()[5].toString());
+		assertEquals("apache.Fraction.ONE_THIRD", cluster[3].getConstants()[6].toString());
+		assertEquals("apache.Fraction.THREE_FIFTHS", cluster[3].getConstants()[7].toString());
+		assertEquals("apache.Fraction.THREE_QUARTERS", cluster[3].getConstants()[8].toString());
+		assertEquals("apache.Fraction.TWO", cluster[3].getConstants()[9].toString());
+		assertEquals("apache.Fraction.TWO_FIFTHS", cluster[3].getConstants()[10].toString());
+		assertEquals("apache.Fraction.TWO_QUARTERS", cluster[3].getConstants()[11].toString());
+		assertEquals("apache.Fraction.TWO_THIRDS", cluster[3].getConstants()[12].toString());
+		assertEquals("apache.Fraction.ZERO", cluster[3].getConstants()[13].toString());
+
+		// cluster[3].getConstructors()
+		assertEquals(1, cluster[3].getConstructors().length);
+		assertEquals("java.lang.Object()", cluster[3].getConstructors()[0].toString());
+
+		// cluster[3].getMethods()
+		assertEquals(0, cluster[3].getMethods().length);
 	}
 
 	public void testReferenceFactory() throws Exception {
@@ -154,6 +354,107 @@ public class RepeatableTestCase extends GenericTestCase {
 		Test t = GenericTestCase.createRandomTest("apache.Fraction", 100, 12012010l);
 
 		assertEquals(100, t.getTest().length);
+
+		assertEquals("java_lang_Double_2 = (double) apache_Fraction_2.intValue()", t.getTest()[0].toString());
+		assertEquals("java_lang_Integer_0 = (int)0", t.getTest()[1].toString());
+		assertEquals("apache_Fraction_3 = apache.Fraction.ZERO", t.getTest()[2].toString());
+		assertEquals("apache_Fraction_0 = apache_Fraction_3.subtract(java_lang_Integer_0)", t.getTest()[3].toString());
+		assertEquals("java_lang_Object_1 = new java.lang.Object()", t.getTest()[4].toString());
+		assertEquals("java_lang_Object_2 = apache.Fraction.ONE", t.getTest()[5].toString());
+		assertEquals("apache_Fraction_2 = apache.Fraction.FOUR_FIFTHS", t.getTest()[6].toString());
+		assertEquals("apache_Fraction_3 = apache_Fraction_1.multiply(apache_Fraction_2)", t.getTest()[7].toString());
+		assertEquals("apache_Fraction_0 = apache.Fraction.THREE_QUARTERS", t.getTest()[8].toString());
+		assertEquals("apache_Fraction_1 = apache_Fraction_0.reciprocal()", t.getTest()[9].toString());
+		assertEquals("java_lang_Integer_3 = (int) apache_Fraction_2.intValue()", t.getTest()[10].toString());
+		assertEquals("java_lang_Double_2 = (double)0.32649530144511274", t.getTest()[11].toString());
+		assertEquals("java_lang_Integer_1 = (int) apache_Fraction_1.getNumerator()", t.getTest()[12].toString());
+		assertEquals("java_lang_Integer_2 = (int) apache_Fraction_0.getDenominator()", t.getTest()[13].toString());
+		assertEquals("java_lang_Double_0 = (double)0.26442080576221294", t.getTest()[14].toString());
+		assertEquals("java_lang_Object_3 = apache_Fraction_0.toString()", t.getTest()[15].toString());
+		assertEquals("apache_Fraction_3 = apache_Fraction_2.add(java_lang_Integer_1)", t.getTest()[16].toString());
+		assertEquals("java_lang_Object_1 = apache.Fraction.ZERO", t.getTest()[17].toString());
+		assertEquals("java_lang_Object_1 = apache.Fraction.THREE_FIFTHS", t.getTest()[18].toString());
+		assertEquals("java_lang_Integer_2 = (int)-1", t.getTest()[19].toString());
+		assertEquals("apache_Fraction_3 = apache_Fraction_3.multiply(java_lang_Integer_1)", t.getTest()[20].toString());
+		assertEquals("java_lang_Object_0 = apache.Fraction.ONE", t.getTest()[21].toString());
+		assertEquals("java_lang_Integer_1 = (int) apache_Fraction_2.intValue()", t.getTest()[22].toString());
+		assertEquals("apache_Fraction_0 = new apache.Fraction(java_lang_Double_0, java_lang_Double_0, java_lang_Integer_3)", t.getTest()[23].toString());
+		assertEquals("apache_Fraction_3 = apache_Fraction_1.add(apache_Fraction_0)", t.getTest()[24].toString());
+		assertEquals("java_lang_Double_0 = (double) apache_Fraction_3.getDenominator()", t.getTest()[25].toString());
+		assertEquals("java_lang_Double_3 = (double) apache_Fraction_3.intValue()", t.getTest()[26].toString());
+		assertEquals("java_lang_Double_0 = (double)4.4110842776770527E307", t.getTest()[27].toString());
+		assertEquals("apache_Fraction_0 = apache_Fraction_1.divide(java_lang_Integer_1)", t.getTest()[28].toString());
+		assertEquals("java_lang_Integer_3 = (int) apache_Fraction_2.hashCode()", t.getTest()[29].toString());
+		assertEquals("apache_Fraction_0 = apache.Fraction.ONE_HALF", t.getTest()[30].toString());
+		assertEquals("java_lang_Object_2 = apache_Fraction_0.reciprocal()", t.getTest()[31].toString());
+		assertEquals("java_lang_Double_2 = (double)0.17511881932984608", t.getTest()[32].toString());
+		assertEquals("java_lang_Object_3 = apache.Fraction.TWO", t.getTest()[33].toString());
+		assertEquals("java_lang_Double_2 = (double) apache_Fraction_1.getNumerator()", t.getTest()[34].toString());
+		assertEquals("java_lang_Integer_2 = (int) apache_Fraction_0.floatValue()", t.getTest()[35].toString());
+		assertEquals("java_lang_Object_3 = apache_Fraction_0.add(java_lang_Integer_2)", t.getTest()[36].toString());
+		assertEquals("java_lang_Object_1 = apache.Fraction.ONE_QUARTER", t.getTest()[37].toString());
+		assertEquals("java_lang_Double_1 = (double) apache_Fraction_0.floatValue()", t.getTest()[38].toString());
+		assertEquals("java_lang_Object_2 = apache.Fraction.ZERO", t.getTest()[39].toString());
+		assertEquals("java_lang_Double_0 = (double) apache_Fraction_1.doubleValue()", t.getTest()[40].toString());
+		assertEquals("apache_Fraction_1 = apache.Fraction.TWO_THIRDS", t.getTest()[41].toString());
+		assertEquals("java_lang_Integer_0 = (int)1", t.getTest()[42].toString());
+		assertEquals("apache_Fraction_0 = new apache.Fraction(java_lang_Double_3)", t.getTest()[43].toString());
+		assertEquals("java_lang_Object_3 = apache.Fraction.ONE_HALF", t.getTest()[44].toString());
+		assertEquals("java_lang_Object_1 = apache.Fraction.ONE_THIRD", t.getTest()[45].toString());
+		assertEquals("apache_Fraction_0 = apache_Fraction_0.multiply(apache_Fraction_3)", t.getTest()[46].toString());
+		assertEquals("java_lang_Object_0 = apache.Fraction.ONE_THIRD", t.getTest()[47].toString());
+		assertEquals("java_lang_Integer_0 = (int) apache_Fraction_0.byteValue()", t.getTest()[48].toString());
+		assertEquals("java_lang_Integer_0 = (int) apache_Fraction_2.longValue()", t.getTest()[49].toString());
+		assertEquals("java_lang_Object_3 = apache.Fraction.ONE_QUARTER", t.getTest()[50].toString());
+		assertEquals("apache_Fraction_3.equals(java_lang_Double_3)", t.getTest()[51].toString());
+		assertEquals("apache_Fraction_0 = apache.Fraction.ONE_HALF", t.getTest()[52].toString());
+		assertEquals("java_lang_Object_1 = apache_Fraction_2.add(apache_Fraction_1)", t.getTest()[53].toString());
+		assertEquals("apache_Fraction_2 = apache_Fraction_2.subtract(apache_Fraction_2)", t.getTest()[54].toString());
+		assertEquals("apache_Fraction_2 = apache_Fraction_0.multiply(apache_Fraction_0)", t.getTest()[55].toString());
+		assertEquals("apache_Fraction_3.equals(apache_Fraction_2)", t.getTest()[56].toString());
+		assertEquals("apache_Fraction_3 = apache_Fraction_2.divide(apache_Fraction_3)", t.getTest()[57].toString());
+		assertEquals("java_lang_Integer_1 = (int) apache_Fraction_1.hashCode()", t.getTest()[58].toString());
+		assertEquals("java_lang_Object_2 = apache_Fraction_2.multiply(java_lang_Integer_2)", t.getTest()[59].toString());
+		assertEquals("java_lang_Object_1 = new java.lang.Object()", t.getTest()[60].toString());
+		assertEquals("apache_Fraction_0 = apache_Fraction_2.divide(apache_Fraction_1)", t.getTest()[61].toString());
+		assertEquals("java_lang_Integer_1 = (int) apache_Fraction_1.getDenominator()", t.getTest()[62].toString());
+		assertEquals("java_lang_Object_1 = new java.lang.Object()", t.getTest()[63].toString());
+		assertEquals("java_lang_Object_1 = apache.Fraction.ONE", t.getTest()[64].toString());
+		assertEquals("java_lang_Object_0 = new apache.Fraction(java_lang_Integer_1, java_lang_Integer_3)", t.getTest()[65].toString());
+		assertEquals("java_lang_Double_3 = (double) apache_Fraction_2.intValue()", t.getTest()[66].toString());
+		assertEquals("java_lang_Object_2 = apache_Fraction_2.divide(apache_Fraction_2)", t.getTest()[67].toString());
+		assertEquals("apache_Fraction_2 = new apache.Fraction(java_lang_Double_2, java_lang_Integer_2)", t.getTest()[68].toString());
+		assertEquals("apache_Fraction_2 = apache.Fraction.THREE_FIFTHS", t.getTest()[69].toString());
+		assertEquals("apache_Fraction_2 = new apache.Fraction(java_lang_Double_1, java_lang_Integer_3)", t.getTest()[70].toString());
+		assertEquals("java_lang_Object_0 = apache.Fraction.TWO", t.getTest()[71].toString());
+		assertEquals("java_lang_Object_0 = apache.Fraction.TWO_FIFTHS", t.getTest()[72].toString());
+		assertEquals("java_lang_Object_3 = apache.Fraction.ONE_FIFTH", t.getTest()[73].toString());
+		assertEquals("apache_Fraction_0.equals(apache_Fraction_0)", t.getTest()[74].toString());
+		assertEquals("apache_Fraction_3.equals(apache_Fraction_1)", t.getTest()[75].toString());
+		assertEquals("java_lang_Integer_2 = (int)2147483647", t.getTest()[76].toString());
+		assertEquals("java_lang_Integer_0 = (int) apache_Fraction_2.getDenominator()", t.getTest()[77].toString());
+		assertEquals("java_lang_Integer_3 = (int)6", t.getTest()[78].toString());
+		assertEquals("apache_Fraction_3 = apache_Fraction_3.abs()", t.getTest()[79].toString());
+		assertEquals("java_lang_Object_0 = apache_Fraction_3.add(java_lang_Integer_2)", t.getTest()[80].toString());
+		assertEquals("java_lang_Integer_0 = (int) apache_Fraction_3.doubleValue()", t.getTest()[81].toString());
+		assertEquals("java_lang_Object_2 = apache_Fraction_3.subtract(java_lang_Integer_3)", t.getTest()[82].toString());
+		assertEquals("java_lang_Object_0 = apache_Fraction_3.add(java_lang_Integer_2)", t.getTest()[83].toString());
+		assertEquals("java_lang_Object_0 = apache.Fraction.TWO", t.getTest()[84].toString());
+		assertEquals("apache_Fraction_1 = apache_Fraction_3.negate()", t.getTest()[85].toString());
+		assertEquals("apache_Fraction_1 = apache_Fraction_3.multiply(java_lang_Integer_1)", t.getTest()[86].toString());
+		assertEquals("apache_Fraction_2 = apache_Fraction_2.multiply(apache_Fraction_1)", t.getTest()[87].toString());
+		assertEquals("java_lang_Integer_1 = (int) apache_Fraction_0.doubleValue()", t.getTest()[88].toString());
+		assertEquals("java_lang_Object_2 = apache.Fraction.TWO_FIFTHS", t.getTest()[89].toString());
+		assertEquals("apache_Fraction_2 = apache_Fraction_3.add(apache_Fraction_1)", t.getTest()[90].toString());
+		assertEquals("java_lang_Integer_3 = (int)1", t.getTest()[91].toString());
+		assertEquals("java_lang_Double_2 = (double) apache_Fraction_3.doubleValue()", t.getTest()[92].toString());
+		assertEquals("apache_Fraction_0 = new apache.Fraction(java_lang_Double_1)", t.getTest()[93].toString());
+		assertEquals("java_lang_Integer_1 = (int) apache_Fraction_2.intValue()", t.getTest()[94].toString());
+		assertEquals("java_lang_Object_2 = apache.Fraction.ONE", t.getTest()[95].toString());
+		assertEquals("java_lang_Object_2 = apache.Fraction.THREE_FIFTHS", t.getTest()[96].toString());
+		assertEquals("java_lang_Object_3 = apache.Fraction.TWO_THIRDS", t.getTest()[97].toString());
+		assertEquals("java_lang_Object_3 = apache.Fraction.MINUS_ONE", t.getTest()[98].toString());
+		assertEquals("java_lang_Double_1 = (double) apache_Fraction_3.floatValue()", t.getTest()[99].toString());
 
 		assertEquals( -530830655, t.getTest()[ 0].hashCode());
 		assertEquals(       7192, t.getTest()[ 1].hashCode());

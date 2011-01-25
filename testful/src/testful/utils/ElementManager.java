@@ -118,11 +118,23 @@ public class ElementManager<K, T extends ElementWithKey<K>> implements Iterable<
 	}
 
 	/**
+	 * Remove a given element
+	 * @param elem the element to remove
+	 */
+	public void remove(T elem) {
+		map.remove(elem.getKey());
+	}
+
+	/**
 	 * Iterate on all elements
 	 */
 	@Override
 	public Iterator<T> iterator() {
 		return map.values().iterator();
+	}
+
+	public T[] toArray(T[] array) {
+		return map.values().toArray(array);
 	}
 
 	/**

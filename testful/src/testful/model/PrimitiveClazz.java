@@ -20,10 +20,9 @@ package testful.model;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.logging.Logger;
 
-import testful.model.TestCluster.ClassRegistry;
+import testful.utils.ElementManager;
 
 public final class PrimitiveClazz extends Clazz {
 
@@ -216,6 +215,10 @@ public final class PrimitiveClazz extends Clazz {
 		return clazzObject;
 	}
 
+	public Clazz getPrimitiveClazz() {
+		return clazzType;
+	}
+
 	/**
 	 * Returns the type
 	 */
@@ -273,62 +276,25 @@ public final class PrimitiveClazz extends Clazz {
 		return ret;
 	}
 
-	@Override
-	void calculateAssignableTo(TestCluster cluster, ClazzRegistry registry, ClassRegistry classRegistry) throws ClassNotFoundException {
-		Set<Clazz> builder = new TreeSet<Clazz>();
-
-		// process primitive types (equivalent primitive types are stored in assignableTo)
-		for(Clazz clazz : assignableTo)
-			if(cluster.contains(clazz)) builder.add(clazz);
-
-		// process superclasses and interfaces
-		Set<Class<?>> todo = new HashSet<Class<?>>();
-
-		Class<?> c = registry.getClass(this);
-		if(c.isInterface()) todo.add(c);
-		while(c != null) {
-			Clazz clazz = classRegistry.getClazzIfExists(c);
-			if(cluster.contains(clazz)) builder.add(clazz);
-
-			for(Class<?> i : c.getInterfaces())
-				insertInterfaceWithParents(todo, i);
-
-			c = c.getSuperclass();
-		}
-
-		Set<Class<?>> done = new HashSet<Class<?>>();
-		for(Class<?> i : todo)
-			if(!done.contains(i)) {
-				Clazz clazz = classRegistry.getClazzIfExists(i);
-				if(cluster.contains(clazz)) {
-					done.add(i);
-					builder.add(clazz);
-				}
-			}
-
-		assignableTo = builder.toArray(new Clazz[builder.size()]);
-	}
-
 	/**
 	 * Analyze the set of classes, and make sure that each primitive type
 	 * is present in its class version (e.g., java.lang.Boolean) and not in
 	 * its primitive version (e.g., boolean).
-	 * @param set the set of classes to analze
+	 * @param cluster the set of classes to analyze
 	 */
-	public static void refine(Set<Clazz> set) {
+	public static void refine(ElementManager<String, Clazz> cluster) {
+		//TODO: remove this method
 		Set<PrimitiveClazz> toRemove = new HashSet<PrimitiveClazz>();
 		Set<PrimitiveClazz> toAdd = new HashSet<PrimitiveClazz>();
 
-		for(Clazz c : set)
+		for(Clazz c : cluster)
 			if(c instanceof PrimitiveClazz) {
 				toAdd.add(((PrimitiveClazz) c).clazzObject);
 				toRemove.add(((PrimitiveClazz) c).clazzType);
 			}
 
-		for(Clazz c : toAdd)
-			set.add(c);
-		for(Clazz c : toRemove)
-			set.remove(c);
+		for(Clazz c : toAdd) cluster.put(c);
+		for(Clazz c : toRemove) cluster.remove(c);
 	}
 
 	public Object cast(Object object) {

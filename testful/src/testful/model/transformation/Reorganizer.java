@@ -217,11 +217,6 @@ public class Reorganizer implements TestTransformation {
 				CreateObject c1 = (CreateObject) o1;
 				CreateObject c2 = (CreateObject) o2;
 
-				name1 = c1.getConstructor().getFullConstructorName();
-				name2 = c2.getConstructor().getFullConstructorName();
-				cmp = name1.compareTo(name2);
-				if(cmp != 0) return cmp;
-
 				cmp = compare(c1.getParams(), c2.getParams());
 				if(cmp != 0) return cmp;
 
@@ -248,8 +243,8 @@ public class Reorganizer implements TestTransformation {
 				cmp = compare(i1.getThis(), i2.getThis());
 				if(cmp != 0) return cmp;
 
-				name1 = i1.getMethod().getFullMethodName();
-				name2 = i2.getMethod().getFullMethodName();
+				name1 = i1.getMethod().getName();
+				name2 = i2.getMethod().getName();
 				cmp = name1.compareTo(name2);
 				if(cmp != 0) return cmp;
 

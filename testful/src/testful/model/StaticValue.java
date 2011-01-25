@@ -20,8 +20,7 @@ package testful.model;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
-
-import testful.model.TestCluster.ClassRegistry;
+import java.lang.reflect.Modifier;
 
 /**
  * StaticValues render constants declared in classes.
@@ -39,10 +38,10 @@ public class StaticValue implements Serializable, Comparable<StaticValue> {
 	/** type name of the field (e.g. Class Foo { int field; } => field) */
 	private final String name;
 
-	StaticValue(TestCluster cluster, Field f, ClassRegistry classRegistry) {
-		type = classRegistry.getClazz(f.getType());
-		declaringClass = classRegistry.getClazz(f.getDeclaringClass());
-		name = f.getName();
+	StaticValue(Clazz declaringClass, Clazz type, String name) {
+		this.declaringClass = declaringClass ;
+		this.type = type;
+		this.name = name;
 	}
 
 	/**
@@ -104,4 +103,24 @@ public class StaticValue implements Serializable, Comparable<StaticValue> {
 	public int compareTo(StaticValue o) {
 		return name.compareTo(o.name);
 	}
+
+	public static boolean skip(Field field) {
+
+		final int modifiers = field.getModifiers();
+		if(!Modifier.isPublic(modifiers)) return true;
+		if(!Modifier.isStatic(modifiers)) return true;
+
+		// ISSUE #1: if you need array support, vote here: http://code.google.com/p/testful/issues/detail?id=1
+		if(field.getType().isArray()) return true;
+		if(field.getType().isEnum()) return true;
+
+		// testful's related fields start with a double underscore
+		if(field.getName().startsWith("__")) return true;
+
+		if(field.getType().getName().startsWith("testful.")) return true;
+		if(field.getDeclaringClass().getName().startsWith("testful.")) return true;
+
+		return false;
+	}
+
 }

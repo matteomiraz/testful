@@ -95,6 +95,4 @@ public class JUnitTransformationTestCase extends GenericTestCase {
 
 		check(t, perform(t), expected, true);
 	}
-
-
 }

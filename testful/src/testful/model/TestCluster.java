@@ -29,88 +29,271 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.IConfigCut;
+import testful.IConfigProject;
 import testful.TestfulException;
 import testful.model.xml.XmlClass;
 import testful.model.xml.XmlConstructor;
 import testful.model.xml.XmlMethod;
-import testful.runner.TestfulClassLoader;
 import testful.utils.ClassComparator;
+import testful.utils.ElementManager;
 
 public class TestCluster implements Serializable {
 
-	private static final Logger logger = Logger.getLogger("testful.model");
+	private static final long serialVersionUID = 6041896902165032348L;
 
-	private static final long serialVersionUID = -3821344984330181680L;
+	static class Builder {
 
-	public static class ClassRegistry {
+		private final IConfigProject config;
+		private final ClassLoader classLoader;
 
-		/** For each class retrieve the corresponding Clazz */
-		private final Map<Class<?>, Clazz> registry;
+		/** all clazzes of the test cluster, including ALL primitive types, String, and all methods' return types */
+		private final ElementManager<String, Clazz> all;
 
-		/** creates an empty registry (with primitive types loaded) */
-		public ClassRegistry(ClazzRegistry clazzRegistry) {
-			registry = new HashMap<Class<?>, Clazz>();
+		/** the clazzes involved in the test cluster, that are those used as input parameters (for primitive types, only the Class is considered) */
+		private final ElementManager<String, Clazz> cluster;
 
-			try {
-				for(PrimitiveClazz c : PrimitiveClazz.createPrimitive())
-					registry.put(clazzRegistry.getClass(c), c);
-			} catch (ClassNotFoundException e) {
-				// never happens
+		public Builder(ClassLoader classLoader, IConfigCut config) throws ClassNotFoundException {
+			this.classLoader = classLoader;
+			this.config = config;
+
+			cluster = new ElementManager<String, Clazz>();
+
+			all = new ElementManager<String, Clazz>();
+			all.put(new Clazz("java.lang.String", false));
+			for (Clazz c : PrimitiveClazz.createPrimitive())
+				all.put(c);
+
+			//TODO: remove xmls!
+			Map<String,XmlClass> xml = calculateCluster(config.getCut());
+
+			for(Clazz c : all) {
+
+				Class<?> javaClass;
+				Set<Clazz> assignableToBuilder = new TreeSet<Clazz>();
+
+				if(c instanceof PrimitiveClazz) {
+
+					javaClass = ((PrimitiveClazz) c).isClass() ? classLoader.loadClass(c.getClassName()) : null;
+
+					// primitive types have a pre-defined assignable to relation
+					for (Clazz ato : c.getAssignableTo())
+						if(cluster.get(ato.getClassName()) != null)
+							assignableToBuilder.add(ato);
+
+				} else {
+					javaClass = classLoader.loadClass(c.getClassName());
+					c.calculateMethods(javaClass, xml.get(c.getClassName()), this);
+				}
+
+				while(javaClass != null) {
+					Clazz clazz = cluster.get(javaClass.getName());
+					if(clazz != null) assignableToBuilder.add(clazz);
+
+					for(Class<?> i : getAllImplementedInterfaces(javaClass)) {
+						Clazz iClazz = cluster.get(i.getName());
+						if(iClazz != null) assignableToBuilder.add(iClazz);
+					}
+
+					javaClass = javaClass.getSuperclass();
+				}
+
+				c.setAssignableTo(assignableToBuilder.toArray(new Clazz[assignableToBuilder.size()]));
 			}
+
+			calculateConstants(classLoader);
+
+			calculateSubClasses(classLoader);
 		}
 
-		public Clazz getClazz(Class<?> type) {
-			Clazz ret = registry.get(type);
-			if(ret == null) {
-				ret = new Clazz(type.getName(), type.isInterface() || Modifier.isAbstract(type.getModifiers()));
-				registry.put(type, ret);
-			}
+		static Set<Class<?>> getAllImplementedInterfaces(Class<?> javaClass) {
+			Set<Class<?>> ret = new HashSet<Class<?>>();
+
+			for (Class<?> i : javaClass.getInterfaces())
+				insertInterfaceWithParents(ret, i);
+
 			return ret;
 		}
 
-		public Clazz getClazzIfExists(Class<?> type) {
-			return registry.get(type);
+		private static void insertInterfaceWithParents(Set<Class<?>> set, Class<?> i) {
+			if(set.add(i)) // if i is a new interface
+				for(Class<?> ext : i.getInterfaces())
+					insertInterfaceWithParents(set, ext);
 		}
 
-		public Clazz[] convert(Class<?>[] c) {
+		private Map<String, XmlClass> calculateCluster(String cutClass) throws ClassNotFoundException {
+			Map<String, XmlClass> xml = new HashMap<String, XmlClass>();
+			Set<String> toDo = new HashSet<String>();
+			toDo.add(cutClass);
+
+			while(!toDo.isEmpty()) {
+				String className = toDo.iterator().next();
+				toDo.remove(className);
+
+				if(cluster.get(className) == null) {
+
+					if(all.get(className) != null) {
+						cluster.put(all.get(className));
+
+					} else {
+						Class<?> javaClass = classLoader.loadClass(className);
+
+						Clazz c = new Clazz(className, javaClass.isInterface() || Modifier.isAbstract(javaClass.getModifiers()));
+						all.put(c);
+						cluster.put(c);
+
+						XmlClass xmlClass = xml.get(className);
+						if(xmlClass == null) {
+							xmlClass = XmlClass.get(config, javaClass);
+							assert(xmlClass != null);
+							xml.put(className, xmlClass);
+						}
+
+						// Include types used in public fields
+						for(Field f : javaClass.getFields()) {
+							if(!StaticValue.skip(f))
+								toDo.add(f.getType().getName());
+						}
+
+						// Consider constructors
+						for(Constructor<?> cns : javaClass.getConstructors()) {
+							XmlConstructor xmlCns = xmlClass.getConstructor(cns);
+							if(xmlCns != null && !xmlCns.isSkip())
+								for(Class<?> param : cns.getParameterTypes())
+									toDo.add(param.getName());
+						}
+
+						// Consider methods
+						for(Method meth : javaClass.getMethods()) {
+							if(meth.getName().startsWith("__testful")) continue;
+
+							XmlMethod xmlMeth = xmlClass.getMethod(meth);
+							if(xmlMeth != null && !xmlMeth.isSkip()) {
+
+								// add input parameters to the test cluster
+								for(Class<?> param : meth.getParameterTypes())
+									toDo.add(param.getName());
+
+								// toDo.add(meth.getReturnType().getName());
+							}
+						}
+
+						for(String aux : xmlClass.getCluster()) {
+							if(cluster.get(aux) == null) toDo.add(aux);
+						}
+					}
+				}
+			}
+
+			PrimitiveClazz.refine(cluster);
+
+			return xml;
+		}
+
+		/** requires: assignableTo calculated */
+		private void calculateConstants(ClassLoader classLoader) throws SecurityException, ClassNotFoundException {
+			Map<Clazz, Set<StaticValue>> fieldMap = new HashMap<Clazz, Set<StaticValue>>();
+
+			for(Clazz cz : cluster) {
+
+				for(Field field : classLoader.loadClass(cz.getClassName()).getFields()) {
+					Class<?> fieldType = field.getType();
+
+					if(StaticValue.skip(field)) continue;
+
+					Clazz fieldTypez = get(fieldType);
+					if(fieldTypez == null) continue;
+
+					StaticValue sv = new StaticValue(cz, fieldTypez, field.getName());
+					for(Clazz d : fieldTypez.getAssignableTo()) {
+						if(cluster.get(d.getClassName()) != null) {
+							Set<StaticValue> fields = fieldMap.get(d);
+							if(fields == null) {
+								fields = new TreeSet<StaticValue>();
+								fieldMap.put(d, fields);
+							}
+							fields.add(sv);
+						}
+					}
+				}
+			}
+
+			for(Clazz c : fieldMap.keySet()) {
+				Set<StaticValue> fields = fieldMap.get(c);
+				c.setConstants(fields.toArray(new StaticValue[fields.size()]));
+			}
+		}
+
+		private void calculateSubClasses(ClassLoader classLoader) throws ClassNotFoundException {
+			// Father => sons
+			Map<Clazz, Set<Clazz>> sonMap = new HashMap<Clazz, Set<Clazz>>();
+
+			for(Clazz cz : cluster) {
+				Class<?> c = classLoader.loadClass(cz.getClassName());
+
+				// all cz's parents
+				Set<Class<?>> parents = new TreeSet<Class<?>>(ClassComparator.singleton);
+				c = c.getSuperclass();
+				while(c != null) {
+					parents.add(c);
+					for(Class<?> i : c.getInterfaces())
+						insertInterfaceWithParents(parents, i);
+
+					c = c.getSuperclass();
+				}
+
+				for(Class<?> p : parents) {
+					Clazz pz = cluster.get(p.getName());
+					if(pz != null) {
+						Set<Clazz> sons = sonMap.get(pz);
+						if(sons == null) {
+							sons = new TreeSet<Clazz>();
+							sonMap.put(pz, sons);
+						}
+						sons.add(cz);
+					}
+				}
+			}
+
+			for(Clazz c : sonMap.keySet()) {
+				Set<Clazz> sons = sonMap.get(c);
+				c.setSubClasses(sons.toArray(new Clazz[sons.size()]));
+			}
+		}
+
+		public Clazz getClusterClazz(String name) {
+			return cluster.get(name);
+		}
+
+		Clazz get(Class<?> c) {
+			return all.get(c.getName());
+		}
+
+		Clazz[] get(Class<?>[] c) {
 			Clazz[] ret = new Clazz[c.length];
-			for(int i = 0; i < c.length; i++)
-				ret[i] = getClazz(c[i]);
+			for (int i = 0; i < ret.length; i++)
+				ret[i] = get(c[i]);
 			return ret;
 		}
 
-		@Override
-		public String toString() {
-			StringBuilder sb = new StringBuilder();
+		public Clazz[] getCluster() {
+			Clazz[] ret = cluster.toArray(new Clazz[cluster.size()]);
+			Arrays.sort(ret);
+			return ret;
+		}
 
-			for(Clazz c : registry.values()) {
-				sb.append(c.getClassName()).append("\n");
-
-				sb.append("  Constants:");
-				for(StaticValue v : c.getConstants())
-					sb.append(v).append(" ");
-				sb.append("\n");
-
-				sb.append("  Assignable To:");
-				for(Clazz d : c.getAssignableTo())
-					sb.append(d.getClassName()).append(" ");
-				sb.append("\n");
-
-				sb.append("  SubClasses:");
-				for(Clazz d : c.getSubClasses())
-					sb.append(d.getClassName()).append(" ");
-				sb.append("\n");
-			}
-
-			return sb.toString();
+		public Clazz[] getAll() {
+			Clazz[] ret = all.toArray(new Clazz[all.size()]);
+			Arrays.sort(ret);
+			return ret;
 		}
 	}
+
+	private static final Logger logger = Logger.getLogger("testful.model");
 
 	/** Class Under Test */
 	private final Clazz cut;
@@ -118,63 +301,16 @@ public class TestCluster implements Serializable {
 	/** All classes required for the test (CUT + AUX). It is sorted according to the name of the classes */
 	private final Clazz[] cluster;
 
-	/** All known classes */
+	/** The whole set of clazzes involved in the test. It includes the cluster, primitive types, and all return types. */
 	private final Clazz[] all;
 
-	public TestCluster(TestfulClassLoader classLoader, IConfigCut config) throws ClassNotFoundException {
-		SortedSet<Clazz> clusterBuilder = new TreeSet<Clazz>();
-		Set<Clazz> toDo = new HashSet<Clazz>();
-		Map<String,XmlClass> xml = new HashMap<String, XmlClass>();
+	public TestCluster(ClassLoader classLoader, IConfigCut config) throws ClassNotFoundException {
+		Builder builder = new Builder(classLoader, config);
 
-		ClazzRegistry clazzRegistry = new ClazzRegistry(classLoader);
-		ClassRegistry classRegistry = new ClassRegistry(clazzRegistry);
+		all = builder.getAll();
+		cluster = builder.getCluster();
+		cut = builder.getClusterClazz(config.getCut());
 
-		cut = classRegistry.getClazz(classLoader.loadClass(config.getCut()));
-		clusterBuilder.add(cut);
-		addClazz(toDo, cut, config, xml, classRegistry, clazzRegistry);
-
-		// adding aux classes (as declared in xmls descriptors)
-		while(!toDo.isEmpty()) {
-			Clazz clazz = toDo.iterator().next();
-			toDo.remove(clazz);
-
-			if(clazz instanceof PrimitiveClazz || clazz.getClassName().equals("java.lang.String")) {
-				clusterBuilder.add(clazz);
-				continue;
-			}
-
-			if(!clusterBuilder.contains(clazz)) {
-				clusterBuilder.add(clazz);
-				addClazz(toDo, clazz, config, xml, classRegistry, clazzRegistry);
-			}
-
-			XmlClass xmlClass = xml.get(clazz.getClassName());
-			if(xmlClass != null) {
-				for(String aux : xmlClass.getCluster()) {
-					final Clazz clusterClazz = classRegistry.getClazz(classLoader.loadClass(aux));
-					if(!clusterBuilder.contains(clusterClazz))
-						toDo.add(clusterClazz);
-				}
-			}
-		}
-
-		PrimitiveClazz.refine(clusterBuilder);
-
-		cluster = clusterBuilder.toArray(new Clazz[clusterBuilder.size()]);
-
-		for(Clazz c : cluster)
-			c.calculateMethods(this, xml.get(c.getClassName()), clazzRegistry, classRegistry);
-
-		// for each known class
-		all = classRegistry.registry.values().toArray(new Clazz[classRegistry.registry.size()]);
-		Arrays.sort(all);
-
-		for(Clazz c : all)
-			c.calculateAssignableTo(this, clazzRegistry, classRegistry);
-
-		calculateConstants(classRegistry, clazzRegistry);
-
-		calculateSubClasses(classRegistry, clazzRegistry);
 
 		if(logger.isLoggable(Level.CONFIG)) {
 			StringBuilder sb = new StringBuilder("Test Cluster:");
@@ -200,46 +336,6 @@ public class TestCluster implements Serializable {
 			if(info.getParameters()[i].isCapturedByReturn()) sb.append(" capturedByReturn");
 			if(info.getParameters()[i].getCaptureStateOf() != null && !info.getParameters()[i].getCaptureStateOf().isEmpty())
 				sb.append(info.getParameters()[i].getCaptureStateOf());
-		}
-	}
-
-	private void addClazz(Set<Clazz> todo, Clazz clazz, IConfigCut config, Map<String, XmlClass> xml, ClassRegistry registry, ClazzRegistry clazzRegistry) throws ClassNotFoundException {
-		todo.add(clazz);
-
-		Class<?> javaClass = clazzRegistry.getClass(clazz);
-
-		XmlClass xmlClass = xml.get(clazz.getClassName());
-		if(xmlClass == null) {
-			xmlClass = XmlClass.get(config, javaClass);
-			if(xmlClass == null) return; // if null, ignore it!
-			xml.put(clazz.getClassName(), xmlClass);
-		}
-
-		// Include types used in public fields
-		for(Field f : javaClass.getFields()) {
-			if(!skipField(f))
-				registry.getClazz(f.getType());
-		}
-
-		// Consider constructors
-		for(Constructor<?> cns : javaClass.getConstructors()) {
-			XmlConstructor xmlCns = xmlClass.getConstructor(cns);
-			if(xmlCns != null && !xmlCns.isSkip())
-				for(Class<?> param : cns.getParameterTypes())
-					todo.add(registry.getClazz(param));
-		}
-
-		// Consider methods
-		for(Method meth : javaClass.getMethods()) {
-			if(meth.getName().startsWith("__testful")) continue;
-
-			XmlMethod xmlMeth = xmlClass.getMethod(meth);
-			if(xmlMeth != null && !xmlMeth.isSkip()) {
-
-				// add input parameters to the test cluster
-				for(Class<?> param : meth.getParameterTypes())
-					todo.add(registry.getClazz(param));
-			}
 		}
 	}
 
@@ -340,105 +436,11 @@ public class TestCluster implements Serializable {
 		for(Clazz c : cluster)
 			ret.append("\n  ").append(c.getClassName());
 
-		if (logger.isLoggable(Level.FINEST)) {
-			ret.append("\nALL:");
-			for (Clazz c : all)
-				ret.append("\n  ").append(c.getClassName());
-		}
-
 		return ret.toString();
 	}
 
 	public Clazz[] getCluster() {
 		return cluster;
-	}
-
-	/** requires: destino is calculated */
-	private void calculateConstants(ClassRegistry classRegistry, ClazzRegistry clazzRegistry) throws SecurityException, ClassNotFoundException {
-		Map<Clazz, Set<StaticValue>> fieldMap = new HashMap<Clazz, Set<StaticValue>>();
-
-		for(Clazz cz : cluster) {
-			for(Field field : clazzRegistry.getClass(cz).getFields()) {
-				Class<?> fieldType = field.getType();
-
-				if(skipField(field)) continue;
-
-				Clazz fieldClazz = classRegistry.getClazzIfExists(fieldType);
-				if(fieldClazz == null) continue;
-
-				for(Clazz d : fieldClazz.getAssignableTo()) {
-					if(contains(d)) {
-						Set<StaticValue> fields = fieldMap.get(d);
-						if(fields == null) {
-							fields = new TreeSet<StaticValue>();
-							fieldMap.put(d, fields);
-						}
-						fields.add(new StaticValue(this, field, classRegistry));
-					}
-				}
-			}
-
-			for(Clazz c : fieldMap.keySet()) {
-				Set<StaticValue> fields = fieldMap.get(c);
-				c.setConstants(fields.toArray(new StaticValue[fields.size()]));
-			}
-		}
-	}
-
-	private boolean skipField(Field field) {
-
-		final int modifiers = field.getModifiers();
-		if(!Modifier.isPublic(modifiers)) return true;
-		if(!Modifier.isStatic(modifiers)) return true;
-
-		// ISSUE #1: if you need array support, vote here: http://code.google.com/p/testful/issues/detail?id=1
-		if(field.getType().isArray()) return true;
-		if(field.getType().isEnum()) return true;
-
-		// testful's related fields start with a double underscore
-		if(field.getName().startsWith("__")) return true;
-
-		if(field.getType().getName().startsWith("testful.")) return true;
-		if(field.getDeclaringClass().getName().startsWith("testful.")) return true;
-
-		return false;
-	}
-
-	private void calculateSubClasses(ClassRegistry registry, ClazzRegistry clazzRegistry) throws ClassNotFoundException {
-		// Father => sons
-		Map<Clazz, Set<Clazz>> sonMap = new HashMap<Clazz, Set<Clazz>>();
-
-		for(Clazz cz : cluster) {
-			Class<?> c = clazzRegistry.getClass(cz);
-
-			// all cz's parents
-			Set<Class<?>> parents = new TreeSet<Class<?>>(ClassComparator.singleton);
-			c = c.getSuperclass();
-			while(c != null) {
-				parents.add(c);
-				for(Class<?> i : c.getInterfaces())
-					Clazz.insertInterfaceWithParents(parents, i);
-
-				c = c.getSuperclass();
-			}
-
-			for(Class<?> p : parents) {
-				Clazz pz = registry.getClazzIfExists(p);
-				if(contains(pz)) {
-					Set<Clazz> sons = sonMap.get(pz);
-					if(sons == null) {
-						sons = new TreeSet<Clazz>();
-						sonMap.put(pz, sons);
-					}
-					sons.add(cz);
-				}
-			}
-		}
-
-		for(Clazz c : sonMap.keySet()) {
-			Set<Clazz> sons = sonMap.get(c);
-			c.setSubClasses(sons.toArray(new Clazz[sons.size()]));
-		}
 	}
 
 	public boolean contains(Clazz clazz) {
@@ -480,7 +482,7 @@ public class TestCluster implements Serializable {
 		final int idx = Arrays.binarySearch(all, clazz);
 		if(idx >= 0) return all[idx];
 
-		logger.warning("Cannot adapt class " + clazz + " " + Arrays.toString(all));
+		logger.warning("Cannot adapt class " + clazz + " " + Arrays.toString(cluster));
 		return null;
 	}
 
