@@ -46,7 +46,9 @@ public class TestCluster implements Serializable {
 
 	private static final long serialVersionUID = 6041896902165032348L;
 
-	static class Builder {
+	private static final Logger logger = Logger.getLogger("testful.model");
+
+	private static class Builder {
 
 		private final IConfigProject config;
 		private final ClassLoader classLoader;
@@ -333,8 +335,6 @@ public class TestCluster implements Serializable {
 		}
 	}
 
-	private static final Logger logger = Logger.getLogger("testful.model");
-
 	/** Class Under Test */
 	private final Clazz cut;
 
@@ -350,7 +350,6 @@ public class TestCluster implements Serializable {
 		all = builder.getAll();
 		cluster = builder.getCluster();
 		cut = builder.getClusterClazz(config.getCut());
-
 
 		if(logger.isLoggable(Level.CONFIG)) {
 			StringBuilder sb = new StringBuilder("Test Cluster:");
