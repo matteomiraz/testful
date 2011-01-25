@@ -26,7 +26,8 @@ import java.util.logging.Logger;
 import testful.runner.TestfulClassLoader;
 
 /**
- * TODO describe me!
+ * ClazzRegistry is a Façade to the remote class-loader,
+ * and allows one to convert testful.model's element into java.lang.reflect ones.
  * @author matteo
  */
 public class ClazzRegistry {

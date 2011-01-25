@@ -126,15 +126,16 @@ public class TestCluster implements Serializable {
 
 				if(cluster.get(className) == null) {
 
-					if(all.get(className) != null) {
-						cluster.put(all.get(className));
+					Clazz clazz = all.get(className);
+					if(clazz != null) {
+						cluster.put(clazz.getReferenceClazz());
 
 					} else {
 						Class<?> javaClass = classLoader.loadClass(className);
 
-						Clazz c = new Clazz(className, javaClass.isInterface() || Modifier.isAbstract(javaClass.getModifiers()));
-						all.put(c);
-						cluster.put(c);
+						clazz = new Clazz(className, javaClass.isInterface() || Modifier.isAbstract(javaClass.getModifiers()));
+						all.put(clazz);
+						cluster.put(clazz);
 
 						XmlClass xmlClass = xml.get(className);
 						if(xmlClass == null) {
@@ -178,8 +179,6 @@ public class TestCluster implements Serializable {
 					}
 				}
 			}
-
-			PrimitiveClazz.refine(cluster);
 
 			return xml;
 		}

@@ -34,7 +34,7 @@ import testful.utils.ByteReader;
 import testful.utils.JavaUtils;
 
 /**
- * TODO describe me!
+ * Loads the bytecode of classes and enable the remote class-loader.
  * @author matteo
  */
 public class ClassType implements DataType {

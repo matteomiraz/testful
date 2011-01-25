@@ -18,11 +18,7 @@
 
 package testful.model;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.logging.Logger;
-
-import testful.utils.ElementManager;
 
 public final class PrimitiveClazz extends Clazz {
 
@@ -274,27 +270,6 @@ public final class PrimitiveClazz extends Clazz {
 		ret[15] = equiv[11] = d.clazzType;
 
 		return ret;
-	}
-
-	/**
-	 * Analyze the set of classes, and make sure that each primitive type
-	 * is present in its class version (e.g., java.lang.Boolean) and not in
-	 * its primitive version (e.g., boolean).
-	 * @param cluster the set of classes to analyze
-	 */
-	public static void refine(ElementManager<String, Clazz> cluster) {
-		//TODO: remove this method
-		Set<PrimitiveClazz> toRemove = new HashSet<PrimitiveClazz>();
-		Set<PrimitiveClazz> toAdd = new HashSet<PrimitiveClazz>();
-
-		for(Clazz c : cluster)
-			if(c instanceof PrimitiveClazz) {
-				toAdd.add(((PrimitiveClazz) c).clazzObject);
-				toRemove.add(((PrimitiveClazz) c).clazzType);
-			}
-
-		for(Clazz c : toAdd) cluster.put(c);
-		for(Clazz c : toRemove) cluster.remove(c);
 	}
 
 	public Object cast(Object object) {
