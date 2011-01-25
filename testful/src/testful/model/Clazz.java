@@ -19,17 +19,7 @@
 package testful.model;
 
 import java.io.Serializable;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.TreeSet;
 
-import testful.model.TestCluster.Builder;
-import testful.model.xml.XmlClass;
-import testful.model.xml.XmlConstructor;
-import testful.model.xml.XmlMethod;
 import testful.utils.ElementWithKey;
 
 public class Clazz implements Serializable, Comparable<Clazz>, ElementWithKey<String> {
@@ -75,47 +65,18 @@ public class Clazz implements Serializable, Comparable<Clazz>, ElementWithKey<St
 		hashCode = name.hashCode();
 	}
 
-	void calculateMethods(Class<?> javaClass, XmlClass xml, Builder builder) throws SecurityException {
+	/**
+	 * @param methods the methods to set
+	 */
+	void setMethods(Methodz[] methods) {
+		this.methods = methods;
+	}
 
-		// if the XML is null (i.e., it is a primitive class)
-		// do not consider methods of the class
-		if(xml == null) {
-			return;
-		}
-
-		// calculate methodz
-		Set<Methodz> mlist = new TreeSet<Methodz>();
-		for(Method meth : javaClass.getMethods()) {
-			final XmlMethod xmlMethod = xml.getMethod(meth);
-			if(xmlMethod != null && !xmlMethod.isSkip()) {
-
-				Clazz returnType;
-				// ISSUE #1: if you need array support, vote here: http://code.google.com/p/testful/issues/detail?id=1
-				if(meth.getReturnType() ==  Void.TYPE || meth.getReturnType().isArray() || meth.getReturnType().isEnum())
-					returnType = null;
-				else
-					returnType = builder.get(meth.getReturnType());
-
-				mlist.add(new Methodz(Modifier.isStatic(meth.getModifiers()), returnType, this, meth.getName(), builder.get(meth.getParameterTypes()), xmlMethod));
-			}
-		}
-		methods = mlist.toArray(new Methodz[mlist.size()]);
-		Arrays.sort(methods);
-
-		// calculate constructorz
-		if(isAbstract()) {
-			constructors = new Constructorz[0];
-
-		} else {
-			Set<Constructorz> clist = new TreeSet<Constructorz>();
-			for(Constructor<?> cns : javaClass.getConstructors()) {
-				final XmlConstructor xmlCns = xml.getConstructor(cns);
-				if(xmlCns != null && !xmlCns.isSkip())
-					clist.add(new Constructorz(this, builder.get(cns.getParameterTypes()), xmlCns));
-			}
-			constructors = clist.toArray(new Constructorz[clist.size()]);
-			Arrays.sort(constructors);
-		}
+	/**
+	 * @param constructors the constructors to set
+	 */
+	void setConstructors(Constructorz[] constructors) {
+		this.constructors = constructors;
 	}
 
 	/**

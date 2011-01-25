@@ -69,8 +69,10 @@ public class TestCluster implements Serializable {
 				all.put(c);
 
 			//TODO: remove xmls!
+			// calculate the test cluster and the set of types involved in the test (all)
 			Map<String,XmlClass> xml = calculateCluster(config.getCut());
 
+			// calculate constructurs, methods, and assignableTo
 			for(Clazz c : all) {
 
 				Class<?> javaClass;
@@ -80,14 +82,17 @@ public class TestCluster implements Serializable {
 
 					javaClass = ((PrimitiveClazz) c).isClass() ? classLoader.loadClass(c.getClassName()) : null;
 
-					// primitive types have a pre-defined assignable to relation
-					for (Clazz ato : c.getAssignableTo())
-						if(cluster.get(ato.getClassName()) != null)
-							assignableToBuilder.add(ato);
+					// primitive types have a pre-defined compatible types
+					for (Clazz comPrime : c.getAssignableTo())
+						if(cluster.get(comPrime.getClassName()) != null)
+							assignableToBuilder.add(comPrime);
 
 				} else {
 					javaClass = classLoader.loadClass(c.getClassName());
-					c.calculateMethods(javaClass, xml.get(c.getClassName()), this);
+
+					XmlClass xmlClass = xml.get(c.getClassName());
+					if(xmlClass != null) // java.lang.String usually does not have any XML description
+						calculateMethods(c, xmlClass, javaClass);
 				}
 
 				while(javaClass != null) {
@@ -108,21 +113,6 @@ public class TestCluster implements Serializable {
 			calculateConstants(classLoader);
 
 			calculateSubClasses(classLoader);
-		}
-
-		static Set<Class<?>> getAllImplementedInterfaces(Class<?> javaClass) {
-			Set<Class<?>> ret = new HashSet<Class<?>>();
-
-			for (Class<?> i : javaClass.getInterfaces())
-				insertInterfaceWithParents(ret, i);
-
-			return ret;
-		}
-
-		private static void insertInterfaceWithParents(Set<Class<?>> set, Class<?> i) {
-			if(set.add(i)) // if i is a new interface
-				for(Class<?> ext : i.getInterfaces())
-					insertInterfaceWithParents(set, ext);
 		}
 
 		private Map<String, XmlClass> calculateCluster(String cutClass) throws ClassNotFoundException {
@@ -194,6 +184,42 @@ public class TestCluster implements Serializable {
 			return xml;
 		}
 
+		private void calculateMethods(Clazz _class, XmlClass xmlClass, Class<?> javaClass) {
+
+			// calculate methodz
+			Set<Methodz> mlist = new TreeSet<Methodz>();
+			for(Method meth : javaClass.getMethods()) {
+				final XmlMethod xmlMethod = xmlClass.getMethod(meth);
+				if(xmlMethod != null && !xmlMethod.isSkip()) {
+
+					Clazz returnType;
+					// ISSUE #1: if you need array support, vote here: http://code.google.com/p/testful/issues/detail?id=1
+					if(meth.getReturnType() ==  Void.TYPE || meth.getReturnType().isArray() || meth.getReturnType().isEnum())
+						returnType = null;
+					else
+						returnType = get(meth.getReturnType());
+
+					mlist.add(new Methodz(Modifier.isStatic(meth.getModifiers()), returnType, _class, meth.getName(), get(meth.getParameterTypes()), xmlMethod));
+				}
+			}
+			Methodz[] methods = mlist.toArray(new Methodz[mlist.size()]);
+			Arrays.sort(methods);
+			_class.setMethods(methods);
+
+			// calculate constructorz
+			if(!_class.isAbstract()) {
+				Set<Constructorz> clist = new TreeSet<Constructorz>();
+				for(Constructor<?> cns : javaClass.getConstructors()) {
+					final XmlConstructor xmlCns = xmlClass.getConstructor(cns);
+					if(xmlCns != null && !xmlCns.isSkip())
+						clist.add(new Constructorz(_class, get(cns.getParameterTypes()), xmlCns));
+				}
+				Constructorz[] constructors = clist.toArray(new Constructorz[clist.size()]);
+				Arrays.sort(constructors);
+				_class.setConstructors(constructors);
+			}
+		}
+
 		/** requires: assignableTo calculated */
 		private void calculateConstants(ClassLoader classLoader) throws SecurityException, ClassNotFoundException {
 			Map<Clazz, Set<StaticValue>> fieldMap = new HashMap<Clazz, Set<StaticValue>>();
@@ -263,6 +289,21 @@ public class TestCluster implements Serializable {
 				Set<Clazz> sons = sonMap.get(c);
 				c.setSubClasses(sons.toArray(new Clazz[sons.size()]));
 			}
+		}
+
+		static Set<Class<?>> getAllImplementedInterfaces(Class<?> javaClass) {
+			Set<Class<?>> ret = new HashSet<Class<?>>();
+
+			for (Class<?> i : javaClass.getInterfaces())
+				insertInterfaceWithParents(ret, i);
+
+			return ret;
+		}
+
+		private static void insertInterfaceWithParents(Set<Class<?>> set, Class<?> i) {
+			if(set.add(i)) // if i is a new interface
+				for(Class<?> ext : i.getInterfaces())
+					insertInterfaceWithParents(set, ext);
 		}
 
 		public Clazz getClusterClazz(String name) {
