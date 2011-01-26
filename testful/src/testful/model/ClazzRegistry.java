@@ -21,9 +21,12 @@ package testful.model;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import testful.runner.TestfulClassLoader;
+import testful.utils.Timer;
 
 /**
  * ClazzRegistry is a Façade to the remote class-loader,
@@ -33,6 +36,8 @@ import testful.runner.TestfulClassLoader;
 public class ClazzRegistry {
 
 	private static final Logger logger = Logger.getLogger("testful.model.clazzRegistry");
+
+	private static final Timer timerClass = Timer.getTimer();
 
 	/** When loaded by a TestfulClassLoader, the singleton stores the ClazzRegistry to use. */
 	public static final ClazzRegistry singleton;
@@ -52,60 +57,94 @@ public class ClazzRegistry {
 		this.loader = loader;
 	}
 
+	private final Map<Clazz, Class<?>> clazzCache = new HashMap<Clazz, Class<?>>();
 	public Class<?> getClass(Clazz clazz) throws ClassNotFoundException {
 
+		timerClass.start("clazzRegistry.getClass");
+
+		Class<?> cache = clazzCache.get(clazz);
+		if(cache != null) {
+			timerClass.stop();
+			return cache;
+		}
+
+		final Class<?> ret;
 		if(clazz instanceof PrimitiveClazz) {
 			switch(((PrimitiveClazz) clazz).getType()) {
 			case BooleanClass:
-				return Boolean.class;
+				ret = Boolean.class;
+				break;
 			case BooleanType:
-				return Boolean.TYPE;
+				ret = Boolean.TYPE;
+				break;
 
 			case ByteClass:
-				return Byte.class;
+				ret = Byte.class;
+				break;
 			case ByteType:
-				return Byte.TYPE;
+				ret = Byte.TYPE;
+				break;
 
 			case CharacterClass:
-				return Character.class;
+				ret = Character.class;
+				break;
 			case CharacterType:
-				return Character.TYPE;
+				ret = Character.TYPE;
+				break;
 
 			case DoubleClass:
-				return Double.class;
+				ret = Double.class;
+				break;
 			case DoubleType:
-				return Double.TYPE;
+				ret = Double.TYPE;
+				break;
 
 			case FloatClass:
-				return Float.class;
+				ret = Float.class;
+				break;
 			case FloatType:
-				return Float.TYPE;
+				ret = Float.TYPE;
+				break;
 
 			case IntegerClass:
-				return Integer.class;
+				ret = Integer.class;
+				break;
 			case IntegerType:
-				return Integer.TYPE;
+				ret = Integer.TYPE;
+				break;
 
 			case LongClass:
-				return Long.class;
+				ret = Long.class;
+				break;
 			case LongType:
-				return Long.TYPE;
+				ret = Long.TYPE;
+				break;
 
 			case ShortClass:
-				return Short.class;
+				ret = Short.class;
+				break;
 			case ShortType:
-				return Short.TYPE;
+				ret = Short.TYPE;
+				break;
 
 			default:
 				logger.warning("Primitive type not known: " + this);
-				return null;
+				ret = null;
+				break;
 			}
+
+		} else {
+			ret = loader.loadClass(clazz.getClassName());
 		}
 
-		return loader.loadClass(clazz.getClassName());
+		clazzCache.put(clazz, ret);
+		timerClass.stop();
+
+		return ret;
 	}
 
 	public Class<?>[] getClasses(Clazz[] c) throws ClassNotFoundException {
+
 		Class<?>[] ret = new Class<?>[c.length];
 		for (int i = 0; i < ret.length; i++)
 			ret[i] = getClass(c[i]);
@@ -114,20 +153,36 @@ public class ClazzRegistry {
 	}
 
 	public Field getField(StaticValue value) throws ClassNotFoundException, SecurityException, NoSuchFieldException {
+
 		Class<?> declaringClass = getClass(value.getDeclaringClass());
 		Field field = declaringClass.getField(value.getName());
+
 		return field;
 	}
 
 	public Method getMethod(Methodz m) throws ClassNotFoundException, SecurityException, NoSuchMethodException {
+
 		Class<?> c = getClass(m.getClazz());
 		Class<?>[] params = getClasses(m.getParameterTypes());
-		return c.getMethod(m.getName(), params);
+		Method method = c.getMethod(m.getName(), params);
+
+		return method;
 	}
 
 	public Constructor<?> getConstructor(Constructorz cns) throws ClassNotFoundException, SecurityException, NoSuchMethodException {
+
 		Class<?> c = getClass(cns.getClazz());
 		Class<?>[] params = getClasses(cns.getParameterTypes());
-		return c.getConstructor(params);
+		Constructor<?> constructor = c.getConstructor(params);
+
+		return constructor;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "ClazzRegistry of " + loader;
 	}
 }
