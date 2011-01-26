@@ -44,7 +44,7 @@ public class Context<R extends Serializable, M extends ExecutionManager<R>> impl
 	private final static AtomicLong ID_SUFFIX = new AtomicLong(0);
 	final String id;
 
-	private final DataFinder classFinder;
+	private final DataFinder finder;
 	private boolean recycleClassLoader = true;
 
 	public boolean stopOnBug = true;
@@ -59,17 +59,17 @@ public class Context<R extends Serializable, M extends ExecutionManager<R>> impl
 	/**
 	 * Create a new evaluation context
 	 * @param execManager the execution manager to use
-	 * @param cf the class finder
+	 * @param finder the class finder
 	 * @param executor the executor
 	 * @param data the tracker data
 	 */
-	public Context(Class<M> execManager, DataFinder cf, Executor executor, TrackerDatum ... data) {
+	public Context(Class<M> execManager, DataFinder finder, Executor executor, TrackerDatum ... data) {
 
 		timer.start("ex.0.serialization");
 
 		this.id = ID_PREFIX + ":" + ID_SUFFIX.incrementAndGet();
 
-		this.classFinder = cf;
+		this.finder = finder;
 		this.execManager = execManager.getName();
 		this.executorSerGz = Cloner.serializeWithCache(executor, true);
 		this.trackerDataSerGz = Cloner.serializeWithCache(data, true);
@@ -93,8 +93,8 @@ public class Context<R extends Serializable, M extends ExecutionManager<R>> impl
 		this.stopOnBug = stopOnBug;
 	}
 
-	public DataFinder getClassFinder() {
-		return classFinder;
+	public DataFinder getFinder() {
+		return finder;
 	}
 
 	public int getSize() {

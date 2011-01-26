@@ -62,7 +62,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	private final static long MIN_AGE = 15 * 60 * 1000; // 15 min
 	private final static long MIN_UNUSED = 5 * 60 * 1000; //  5 min
 
-	private final CachingMap<String, DataFinder> classFinders;
+	private final CachingMap<String, DataFinder> finders;
 	private final CachingMap<String, Queue<TestfulClassLoader>> classLoaders;
 
 	private AtomicLong executedJobs = new AtomicLong();
@@ -77,7 +77,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 		tests = new ArrayBlockingQueue<Context<?, ?>>(buffer);
 		results = new ConcurrentHashMap<String, ITestRepository>();
 
-		classFinders = new CachingMap<String, DataFinder>(MAX_ELEMS, MIN_AGE, MIN_UNUSED);
+		finders = new CachingMap<String, DataFinder>(MAX_ELEMS, MIN_AGE, MIN_UNUSED);
 		classLoaders = new CachingMap<String, Queue<TestfulClassLoader>>(MAX_ELEMS, MIN_AGE, MIN_UNUSED);
 
 		if(cpu < 0) cpu = Runtime.getRuntime().availableProcessors();
@@ -178,28 +178,33 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	}
 
 	public TestfulClassLoader getClassLoader(Context<?, ?> ctx) throws RemoteException {
-		DataFinder classFinder = ctx.getClassFinder();
-		String key = classFinder.getKey();
-
-		Cacheable<DataFinder> finder;
-		synchronized(classFinders) {
-			finder = classFinders.get(key);
-			if(finder == null) {
-				if(classFinder instanceof DataFinderCaching) finder = new Cacheable<DataFinder>(classFinder);
-				else finder = new Cacheable<DataFinder>(new DataFinderCaching(classFinder));
-
-				classFinders.put(key, finder);
-			}
-		}
+		DataFinder finder = ctx.getFinder();
+		String key = finder.getKey();
 
 		TestfulClassLoader ret = null;
-		if(ctx.isRecycleClassLoader())
+		if(ctx.isRecycleClassLoader()) {
 			synchronized(classLoaders) {
 				Cacheable<Queue<TestfulClassLoader>> q = classLoaders.get(key);
 				if(q != null) ret = q.getElement().poll();
 			}
+		}
 
-		if(ret == null) ret = new TestfulClassLoader(finder.getElement());
+		// if cacheable and cached
+		if(ret != null) return ret;
+
+		Cacheable<DataFinder> cacheableFinder;
+		synchronized(finders) {
+			cacheableFinder = finders.get(key);
+
+			if(cacheableFinder == null) {
+				if(finder instanceof DataFinderCaching) cacheableFinder = new Cacheable<DataFinder>(finder);
+				else cacheableFinder = new Cacheable<DataFinder>(new DataFinderCaching(finder));
+
+				finders.put(key, cacheableFinder);
+			}
+		}
+
+		ret = new TestfulClassLoader(cacheableFinder.getElement());
 
 		return ret;
 	}
