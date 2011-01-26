@@ -148,7 +148,7 @@ public class TestfulProblem implements Serializable {
 		invTot.addAndGet(test.getTest().length);
 
 		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = CoverageExecutionManager.getContext(finder, test, data);
-		ctx.setRecycleClassLoader(reload);
+		ctx.setRecycleClassLoader(!reload);
 		return RunnerPool.getRunnerPool().execute(ctx);
 	}
 
