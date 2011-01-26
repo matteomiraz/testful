@@ -52,7 +52,7 @@ public abstract class ExecutionManager<T extends Serializable> {
 
 	private static final Timer timer = Timer.getTimer();
 
-	protected final boolean recycleClassLoader;
+	protected final boolean reloadClasses;
 
 	protected final TestfulClassLoader classLoader;
 
@@ -70,11 +70,11 @@ public abstract class ExecutionManager<T extends Serializable> {
 	 * <b>NOTICE:</b> subclasses must have the same constructor (same parameters. same order).
 	 * @throws TestfulException if something really weird goes wrong
 	 */
-	public ExecutionManager(byte[] executorSerGz, byte[] trackerDataSerGz, boolean recycleClassloader) throws TestfulException {
+	public ExecutionManager(byte[] executorSerGz, byte[] trackerDataSerGz, boolean reloadClasses) throws TestfulException {
 
 		timer.start("ex.0.deserialization");
 
-		this.recycleClassLoader = recycleClassloader;
+		this.reloadClasses = reloadClasses;
 
 		ClassLoader loader = this.getClass().getClassLoader();
 		if(!(loader instanceof TestfulClassLoader)) throw new ClassCastException("FATAL: The execution manager must be loaded using a testful class loader!");
@@ -112,9 +112,9 @@ public abstract class ExecutionManager<T extends Serializable> {
 	 * <b>WARNING</b>: this method should be used only by other Execution Managers, and the class must be loaded through the testful class loader
 	 * @throws TestfulException if something really weird goes wrong
 	 */
-	public ExecutionManager(Executor executor, TrackerDatum[] data) throws TestfulException {
+	public ExecutionManager(Executor executor, TrackerDatum[] data, boolean reloadClasses) throws TestfulException {
 
-		this.recycleClassLoader = true;
+		this.reloadClasses = reloadClasses;
 
 		ClassLoader loader = this.getClass().getClassLoader();
 		if(!(loader instanceof TestfulClassLoader)) throw new ClassCastException("FATAL: The execution manager must be loaded using a testful class loader!");

@@ -22,8 +22,8 @@ import java.util.logging.Logger;
 
 import testful.TestfulException;
 import testful.model.Test;
-import testful.runner.DataFinder;
 import testful.runner.Context;
+import testful.runner.DataFinder;
 import testful.runner.ExecutionManager;
 import testful.runner.Executor;
 import testful.utils.ElementManager;
@@ -39,8 +39,8 @@ public class CoverageExecutionManager extends ExecutionManager<ElementManager<St
 		return ctx;
 	}
 
-	public CoverageExecutionManager(byte[] executorSerGz, byte[] trackerDataSerGz, boolean recycleClassLoader) throws TestfulException {
-		super(executorSerGz, trackerDataSerGz, recycleClassLoader);
+	public CoverageExecutionManager(byte[] executorSerGz, byte[] trackerDataSerGz, boolean reloadClasses) throws TestfulException {
+		super(executorSerGz, trackerDataSerGz, reloadClasses);
 	}
 
 	@Override

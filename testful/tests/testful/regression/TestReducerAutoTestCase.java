@@ -36,7 +36,7 @@ public class TestReducerAutoTestCase extends AutoTestCase {
 
 	@Override
 	protected Collection<TestCoverage> perform(Test test) throws Exception {
-		TestSuiteReducer reducer = new TestSuiteReducer(getFinder(), new TrackerDatum[0]);
+		TestSuiteReducer reducer = new TestSuiteReducer(getFinder(), true, new TrackerDatum[0]);
 		reducer.process(test);
 		Collection<TestCoverage> output = reducer.getOutput();
 

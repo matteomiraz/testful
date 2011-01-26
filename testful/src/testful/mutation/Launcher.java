@@ -70,7 +70,7 @@ public class Launcher {
 
 			DataFinder finder = new DataFinderCaching(new DataFinderImpl(new ClassType(config)));
 
-			MutationRunner mutationRunner = new MutationRunner(exec, finder, config.isReload());
+			MutationRunner mutationRunner = new MutationRunner(exec, finder, config.isReloadClasses());
 			mutationRunner.read(config.getArguments());
 			mutationRunner.join();
 		} catch(Exception e) {
@@ -93,7 +93,7 @@ public class Launcher {
 
 	private static class MutationRunner extends TestReader {
 
-		private final boolean reload;
+		private final boolean reloadClasses;
 
 		private final BlockingQueue<MutJob> submitted;
 		private final DataFinder finder;
@@ -102,8 +102,8 @@ public class Launcher {
 
 		private final Thread futureWaiter;
 
-		public MutationRunner(IRunner exec, DataFinder finder, boolean reload) throws SecurityException {
-			this.reload = reload;
+		public MutationRunner(IRunner exec, DataFinder finder, boolean reloadClasses) throws SecurityException {
+			this.reloadClasses = reloadClasses;
 			this.exec = exec;
 			submitted = new ArrayBlockingQueue<MutJob>(50);
 			this.finder = finder;
@@ -151,7 +151,7 @@ public class Launcher {
 		protected void read(String fileName, Test test) {
 			try {
 				Context<MutationCoverage, MutationExecutionManager> ctx = MutationExecutionManager.getContext(finder, new Test(test.getCluster(), test.getReferenceFactory(), test.getTest()));
-				if(reload) ctx.setRecycleClassLoader(false);
+				ctx.setReloadClasses(reloadClasses);
 				MutJob mutJob = new MutJob(fileName, test, exec.execute(ctx));
 				submitted.put(mutJob);
 				logger.info("submitted: " + fileName);

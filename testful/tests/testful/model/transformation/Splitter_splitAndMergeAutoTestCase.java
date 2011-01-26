@@ -31,7 +31,7 @@ public class Splitter_splitAndMergeAutoTestCase extends AutoTestCase {
 
 	@Override
 	protected List<Test> perform(Test test) throws Exception {
-		test = SimplifierDynamic.singleton.perform(getFinder(), test);
+		test = SimplifierDynamic.singleton.perform(getFinder(), test, true);
 		return Arrays.asList(Splitter.splitAndMerge(test));
 	}
 }

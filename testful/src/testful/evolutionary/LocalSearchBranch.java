@@ -619,8 +619,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 	private Set<TestCoverage> evalParts(Solution<Operation> solution) throws InterruptedException, ExecutionException {
 
 		List<Test> parts = Splitter.split(true,
-				SimplifierDynamic.singleton.perform(problem.getFinder(),
-						problem.getTest(solution.getDecisionVariables().variables_)));
+				SimplifierDynamic.singleton.perform(problem.getFinder(), problem.getTest(solution.getDecisionVariables().variables_), problem.isReloadClasses()));
 
 		List<Future<ElementManager<String, CoverageInformation>>> futures = new ArrayList<Future<ElementManager<String, CoverageInformation>>>(parts.size());
 		for(Test t : parts) futures.add(problem.evaluate(t));

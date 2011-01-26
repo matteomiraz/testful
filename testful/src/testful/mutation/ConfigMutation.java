@@ -52,13 +52,13 @@ implements IConfigProject.Args4j, IConfigRunner.Args4j {
 	private boolean disableTrack;
 
 	@Option(required = false, name = "-reload", usage = "Reload classes before each run (reinitialize static fields)")
-	private boolean reload;
+	private boolean reloadClasses;
 
 	/**
 	 * Returns whether or not I have to reload classes before each run (reinitialize static fields)
 	 */
-	public boolean isReload() {
-		return reload;
+	public boolean isReloadClasses() {
+		return reloadClasses;
 	}
 
 	public boolean isTrack() {

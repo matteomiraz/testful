@@ -33,7 +33,7 @@ public class Splitter_splitAndMinimizeAutoTestCase extends AutoTestCase {
 	@Override
 	protected List<Test> perform(Test test) throws Exception {
 
-		test = SimplifierDynamic.singleton.perform(getFinder(), test);
+		test = SimplifierDynamic.singleton.perform(getFinder(), test, true);
 		Test min = Splitter.splitAndMinimize(test, GenericTestCase.getFinder());
 		return Arrays.asList(min);
 	}

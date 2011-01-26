@@ -13,8 +13,8 @@ import testful.model.Operation;
 import testful.model.OperationResult;
 import testful.model.Test;
 import testful.model.executor.ReflectionExecutor;
-import testful.runner.DataFinder;
 import testful.runner.Context;
+import testful.runner.DataFinder;
 import testful.runner.ExecutionManager;
 import testful.runner.Executor;
 import testful.runner.TestfulClassLoader;
@@ -48,8 +48,8 @@ public class MutationExecutionManager extends ExecutionManager<MutationCoverage>
 	/** the configuration class */
 	private Class<?> config;
 
-	public MutationExecutionManager(byte[] executorSerGz, byte[] trackerDataSerGz, boolean recycleClassLoader) throws TestfulException {
-		super(executorSerGz, trackerDataSerGz, recycleClassLoader);
+	public MutationExecutionManager(byte[] executorSerGz, byte[] trackerDataSerGz, boolean reloadClasses) throws TestfulException {
+		super(executorSerGz, trackerDataSerGz, reloadClasses);
 
 		TrackerDatum[] trackerDataTmp = (TrackerDatum[]) Cloner.deserialize(trackerDataSerGz, true);
 
@@ -162,10 +162,10 @@ public class MutationExecutionManager extends ExecutionManager<MutationCoverage>
 			for(int mutation = executedMutants.nextSetBit(0); mutation >= 0; mutation = executedMutants.nextSetBit(mutation + 1)) {
 				try {
 					TestfulClassLoader loader = classLoader;
-					if(!recycleClassLoader) loader = loader.getNew();
+					if(reloadClasses) loader = loader.getNew();
 					trackerData[0] = new MutationExecutionData(className, mutation, maxExecutionTime);
 
-					MutationExecutionManagerSingle em = new MutationExecutionManagerSingle(executor, trackerData);
+					MutationExecutionManagerSingle em = new MutationExecutionManagerSingle(executor, trackerData, false);
 
 					long executionTime = em.execute(stopOnBug);
 					if(executionTime < 0) {

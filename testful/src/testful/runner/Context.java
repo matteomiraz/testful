@@ -45,7 +45,7 @@ public class Context<R extends Serializable, M extends ExecutionManager<R>> impl
 	final String id;
 
 	private final DataFinder finder;
-	private boolean recycleClassLoader = true;
+	private boolean reloadClasses = false;
 
 	public boolean stopOnBug = true;
 	private final String execManager;
@@ -77,12 +77,16 @@ public class Context<R extends Serializable, M extends ExecutionManager<R>> impl
 		timer.stop();
 	}
 
-	public boolean isRecycleClassLoader() {
-		return recycleClassLoader;
+	public boolean isReloadClasses() {
+		return reloadClasses;
 	}
 
-	public void setRecycleClassLoader(boolean recycleClassLoader) {
-		this.recycleClassLoader = recycleClassLoader;
+	/**
+	 * Force the reload of all classes (i.e., does not enable the reuse of class loaders)
+	 * @param reloadClasses true if the classes must be reloaded for each test execution
+	 */
+	public void setReloadClasses(boolean reloadClasses) {
+		this.reloadClasses = reloadClasses;
 	}
 
 	public boolean isStopOnBug() {
@@ -106,7 +110,7 @@ public class Context<R extends Serializable, M extends ExecutionManager<R>> impl
 		try {
 			Class<? extends ExecutionManager<R>> c = (Class<? extends ExecutionManager<R>>) loader.loadClass(execManager);
 			Constructor<? extends ExecutionManager<R>> cns = c.getConstructor(new Class<?>[] { byte[].class, byte[].class, boolean.class});
-			return cns.newInstance(executorSerGz, trackerDataSerGz, recycleClassLoader);
+			return cns.newInstance(executorSerGz, trackerDataSerGz, reloadClasses);
 		} catch(Exception e) {
 			throw new ClassNotFoundException("Cannot create the execution manager", e);
 		}

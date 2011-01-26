@@ -30,8 +30,8 @@ import testful.model.Operation;
 import testful.model.ReferenceFactory;
 import testful.model.Test;
 import testful.model.TestCluster;
-import testful.model.transformation.Splitter;
 import testful.model.transformation.SimplifierDynamic;
+import testful.model.transformation.Splitter;
 import ec.util.MersenneTwisterFast;
 
 /**
@@ -80,7 +80,7 @@ public class TestfulMutation extends Mutation<Operation> {
 				Test test = problem.getTest(repr);
 
 				// remove all useless operations
-				test = SimplifierDynamic.singleton.perform(problem.getFinder(), test);
+				test = SimplifierDynamic.singleton.perform(problem.getFinder(), test, problem.isReloadClasses());
 				test = Splitter.splitAndMerge(test);
 
 				repr.clear();

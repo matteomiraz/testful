@@ -41,7 +41,7 @@ public class Splitter_splitTestCase extends GenericTestCase {
 
 	private List<Test> perform(Test test) throws Exception {
 
-		test = SimplifierDynamic.singleton.perform(getFinder(), test);
+		test = SimplifierDynamic.singleton.perform(getFinder(), test, true);
 		return Splitter.split(false, test);
 	}
 

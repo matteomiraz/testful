@@ -37,8 +37,8 @@ public class RandomTestSplit extends RandomTest {
 
 	private final Splitter simplifier;
 
-	public RandomTestSplit(File logDirectory, DataFinder finder, boolean reload, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
-		super(logDirectory, finder, reload, cluster, refFactory, seed, data);
+	public RandomTestSplit(File logDirectory, DataFinder finder, boolean reloadClasses, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
+		super(logDirectory, finder, reloadClasses, cluster, refFactory, seed, data);
 
 		simplifier = new Splitter(true, cluster, refFactory);
 	}

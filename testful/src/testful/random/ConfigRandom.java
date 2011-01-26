@@ -98,8 +98,8 @@ public class ConfigRandom implements IConfigRandom, IConfigRunner.Args4j, IConfi
 	}
 
 	@Override
-	public boolean isReload() {
-		return configGenerator.isReload();
+	public boolean isReloadClasses() {
+		return configGenerator.isReloadClasses();
 	}
 
 	@Override
@@ -163,8 +163,8 @@ public class ConfigRandom implements IConfigRandom, IConfigRunner.Args4j, IConfi
 	}
 
 	@Override
-	public void setReload(boolean reload) {
-		configGenerator.setReload(reload);
+	public void setReloadClasses(boolean reloadClasses) {
+		configGenerator.setReloadClasses(reloadClasses);
 	}
 
 	@Override

@@ -54,7 +54,7 @@ public class JUnitTransformationTestCase extends GenericTestCase {
 
 
 	protected List<Test> perform(Test test) throws Exception {
-		test = SimplifierDynamic.singleton.perform(getFinder(), test);
+		test = SimplifierDynamic.singleton.perform(getFinder(), test, true);
 
 		return Arrays.asList(transformation.perform(test));
 	}

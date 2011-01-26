@@ -182,7 +182,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 		String key = finder.getKey();
 
 		TestfulClassLoader ret = null;
-		if(ctx.isRecycleClassLoader()) {
+		if(!ctx.isReloadClasses()) {
 			synchronized(classLoaders) {
 				Cacheable<Queue<TestfulClassLoader>> q = classLoaders.get(key);
 				if(q != null) ret = q.getElement().poll();
@@ -224,7 +224,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 
 	public void putException(Context<?, ?> ctx, Exception exc, TestfulClassLoader cl) {
 		if(cl != null)
-			recycleClassLoader(cl);
+			reuseClassLoader(cl);
 
 		try {
 			putException(ctx.id, Cloner.serialize(exc, true));
@@ -247,7 +247,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	}
 
 	public void putResult(Context<?, ?> ctx, Serializable result, TestfulClassLoader cl) {
-		recycleClassLoader(cl);
+		reuseClassLoader(cl);
 
 		try {
 			putResult(ctx.id, Cloner.serialize(result, true));
@@ -256,7 +256,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 		}
 	}
 
-	private void recycleClassLoader(TestfulClassLoader cl) {
+	private void reuseClassLoader(TestfulClassLoader cl) {
 		synchronized(classLoaders) {
 			Cacheable<Queue<TestfulClassLoader>> q = classLoaders.get(cl.getKey());
 

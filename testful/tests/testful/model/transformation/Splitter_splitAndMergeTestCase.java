@@ -36,7 +36,7 @@ import testful.testCut.DummySimpleCUT;
 public class Splitter_splitAndMergeTestCase extends GenericTestCase {
 
 	protected List<Test> perform(Test test) throws Exception {
-		test = SimplifierDynamic.singleton.perform(getFinder(), test);
+		test = SimplifierDynamic.singleton.perform(getFinder(), test, true);
 		return Arrays.asList(Splitter.splitAndMerge(test));
 	}
 

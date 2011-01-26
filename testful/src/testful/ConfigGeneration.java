@@ -26,8 +26,8 @@ implements IConfigProject.Args4j, IConfigCut.Args4j, IConfigGeneration.Args4j {
 	/** generated test directory */
 	private File dirGeneratedTests;
 
-	/** should I reload all classes every new test? */
-	private boolean reload;
+	/** should testful reload all classes for each test execution? */
+	private boolean reloadClasses;
 
 	/** How much time do I have? (in seconds) */
 	private int time;
@@ -44,7 +44,7 @@ implements IConfigProject.Args4j, IConfigCut.Args4j, IConfigGeneration.Args4j {
 
 	public ConfigGeneration() {
 		dirGeneratedTests = new File("genTests");
-		reload = false;
+		reloadClasses = false;
 
 		time=600;
 		numVar=4;
@@ -56,16 +56,16 @@ implements IConfigProject.Args4j, IConfigCut.Args4j, IConfigGeneration.Args4j {
 	 * @see testful.IConfigGeneration#setReload(boolean)
 	 */
 	@Override
-	public void setReload(boolean reload) {
-		this.reload = reload;
+	public void setReloadClasses(boolean reloadClasses) {
+		this.reloadClasses = reloadClasses;
 	}
 
 	/* (non-Javadoc)
 	 * @see testful.IConfigGeneration#isReload()
 	 */
 	@Override
-	public boolean isReload() {
-		return reload;
+	public boolean isReloadClasses() {
+		return reloadClasses;
 	}
 
 	/* (non-Javadoc)

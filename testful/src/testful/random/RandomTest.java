@@ -39,8 +39,8 @@ import testful.model.Test;
 import testful.model.TestCluster;
 import testful.model.TestCoverage;
 import testful.model.TestSuite;
-import testful.runner.DataFinder;
 import testful.runner.Context;
+import testful.runner.DataFinder;
 import testful.runner.RunnerPool;
 import testful.utils.ElementManager;
 import ec.util.MersenneTwisterFast;
@@ -59,7 +59,7 @@ public abstract class RandomTest {
 	protected final BlockingQueue<Entry<Operation[], Future<ElementManager<String, CoverageInformation>>>> tests = new LinkedBlockingQueue<Entry<Operation[], Future<ElementManager<String, CoverageInformation>>>>();
 	private final OptimalTestCreator optimal;
 	private final DataFinder finder;
-	private final boolean reload;
+	private final boolean reloadClasses;
 	private final TrackerDatum[] data;
 
 	protected final MersenneTwisterFast random;
@@ -68,7 +68,7 @@ public abstract class RandomTest {
 
 	protected final File logDirectory;
 
-	public RandomTest(File logDirectory, DataFinder finder, boolean reload, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
+	public RandomTest(File logDirectory, DataFinder finder, boolean reloadClasses, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
 		this.logDirectory = logDirectory;
 		optimal = new OptimalTestCreator();
 
@@ -79,13 +79,13 @@ public abstract class RandomTest {
 		this.refFactory = refFactory;
 
 		this.finder = finder;
-		this.reload = reload;
+		this.reloadClasses = reloadClasses;
 		this.data = data;
 	}
 
 	protected Future<ElementManager<String, CoverageInformation>> execute(Operation[] ops) {
 		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = CoverageExecutionManager.getContext(finder, new Test(cluster, refFactory, ops), data);
-		ctx.setRecycleClassLoader(reload);
+		ctx.setReloadClasses(reloadClasses);
 		return RunnerPool.getRunnerPool().execute(ctx);
 	}
 

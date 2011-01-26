@@ -16,12 +16,12 @@ public class MutationExecutionManagerSingle extends ExecutionManager<Long> {
 	static final long FAULTY_EXECUTION = -2l;
 	static final long ERROR_EXECUTION = -3l;
 
-	public MutationExecutionManagerSingle(byte[] executorSerGz, byte[] trackerDataSerGz, boolean recycleClassLoader) throws TestfulException {
-		super(executorSerGz, trackerDataSerGz, recycleClassLoader);
+	public MutationExecutionManagerSingle(byte[] executorSerGz, byte[] trackerDataSerGz, boolean reloadClasses) throws TestfulException {
+		super(executorSerGz, trackerDataSerGz, reloadClasses);
 	}
 
-	public MutationExecutionManagerSingle(Executor executor, TrackerDatum[] data) throws TestfulException {
-		super(executor, data);
+	public MutationExecutionManagerSingle(Executor executor, TrackerDatum[] data, boolean reloadClasses) throws TestfulException {
+		super(executor, data, reloadClasses);
 	}
 
 	@Override

@@ -79,8 +79,8 @@ public class TestfulTestCase extends TestCase {
 
 	public static class FaultExecutionManager extends ExecutionManager<Boolean> {
 
-		public FaultExecutionManager(byte[] executorSerGz, byte[] trackerDataSerGz, boolean recycleClassloader) throws TestfulException {
-			super(executorSerGz, trackerDataSerGz, recycleClassloader);
+		public FaultExecutionManager(byte[] executorSerGz, byte[] trackerDataSerGz, boolean reloadClasses) throws TestfulException {
+			super(executorSerGz, trackerDataSerGz, reloadClasses);
 		}
 
 		/* (non-Javadoc)
@@ -119,7 +119,7 @@ public class TestfulTestCase extends TestCase {
 				// OperationResult.Verifier.insertOperationResultVerifier(test.getTest());
 
 				Context<Boolean, FaultExecutionManager> ctx = new Context<Boolean, FaultExecutionManager>(FaultExecutionManager.class, finder, new ReflectionExecutor(test));
-				ctx.setRecycleClassLoader(true);
+				ctx.setReloadClasses(true);
 				ctx.setStopOnBug(true);
 
 				Future<Boolean> r = RunnerPool.getRunnerPool().execute(ctx);

@@ -74,11 +74,11 @@ public class SimplifierDynamic implements TestTransformation {
 	 * Like method <code>Test perform(Test test)</code>,
 	 * but automatically calculates the {@link OperationResult} Information.
 	 */
-	public Test perform(DataFinder finder, Test orig) throws InterruptedException, ExecutionException {
+	public Test perform(DataFinder finder, Test orig, boolean reloadClasses) throws InterruptedException, ExecutionException {
 		Operation[] ops = Arrays.copyOf(orig.getTest(), orig.getTest().length);
 
 		OperationResult.insert(ops);
-		ops = TestExecutionManager.execute(finder, new Test(orig.getCluster(), orig.getReferenceFactory(), ops));
+		ops = TestExecutionManager.execute(finder, new Test(orig.getCluster(), orig.getReferenceFactory(), ops), !reloadClasses);
 
 		ops = perform(ops);
 

@@ -166,7 +166,7 @@ public class Launcher {
 			logger.fine("Optimal Coverage " + testfulProblem.getOptimal().getCoverage());
 
 		/* simplify tests */
-		final TestSuiteReducer reducer = new TestSuiteReducer(testfulProblem.getFinder(), testfulProblem.getData());
+		final TestSuiteReducer reducer = new TestSuiteReducer(testfulProblem.getFinder(), config.isReloadClasses(), testfulProblem.getData());
 		for (TestCoverage t : testfulProblem.getOptimalTests())
 			reducer.process(t);
 
@@ -203,7 +203,7 @@ public class Launcher {
 
 		TrackerDatum[] data = new TrackerDatum[] { };
 
-		RandomTest rt = new RandomTestSplit(config.getLog(), testfulProblem.getFinder(), config.isReload(), testfulProblem.getCluster(), testfulProblem.getReferenceFactory(), config.getSeed(), data);
+		RandomTest rt = new RandomTestSplit(config.getLog(), testfulProblem.getFinder(), config.isReloadClasses(), testfulProblem.getCluster(), testfulProblem.getReferenceFactory(), config.getSeed(), data);
 
 		rt.test(smartTime * 1000);
 

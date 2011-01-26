@@ -638,7 +638,7 @@ public class JUnitTestGenerator extends TestReader {
 		if(config.noReduce)
 			gen.read(config.tests);
 		else
-			gen.read(TestSuiteReducer.reduce(finder, config.tests));
+			gen.read(TestSuiteReducer.reduce(finder, config.reloadClasses, config.tests));
 
 		gen.writeSuite();
 
@@ -646,6 +646,9 @@ public class JUnitTestGenerator extends TestReader {
 	}
 
 	private static class Config extends ConfigProject implements IConfigProject.Args4j, IConfigRunner.Args4j {
+
+		@Option(required = false, name = "-reload", usage = "Reload classes before each run (reinitialize static fields)")
+		private boolean reloadClasses;
 
 		@Option(required = false, name = "-noReduce", usage = "Do not try to reduce test cases.")
 		private  boolean noReduce;

@@ -141,8 +141,8 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	}
 
 	@Override
-	public boolean isReload() {
-		return configGenerator.isReload();
+	public boolean isReloadClasses() {
+		return configGenerator.isReloadClasses();
 	}
 
 	@Override
@@ -220,8 +220,8 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	}
 
 	@Override
-	public void setReload(boolean reload) {
-		configGenerator.setReload(reload);
+	public void setReloadClasses(boolean reloadClasses) {
+		configGenerator.setReloadClasses(reloadClasses);
 	}
 
 	@Override

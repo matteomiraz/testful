@@ -36,7 +36,7 @@ public interface IConfigGeneration extends IConfigCut {
 	 * Returns true if I have to reload classes before each run (reinitialize static fields)
 	 * @return true if I have to reload classes before each run (reinitialize static fields)
 	 */
-	public boolean isReload();
+	public boolean isReloadClasses();
 
 	/**
 	 * Returns the directory in which output tests will be put (e.g. $HOME/workspace/project/genTests/ )
@@ -72,10 +72,10 @@ public interface IConfigGeneration extends IConfigCut {
 
 		/**
 		 * Set whether or not I have to reload classes before each run (reinitialize static fields)
-		 * @param reload set if I have to reload classes before each run (reinitialize static fields)
+		 * @param reloadClasses set if I have to reload classes before each run (reinitialize static fields)
 		 */
 		@Option(required = false, name = "-reload", usage = "Reload classes before each run (reinitialize static fields)")
-		public void setReload(boolean reload);
+		public void setReloadClasses(boolean reloadClasses);
 
 		/**
 		 * Sets the directory in which output tests will be put.

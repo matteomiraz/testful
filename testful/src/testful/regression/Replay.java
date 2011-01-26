@@ -55,11 +55,16 @@ public class Replay extends TestReader {
 		@Option(required = false, name = "-exitOnBug", usage = "Exit when a bug is found")
 		public boolean exitOnBug;
 
+		/** should I reload all classes every new test? */
+		@Option(required = false, name = "-reload", usage = "Reload classes before each run (reinitialize static fields)")
+		private boolean reloadClasses = false;
+
 		@Argument
 		private List<String> tests = new ArrayList<String>();
 	}
 
 	private final boolean exitOnBug;
+	private final boolean reloadClasses;
 
 	private DataFinder finder;
 
@@ -76,7 +81,7 @@ public class Replay extends TestReader {
 		RunnerPool.getRunnerPool().startLocalWorkers();
 
 		try {
-			Replay replay = new Replay(config, config.exitOnBug);
+			Replay replay = new Replay(config, config.exitOnBug, config.reloadClasses);
 			replay.read(config.tests);
 		} catch (ClassNotFoundException e) {
 			System.exit(1);
@@ -85,7 +90,9 @@ public class Replay extends TestReader {
 		System.exit(0);
 	}
 
-	public Replay(IConfigProject config, boolean exitOnBug) throws ClassNotFoundException {
+	public Replay(IConfigProject config, boolean exitOnBug, boolean reloadClasses) throws ClassNotFoundException {
+
+		this.reloadClasses = reloadClasses;
 		this.exitOnBug = exitOnBug;
 
 		try {
@@ -102,7 +109,7 @@ public class Replay extends TestReader {
 		try {
 			logger.info("Replaying " + fileName);
 			OperationResult.insert(test.getTest());
-			Operation[] operations = TestExecutionManager.execute(finder, test);
+			Operation[] operations = TestExecutionManager.execute(finder, test, reloadClasses);
 
 			for(Operation op : operations) {
 				OperationResult info = (OperationResult) op.getInfo(OperationResult.KEY);

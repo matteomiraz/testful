@@ -41,7 +41,7 @@ public class ReorganizerTestCase extends GenericTestCase {
 
 	protected List<Test> perform(Test test) throws Exception {
 		OperationResult.insert(test.getTest());
-		test = TestExecutionManager.executeTest(getFinder(), new Test(test.getCluster(), test.getReferenceFactory(), test.getTest()));
+		test = TestExecutionManager.executeTest(getFinder(), new Test(test.getCluster(), test.getReferenceFactory(), test.getTest()), true);
 
 		test = Reorganizer.singleton.perform(test);
 

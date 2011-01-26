@@ -178,7 +178,7 @@ public abstract class GenericTestCase extends TestCase {
 		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx =
 			CoverageExecutionManager.getContext(getFinder(), test, data);
 
-		ctx.setRecycleClassLoader(true);
+		ctx.setReloadClasses(true);
 		Future<ElementManager<String, CoverageInformation>> future = getExec().execute(ctx);
 		ElementManager<String, CoverageInformation> coverage = future.get();
 

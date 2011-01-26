@@ -64,7 +64,7 @@ public class TestfulProblem implements Serializable {
 	private final ReferenceFactory refFactory;
 	private final WhiteBoxAnalysisData whiteAnalysis;
 	private final TrackerDatum[] data;
-	private final boolean reload;
+	private final boolean reloadClasses;
 
 	/** Saves the tests with the best coverage (including fault coverage!) */
 	private final OptimalTestCreator optimal = new OptimalTestCreator();
@@ -74,7 +74,7 @@ public class TestfulProblem implements Serializable {
 
 	public TestfulProblem(IConfigGeneration config) throws ClassNotFoundException {
 		try {
-			reload = config.isReload();
+			reloadClasses = config.isReloadClasses();
 
 			final ClassType classType = new ClassType(config);
 			final DataFinderImpl finderImpl = new DataFinderImpl(classType);
@@ -108,6 +108,10 @@ public class TestfulProblem implements Serializable {
 
 	public DataFinderCaching getFinder() {
 		return finder;
+	}
+
+	public boolean isReloadClasses() {
+		return reloadClasses;
 	}
 
 	public TrackerDatum[] getData() {
@@ -148,7 +152,7 @@ public class TestfulProblem implements Serializable {
 		invTot.addAndGet(test.getTest().length);
 
 		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = CoverageExecutionManager.getContext(finder, test, data);
-		ctx.setRecycleClassLoader(!reload);
+		ctx.setReloadClasses(reloadClasses);
 		return RunnerPool.getRunnerPool().execute(ctx);
 	}
 

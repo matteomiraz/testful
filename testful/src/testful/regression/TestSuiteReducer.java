@@ -72,10 +72,12 @@ public class TestSuiteReducer {
 	);
 
 	private final OptimalTestCreator optimal = new OptimalTestCreator();
+	private final boolean reloadClasses;
 	private final DataFinder finder;
 	private final TrackerDatum[] data;
 
-	public TestSuiteReducer(DataFinder finder, TrackerDatum[] data) {
+	public TestSuiteReducer(DataFinder finder, boolean reloadClasses, TrackerDatum[] data) {
+		this.reloadClasses = reloadClasses;
 		this.finder = finder;
 		this.data = data;
 	}
@@ -83,7 +85,7 @@ public class TestSuiteReducer {
 	public void process(Test test) {
 		try {
 
-			test = SimplifierDynamic.singleton.perform(finder, test);
+			test = SimplifierDynamic.singleton.perform(finder, test, reloadClasses);
 
 			test = transform.perform(test);
 
@@ -107,7 +109,7 @@ public class TestSuiteReducer {
 	private TestCoverage getCoverage(Test t) throws InterruptedException, ExecutionException {
 
 		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = CoverageExecutionManager.getContext(finder, t, data);
-		ctx.setRecycleClassLoader(true);
+		ctx.setReloadClasses(reloadClasses);
 		Future<ElementManager<String, CoverageInformation>> f = RunnerPool.getRunnerPool().execute(ctx);
 
 		ElementManager<String, CoverageInformation> cov = f.get();
@@ -121,8 +123,8 @@ public class TestSuiteReducer {
 
 	// -------------------- static version ------------
 
-	public static Collection<TestCoverage> reduce(DataFinder finder, List<String> tests) {
-		final TestSuiteReducer reducer = new TestSuiteReducer(finder, new TrackerDatum[0]);
+	public static Collection<TestCoverage> reduce(DataFinder finder, boolean reloadClasses, List<String> tests) {
+		final TestSuiteReducer reducer = new TestSuiteReducer(finder, reloadClasses, new TrackerDatum[0]);
 		new TestReader() {
 
 			@Override
@@ -152,6 +154,10 @@ public class TestSuiteReducer {
 
 		private List<String> remote = new ArrayList<String>();
 
+		/** should I reload all classes every new test? */
+		@Option(required = false, name = "-reload", usage = "Reload classes before each run (reinitialize static fields)")
+		private boolean reloadClasses = false;
+
 		private boolean localEvaluation = true;
 
 		@Override
@@ -172,6 +178,10 @@ public class TestSuiteReducer {
 		@Override
 		public void disableLocalEvaluation(boolean disableLocalEvaluation) {
 			localEvaluation = !disableLocalEvaluation;
+		}
+
+		public boolean isReloadClasses() {
+			return reloadClasses;
 		}
 	}
 
@@ -197,7 +207,7 @@ public class TestSuiteReducer {
 
 		TrackerDatum[] data = new TrackerDatum[] { };
 
-		final TestSuiteReducer reducer = new TestSuiteReducer(finder, data);
+		final TestSuiteReducer reducer = new TestSuiteReducer(finder, config.isReloadClasses(), data);
 		new TestReader() {
 
 			@Override

@@ -84,10 +84,10 @@ public class Launcher {
 		logger.config("Using the " + config.getRandomType() + " algorithm");
 		switch(config.getRandomType()) {
 		case SIMPLE:
-			rt = new RandomTestSimple(config.getLog(), finder, config.isReload(), tc, refFactory, config.getSeed());
+			rt = new RandomTestSimple(config.getLog(), finder, config.isReloadClasses(), tc, refFactory, config.getSeed());
 			break;
 		case SPLIT:
-			rt = new RandomTestSplit(config.getLog(), finder, config.isReload(), tc, refFactory, config.getSeed());
+			rt = new RandomTestSplit(config.getLog(), finder, config.isReloadClasses(), tc, refFactory, config.getSeed());
 			break;
 		}
 

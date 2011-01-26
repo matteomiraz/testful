@@ -81,11 +81,10 @@ public class SimplifierStaticTestCase extends GenericTestCase {
 				new CreateObject(cut.saa[0], cut.saa_cns, new Reference[] { }),
 				new AssignConstant(cut.sa[1], null),
 				new Invoke(null, cut.saa[0], cut.saa_addTail, new Reference[] { cut.sa[1] } ),
-				new Invoke(cut.ints[2], cut.cuts[2], cut.c_conta, new Reference[] { cut.saa[0] }),
-
+				new Invoke(cut.ints[2], cut.cuts[2], cut.c_conta, new Reference[] { cut.saa[0] })
 		});
 
-		t = SimplifierDynamic.singleton.perform(getFinder(), t);
+		t = SimplifierDynamic.singleton.perform(getFinder(), t, true);
 
 		{
 			OperationResult opRes6 = (OperationResult) t.getTest()[6].getInfo(OperationResult.KEY);

@@ -23,8 +23,8 @@ import java.util.concurrent.ExecutionException;
 import testful.TestfulException;
 import testful.coverage.TrackerDatum;
 import testful.model.executor.ReflectionExecutor;
-import testful.runner.DataFinder;
 import testful.runner.Context;
+import testful.runner.DataFinder;
 import testful.runner.ExecutionManager;
 import testful.runner.RunnerPool;
 
@@ -34,8 +34,8 @@ import testful.runner.RunnerPool;
  */
 public class TestExecutionManager extends ExecutionManager<Operation[]> {
 
-	public TestExecutionManager(byte[] executorSerGz, byte[] trackerDataSerGz, boolean recycleClassLoader) throws TestfulException {
-		super(executorSerGz, trackerDataSerGz, recycleClassLoader);
+	public TestExecutionManager(byte[] executorSerGz, byte[] trackerDataSerGz, boolean reloadClasses) throws TestfulException {
+		super(executorSerGz, trackerDataSerGz, reloadClasses);
 	}
 
 	@Override
@@ -51,10 +51,10 @@ public class TestExecutionManager extends ExecutionManager<Operation[]> {
 	@Override
 	protected void warmUp() {}
 
-	public static Operation[] execute(DataFinder finder, Test test, TrackerDatum ... data) throws InterruptedException, ExecutionException {
+	public static Operation[] execute(DataFinder finder, Test test, boolean reloadClasses, TrackerDatum ... data) throws InterruptedException, ExecutionException {
 		Context<Operation[], TestExecutionManager> ctx =  new Context<Operation[], TestExecutionManager>(TestExecutionManager.class, finder, new ReflectionExecutor(test), data);
 		ctx.setStopOnBug(false);
-		ctx.setRecycleClassLoader(true);
+		ctx.setReloadClasses(reloadClasses);
 
 		Operation[] ops = RunnerPool.getRunnerPool().execute(ctx).get();
 
@@ -64,10 +64,10 @@ public class TestExecutionManager extends ExecutionManager<Operation[]> {
 		return ops;
 	}
 
-	public static Test executeTest(DataFinder finder, Test test, TrackerDatum ... data) throws InterruptedException, ExecutionException {
+	public static Test executeTest(DataFinder finder, Test test, boolean reloadClasses, TrackerDatum ... data) throws InterruptedException, ExecutionException {
 		Context<Operation[], TestExecutionManager> ctx =  new Context<Operation[], TestExecutionManager>(TestExecutionManager.class, finder, new ReflectionExecutor(test), data);
 		ctx.setStopOnBug(false);
-		ctx.setRecycleClassLoader(true);
+		ctx.setReloadClasses(reloadClasses);
 
 		Operation[] ops = RunnerPool.getRunnerPool().execute(ctx).get();
 

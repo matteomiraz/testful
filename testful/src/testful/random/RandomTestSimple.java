@@ -35,8 +35,8 @@ public class RandomTestSimple extends RandomTest {
 
 	private final int TEST_SIZE = 500;
 
-	public RandomTestSimple(File logDirectory, DataFinder finder, boolean reload, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
-		super(logDirectory, finder, reload, cluster, refFactory, seed, data);
+	public RandomTestSimple(File logDirectory, DataFinder finder, boolean reloadClasses, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
+		super(logDirectory, finder, reloadClasses, cluster, refFactory, seed, data);
 	}
 
 	@Override
