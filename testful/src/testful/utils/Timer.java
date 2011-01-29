@@ -51,13 +51,13 @@ public abstract class Timer {
 	public abstract void stop();
 
 	public static Timer getTimer() {
-		if(MONITOR) return new TimerImpl();
-		else return TimerDisabled.singleton;
+		if(MONITOR) return new Enabled();
+		else return Disabled.singleton;
 	}
 
-	private static class TimerDisabled extends Timer {
+	public static class Disabled extends Timer {
 
-		public static TimerDisabled singleton = new TimerDisabled();
+		public static Disabled singleton = new Disabled();
 
 		/* (non-Javadoc)
 		 * @see testful.utils.Timer#start(java.lang.String)
@@ -72,7 +72,7 @@ public abstract class Timer {
 		public void stop() { }
 	}
 
-	private static class TimerImpl extends Timer {
+	private static class Enabled extends Timer {
 		private String name = null;
 		private long begin = 0;
 

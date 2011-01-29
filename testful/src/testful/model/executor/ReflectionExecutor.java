@@ -98,6 +98,7 @@ public class ReflectionExecutor implements Executor, Externalizable {
 	}
 
 	/** Constructor for Externalizable interface. DO NOT USE THIS CONSTRUCTOR. */
+	@Deprecated
 	public ReflectionExecutor() { }
 
 	@Override
@@ -116,17 +117,10 @@ public class ReflectionExecutor implements Executor, Externalizable {
 
 	private static Timer2 timer_pre_stop = timer.getSubTimer(TIMER_PREFIX + ".2.preStop");
 
-	private static Timer2 timer_post = timer.getSubTimer(TIMER_PREFIX + ".6.post");
-	private static Timer2 timer_post_stop = timer_post.getSubTimer(TIMER_PREFIX + ".6.post.stop");
-	private static Timer2 timer_post_log = timer_post.getSubTimer(TIMER_PREFIX + ".6.post.log");
-
 	private static Timer2 timer_stop = timer.getSubTimer(TIMER_PREFIX + ".3.stop");
 
-	private static Timer2 timer_exec = timer.getSubTimer(TIMER_PREFIX + ".3.dynamic");
-	private static Timer2 timer_error = timer.getSubTimer(TIMER_PREFIX + ".5.error");
-	private static Timer2 timer_finally = timer.getSubTimer(TIMER_PREFIX + ".5.finally");
+	private static Timer2 timer_exec = timer.getSubTimer(TIMER_PREFIX + ".3.exec");
 
-	private static Timer2 timer_reset = timer_exec.getSubTimer(TIMER_PREFIX + ".4.reset");
 	private static Timer2 timer_assignPrimitive = timer_exec.getSubTimer(TIMER_PREFIX + ".4.assignPrimitive");
 	private static Timer2 timer_createObject = timer_exec.getSubTimer(TIMER_PREFIX + ".4.createObject");
 	private static Timer2 timer_createObjectCut = timer_createObject.getSubTimer(TIMER_PREFIX + ".4.createObject.cut");
@@ -134,6 +128,8 @@ public class ReflectionExecutor implements Executor, Externalizable {
 	private static Timer2 timer_invokeCut = timer_invoke.getSubTimer(TIMER_PREFIX + ".4.invoke.cut");
 	private static Timer2 timer_assignConstant = timer_exec.getSubTimer(TIMER_PREFIX + ".4.assignConstant");
 	private static Timer2 timer_assignConstantCut = timer_assignConstant.getSubTimer(TIMER_PREFIX + ".4.assignConstant.cut");
+
+	private static Timer2 timer_post_stop = timer.getSubTimer(TIMER_PREFIX + ".5.postStop");
 
 	@Override
 	public int execute(boolean stopOnBug) throws ClassNotFoundException, ClassCastException {
@@ -193,17 +189,13 @@ public class ReflectionExecutor implements Executor, Externalizable {
 				}
 				timer_stop.stop();
 
-				try {
-					timer_exec.start();
-					if(op instanceof AssignPrimitive) assignPrimitive((AssignPrimitive) op);
-					else if(op instanceof AssignConstant) assignConstant((AssignConstant) op);
-					else if(op instanceof CreateObject) createObject((CreateObject) op);
-					else if(op instanceof Invoke) invoke((Invoke) op);
-					else if(op instanceof ResetRepository) reset();
-					else logger.warning("Unknown operation: " + op.getClass().getName() + " - " + op);
-				} finally {
-					timer_exec.stop();
-				}
+				timer_exec.start();
+				if(op instanceof AssignPrimitive) assignPrimitive((AssignPrimitive) op);
+				else if(op instanceof AssignConstant) assignConstant((AssignConstant) op);
+				else if(op instanceof CreateObject) createObject((CreateObject) op);
+				else if(op instanceof Invoke) invoke((Invoke) op);
+				else if(op instanceof ResetRepository) reset();
+				else logger.warning("Unknown operation: " + op.getClass().getName() + " - " + op);
 
 				nValid++;
 
@@ -219,7 +211,7 @@ public class ReflectionExecutor implements Executor, Externalizable {
 				}
 
 			} catch(Throwable e) {
-				timer_error.start();
+
 				if (e instanceof TestfulInternalException) {
 					// clean the test execution
 					nPre++;
@@ -235,30 +227,23 @@ public class ReflectionExecutor implements Executor, Externalizable {
 
 					reset();
 				}
-				timer_error.stop();
 			} finally {
-				timer_finally.start();
+				timer_exec.stop();
+
 				if(maxExecTime != null) {
 					stopper.stop();
 					if(Thread.interrupted())
 						logger.finest("Clean the thread interrupted status");
 				}
-				timer_finally.stop();
 			}
 		}
-
-		timer_post.start();
 
 		timer_post_stop.start();
 		stopper.done();
 		timer_post_stop.stop();
 
-		timer_post_log.start();
 		if(LOGGER_FINEST) logger.finest(toString());
 		if(LOGGER_FINE)   logger.fine(new StringBuilder("STATS").append(" ops:").append(test.length).append(" invalid:").append(nPre).append(" valid:").append(nValid).append(" faulty:").append(nFaulty).toString());
-		timer_post_log.stop();
-
-		timer_post.stop();
 
 		timer.stop();
 
@@ -322,10 +307,8 @@ public class ReflectionExecutor implements Executor, Externalizable {
 	}
 
 	private void reset() {
-		timer_reset.stop();
 		for(int i = 0; i < repository.length; i++)
 			repository[i] = null;
-		timer_reset.start();
 	}
 
 	/** createObject */

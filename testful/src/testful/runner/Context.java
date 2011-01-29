@@ -59,13 +59,13 @@ public class Context<R extends Serializable, M extends ExecutionManager<R>> impl
 	/**
 	 * Create a new evaluation context
 	 * @param execManager the execution manager to use
-	 * @param finder the class finder
+	 * @param finder the data finder
 	 * @param executor the executor
 	 * @param data the tracker data
 	 */
 	public Context(Class<M> execManager, DataFinder finder, Executor executor, TrackerDatum ... data) {
 
-		timer.start("ex.0.serialization");
+		timer.start("exec.0.serialization");
 
 		this.id = ID_PREFIX + ":" + ID_SUFFIX.incrementAndGet();
 

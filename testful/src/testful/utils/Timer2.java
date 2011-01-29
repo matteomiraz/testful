@@ -35,15 +35,15 @@ public abstract class Timer2 {
 	public abstract Timer2 getSubTimer(String name);
 
 	public static Timer2 getRootTimer(String name) {
-		if(Timer.MONITOR) return new Timer2Impl(name);
-		else return TimerDisabled.singleton;
+		if(Timer.MONITOR) return new Enabled(name);
+		else return Disabled.singleton;
 	}
 
-	private static class TimerDisabled extends Timer2 {
+	private static class Disabled extends Timer2 {
 
-		public static TimerDisabled singleton = new TimerDisabled();
+		public static Disabled singleton = new Disabled();
 
-		private TimerDisabled() { }
+		private Disabled() { }
 
 		@Override
 		public void start() { }
@@ -57,23 +57,23 @@ public abstract class Timer2 {
 		}
 	}
 
-	private static class Timer2Impl extends Timer2 {
+	private static class Enabled extends Timer2 {
 		private final String name;
-		private final Timer2Impl parent;
-		public Timer2Impl(String name) {
+		private final Enabled parent;
+		public Enabled(String name) {
 			parent = null;
 			this.name = name;
 		}
 
-		private Timer2Impl(Timer2Impl parent, String name) {
+		private Enabled(Enabled parent, String name) {
 			this.parent = parent;
 			this.name = name;
 		}
 
-		private Collection<Timer2Impl> subtimers = new LinkedList<Timer2Impl>();
+		private Collection<Enabled> subtimers = new LinkedList<Enabled>();
 		@Override
 		public Timer2 getSubTimer(String name) {
-			Timer2Impl ret = new Timer2Impl(this, name);
+			Enabled ret = new Enabled(this, name);
 			subtimers.add(ret);
 			return ret;
 		}
@@ -103,6 +103,9 @@ public abstract class Timer2 {
 			if(TestFul.DEBUG && paused)
 				new IllegalStateException("The timer " + name + " is paused").printStackTrace();
 
+			if(TestFul.DEBUG && start == 0)
+				new IllegalStateException("The timer " + name + " is not running").printStackTrace();
+
 			paused = true;
 			duration += (System.nanoTime() - start);
 		}
@@ -120,6 +123,9 @@ public abstract class Timer2 {
 		 */
 		@Override
 		public void stop() {
+			if(TestFul.DEBUG && start == 0)
+				new IllegalStateException("The timer " + name + " is not running").printStackTrace();
+
 			long end = System.nanoTime();
 			duration += end - start;
 
@@ -134,7 +140,7 @@ public abstract class Timer2 {
 			duration = 0;
 			n = 0;
 
-			for (Timer2Impl subTimer : subtimers)
+			for (Enabled subTimer : subtimers)
 				subTimer.log();
 		}
 

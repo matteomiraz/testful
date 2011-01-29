@@ -72,7 +72,7 @@ public abstract class ExecutionManager<T extends Serializable> {
 	 */
 	public ExecutionManager(byte[] executorSerGz, byte[] trackerDataSerGz, boolean reloadClasses) throws TestfulException {
 
-		timer.start("ex.0.deserialization");
+		timer.start("exec.0.deserialization");
 
 		this.reloadClasses = reloadClasses;
 

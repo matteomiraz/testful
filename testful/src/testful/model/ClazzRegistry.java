@@ -37,7 +37,7 @@ public class ClazzRegistry {
 
 	private static final Logger logger = Logger.getLogger("testful.model.clazzRegistry");
 
-	private static final Timer timerClass = Timer.getTimer();
+	private static final Timer timerClass = Timer.Disabled.singleton; // Timer.getTimer();
 
 	/** When loaded by a TestfulClassLoader, the singleton stores the ClazzRegistry to use. */
 	public static final ClazzRegistry singleton;
