@@ -24,6 +24,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import testful.coverage.TrackerDatum;
+import testful.model.Test;
 import testful.utils.Cloner;
 import testful.utils.Timer;
 
@@ -34,7 +35,7 @@ import testful.utils.Timer;
  * @param <R> the type of the <b>R</b>esult
  * @param <M> the Execution <b>M</b>anager
  */
-public class Context<R extends Serializable, M extends ExecutionManager<R>> implements Serializable {
+public class Context<R extends Serializable, M extends IExecutionManager<R>> implements Serializable {
 
 	private static final long serialVersionUID = 1615872139934821021L;
 
@@ -51,7 +52,7 @@ public class Context<R extends Serializable, M extends ExecutionManager<R>> impl
 	private final String execManager;
 
 	/** contains a compressed serialized array of Executor */
-	private final byte[] executorSerGz;
+	private final byte[] executor;
 
 	/** contains a compressed serialized array of TrackerDatum */
 	private final byte[] trackerDataSerGz;
@@ -60,10 +61,11 @@ public class Context<R extends Serializable, M extends ExecutionManager<R>> impl
 	 * Create a new evaluation context
 	 * @param execManager the execution manager to use
 	 * @param finder the data finder
-	 * @param executor the executor
+	 * @param executorType the type of the executor to use
+	 * @param test the test to execute
 	 * @param data the tracker data
 	 */
-	public Context(Class<M> execManager, DataFinder finder, Executor executor, TrackerDatum ... data) {
+	public Context(Class<M> execManager, DataFinder finder, Class<? extends IExecutor> executorType, Test test, TrackerDatum ... data) {
 
 		timer.start("exec.0.serialization");
 
@@ -71,7 +73,7 @@ public class Context<R extends Serializable, M extends ExecutionManager<R>> impl
 
 		this.finder = finder;
 		this.execManager = execManager.getName();
-		this.executorSerGz = Cloner.serializeWithCache(executor, true);
+		this.executor = ExecutorSerializer.serialize(finder, executorType, test);
 		this.trackerDataSerGz = Cloner.serializeWithCache(data, true);
 
 		timer.stop();
@@ -102,15 +104,15 @@ public class Context<R extends Serializable, M extends ExecutionManager<R>> impl
 	}
 
 	public int getSize() {
-		return executorSerGz.length + trackerDataSerGz.length;
+		return executor.length + trackerDataSerGz.length;
 	}
 
 	@SuppressWarnings("unchecked")
-	public ExecutionManager<R> getExecManager(TestfulClassLoader loader) throws ClassNotFoundException {
+	public IExecutionManager<R> getExecManager(TestfulClassLoader loader) throws ClassNotFoundException {
 		try {
-			Class<? extends ExecutionManager<R>> c = (Class<? extends ExecutionManager<R>>) loader.loadClass(execManager);
-			Constructor<? extends ExecutionManager<R>> cns = c.getConstructor(new Class<?>[] { byte[].class, byte[].class, boolean.class});
-			return cns.newInstance(executorSerGz, trackerDataSerGz, reloadClasses);
+			Class<? extends IExecutionManager<R>> c = (Class<? extends IExecutionManager<R>>) loader.loadClass(execManager);
+			Constructor<? extends IExecutionManager<R>> cns = c.getConstructor(new Class<?>[] { byte[].class, byte[].class, boolean.class});
+			return cns.newInstance(executor, trackerDataSerGz, reloadClasses);
 		} catch(Exception e) {
 			throw new ClassNotFoundException("Cannot create the execution manager", e);
 		}

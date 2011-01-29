@@ -48,11 +48,8 @@ public class TestExecutionManager extends ExecutionManager<Operation[]> {
 		Test.ensureNoDuplicateOps(executor.getTest());
 	}
 
-	@Override
-	protected void warmUp() {}
-
 	public static Operation[] execute(DataFinder finder, Test test, boolean reloadClasses, TrackerDatum ... data) throws InterruptedException, ExecutionException {
-		Context<Operation[], TestExecutionManager> ctx =  new Context<Operation[], TestExecutionManager>(TestExecutionManager.class, finder, new ReflectionExecutor(test), data);
+		Context<Operation[], TestExecutionManager> ctx =  new Context<Operation[], TestExecutionManager>(TestExecutionManager.class, finder, ReflectionExecutor.class, test, data);
 		ctx.setStopOnBug(false);
 		ctx.setReloadClasses(reloadClasses);
 
@@ -65,7 +62,7 @@ public class TestExecutionManager extends ExecutionManager<Operation[]> {
 	}
 
 	public static Test executeTest(DataFinder finder, Test test, boolean reloadClasses, TrackerDatum ... data) throws InterruptedException, ExecutionException {
-		Context<Operation[], TestExecutionManager> ctx =  new Context<Operation[], TestExecutionManager>(TestExecutionManager.class, finder, new ReflectionExecutor(test), data);
+		Context<Operation[], TestExecutionManager> ctx =  new Context<Operation[], TestExecutionManager>(TestExecutionManager.class, finder, ReflectionExecutor.class, test, data);
 		ctx.setStopOnBug(false);
 		ctx.setReloadClasses(reloadClasses);
 

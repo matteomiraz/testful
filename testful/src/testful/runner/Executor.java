@@ -18,19 +18,50 @@
 
 package testful.runner;
 
-import java.io.Serializable;
-
+import testful.TestFul;
 import testful.model.Operation;
+import testful.model.Reference;
+import testful.model.TestCluster;
 
 /**
- * Interface for the test executor.<br/>
+ * 
+ * Classes implementing this interface must support their own serialization (and de-serialization) <b>in an efficient manner</b>.
+ * 
  * Classes implementing this interface must not execute directly the test, but
  * must create another instance of another class, loaded using the specified
  * class loader, and use it to run the test.
  *
  * @author matteo
  */
-public interface Executor extends Serializable {
+public abstract class Executor implements IExecutor {
+
+	/** Test cluster */
+	protected final TestCluster cluster;
+
+	/** types of elements in the repository */
+	protected final Reference[] repositoryType;
+
+	protected final Operation[] test;
+
+	protected final boolean discoverFaults;
+
+	/**
+	 * Classes implementing this class MUST expose a constructor with EXACTLY these parameters.
+	 * @param testCluster the test cluster
+	 * @param testRefs the references used in the test
+	 * @param testOps the sequence of operations
+	 * @param faultDiscovery true if the fault discovery is enabled
+	 */
+	public Executor(TestCluster testCluster, Reference[] testRefs, Operation[] testOps, boolean faultDiscovery) {
+
+		if(TestFul.DEBUG && !(Executor.class.getClassLoader() instanceof TestfulClassLoader))
+			throw new ClassCastException("The executor must be loaded by the Testful Class Loader");
+
+		cluster = testCluster;
+		repositoryType = testRefs;
+		test = testOps;
+		discoverFaults = faultDiscovery;
+	}
 
 	/**
 	 * Run the test, using the specified class loader.
@@ -38,7 +69,8 @@ public interface Executor extends Serializable {
 	 * @return the number of bug found
 	 * @throws ClassNotFoundException if there is any problem resolving classes
 	 */
-	public int execute(boolean stopOnBug) throws ClassNotFoundException;
+	@Override
+	public abstract int execute(boolean stopOnBug) throws ClassNotFoundException;
 
 	/**
 	 * Returns the operations of the test.
@@ -46,11 +78,16 @@ public interface Executor extends Serializable {
 	 * each operation has the proper OperationInformation.
 	 * @return the operations of the test.
 	 */
-	public Operation[] getTest();
+	@Override
+	public Operation[] getTest() {
+		return test;
+	}
 
 	/**
 	 * Returns the length of the test
 	 * @return the length of the test
 	 */
-	public int getTestLength();
+	public int getTestLength() {
+		return test.length;
+	}
 }

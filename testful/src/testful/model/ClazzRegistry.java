@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import testful.runner.TestfulClassLoader;
 import testful.utils.Timer;
 
 /**
@@ -43,17 +42,11 @@ public class ClazzRegistry {
 	public static final ClazzRegistry singleton;
 
 	static {
-		ClassLoader loader = ClazzRegistry.class.getClassLoader();
-
-		ClazzRegistry tmp = null;
-		if(loader instanceof TestfulClassLoader) {
-			tmp = new ClazzRegistry((TestfulClassLoader) loader);
-		}
-		singleton = tmp;
+		singleton = new ClazzRegistry(ClazzRegistry.class.getClassLoader());
 	}
 
-	private final TestfulClassLoader loader;
-	public ClazzRegistry(TestfulClassLoader loader) {
+	private final ClassLoader loader;
+	public ClazzRegistry(ClassLoader loader) {
 		this.loader = loader;
 	}
 

@@ -8,7 +8,7 @@ import testful.TestfulException;
 import testful.coverage.Tracker;
 import testful.coverage.TrackerDatum;
 import testful.runner.ExecutionManager;
-import testful.runner.Executor;
+import testful.runner.IExecutor;
 
 public class MutationExecutionManagerSingle extends ExecutionManager<Long> {
 	private static Logger logger = Logger.getLogger("testful.mutation");
@@ -16,11 +16,13 @@ public class MutationExecutionManagerSingle extends ExecutionManager<Long> {
 	static final long FAULTY_EXECUTION = -2l;
 	static final long ERROR_EXECUTION = -3l;
 
+	private static ClassLoader classLoader = MutationExecutionManager.class.getClassLoader();
+
 	public MutationExecutionManagerSingle(byte[] executorSerGz, byte[] trackerDataSerGz, boolean reloadClasses) throws TestfulException {
 		super(executorSerGz, trackerDataSerGz, reloadClasses);
 	}
 
-	public MutationExecutionManagerSingle(Executor executor, TrackerDatum[] data, boolean reloadClasses) throws TestfulException {
+	public MutationExecutionManagerSingle(IExecutor executor, TrackerDatum[] data, boolean reloadClasses) throws TestfulException {
 		super(executor, data, reloadClasses);
 	}
 
@@ -31,9 +33,6 @@ public class MutationExecutionManagerSingle extends ExecutionManager<Long> {
 
 		return executionTime;
 	}
-
-	@Override
-	protected void warmUp() { }
 
 	@Override
 	protected void setup() throws ClassNotFoundException { }

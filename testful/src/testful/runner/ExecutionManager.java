@@ -19,28 +19,27 @@
 package testful.runner;
 
 import java.io.Serializable;
-import java.lang.reflect.Method;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import testful.TestFul;
 import testful.TestfulException;
 import testful.coverage.TrackerDatum;
 import testful.utils.Cloner;
 import testful.utils.Timer;
 
 /**
- * Embodies the execution environment of the test. Manages the supply of
- * information at run-time to trackers, the test execution, and the retrieval of
- * coverage information.<br/>
- * The execution manager itself (i.e., this abstract class) is loaded by the system
- * class-loader, but subclasses must be loaded using the test's class loader (instance
- * of the TestfulClassLoader). When one is creating an instance, he must specify the
- * executor to use and (optionally) the <b>tracker data</b>. Then it is possible
- * to execute the test and retrieve the results by invoking the method execute,
+ * Abstract manager for executing tests.<br/>
+ * It supplies run-time information to trackers, execute the test, and retrieve the information.<br/>
+ * 
+ * <b>This class is loaded through the Testful ClassLoader.<b>
+ * 
+ * To create an instance, you must specify the executor to use and (optionally) the <b>tracker data</b>.
+ * Then it is possible to execute the test and retrieve the results by invoking the method execute,
  * and specifying whether or not the execution must stop as soon as a bug is
  * revealed. This method performs the following operations:
  * <ol>
  * <li>invoke the setup method</li>
- * <li>if the class-loader is a new one (never used before), invoke the warm-up
- * method</li>
  * <li>invoke the reallyExecute() method, which really execute the test</li>
  * <li>invoke the getResult method, and return the result</li>
  * </ol>
@@ -48,16 +47,16 @@ import testful.utils.Timer;
  * @author matteo
  * @param <T> The type of the collected coverage information
  */
-public abstract class ExecutionManager<T extends Serializable> {
+public abstract class ExecutionManager<T extends Serializable> implements IExecutionManager<T> {
+
+	private static final Logger logger = Logger.getLogger("testful.runner");
 
 	private static final Timer timer = Timer.getTimer();
 
 	protected final boolean reloadClasses;
 
-	protected final TestfulClassLoader classLoader;
-
 	/** the executor of the test */
-	protected final Executor executor;
+	protected final IExecutor executor;
 
 	/** the execution time of the test (if null, the test has not been executed) */
 	protected Long executionTime;
@@ -70,41 +69,31 @@ public abstract class ExecutionManager<T extends Serializable> {
 	 * <b>NOTICE:</b> subclasses must have the same constructor (same parameters. same order).
 	 * @throws TestfulException if something really weird goes wrong
 	 */
-	public ExecutionManager(byte[] executorSerGz, byte[] trackerDataSerGz, boolean reloadClasses) throws TestfulException {
+	public ExecutionManager(byte[] executor, byte[] trackerDataSerGz, boolean reloadClasses) throws TestfulException {
 
 		timer.start("exec.0.deserialization");
 
 		this.reloadClasses = reloadClasses;
 
-		ClassLoader loader = this.getClass().getClassLoader();
-		if(!(loader instanceof TestfulClassLoader)) throw new ClassCastException("FATAL: The execution manager must be loaded using a testful class loader!");
-
-		this.classLoader = (TestfulClassLoader) loader;
-
-		try {
-			Class<?> cloner = loader.loadClass(Cloner.class.getName());
-			Method deserialize = cloner.getMethod("deserialize", byte[].class, boolean.class);
-
-			// Setup the executor
-			if(executorSerGz != null)
-				this.executor = (Executor) deserialize.invoke(null, executorSerGz, true);
-			else
-				this.executor = null;
-
-			if(trackerDataSerGz != null) {
-				// Setup the tracker data
-				TrackerDatum[] data = (TrackerDatum[]) deserialize.invoke(null, trackerDataSerGz, true);
-
-				Class<?> trackerDatum = loader.loadClass("testful.coverage.Tracker");
-				Method setup = trackerDatum.getMethod("setup", TrackerDatum[].class);
-				setup.invoke(null, new Object[] { data });
-			}
-
-		} catch(Throwable e) {
-			throw new TestfulException("Cannot setup the execution manager", e);
-		} finally {
-			timer.stop();
+		if(TestFul.DEBUG && !(ExecutionManager.class.getClassLoader() instanceof TestfulClassLoader)) {
+			ClassCastException exc = new ClassCastException("The execution manager must be loaded by using a testful class loader!");
+			logger.log(Level.WARNING, exc.getMessage(), exc);
 		}
+
+		// Setup the executor
+		if(executor != null)
+			this.executor = ExecutorSerializer.deserialize(executor);
+		else
+			this.executor = null;
+
+		if(trackerDataSerGz != null) {
+			// Setup the tracker data
+			TrackerDatum[] data = (TrackerDatum[]) Cloner.deserialize(trackerDataSerGz, true);
+
+			testful.coverage.Tracker.setup(data);
+		}
+
+		timer.stop();
 	}
 
 	/**
@@ -112,24 +101,18 @@ public abstract class ExecutionManager<T extends Serializable> {
 	 * <b>WARNING</b>: this method should be used only by other Execution Managers, and the class must be loaded through the testful class loader
 	 * @throws TestfulException if something really weird goes wrong
 	 */
-	public ExecutionManager(Executor executor, TrackerDatum[] data, boolean reloadClasses) throws TestfulException {
+	public ExecutionManager(IExecutor executor, TrackerDatum[] data, boolean reloadClasses) throws TestfulException {
 
 		this.reloadClasses = reloadClasses;
 
-		ClassLoader loader = this.getClass().getClassLoader();
-		if(!(loader instanceof TestfulClassLoader)) throw new ClassCastException("FATAL: The execution manager must be loaded using a testful class loader!");
-
-		this.classLoader = (TestfulClassLoader) loader;
+		if(TestFul.DEBUG && !(ExecutionManager.class.getClassLoader() instanceof TestfulClassLoader)) {
+			ClassCastException exc = new ClassCastException("The execution manager must be loaded using a testful class loader!");
+			logger.log(Level.WARNING, exc.getMessage(), exc);
+		}
 
 		this.executor = executor;
 
-		try {
-			Class<?> trackerDatum = loader.loadClass("testful.coverage.Tracker");
-			Method setup = trackerDatum.getMethod("setup", TrackerDatum[].class);
-			setup.invoke(null, new Object[] { data });
-		} catch (Throwable e) {
-			throw new TestfulException("Cannot setup the execution manager", e);
-		}
+		testful.coverage.Tracker.setup(data);
 	}
 
 	public Long getExecutionTime() {
@@ -141,8 +124,6 @@ public abstract class ExecutionManager<T extends Serializable> {
 	 * the following operations:
 	 * <ol>
 	 * <li>invoke the setup method</li>
-	 * <li>if the classloader is a new one (never used before), invoke the warmup
-	 * method</li>
 	 * <li>invoke the execute() method, which really execute the test</li>
 	 * <li>invoke the getResult method, and return the result</li>
 	 * </ol>
@@ -151,15 +132,11 @@ public abstract class ExecutionManager<T extends Serializable> {
 	 * @return the desired result
 	 * @throws ClassNotFoundException if it is impossible to find some classes
 	 */
+	@Override
 	public T execute(boolean stopOnBug) throws ClassNotFoundException {
 		this.executionTime = null;
 
 		setup();
-
-		if(!classLoader.isWarmedUp()) {
-			warmUp();
-			classLoader.setWarmedUp(true);
-		}
 
 		reallyExecute(stopOnBug);
 
@@ -171,12 +148,6 @@ public abstract class ExecutionManager<T extends Serializable> {
 	 * <code>execute</code> before running the test.
 	 */
 	protected abstract void setup() throws ClassNotFoundException;
-
-	/**
-	 * Warm up the class loader: perform some operation on the classes under test
-	 * to pre-compile their bytecode and ensure faster executions.
-	 */
-	protected abstract void warmUp();
 
 	/**
 	 * Collect the results of the test execution

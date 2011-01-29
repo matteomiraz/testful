@@ -16,7 +16,6 @@ import testful.model.executor.ReflectionExecutor;
 import testful.runner.Context;
 import testful.runner.DataFinder;
 import testful.runner.ExecutionManager;
-import testful.runner.Executor;
 import testful.runner.TestfulClassLoader;
 import testful.utils.Cloner;
 
@@ -32,9 +31,10 @@ public class MutationExecutionManager extends ExecutionManager<MutationCoverage>
 	private static Logger logger = Logger.getLogger("testful.mutation");
 
 	public static Context<MutationCoverage, MutationExecutionManager> getContext(DataFinder finder, Test test, TrackerDatum ... data) {
-		Executor executor = new ReflectionExecutor(test);
-		return new Context<MutationCoverage, MutationExecutionManager>(MutationExecutionManager.class, finder, executor, data);
+		return new Context<MutationCoverage, MutationExecutionManager>(MutationExecutionManager.class, finder, ReflectionExecutor.class, test, data);
 	}
+
+	private static ClassLoader classLoader = MutationExecutionManager.class.getClassLoader();
 
 	/** tracker data. trackerData[0] contains information about the mutation to run */
 	private TrackerDatum[] trackerData;
@@ -80,9 +80,6 @@ public class MutationExecutionManager extends ExecutionManager<MutationCoverage>
 	protected MutationCoverage getResult() {
 		return coverage;
 	}
-
-	@Override
-	protected void warmUp() { }
 
 	@Override
 	protected void setup() throws ClassNotFoundException { }
@@ -161,10 +158,11 @@ public class MutationExecutionManager extends ExecutionManager<MutationCoverage>
 
 			for(int mutation = executedMutants.nextSetBit(0); mutation >= 0; mutation = executedMutants.nextSetBit(mutation + 1)) {
 				try {
-					TestfulClassLoader loader = classLoader;
+					TestfulClassLoader loader = (TestfulClassLoader) classLoader;
 					if(reloadClasses) loader = loader.getNew();
-					trackerData[0] = new MutationExecutionData(className, mutation, maxExecutionTime);
 
+					//TODO: use the "new" class loader
+					trackerData[0] = new MutationExecutionData(className, mutation, maxExecutionTime);
 					MutationExecutionManagerSingle em = new MutationExecutionManagerSingle(executor, trackerData, false);
 
 					long executionTime = em.execute(stopOnBug);

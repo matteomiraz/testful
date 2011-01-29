@@ -21,7 +21,11 @@ package testful.coverage;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import testful.TestFul;
+import testful.runner.TestfulClassLoader;
 import testful.utils.ElementManager;
 
 /**
@@ -38,6 +42,14 @@ import testful.utils.ElementManager;
  */
 public abstract class Tracker {
 
+	private static final Logger logger = Logger.getLogger("testful.coverage");
+
+	static {
+		if(TestFul.DEBUG && !(Tracker.class.getClassLoader() instanceof TestfulClassLoader)) {
+			ClassCastException exc = new ClassCastException("Trackers must be loaded using a testful class loader!");
+			logger.log(Level.WARNING, exc.getMessage(), exc);
+		}
+	}
 
 	private static ElementManager<String, TrackerDatum> data = new ElementManager<String, TrackerDatum>();
 

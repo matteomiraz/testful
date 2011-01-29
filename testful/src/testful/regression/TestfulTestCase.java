@@ -90,12 +90,6 @@ public class TestfulTestCase extends TestCase {
 		protected void setup() throws ClassNotFoundException { }
 
 		/* (non-Javadoc)
-		 * @see testful.runner.ExecutionManager#warmUp()
-		 */
-		@Override
-		protected void warmUp() { }
-
-		/* (non-Javadoc)
 		 * @see testful.runner.ExecutionManager#getResult()
 		 */
 		@Override
@@ -118,7 +112,7 @@ public class TestfulTestCase extends TestCase {
 
 				// OperationResult.Verifier.insertOperationResultVerifier(test.getTest());
 
-				Context<Boolean, FaultExecutionManager> ctx = new Context<Boolean, FaultExecutionManager>(FaultExecutionManager.class, finder, new ReflectionExecutor(test));
+				Context<Boolean, FaultExecutionManager> ctx = new Context<Boolean, FaultExecutionManager>(FaultExecutionManager.class, finder, ReflectionExecutor.class, test);
 				ctx.setReloadClasses(true);
 				ctx.setStopOnBug(true);
 

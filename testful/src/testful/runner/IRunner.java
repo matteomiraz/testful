@@ -24,7 +24,7 @@ import java.util.concurrent.Future;
 
 public interface IRunner {
 
-	public <T extends Serializable> Future<T> execute(Context<T, ? extends ExecutionManager<T>> ctx);
+	public <T extends Serializable> Future<T> execute(Context<T, ? extends IExecutionManager<T>> ctx);
 
 	public boolean addRemoteWorker(String rmiAddress);
 }

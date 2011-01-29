@@ -58,7 +58,7 @@ public class Worker extends Thread {
 
 				try {
 					if(LOG_FINER) logger.finer("Worker " + getName() + " is evaluating " + ctx.id);
-					ExecutionManager<?> execManager = ctx.getExecManager(cl);
+					IExecutionManager<?> execManager = ctx.getExecManager(cl);
 					Serializable result = execManager.execute(ctx.stopOnBug);
 					workerManager.putResult(ctx, result, cl);
 				} catch(Exception e) {

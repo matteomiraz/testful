@@ -45,6 +45,7 @@ import testful.runner.ClassType;
 import testful.runner.Context;
 import testful.runner.DataFinderCaching;
 import testful.runner.DataFinderImpl;
+import testful.runner.ObjectType;
 import testful.runner.RunnerPool;
 import testful.runner.TestfulClassLoader;
 import testful.utils.ElementManager;
@@ -62,6 +63,7 @@ public class TestfulProblem implements Serializable {
 	private final DataFinderCaching finder;
 	private final TestCluster cluster;
 	private final ReferenceFactory refFactory;
+	private final ObjectType objectType;
 	private final WhiteBoxAnalysisData whiteAnalysis;
 	private final TrackerDatum[] data;
 	private final boolean reloadClasses;
@@ -77,7 +79,8 @@ public class TestfulProblem implements Serializable {
 			reloadClasses = config.isReloadClasses();
 
 			final ClassType classType = new ClassType(config);
-			final DataFinderImpl finderImpl = new DataFinderImpl(classType);
+			objectType = new ObjectType();
+			final DataFinderImpl finderImpl = new DataFinderImpl(classType, objectType);
 
 			whiteAnalysis = new WhiteBoxAnalysisData();
 			classType.addClassData(whiteAnalysis);
@@ -86,6 +89,7 @@ public class TestfulProblem implements Serializable {
 			TestfulClassLoader tcl = new TestfulClassLoader(finder);
 
 			cluster = new TestCluster(tcl, config);
+			objectType.addObject(cluster);
 
 			data = new TrackerDatum[0];
 

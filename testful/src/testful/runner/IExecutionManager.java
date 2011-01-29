@@ -1,6 +1,6 @@
 /*
  * TestFul - http://code.google.com/p/testful/
- * Copyright (C) 2010  Matteo Miraz
+ * Copyright (C) 2011 Matteo Miraz
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,23 +18,22 @@
 
 package testful.runner;
 
-import java.rmi.Remote;
-import java.rmi.RemoteException;
+import java.io.Serializable;
 
 /**
- * Allows one to retrieve something remotely (e.g., the bytecode of classes)
+ * Interface to manage the execution of tests and collect some data.
  *
  * @author matteo
+ * @param <T> The type of collected information
  */
-public interface DataFinder extends Remote {
-
-	public String getKey() throws RemoteException;
+public interface IExecutionManager<T extends Serializable> {
 
 	/**
-	 * Retrieves something remotely (e.g., the bytecode of classes)
-	 * @param type the type of the data. It MUST not contain a "#"
-	 * @param id the id of the information
-	 * @return the payload containing the information
+	 * Execute the test and retrieve the desired result.
+	 * @param stopOnBug if true the execution will stop as soon as the first bug is revealed
+	 * @return the desired result
+	 * @throws ClassNotFoundException if it is impossible to find some classes
 	 */
-	public byte[] getData(String type, String id) throws RemoteException;
+	T execute(boolean stopOnBug) throws ClassNotFoundException;
+
 }

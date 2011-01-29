@@ -18,10 +18,6 @@
 
 package testful.model.executor;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -47,7 +43,6 @@ import testful.model.PrimitiveClazz;
 import testful.model.Reference;
 import testful.model.ResetRepository;
 import testful.model.StaticValue;
-import testful.model.Test;
 import testful.model.TestCluster;
 import testful.model.faults.FaultyExecutionException;
 import testful.model.faults.PreconditionViolationException;
@@ -63,7 +58,7 @@ import testful.utils.Timer2;
  *
  * @author matteo
  */
-public class ReflectionExecutor implements Executor, Externalizable {
+public class ReflectionExecutor extends Executor {
 
 	private static final Logger logger = Logger.getLogger("testful.model.ReflectionExecutor");
 	private static final boolean LOGGER_FINE   = logger.isLoggable(Level.FINE);
@@ -72,43 +67,14 @@ public class ReflectionExecutor implements Executor, Externalizable {
 
 	private static final long serialVersionUID = -1696826206324780022L;
 
-	// checks the System property of the current JVM
-	private static final boolean DISCOVER_FAULTS = TestFul.getProperty(TestFul.PROPERTY_FAULT_DETECT, true);
-
-	// uses the system property of the testful's JVM (and not the one of the workers)
-	/** true if the fault detection is enabled. <br/><b>DO NOT redefine this field!</b>*/
-	private boolean discoverFaults = DISCOVER_FAULTS;
-
-	/** types of elements in the repository. <br/><b>DO NOT redefine this field!</b> */
-	private Reference[] repositoryType;
-
-	/** Test cluster. <br/><b>DO NOT redefine this field!</b> */
-	private TestCluster cluster;
-
-	/** the list of operations to perform. <br/><b>DO NOT redefine this field!</b> */
-	private Operation[] test;
-
 	/** The internal object repository */
 	private transient Object[] repository;
 
-	public ReflectionExecutor(Test test) {
-		cluster = test.getCluster();
-		repositoryType = test.getReferenceFactory().getReferences();
-		this.test = test.getTest();
-	}
+	public ReflectionExecutor(TestCluster testCluster, Reference[] testRefs, Operation[] test, boolean discoverFaults) {
+		super(testCluster, testRefs, test, discoverFaults);
 
-	/** Constructor for Externalizable interface. DO NOT USE THIS CONSTRUCTOR. */
-	@Deprecated
-	public ReflectionExecutor() { }
-
-	@Override
-	public int getTestLength() {
-		return test.length;
-	}
-
-	@Override
-	public Operation[] getTest() {
-		return test;
+		if(TestFul.DEBUG && ClazzRegistry.singleton == null)
+			throw new ClassCastException("ClazzRegistry not initialized");
 	}
 
 	private static final String TIMER_PREFIX = "exec";
@@ -133,12 +99,6 @@ public class ReflectionExecutor implements Executor, Externalizable {
 
 	@Override
 	public int execute(boolean stopOnBug) throws ClassNotFoundException, ClassCastException {
-
-		if(ClazzRegistry.singleton == null) {
-			ClassNotFoundException exc = new ClassNotFoundException("The executor must be loaded using the TestfulClassLoader!");
-			logger.log(Level.WARNING, exc.getMessage(), exc);
-			throw exc;
-		}
 
 		timer.start();
 
@@ -572,33 +532,5 @@ public class ReflectionExecutor implements Executor, Externalizable {
 			ret.append("  ").append(String.format("%2d", element.getId())).append(" (").append(element.getClazz()).append(":").append(element.getPos()).append(") = ").append(repository[element.getId()]).append("\n");
 
 		return ret.toString();
-	}
-
-	/* (non-Javadoc)
-	 * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
-	 */
-	@Override
-	public void writeExternal(ObjectOutput out) throws IOException {
-		out.writeBoolean(discoverFaults);
-		out.writeObject(repositoryType);
-		out.writeObject(cluster);
-		out.writeObject(test);
-	}
-
-	/* (non-Javadoc)
-	 * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
-	 */
-	@Override
-	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-
-		if(ClazzRegistry.singleton == null)
-			throw new ClassNotFoundException("The executor must be loaded using the TestfulClassLoader!");
-
-		discoverFaults = in.readBoolean();
-		repositoryType = (Reference[]) in.readObject();
-		cluster = (TestCluster) in.readObject();
-		test = (Operation[]) in.readObject();
-
-		ClazzRegistry.singleton.getClass(cluster.getCut());
 	}
 }

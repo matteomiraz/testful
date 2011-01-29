@@ -46,7 +46,11 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 		"testful.utils.Cloner",
 		"testful.model.ClazzRegistry",
 		"testful.model.TestExecutionManager",
-		"testful.regression.TestfulTestCase$FaultExecutionManager"
+		"testful.regression.TestfulTestCase$FaultExecutionManager",
+		"testful.runner.ExecutionManager",
+		"testful.runner.Executor",
+		"testful.runner.ExecutorSerializer",
+		"testful.runner.ObjectRegistry"
 	};
 
 	/** for these packages force to use the testful classloader */
@@ -75,7 +79,6 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 	private final long id;
 	private final DataFinder finder;
 	private final Set<String> loaded;
-	private boolean isWarmedUp = false;
 	private final String key;
 
 	public TestfulClassLoader(DataFinder finder) throws RemoteException {
@@ -98,6 +101,7 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 
 	@Override
 	protected synchronized Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+
 		if(canUseSystemClassLoader(name) || loaded.contains(name)) return super.loadClass(name, resolve);
 
 		return findClass(name);
@@ -117,14 +121,6 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 			e.printStackTrace();
 			throw exc;
 		}
-	}
-
-	public boolean isWarmedUp() {
-		return isWarmedUp;
-	}
-
-	public void setWarmedUp(boolean isWarmedUp) {
-		this.isWarmedUp = isWarmedUp;
 	}
 
 	@Override

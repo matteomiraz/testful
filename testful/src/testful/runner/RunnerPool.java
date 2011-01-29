@@ -166,7 +166,7 @@ public class RunnerPool implements IRunner, ITestRepository {
 	}
 
 	@Override
-	public <T extends Serializable> Future<T> execute(Context<T, ? extends ExecutionManager<T>> ctx) {
+	public <T extends Serializable> Future<T> execute(Context<T, ? extends IExecutionManager<T>> ctx) {
 		TestfulFuture<T> ret = new TestfulFuture<T>(ctx.id);
 		futures.put(ret);
 

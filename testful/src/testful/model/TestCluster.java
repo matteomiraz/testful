@@ -18,7 +18,6 @@
 
 package testful.model;
 
-import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -39,10 +38,11 @@ import testful.TestfulException;
 import testful.model.xml.XmlClass;
 import testful.model.xml.XmlConstructor;
 import testful.model.xml.XmlMethod;
+import testful.runner.ISerializable;
 import testful.utils.ClassComparator;
 import testful.utils.ElementManager;
 
-public class TestCluster implements Serializable {
+public class TestCluster implements ISerializable {
 
 	private static final long serialVersionUID = 6041896902165032348L;
 
@@ -587,4 +587,16 @@ public class TestCluster implements Serializable {
 		logger.warning("cannot adapt StaticValue " + sv + " " + Arrays.toString(constants));
 		return null;
 	}
+
+	private transient long iSerializableIdentifier;
+
+	@Override
+	public void setISerializableIdentifier(long id) {
+		iSerializableIdentifier = id;
+	}
+
+	@Override
+	public Long getISerializableIdentifier() {
+		return iSerializableIdentifier;
+	};
 }
