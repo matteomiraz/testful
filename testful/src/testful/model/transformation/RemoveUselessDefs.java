@@ -83,7 +83,7 @@ public class RemoveUselessDefs implements TestTransformation {
 
 				if(target != null && target.getClazz() != cut && !usedReference[target.getId()]) {
 					op = new CreateObject(null, co.getConstructor(), co.getParams());
-					op.addInfo(co);
+					op.addInfo(co.getInfos());
 				}
 
 			} else if(op instanceof Invoke) {
@@ -92,7 +92,7 @@ public class RemoveUselessDefs implements TestTransformation {
 
 				if(target != null && target.getClazz() != cut && !usedReference[target.getId()]) {
 					op = new Invoke(null, in.getThis(), in.getMethod(), in.getParams());
-					op.addInfo(in);
+					op.addInfo(in.getInfos());
 				}
 			}
 

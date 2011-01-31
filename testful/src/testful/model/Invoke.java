@@ -50,7 +50,7 @@ public class Invoke extends Operation {
 	@Override
 	public Operation adapt(TestCluster cluster, ReferenceFactory refFactory) {
 		final Invoke ret = new Invoke(refFactory.adapt(_return), refFactory.adapt(_this), cluster.adapt(method), refFactory.adapt(params));
-		ret.addInfo(this);
+		ret.addInfo(getInfos());
 		return ret;
 	}
 
@@ -176,7 +176,7 @@ public class Invoke extends Operation {
 	@Override
 	public Operation clone() {
 		final Invoke clone = new Invoke(_return, _this, method, params);
-		clone.addInfo(this);
+		clone.addInfo(getInfos());
 		return clone;
 	}
 }

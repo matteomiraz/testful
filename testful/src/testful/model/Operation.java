@@ -49,11 +49,10 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 	}
 
 	/**
-	 * Adds all the information contained in the other operation
-	 * @param otherOp the operation that contains the information to copy
+	 * Adds all the information contained in the iterator
+	 * @param iter the iterator containing the information to copy
 	 */
-	public void addInfo(Operation otherOp) {
-		Iterator<OperationInformation> iter = otherOp.getInfos();
+	public void addInfo(Iterator<OperationInformation> iter) {
 		while(iter.hasNext())
 			addInfo(iter.next().clone());
 	}

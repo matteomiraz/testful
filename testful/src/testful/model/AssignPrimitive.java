@@ -72,7 +72,7 @@ public class AssignPrimitive extends Operation {
 	@Override
 	public Operation adapt(TestCluster cluster, ReferenceFactory refFactory) {
 		final AssignPrimitive ret = new AssignPrimitive(refFactory.adapt(ref), value);
-		ret.addInfo(this);
+		ret.addInfo(getInfos());
 		return ret;
 	}
 
@@ -339,7 +339,7 @@ public class AssignPrimitive extends Operation {
 	@Override
 	public Operation clone() {
 		final AssignPrimitive clone = new AssignPrimitive(ref, value);
-		clone.addInfo(this);
+		clone.addInfo(getInfos());
 		return clone;
 	}
 }

@@ -63,7 +63,7 @@ public final class ResetRepository extends Operation {
 	@Override
 	public Operation clone() {
 		ResetRepository clone = new ResetRepository();
-		clone.addInfo(this);
+		clone.addInfo(getInfos());
 		return clone;
 	}
 }

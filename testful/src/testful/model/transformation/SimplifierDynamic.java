@@ -113,12 +113,12 @@ public class SimplifierDynamic implements TestTransformation {
 
 					if(op instanceof CreateObject) {
 						CreateObject o = new CreateObject(null, ((CreateObject) op).getConstructor(), ((CreateObject) op).getParams());
-						o.addInfo(op);
+						o.addInfo(op.getInfos());
 						ops.add(o);
 
 					} else if(op instanceof Invoke) {
 						Invoke o = new Invoke(null, ((Invoke) op).getThis(), ((Invoke) op).getMethod(), ((Invoke) op).getParams());
-						o.addInfo(op);
+						o.addInfo(op.getInfos());
 						ops.add(o);
 
 					} else {

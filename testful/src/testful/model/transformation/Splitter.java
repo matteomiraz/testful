@@ -496,7 +496,7 @@ public class Splitter {
 		if(!splitObservers) {
 			Invoke orig = op;
 			op = new Invoke(opTarget, opThis, op.getMethod(), paramsRef);
-			op.addInfo(orig);
+			op.addInfo(orig.getInfos());
 		}
 
 		// 3. calculate the set of operation "op" depends on (including "op")
@@ -685,7 +685,7 @@ public class Splitter {
 		if(!splitObservers) {
 			CreateObject orig = op;
 			op = new CreateObject(opTarget, op.getConstructor(), paramsRef);
-			op.addInfo(orig);
+			op.addInfo(orig.getInfos());
 		}
 
 		// 3. calculate the set of operation "op" depends on (including "op")
@@ -756,7 +756,7 @@ public class Splitter {
 			if(r.getClazz() instanceof PrimitiveClazz) o = new AssignPrimitive(r, null);
 			else o = new AssignConstant(r, null);
 
-			o.addInfo(op);
+			o.addInfo(op.getInfos());
 
 			operations[r.getId()].add(o);
 		}

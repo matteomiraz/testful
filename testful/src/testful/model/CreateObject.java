@@ -46,7 +46,7 @@ public class CreateObject extends Operation {
 	@Override
 	public Operation adapt(TestCluster cluster, ReferenceFactory refFactory) {
 		final CreateObject ret = new CreateObject(refFactory.adapt(ref), cluster.adapt(constructor), refFactory.adapt(params));
-		ret.addInfo(this);
+		ret.addInfo(getInfos());
 		return ret;
 	}
 
@@ -139,7 +139,7 @@ public class CreateObject extends Operation {
 	@Override
 	public Operation clone() {
 		final CreateObject clone = new CreateObject(ref, constructor, params);
-		clone.addInfo(this);
+		clone.addInfo(getInfos());
 		return clone;
 	}
 }

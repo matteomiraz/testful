@@ -49,7 +49,7 @@ public class AssignConstant extends Operation {
 	@Override
 	public Operation adapt(TestCluster cluster, ReferenceFactory refFactory) {
 		final AssignConstant ret = new AssignConstant(refFactory.adapt(ref), cluster.adapt(staticValue));
-		ret.addInfo(this);
+		ret.addInfo(getInfos());
 		return ret;
 	}
 
@@ -110,7 +110,7 @@ public class AssignConstant extends Operation {
 	@Override
 	public Operation clone() {
 		final AssignConstant clone = new AssignConstant(ref, staticValue);
-		clone.addInfo(this);
+		clone.addInfo(getInfos());
 		return clone;
 	}
 }
