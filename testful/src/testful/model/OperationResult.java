@@ -197,7 +197,7 @@ public class OperationResult extends OperationInformation {
 						if(m.getParameterTypes().length == 0 && m.getMethodInformation().getType() == MethodInformation.Kind.OBSERVER) {
 
 							try {
-								Method method = ClazzRegistry.singleton.getMethod(m);
+								Method method = ClassRegistry.singleton.getMethod(m);
 
 								Object res = method.invoke(o);
 								Serializable res1 = saveObject(res);

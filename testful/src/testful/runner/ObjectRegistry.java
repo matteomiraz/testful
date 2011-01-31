@@ -34,7 +34,7 @@ public class ObjectRegistry {
 
 	private static Logger logger = Logger.getLogger("testful.executor");
 
-	/** When loaded by a TestfulClassLoader, the singleton stores the ClazzRegistry to use. */
+	/** When loaded by a TestfulClassLoader, this is the singleton to use */
 	public static final ObjectRegistry singleton;
 
 	static {
@@ -76,21 +76,6 @@ public class ObjectRegistry {
 			return null;
 		}
 	}
-
-	// XXX: rimuovere!
-	//	public boolean contains(String identifier) {
-	//
-	//		if(cache.containsKey(identifier)) return true;
-	//
-	//		try {
-	//			byte[] b = finder.getData(ObjectType.NAME, identifier);
-	//			if(b != null) return true;
-	//		} catch (RemoteException exc) {
-	//			logger.log(Level.WARNING, exc.getMessage(), exc);
-	//		}
-	//
-	//		return false;
-	//	}
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()

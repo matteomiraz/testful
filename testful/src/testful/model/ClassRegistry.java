@@ -28,25 +28,25 @@ import java.util.logging.Logger;
 import testful.utils.Timer;
 
 /**
- * ClazzRegistry is a Façade to the remote class-loader,
+ * ClassRegistry is a Façade to the remote class-loader
  * and allows one to convert testful.model's element into java.lang.reflect ones.
  * @author matteo
  */
-public class ClazzRegistry {
+public class ClassRegistry {
 
 	private static final Logger logger = Logger.getLogger("testful.model.clazzRegistry");
 
-	private static final Timer timerClass = Timer.getTimer();
+	private static final Timer timerClass = Timer.Disabled.singleton; // Timer.getTimer();
 
-	/** When loaded by a TestfulClassLoader, the singleton stores the ClazzRegistry to use. */
-	public static final ClazzRegistry singleton;
+	/** When loaded by a TestfulClassLoader, the singleton stores the ClassRegistry to use. */
+	public static final ClassRegistry singleton;
 
 	static {
-		singleton = new ClazzRegistry(ClazzRegistry.class.getClassLoader());
+		singleton = new ClassRegistry(ClassRegistry.class.getClassLoader());
 	}
 
 	private final ClassLoader loader;
-	public ClazzRegistry(ClassLoader loader) {
+	public ClassRegistry(ClassLoader loader) {
 		this.loader = loader;
 	}
 
@@ -191,6 +191,6 @@ public class ClazzRegistry {
 	 */
 	@Override
 	public String toString() {
-		return "ClazzRegistry of " + loader;
+		return "ClassRegistry of " + loader;
 	}
 }

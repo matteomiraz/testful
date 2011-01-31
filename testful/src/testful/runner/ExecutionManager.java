@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 import testful.TestFul;
 import testful.TestfulException;
 import testful.coverage.TrackerDatum;
+import testful.model.ExecutorSerializer;
 import testful.utils.Cloner;
 import testful.utils.Timer;
 

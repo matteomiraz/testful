@@ -44,12 +44,12 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 	/** for these classes force to use the testful classloader */
 	private static final String[] TESTFUL_CLASSES = {
 		"testful.utils.Cloner",
-		"testful.model.ClazzRegistry",
+		"testful.model.ClassRegistry",
+		"testful.model.ExecutorSerializer",
 		"testful.model.TestExecutionManager",
 		"testful.regression.TestfulTestCase$FaultExecutionManager",
 		"testful.runner.ExecutionManager",
 		"testful.runner.Executor",
-		"testful.runner.ExecutorSerializer",
 		"testful.runner.ObjectRegistry"
 	};
 

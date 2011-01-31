@@ -31,8 +31,8 @@ import testful.coverage.fault.FaultTracker;
 import testful.coverage.stopper.Stopper;
 import testful.model.AssignConstant;
 import testful.model.AssignPrimitive;
+import testful.model.ClassRegistry;
 import testful.model.Clazz;
-import testful.model.ClazzRegistry;
 import testful.model.Constructorz;
 import testful.model.CreateObject;
 import testful.model.Invoke;
@@ -73,8 +73,8 @@ public class ReflectionExecutor extends Executor {
 	public ReflectionExecutor(TestCluster testCluster, Reference[] testRefs, Operation[] test, boolean discoverFaults) {
 		super(testCluster, testRefs, test, discoverFaults);
 
-		if(TestFul.DEBUG && ClazzRegistry.singleton == null)
-			throw new ClassCastException("ClazzRegistry not initialized");
+		if(TestFul.DEBUG && ClassRegistry.singleton == null)
+			throw new ClassCastException("ClassRegistry not initialized");
 	}
 
 	private static final String TIMER_PREFIX = "exec";
@@ -284,7 +284,7 @@ public class ReflectionExecutor extends Executor {
 
 			Constructor<?> cons;
 			try {
-				cons = ClazzRegistry.singleton.getConstructor(constructor);
+				cons = ClassRegistry.singleton.getConstructor(constructor);
 			} catch (Exception exc) {
 				logger.log(Level.WARNING, exc.getMessage(), exc);
 				throw new TestfulInternalException.Impl(exc);
@@ -414,7 +414,7 @@ public class ReflectionExecutor extends Executor {
 				try {
 					timer_assignConstantCut.start();
 
-					Field field = ClazzRegistry.singleton.getField(value);
+					Field field = ClassRegistry.singleton.getField(value);
 					Object newObject = field.get(null);
 					set(ref, newObject);
 				} finally {
@@ -442,7 +442,7 @@ public class ReflectionExecutor extends Executor {
 			final Clazz[] paramsTypes = method.getParameterTypes();
 			final OperationResult opRes = (OperationResult) op.getInfo(OperationResult.KEY);
 
-			final Method m = ClazzRegistry.singleton.getMethod(method);
+			final Method m = ClassRegistry.singleton.getMethod(method);
 			final Object[] args = new Object[params.length];
 
 			final Object baseObject;

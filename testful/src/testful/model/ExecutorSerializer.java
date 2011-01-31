@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package testful.runner;
+package testful.model;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,10 +30,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.TestFul;
-import testful.model.Operation;
-import testful.model.Reference;
-import testful.model.Test;
-import testful.model.TestCluster;
+import testful.runner.DataFinder;
+import testful.runner.IExecutor;
+import testful.runner.ObjectRegistry;
+import testful.runner.ObjectType;
+import testful.runner.TestfulClassLoader;
 
 /**
  * Efficiently serializes and de-serializes Executors
@@ -56,17 +57,13 @@ public class ExecutorSerializer {
 
 			String clusterID = ObjectType.contains(finder, test.getCluster());
 
-			if(clusterID != null) {
-				oo.writeBoolean(true);
-
-				oo.writeObject(clusterID);
+			if(clusterID == null) {
+				oo.writeObject(test.getCluster());
 				oo.writeObject(test.getReferenceFactory().getReferences());
 				oo.writeObject(test.getTest());
 
 			} else {
-				oo.writeBoolean(false);
-
-				oo.writeObject(test.getCluster());
+				oo.writeObject(clusterID);
 				oo.writeObject(test.getReferenceFactory().getReferences());
 				oo.writeObject(test.getTest());
 			}
@@ -93,23 +90,23 @@ public class ExecutorSerializer {
 			String execClassName = (String) oi.readObject();
 			boolean discoverFaults = oi.readBoolean();
 
-			boolean optimized = oi.readBoolean();
-
 			final TestCluster testCluster;
 			final Reference[] testRefs;
 			final Operation[] testOps;
 
-			if(optimized) {
-				String clusterID = (String) oi.readObject();
-				testCluster = (TestCluster) ObjectRegistry.singleton.getObject(clusterID);
+			Object clusterObj = oi.readObject();
+			if(clusterObj instanceof TestCluster) {
+				testCluster = (TestCluster) clusterObj;
 				testRefs = (Reference[]) oi.readObject();
 				testOps = (Operation[]) oi.readObject();
 
-			} else {
-				testCluster = (TestCluster) oi.readObject();
+			} else if(clusterObj instanceof String) {
+				testCluster = (TestCluster) ObjectRegistry.singleton.getObject((String) clusterObj);
 				testRefs = (Reference[]) oi.readObject();
 				testOps = (Operation[]) oi.readObject();
-			}
+
+			} else
+				throw new Exception("Unexpected TestCluster: " + clusterObj + " (" + clusterObj.getClass().getCanonicalName() + ")");
 
 			@SuppressWarnings("unchecked")
 			Class<? extends IExecutor> execClass = (Class<? extends IExecutor>) Class.forName(execClassName);

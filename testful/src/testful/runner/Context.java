@@ -24,6 +24,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import testful.coverage.TrackerDatum;
+import testful.model.ExecutorSerializer;
 import testful.model.Test;
 import testful.utils.Cloner;
 import testful.utils.Timer;
