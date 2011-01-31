@@ -24,7 +24,7 @@ import testful.utils.ElementWithKey;
 
 public class Clazz implements Serializable, Comparable<Clazz>, ElementWithKey<String> {
 
-	private static final long serialVersionUID = -2661635029405835812L;
+	private static final long serialVersionUID = 2529336968056188350L;
 
 	private static final Clazz[] NO_CLAZZES = new Clazz[0];
 	private static final StaticValue[] NO_CONSTANTS = new StaticValue[0];

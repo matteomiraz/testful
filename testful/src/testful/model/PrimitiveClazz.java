@@ -23,9 +23,9 @@ import java.util.logging.Logger;
 
 public final class PrimitiveClazz extends Clazz {
 
-	private static final Logger logger = Logger.getLogger("testful.model");
+	private static final long serialVersionUID = 8383807566178953358L;
 
-	private static final long serialVersionUID = -2125532247454284282L;
+	private static final Logger logger = Logger.getLogger("testful.model");
 
 	public static enum PrimTypes {
 

@@ -29,7 +29,7 @@ import java.lang.reflect.Modifier;
  */
 public class StaticValue implements Serializable, Comparable<StaticValue> {
 
-	private static final long serialVersionUID = 2915220460472722096L;
+	private static final long serialVersionUID = 4401280118747124819L;
 
 	private final int id;
 

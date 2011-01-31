@@ -28,6 +28,10 @@
 		<exclude name="testful/coverage/TrackerDatum.class" />
 		<exclude name="testful/coverage/**/*Instrumenter*.class" />
 
+		<include name="testful/runner/ExecutionManager.class" />
+		<include name="testful/runner/Executor.class" />
+		<include name="testful/runner/ObjectRegistry.class" />
+
 		<include name="testful/model/**/*.class" />
 		<!-- testful.model.Operation is a Variable -->
 		<include name="jmetal/base/Variable.class" />

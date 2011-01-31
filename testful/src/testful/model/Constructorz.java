@@ -29,7 +29,7 @@ import testful.model.xml.XmlParameter;
 
 public class Constructorz implements Serializable, Comparable<Constructorz> {
 
-	private static final long serialVersionUID = 5191767105810286511L;
+	private static final long serialVersionUID = 1874825146634233768L;
 
 	private final int id;
 	private final Clazz clazz;

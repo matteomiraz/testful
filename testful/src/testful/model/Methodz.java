@@ -33,7 +33,7 @@ import testful.model.xml.XmlParameter;
  */
 public class Methodz implements Serializable, Comparable<Methodz> {
 
-	private static final long serialVersionUID = -6215844840936041441L;
+	private static final long serialVersionUID = 8987493771165635733L;
 
 	private final int id;
 	private final Clazz clazz;
