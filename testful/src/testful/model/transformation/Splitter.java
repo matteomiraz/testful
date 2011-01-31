@@ -137,7 +137,7 @@ public class Splitter {
 		}
 	}
 
-	public static Test splitAndMinimize(final Test orig, DataFinder finder, TrackerDatum ... data) {
+	public static Test splitAndMinimize(final Test orig, DataFinder finder, boolean reloadClasses, TrackerDatum ... data) {
 
 		final List<Test> res = new ArrayList<Test>();
 		Splitter splitter = new Splitter(true, orig.getCluster(), orig.getReferenceFactory(), new Listener() {
@@ -156,7 +156,7 @@ public class Splitter {
 
 		Map<Test, Future<ElementManager<String, CoverageInformation>>> futures = new HashMap<Test, Future<ElementManager<String,CoverageInformation>>>();
 		for(Test t : res)
-			futures.put(t, RunnerPool.getRunnerPool().execute(CoverageExecutionManager.getContext(finder, t, data)));
+			futures.put(t, RunnerPool.getRunnerPool().execute(CoverageExecutionManager.getContext(finder, t, reloadClasses, data)));
 
 		SortedSet<TestCoverage> results = new TreeSet<TestCoverage>(new Comparator<TestCoverage>() {
 			@Override

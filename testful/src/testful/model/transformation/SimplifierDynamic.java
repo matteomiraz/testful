@@ -78,7 +78,7 @@ public class SimplifierDynamic implements TestTransformation {
 		Operation[] ops = Arrays.copyOf(orig.getTest(), orig.getTest().length);
 
 		OperationResult.insert(ops);
-		ops = TestExecutionManager.execute(finder, new Test(orig.getCluster(), orig.getReferenceFactory(), ops), !reloadClasses);
+		ops = TestExecutionManager.execute(finder, new Test(orig.getCluster(), orig.getReferenceFactory(), ops), reloadClasses);
 
 		ops = perform(ops);
 

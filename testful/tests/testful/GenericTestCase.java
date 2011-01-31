@@ -176,7 +176,7 @@ public abstract class GenericTestCase extends TestCase {
 
 	protected static ElementManager<String, CoverageInformation> getCoverage(Test test, TrackerDatum ... data) throws InterruptedException, ExecutionException {
 		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx =
-			CoverageExecutionManager.getContext(getFinder(), test, data);
+			CoverageExecutionManager.getContext(getFinder(), test, true, data);
 
 		ctx.setReloadClasses(true);
 		Future<ElementManager<String, CoverageInformation>> future = getExec().execute(ctx);

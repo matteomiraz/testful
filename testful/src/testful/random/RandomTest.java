@@ -84,8 +84,7 @@ public abstract class RandomTest {
 	}
 
 	protected Future<ElementManager<String, CoverageInformation>> execute(Operation[] ops) {
-		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = CoverageExecutionManager.getContext(finder, new Test(cluster, refFactory, ops), data);
-		ctx.setReloadClasses(reloadClasses);
+		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = CoverageExecutionManager.getContext(finder, new Test(cluster, refFactory, ops), reloadClasses, data);
 		return RunnerPool.getRunnerPool().execute(ctx);
 	}
 

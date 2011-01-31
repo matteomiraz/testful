@@ -155,8 +155,7 @@ public class TestfulProblem implements Serializable {
 
 		invTot.addAndGet(test.getTest().length);
 
-		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = CoverageExecutionManager.getContext(finder, test, data);
-		ctx.setReloadClasses(reloadClasses);
+		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = CoverageExecutionManager.getContext(finder, test, reloadClasses, data);
 		return RunnerPool.getRunnerPool().execute(ctx);
 	}
 

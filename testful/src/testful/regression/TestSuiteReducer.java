@@ -108,7 +108,7 @@ public class TestSuiteReducer {
 
 	private TestCoverage getCoverage(Test t) throws InterruptedException, ExecutionException {
 
-		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = CoverageExecutionManager.getContext(finder, t, data);
+		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = CoverageExecutionManager.getContext(finder, t, reloadClasses, data);
 		ctx.setReloadClasses(reloadClasses);
 		Future<ElementManager<String, CoverageInformation>> f = RunnerPool.getRunnerPool().execute(ctx);
 

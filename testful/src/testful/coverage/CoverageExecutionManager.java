@@ -28,9 +28,10 @@ import testful.utils.ElementManager;
 
 public class CoverageExecutionManager extends ExecutionManager<ElementManager<String, CoverageInformation>> {
 
-	public static Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> getContext(DataFinder finder, Test test, TrackerDatum ... data) {
+	public static Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> getContext(DataFinder finder, Test test, boolean reloadClasses, TrackerDatum ... data) {
 		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = new Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager>(CoverageExecutionManager.class, finder, ReflectionExecutor.class, test, data);
 		ctx.setStopOnBug(false);
+		ctx.setReloadClasses(reloadClasses);
 		return ctx;
 	}
 

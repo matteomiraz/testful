@@ -151,7 +151,7 @@ public abstract class AutoTestCase extends GenericTestCase {
 
 			List<Future<ElementManager<String, CoverageInformation>>> futures = new ArrayList<Future<ElementManager<String,CoverageInformation>>>();
 			for(Test r : res) {
-				Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = CoverageExecutionManager.getContext(getFinder(), r);
+				Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = CoverageExecutionManager.getContext(getFinder(), r, true);
 				futures.add(getExec().execute(ctx));
 			}
 			for(Future<ElementManager<String, CoverageInformation>> future : futures) {

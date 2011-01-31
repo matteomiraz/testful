@@ -271,7 +271,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder("Testful's runner - ").append(new Date().toString());
+		StringBuilder sb = new StringBuilder("Testful runner - ").append(new Date().toString());
 
 		int waiting = tests.size();
 		int current = results.size();

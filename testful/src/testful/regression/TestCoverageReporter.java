@@ -63,6 +63,9 @@ public class TestCoverageReporter extends TestReader {
 		@Option(required = false, name = "-total", usage = "Print the total coverage")
 		private boolean total = false;
 
+		@Option(required = false, name = "-reload", usage = "Reload classes before each run (reinitialize static fields)")
+		private boolean reload = false;
+
 		@Argument
 		private List<String> arguments = new ArrayList<String>();
 
@@ -128,7 +131,7 @@ public class TestCoverageReporter extends TestReader {
 
 			numInvocations += t.getTest().length;
 			TestCoverage tCov = new TestCoverage(t,
-					RunnerPool.getRunnerPool().execute(CoverageExecutionManager.getContext(finder, t, TRACKER_DATA)).get());
+					RunnerPool.getRunnerPool().execute(CoverageExecutionManager.getContext(finder, t, config.reload, TRACKER_DATA)).get());
 
 			optimal.update(tCov);
 

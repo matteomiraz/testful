@@ -38,7 +38,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, false);
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
 		assertEquals(3, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -58,7 +58,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, false);
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -77,7 +77,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, false);
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
 		assertEquals(3, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -97,7 +97,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, false);
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -116,7 +116,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, false);
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
 		assertEquals(3, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -136,7 +136,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, false);
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -154,7 +154,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, false);
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -172,7 +172,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, false);
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -190,7 +190,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, false);
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -208,7 +208,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, false);
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -226,7 +226,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, false);
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -244,7 +244,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, false);
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -262,7 +262,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, false);
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -280,7 +280,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, false);
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -298,7 +298,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, false);
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
@@ -320,7 +320,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		Test test2 = new Test(cut.cluster, cut.refFactory, ops);
 
 		OperationResult.insert(test2.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test2, false);
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test2, true);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
@@ -338,7 +338,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(t.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), t, false);
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), t, true);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)t.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -357,7 +357,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 
 
 		OperationResult.insert(t.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), t, false);
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), t, true);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)t.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -375,7 +375,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(t.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), t, false);
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), t, true);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)t.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -393,7 +393,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(t.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), t, false);
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), t, true);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)t.getTest()[0].getInfo(OperationResult.KEY)).status);
@@ -411,7 +411,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(t.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), t, false);
+		Operation[] testOperations = TestExecutionManager.execute(getFinder(), t, true);
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)t.getTest()[0].getInfo(OperationResult.KEY)).status);
