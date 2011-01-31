@@ -31,7 +31,15 @@ public class Reference implements Serializable, Comparable<Reference> {
 	/** The id of the reference */
 	private final int id;
 
-	Reference(Clazz clazz, int pos, int id) {
+	/**
+	 * The correct visibility is package-only.
+	 * However, since this constructor must be invoked by classes (in the package testful.model)
+	 * loaded by different class-loaders, this constructor has a public visibility.
+	 * @param clazz the type of the reference
+	 * @param pos the position of the reference
+	 * @param id the id of the reference
+	 */
+	public Reference(Clazz clazz, int pos, int id) {
 		this.clazz = clazz;
 		this.pos = pos;
 		this.id = id;

@@ -23,9 +23,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.lang.reflect.Constructor;
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,13 +51,14 @@ public class ExecutorSerializer {
 	public static <T extends IExecutor> byte[] serialize(DataFinder finder, Class<T> executor, Test test) {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try {
-			ObjectOutput oo = new ObjectOutputStream(baos);
+			ObjectOutputStream oo = new ObjectOutputStream(baos);
 
 			oo.writeObject(executor.getName());
 			oo.writeBoolean(DISCOVER_FAULTS);
 
 			String clusterID = ObjectType.contains(finder, test.getCluster());
 
+			// perform the standard serialization
 			if(clusterID == null) {
 				oo.writeObject(test.getCluster());
 				oo.writeObject(test.getReferenceFactory().getReferences());
@@ -64,8 +66,85 @@ public class ExecutorSerializer {
 
 			} else {
 				oo.writeObject(clusterID);
-				oo.writeObject(test.getReferenceFactory().getReferences());
-				oo.writeObject(test.getTest());
+
+				// write the references: refs.length { ref.class.id, ref.pos }
+				Reference[] refs = test.getReferenceFactory().getReferences();
+				oo.writeInt(refs.length);
+				for (int i = 0; i < refs.length; i++) {
+					Reference ref = refs[i];
+
+					oo.writeInt(ref.getClazz().getId());
+					oo.writeInt(ref.getPos());
+
+					if(TestFul.DEBUG && ref.getId() != i)
+						TestFul.debug(new Exception("Reference id is not its ordinal position in the 'referenceFactory.getReferences()' array"));
+				}
+
+
+				// write the test: test.length { op.type [op-specific data] }
+				oo.writeInt(test.getTest().length);
+				for (Operation op : test.getTest()) {
+
+					if (op instanceof ResetRepository) {
+						// op.type=0 no_extra_data
+						oo.writeByte(0);
+
+					} else if(op instanceof AssignConstant) {
+						// op.type=1 target.id staticValue.id {info ~ null}
+						oo.writeByte(1);
+						AssignConstant ac = (AssignConstant)op;
+						oo.writeInt(ac.getTarget() == null ? -1 : ac.getTarget().getId());
+						oo.writeInt(ac.getValue() == null ? -1 : ac.getValue().getId());
+
+						Iterator<OperationInformation> iter = op.getInfos();
+						while(iter.hasNext()) oo.writeObject(iter.next());
+						oo.writeObject(null);
+
+					} else if(op instanceof AssignPrimitive) {
+						// op.type=2 target.id value {info ~ null}
+						oo.writeByte(2);
+						AssignPrimitive ap = (AssignPrimitive)op;
+						oo.writeInt(ap.getTarget() == null ? -1 : ap.getTarget().getId());
+						oo.writeObject(ap.getValue());
+
+						Iterator<OperationInformation> iter = op.getInfos();
+						while(iter.hasNext()) oo.writeObject(iter.next());
+						oo.writeObject(null);
+
+					} else if(op instanceof CreateObject) {
+						// op.type=3 target.id cosntructor.id params.len {param.id} {info ~ null}
+						oo.writeByte(3);
+						CreateObject co = (CreateObject)op;
+						oo.writeInt(co.getTarget() == null ? -1 : co.getTarget().getId());
+						oo.writeInt(co.getConstructor().getId());
+						oo.writeInt(co.getParams().length);
+						for (Reference param : co.getParams())
+							oo.writeInt(param.getId());
+
+						Iterator<OperationInformation> iter = op.getInfos();
+						while(iter.hasNext()) oo.writeObject(iter.next());
+						oo.writeObject(null);
+
+					} else if(op instanceof Invoke) {
+						// op.type=3 target.id this.id method.id params.len {param.id} {info ~ null}
+						oo.writeByte(4);
+						Invoke in = (Invoke)op;
+						oo.writeInt(in.getTarget() == null ? -1 : in.getTarget().getId());
+						oo.writeInt(in.getThis() == null ? -1 : in.getThis().getId());
+						oo.writeInt(in.getMethod().getId());
+						oo.writeInt(in.getParams().length);
+						for (Reference param : in.getParams())
+							oo.writeInt(param.getId());
+
+						Iterator<OperationInformation> iter = op.getInfos();
+						while(iter.hasNext()) oo.writeObject(iter.next());
+						oo.writeObject(null);
+
+					} else
+						logger.warning("Unknown operation: " + op.getClass().getName() + " - " + op);
+
+					oo.reset();
+				}
 			}
 
 			oo.close();
@@ -95,15 +174,126 @@ public class ExecutorSerializer {
 			final Operation[] testOps;
 
 			Object clusterObj = oi.readObject();
+
 			if(clusterObj instanceof TestCluster) {
+
+				// perform the standard de-serialization
 				testCluster = (TestCluster) clusterObj;
 				testRefs = (Reference[]) oi.readObject();
 				testOps = (Operation[]) oi.readObject();
 
 			} else if(clusterObj instanceof String) {
+
+				// use the ObjectRegistry and the advanced serialization
 				testCluster = (TestCluster) ObjectRegistry.singleton.getObject((String) clusterObj);
-				testRefs = (Reference[]) oi.readObject();
-				testOps = (Operation[]) oi.readObject();
+
+				// read the references: refs.length { ref.class.id, ref.pos, ref.id }
+				int refLen = oi.readInt();
+				testRefs = new Reference[refLen];
+				for(int i = 0; i < refLen; i++) {
+					Clazz clazz = testCluster.getClazzById(oi.readInt());
+					int pos = oi.readInt();
+					testRefs[i] = new Reference(clazz, pos, i);
+				}
+
+				// read the operations
+				int testLen = oi.readInt();
+				testOps = new Operation[testLen];
+				for (int i = 0; i < testLen; i++) {
+
+					byte operationType = oi.readByte();
+					switch(operationType) {
+					case 0: { // ResetRepository
+						testOps[i] = ResetRepository.singleton;
+						break;
+					}
+
+					case 1: { // AssignConstant
+						int targetId = oi.readInt();
+						Reference ref = (targetId < 0 ? null : testRefs[targetId]);
+
+						int valueId = oi.readInt();
+						StaticValue staticValue = valueId < 0 ? null : testCluster.getStaticValueById(valueId);
+
+						testOps[i] = new AssignConstant(ref, staticValue);
+
+						OperationInformation info;
+						while((info = (OperationInformation) oi.readObject()) != null)
+							testOps[i].addInfo(info);
+
+						break;
+					}
+
+					case 2: { // AssignPrimitive
+						int targetId = oi.readInt();
+						Reference ref = (targetId < 0 ? null : testRefs[targetId]);
+
+						Serializable value = (Serializable) oi.readObject();
+
+						testOps[i] = new AssignPrimitive(ref, value);
+
+						OperationInformation info;
+						while((info = (OperationInformation) oi.readObject()) != null)
+							testOps[i].addInfo(info);
+
+						break;
+					}
+
+					case 3: { // CreateObject
+						int targetId = oi.readInt();
+						Reference target = (targetId < 0 ? null : testRefs[targetId]);
+
+						int constructorId = oi.readInt();
+						Constructorz constructor = testCluster.getConstructorById(constructorId);
+
+						int paramLen = oi.readInt();
+						Reference[] params = new Reference[paramLen];
+						for (int j = 0; j < paramLen; j++) {
+							int paramId = oi.readInt();
+							params[j] = testRefs[paramId];
+						}
+
+						testOps[i] = new CreateObject(target, constructor, params);
+
+						OperationInformation info;
+						while((info = (OperationInformation) oi.readObject()) != null)
+							testOps[i].addInfo(info);
+
+						break;
+					}
+
+					case 4: { // Invoke
+
+						int targetId = oi.readInt();
+						Reference target = (targetId < 0 ? null : testRefs[targetId]);
+
+						int thisId = oi.readInt();
+						Reference _this = (thisId < 0 ? null : testRefs[thisId]);
+
+						int methodId = oi.readInt();
+						Methodz method = testCluster.getMethodById(methodId);
+
+						int paramLen = oi.readInt();
+						Reference[] params = new Reference[paramLen];
+						for (int j = 0; j < paramLen; j++) {
+							int paramId = oi.readInt();
+							params[j] = testRefs[paramId];
+						}
+
+						testOps[i] = new Invoke(target, _this, method, params);
+
+						OperationInformation info;
+						while((info = (OperationInformation) oi.readObject()) != null)
+							testOps[i].addInfo(info);
+
+						break;
+					}
+
+					default:
+						logger.warning("Unknown operation serialized type " + operationType);
+					}
+
+				}
 
 			} else
 				throw new Exception("Unexpected TestCluster: " + clusterObj + " (" + clusterObj.getClass().getCanonicalName() + ")");

@@ -471,6 +471,59 @@ public class TestCluster implements ISerializable {
 		return cut;
 	}
 
+	private transient Map<Integer, Clazz> clazzCache;
+	private transient Map<Integer, Constructorz> constructorzCache;
+	private transient Map<Integer, Methodz> methodzCache;
+	private transient Map<Integer, StaticValue> staticValueCache;
+
+	private void updateCaches() {
+		clazzCache = new HashMap<Integer, Clazz>();
+		constructorzCache = new HashMap<Integer, Constructorz>();
+		methodzCache = new HashMap<Integer, Methodz>();
+		staticValueCache = new HashMap<Integer, StaticValue>();
+
+		for (Clazz c : all) {
+			clazzCache.put(c.getId(), c);
+
+			for (Constructorz cns : c.getConstructors())
+				constructorzCache.put(cns.getId(), cns);
+
+			for (Methodz meth : c.getMethods())
+				methodzCache.put(meth.getId(), meth);
+
+			for (StaticValue sv : c.getConstants())
+				staticValueCache.put(sv.getId(), sv);
+		}
+	}
+
+	public Clazz getClazzById(int id) {
+		if(clazzCache == null)
+			updateCaches();
+
+		return clazzCache.get(id);
+	}
+
+	public Constructorz getConstructorById(int id) {
+		if(constructorzCache == null)
+			updateCaches();
+
+		return constructorzCache.get(id);
+	}
+
+	public Methodz getMethodById(int id) {
+		if(methodzCache == null)
+			updateCaches();
+
+		return methodzCache.get(id);
+	}
+
+	public StaticValue getStaticValueById(int id) {
+		if(staticValueCache == null)
+			updateCaches();
+
+		return staticValueCache.get(id);
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder ret = new StringBuilder();
