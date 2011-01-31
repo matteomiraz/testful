@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -59,6 +60,11 @@ public class TestCluster implements ISerializable {
 		/** the clazzes involved in the test cluster, that are those used as input parameters (for primitive types, only the Class is considered) */
 		private final ElementManager<String, Clazz> cluster;
 
+		private final AtomicInteger clazzIdGenerator = new AtomicInteger();
+		private final AtomicInteger methodzIdGenerator = new AtomicInteger();
+		private final AtomicInteger constructorzIdGenerator = new AtomicInteger();
+		private final AtomicInteger staticValueIdGenerator = new AtomicInteger();
+
 		public Builder(ClassLoader classLoader, IConfigCut config) throws ClassNotFoundException {
 			this.classLoader = classLoader;
 			this.config = config;
@@ -66,15 +72,15 @@ public class TestCluster implements ISerializable {
 			cluster = new ElementManager<String, Clazz>();
 
 			all = new ElementManager<String, Clazz>();
-			all.put(new Clazz("java.lang.String", false));
-			for (Clazz c : PrimitiveClazz.createPrimitive())
+			all.put(new Clazz(clazzIdGenerator.incrementAndGet(), "java.lang.String", false));
+			for (Clazz c : PrimitiveClazz.createPrimitive(clazzIdGenerator))
 				all.put(c);
 
 			//TODO: remove xmls!
 			// calculate the test cluster and the set of types involved in the test (all)
 			Map<String,XmlClass> xml = calculateCluster(config.getCut());
 
-			// calculate constructurs, methods, and assignableTo
+			// calculate constructors, methods, and assignableTo
 			for(Clazz c : all) {
 
 				Class<?> javaClass;
@@ -135,7 +141,7 @@ public class TestCluster implements ISerializable {
 					} else {
 						Class<?> javaClass = classLoader.loadClass(className);
 
-						clazz = new Clazz(className, javaClass.isInterface() || Modifier.isAbstract(javaClass.getModifiers()));
+						clazz = new Clazz(clazzIdGenerator.incrementAndGet(), className, javaClass.isInterface() || Modifier.isAbstract(javaClass.getModifiers()));
 						all.put(clazz);
 						cluster.put(clazz);
 
@@ -200,7 +206,7 @@ public class TestCluster implements ISerializable {
 					else
 						returnType = get(meth.getReturnType());
 
-					mlist.add(new Methodz(Modifier.isStatic(meth.getModifiers()), returnType, _class, meth.getName(), get(meth.getParameterTypes()), xmlMethod));
+					mlist.add(new Methodz(methodzIdGenerator.incrementAndGet(), Modifier.isStatic(meth.getModifiers()), returnType, _class, meth.getName(), get(meth.getParameterTypes()), xmlMethod));
 				}
 			}
 			Methodz[] methods = mlist.toArray(new Methodz[mlist.size()]);
@@ -213,7 +219,7 @@ public class TestCluster implements ISerializable {
 				for(Constructor<?> cns : javaClass.getConstructors()) {
 					final XmlConstructor xmlCns = xmlClass.getConstructor(cns);
 					if(xmlCns != null && !xmlCns.isSkip())
-						clist.add(new Constructorz(_class, get(cns.getParameterTypes()), xmlCns));
+						clist.add(new Constructorz(constructorzIdGenerator.incrementAndGet(), _class, get(cns.getParameterTypes()), xmlCns));
 				}
 				Constructorz[] constructors = clist.toArray(new Constructorz[clist.size()]);
 				Arrays.sort(constructors);
@@ -235,7 +241,7 @@ public class TestCluster implements ISerializable {
 					Clazz fieldTypez = get(fieldType);
 					if(fieldTypez == null) continue;
 
-					StaticValue sv = new StaticValue(cz, fieldTypez, field.getName());
+					StaticValue sv = new StaticValue(staticValueIdGenerator.incrementAndGet(), cz, fieldTypez, field.getName());
 					for(Clazz d : fieldTypez.getAssignableTo()) {
 						if(cluster.get(d.getClassName()) != null) {
 							Set<StaticValue> fields = fieldMap.get(d);

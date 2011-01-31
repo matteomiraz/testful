@@ -31,6 +31,7 @@ public class Constructorz implements Serializable, Comparable<Constructorz> {
 
 	private static final long serialVersionUID = 5191767105810286511L;
 
+	private final int id;
 	private final Clazz clazz;
 	private final Clazz[] params;
 	private final MethodInformation info;
@@ -38,7 +39,8 @@ public class Constructorz implements Serializable, Comparable<Constructorz> {
 	/** The maximum execution time (in milliseconds) */
 	private final int maxExecutionTime;
 
-	Constructorz(Clazz clazz, Clazz[] params, XmlConstructor xml) {
+	Constructorz(int id, Clazz clazz, Clazz[] params, XmlConstructor xml) {
+		this.id = id;
 		this.clazz = clazz;
 		this.params = params;
 
@@ -59,6 +61,14 @@ public class Constructorz implements Serializable, Comparable<Constructorz> {
 				paramsInfo[i].addCaptureStateOf(paramsInfo[exch]);
 
 		info = new MethodInformation(Kind.CONSTRUCTOR, true, paramsInfo);
+	}
+
+	/**
+	 * Returns the identification of the constructorz
+	 * @return the identification of the constructorz
+	 */
+	public int getId() {
+		return id;
 	}
 
 	public Clazz getClazz() {

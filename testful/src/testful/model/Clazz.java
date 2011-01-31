@@ -31,6 +31,8 @@ public class Clazz implements Serializable, Comparable<Clazz>, ElementWithKey<St
 	private static final Constructorz[] NO_CONSTRUCTORS = new Constructorz[0];
 	private static final Methodz[] NO_METHODS = new Methodz[0];
 
+	private final int id;
+
 	/** true if it is an abstract class or an interface */
 	private final boolean isAbstract;
 
@@ -58,7 +60,8 @@ public class Clazz implements Serializable, Comparable<Clazz>, ElementWithKey<St
 
 	private final int hashCode;
 
-	Clazz(String name, boolean isAbstract) {
+	Clazz(int id, String name, boolean isAbstract) {
+		this.id = id;
 		this.name = name;
 		this.isAbstract = isAbstract;
 
@@ -77,6 +80,14 @@ public class Clazz implements Serializable, Comparable<Clazz>, ElementWithKey<St
 	 */
 	void setConstructors(Constructorz[] constructors) {
 		this.constructors = constructors;
+	}
+
+	/**
+	 * Returns the numeric id of the clazz
+	 * @return the id of the clazz
+	 */
+	public int getId() {
+		return id;
 	}
 
 	/**

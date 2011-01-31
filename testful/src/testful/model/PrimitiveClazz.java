@@ -18,6 +18,7 @@
 
 package testful.model;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 public final class PrimitiveClazz extends Clazz {
@@ -187,18 +188,18 @@ public final class PrimitiveClazz extends Clazz {
 	 * @param cluster : the test cluster
 	 * @param type : the Class type (e.g., Integer)
 	 */
-	private PrimitiveClazz(PrimTypes type, Clazz[] assignableTo) {
-		super(type.toString(), false);
+	private PrimitiveClazz(AtomicInteger idGenerator, PrimTypes type, Clazz[] assignableTo) {
+		super(idGenerator.incrementAndGet(), type.toString(), false);
 		realType = type;
 		this.assignableTo = assignableTo;
-		PrimitiveClazz other = new PrimitiveClazz(this);
+		PrimitiveClazz other = new PrimitiveClazz(idGenerator, this);
 
 		clazzObject = type.isClass() ? this : other;
 		clazzType = type.isClass() ? other : this;
 	}
 
-	private PrimitiveClazz(PrimitiveClazz other) {
-		super(other.realType.other().toString(), false);
+	private PrimitiveClazz(AtomicInteger idGenerator, PrimitiveClazz other) {
+		super(idGenerator.incrementAndGet(), other.realType.other().toString(), false);
 		realType = other.realType.other();
 		assignableTo = other.assignableTo;
 
@@ -231,41 +232,41 @@ public final class PrimitiveClazz extends Clazz {
 		return "(" + clazzType.getClassName() + ")";
 	}
 
-	static PrimitiveClazz[] createPrimitive() {
+	static PrimitiveClazz[] createPrimitive(AtomicInteger idGenerator) {
 		PrimitiveClazz[] ret = new PrimitiveClazz[16];
 
 		PrimitiveClazz[] equiv = new PrimitiveClazz[2];
-		PrimitiveClazz o = new PrimitiveClazz(PrimTypes.BooleanClass, equiv);
+		PrimitiveClazz o = new PrimitiveClazz(idGenerator, PrimTypes.BooleanClass, equiv);
 		ret[0] = equiv[0] = o.clazzObject;
 		ret[1] = equiv[1] = o.clazzType;
 
 		equiv = new PrimitiveClazz[2];
-		PrimitiveClazz c = new PrimitiveClazz(PrimTypes.CharacterClass, equiv);
+		PrimitiveClazz c = new PrimitiveClazz(idGenerator, PrimTypes.CharacterClass, equiv);
 		ret[2] = equiv[0] = c.clazzObject;
 		ret[3] = equiv[1] = c.clazzType;
 
 		equiv = new PrimitiveClazz[12];
-		PrimitiveClazz b = new PrimitiveClazz(PrimTypes.ByteClass, equiv);
+		PrimitiveClazz b = new PrimitiveClazz(idGenerator, PrimTypes.ByteClass, equiv);
 		ret[4] = equiv[0] = b.clazzObject;
 		ret[5] = equiv[1] = b.clazzType;
 
-		PrimitiveClazz i = new PrimitiveClazz(PrimTypes.IntegerClass, equiv);;
+		PrimitiveClazz i = new PrimitiveClazz(idGenerator, PrimTypes.IntegerClass, equiv);;
 		ret[6] = equiv[2] = i.clazzObject;
 		ret[7] = equiv[3] = i.clazzType;
 
-		PrimitiveClazz s = new PrimitiveClazz(PrimTypes.ShortClass, equiv);
+		PrimitiveClazz s = new PrimitiveClazz(idGenerator, PrimTypes.ShortClass, equiv);
 		ret[8] = equiv[4] = s.clazzObject;
 		ret[9] = equiv[5] = s.clazzType;
 
-		PrimitiveClazz l = new PrimitiveClazz(PrimTypes.LongClass, equiv);
+		PrimitiveClazz l = new PrimitiveClazz(idGenerator, PrimTypes.LongClass, equiv);
 		ret[10] = equiv[6] = l.clazzObject;
 		ret[11] = equiv[7] = l.clazzType;
 
-		PrimitiveClazz f = new PrimitiveClazz(PrimTypes.FloatClass, equiv);
+		PrimitiveClazz f = new PrimitiveClazz(idGenerator, PrimTypes.FloatClass, equiv);
 		ret[12] = equiv[8] = f.clazzObject;
 		ret[13] = equiv[9] = f.clazzType;
 
-		PrimitiveClazz d = new PrimitiveClazz(PrimTypes.DoubleClass, equiv);
+		PrimitiveClazz d = new PrimitiveClazz(idGenerator, PrimTypes.DoubleClass, equiv);
 		ret[14] = equiv[10] = d.clazzObject;
 		ret[15] = equiv[11] = d.clazzType;
 

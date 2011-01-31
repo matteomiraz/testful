@@ -35,6 +35,7 @@ public class Methodz implements Serializable, Comparable<Methodz> {
 
 	private static final long serialVersionUID = -6215844840936041441L;
 
+	private final int id;
 	private final Clazz clazz;
 	private final String name;
 	private final Clazz[] params;
@@ -46,7 +47,8 @@ public class Methodz implements Serializable, Comparable<Methodz> {
 
 	private final MethodInformation info;
 
-	Methodz(boolean _static, Clazz returnType, Clazz clazz, String name, Clazz[] params, XmlMethod xml) {
+	Methodz(int id, boolean _static, Clazz returnType, Clazz clazz, String name, Clazz[] params, XmlMethod xml) {
+		this.id = id;
 		this.clazz = clazz;
 		this.name = name;
 		this.params = params;
@@ -70,6 +72,14 @@ public class Methodz implements Serializable, Comparable<Methodz> {
 				paramsInfo[i].addCaptureStateOf(paramsInfo[exch]);
 
 		info = new MethodInformation(MethodInformation.Kind.convert(xml.getKind()), xml.isExposeState(), paramsInfo);
+	}
+
+	/**
+	 * Returns the identification of the Methodz
+	 * @return the identification of the Methodz
+	 */
+	public int getId() {
+		return id;
 	}
 
 	public Clazz getClazz() {

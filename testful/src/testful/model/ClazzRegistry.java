@@ -36,7 +36,7 @@ public class ClazzRegistry {
 
 	private static final Logger logger = Logger.getLogger("testful.model.clazzRegistry");
 
-	private static final Timer timerClass = Timer.Disabled.singleton; // Timer.getTimer();
+	private static final Timer timerClass = Timer.getTimer();
 
 	/** When loaded by a TestfulClassLoader, the singleton stores the ClazzRegistry to use. */
 	public static final ClazzRegistry singleton;
@@ -50,12 +50,12 @@ public class ClazzRegistry {
 		this.loader = loader;
 	}
 
-	private final Map<Clazz, Class<?>> clazzCache = new HashMap<Clazz, Class<?>>();
+	private final Map<Integer, Class<?>> clazzCache = new HashMap<Integer, Class<?>>();
 	public Class<?> getClass(Clazz clazz) throws ClassNotFoundException {
 
 		timerClass.start("clazzRegistry.getClass");
 
-		Class<?> cache = clazzCache.get(clazz);
+		Class<?> cache = clazzCache.get(clazz.getId());
 		if(cache != null) {
 			timerClass.stop();
 			return cache;
@@ -130,7 +130,7 @@ public class ClazzRegistry {
 			ret = loader.loadClass(clazz.getClassName());
 		}
 
-		clazzCache.put(clazz, ret);
+		clazzCache.put(clazz.getId(), ret);
 		timerClass.stop();
 
 		return ret;
@@ -145,28 +145,43 @@ public class ClazzRegistry {
 		return ret;
 	}
 
+	private final Map<Integer, Field> fieldCache = new HashMap<Integer, Field>();
 	public Field getField(StaticValue value) throws ClassNotFoundException, SecurityException, NoSuchFieldException {
+
+		Field cache = fieldCache.get(value.getId());
+		if(cache != null) return cache;
 
 		Class<?> declaringClass = getClass(value.getDeclaringClass());
 		Field field = declaringClass.getField(value.getName());
+		fieldCache.put(value.getId(), field);
 
 		return field;
 	}
 
+	private final Map<Integer, Method> methodCache = new HashMap<Integer, Method>();
 	public Method getMethod(Methodz m) throws ClassNotFoundException, SecurityException, NoSuchMethodException {
+
+		Method cache = methodCache.get(m.getId());
+		if(cache != null) return cache;
 
 		Class<?> c = getClass(m.getClazz());
 		Class<?>[] params = getClasses(m.getParameterTypes());
 		Method method = c.getMethod(m.getName(), params);
+		methodCache.put(m.getId(), method);
 
 		return method;
 	}
 
+	private final Map<Integer, Constructor<?>> constructorCache = new HashMap<Integer, Constructor<?>>();
 	public Constructor<?> getConstructor(Constructorz cns) throws ClassNotFoundException, SecurityException, NoSuchMethodException {
+
+		Constructor<?> cache = constructorCache.get(cns.getId());
+		if(cache != null) return cache;
 
 		Class<?> c = getClass(cns.getClazz());
 		Class<?>[] params = getClasses(cns.getParameterTypes());
 		Constructor<?> constructor = c.getConstructor(params);
+		constructorCache.put(cns.getId(), constructor);
 
 		return constructor;
 	}

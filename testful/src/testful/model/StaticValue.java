@@ -31,6 +31,8 @@ public class StaticValue implements Serializable, Comparable<StaticValue> {
 
 	private static final long serialVersionUID = 2915220460472722096L;
 
+	private final int id;
+
 	/** type of the field (e.g. Class Foo { int field; } => int ) */
 	private final Clazz type;
 	/** the class that declares the field (e.g. Class Foo { int field; } => Foo ) */
@@ -38,10 +40,19 @@ public class StaticValue implements Serializable, Comparable<StaticValue> {
 	/** type name of the field (e.g. Class Foo { int field; } => field) */
 	private final String name;
 
-	StaticValue(Clazz declaringClass, Clazz type, String name) {
+	StaticValue(int id, Clazz declaringClass, Clazz type, String name) {
+		this.id = id;
 		this.declaringClass = declaringClass ;
 		this.type = type;
 		this.name = name;
+	}
+
+	/**
+	 * Returns the identification of the static value
+	 * @return the identification of the static value
+	 */
+	public int getId() {
+		return id;
 	}
 
 	/**
