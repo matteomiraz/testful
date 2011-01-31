@@ -90,7 +90,7 @@ public abstract class Timer2 {
 		@Override
 		public void start() {
 			if(TestFul.DEBUG && start != 0)
-				new IllegalStateException("The timer " + name + " is still running").printStackTrace();
+				TestFul.debug(new IllegalStateException("The timer " + name + " is still running"));
 
 			if(parent != null)
 				parent.pause();
@@ -101,10 +101,10 @@ public abstract class Timer2 {
 
 		public void pause() {
 			if(TestFul.DEBUG && paused)
-				new IllegalStateException("The timer " + name + " is paused").printStackTrace();
+				TestFul.debug(new IllegalStateException("The timer " + name + " is paused"));
 
 			if(TestFul.DEBUG && start == 0)
-				new IllegalStateException("The timer " + name + " is not running").printStackTrace();
+				TestFul.debug(new IllegalStateException("The timer " + name + " is not running"));
 
 			paused = true;
 			duration += (System.nanoTime() - start);
@@ -112,7 +112,7 @@ public abstract class Timer2 {
 
 		public void resume() {
 			if(TestFul.DEBUG && !paused)
-				new IllegalStateException("The timer " + name + " is not paused").printStackTrace();
+				TestFul.debug(new IllegalStateException("The timer " + name + " is not paused"));
 
 			paused = false;
 			start = System.nanoTime();
@@ -124,7 +124,7 @@ public abstract class Timer2 {
 		@Override
 		public void stop() {
 			if(TestFul.DEBUG && start == 0)
-				new IllegalStateException("The timer " + name + " is not running").printStackTrace();
+				TestFul.debug(new IllegalStateException("The timer " + name + " is not running"));
 
 			long end = System.nanoTime();
 			duration += end - start;

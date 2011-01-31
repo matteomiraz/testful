@@ -291,7 +291,7 @@ public class TestFul {
 			try {
 				sb.append(name.substring(3) + " = " + m.invoke(o) + "\n");
 			} catch (Exception e) {
-				e.printStackTrace();
+				debug(e);
 			}
 
 		}

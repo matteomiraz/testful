@@ -118,7 +118,6 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 		} catch(RemoteException e) {
 			final ClassNotFoundException exc = new ClassNotFoundException("Cannot retrieve the class " + name, e);
 			logger.log(Level.WARNING, exc.getMessage(), exc);
-			e.printStackTrace();
 			throw exc;
 		}
 	}

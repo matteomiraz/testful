@@ -174,7 +174,7 @@ public class RunnerPool implements IRunner, ITestRepository {
 			tests.put(ctx);
 		} catch(InterruptedException e) {
 			// this should not happens
-			e.printStackTrace();
+			logger.log(Level.WARNING, e.getMessage(), e);
 		}
 
 		return ret;

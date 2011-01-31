@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
@@ -37,6 +39,8 @@ import testful.utils.ElementManager;
  * @author matteo
  */
 public class CoverageMerge {
+
+	private static final Logger logger = Logger.getLogger("testful.regression");
 
 	private static class Config implements IConfig {
 
@@ -72,7 +76,7 @@ public class CoverageMerge {
 					cCov.merge(rCov);
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.log(Level.WARNING, e.getMessage(), e);
 			}
 		}
 
@@ -80,7 +84,7 @@ public class CoverageMerge {
 			try {
 				combined.write(config.out);
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.log(Level.WARNING, e.getMessage(), e);
 			}
 		}
 

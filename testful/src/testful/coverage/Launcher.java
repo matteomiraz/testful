@@ -228,7 +228,7 @@ public class Launcher {
 
 		} catch (Exception e) {
 			logger.log(Level.WARNING, "Error during the instrumentation: " + e.getMessage(), e);
-			e.printStackTrace();
+			TestFul.debug(e);
 			System.exit(1);
 		}
 

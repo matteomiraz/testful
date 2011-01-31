@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.utils;
 
 import java.io.ByteArrayInputStream;
@@ -29,10 +28,14 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.WeakHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public class Cloner<E extends Serializable> {
+
+	private static final Logger logger = Logger.getLogger("testful.utils.Cloner");
 
 	private static final WeakHashMap<Serializable, byte[]> prevNorm = new WeakHashMap<Serializable, byte[]>();
 	private static final WeakHashMap<Serializable, byte[]> prevGzip = new WeakHashMap<Serializable, byte[]>();
@@ -64,7 +67,7 @@ public class Cloner<E extends Serializable> {
 			oo.close();
 			return baos.toByteArray();
 		} catch(IOException e) {
-			e.printStackTrace();
+			logger.log(Level.WARNING, e.getMessage() + " (Cloner is loaded by " + Cloner.class.getClassLoader() + ")", e);
 			return new byte[0];
 		}
 	}
@@ -86,12 +89,12 @@ public class Cloner<E extends Serializable> {
 			oi = new ObjectInputStream(compressed ? new GZIPInputStream(bais) : bais);
 			return (Serializable) oi.readObject();
 		} catch(Exception e) {
-			e.printStackTrace();
+			logger.log(Level.WARNING, e.getMessage() + " (Cloner is loaded by " + Cloner.class.getClassLoader() + ")", e);
 		} finally {
 			if(oi != null) try {
 				oi.close();
 			} catch(IOException e) {
-				e.printStackTrace();
+				logger.log(Level.WARNING, e.getMessage() + " (Cloner is loaded by " + Cloner.class.getClassLoader() + ")", e);
 			}
 		}
 		return null;

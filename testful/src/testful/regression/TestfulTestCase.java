@@ -121,7 +121,6 @@ public class TestfulTestCase extends TestCase {
 				try {
 					if(r.get()) fail("Test " + fileName + " failed");
 				} catch (Exception e) {
-					e.printStackTrace();
 					logger.log(Level.WARNING, "Exception during the execution of the test: " + e.getMessage(), e);
 				}
 

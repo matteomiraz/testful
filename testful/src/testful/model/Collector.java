@@ -162,12 +162,12 @@ public class Collector {
 			oo.writeObject(DataLight.toArray(coverage));
 			wait = -1;
 		} catch(IOException e) {
-			e.printStackTrace();
+			logger.log(Level.WARNING, e.getMessage(), e);
 		} finally {
 			if(oo != null) try {
 				oo.close();
 			} catch(IOException e) {
-				e.printStackTrace();
+				logger.log(Level.WARNING, e.getMessage(), e);
 			}
 
 			long stop = System.currentTimeMillis();

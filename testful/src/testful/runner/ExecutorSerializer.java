@@ -74,7 +74,7 @@ public class ExecutorSerializer {
 			oo.close();
 			return baos.toByteArray();
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.log(Level.WARNING, e.getMessage(), e);
 			return new byte[0];
 		}
 	}
@@ -126,7 +126,7 @@ public class ExecutorSerializer {
 				try {
 					oi.close();
 				} catch(IOException e) {
-					e.printStackTrace();
+					logger.log(Level.WARNING, e.getMessage(), e);
 				}
 			}
 		}
