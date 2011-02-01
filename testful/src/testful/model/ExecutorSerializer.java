@@ -50,7 +50,8 @@ public class ExecutorSerializer {
 
 	private static final boolean JAVA_SERIALIZATION = TestFul.getProperty(TestFul.PROPERTY_JAVA_SERIALIZATION, false);
 
-	private static final Timer2 t_ser = Timer2.getRootTimer("ser");
+	private static final Timer2 t_ser = Timer2.Disabled.singleton;
+	//private static final Timer2 t_ser = Timer2.getRootTimer("ser");
 	private static final Timer2 t_ser_sInit = t_ser.getSubTimer("ser.aStreamInit");
 	private static final Timer2 t_ser_sClose = t_ser.getSubTimer("ser.zStreamClose");
 	private static final Timer2 t_ser_cluster = t_ser.getSubTimer("ser.cluster");
@@ -64,7 +65,8 @@ public class ExecutorSerializer {
 	private static final Timer2 t_ser_test_ap = t_ser_test.getSubTimer("ser.test.ap");
 	private static final Timer2 t_ser_test_ac = t_ser_test.getSubTimer("ser.test.ac");
 
-	private static final Timer2 t_dser = Timer2.getRootTimer("dser");
+	private static final Timer2 t_dser = Timer2.Disabled.singleton;
+	//private static final Timer2 t_dser = Timer2.getRootTimer("dser");
 	private static final Timer2 t_dser_sInit = t_dser.getSubTimer("dser.aStreamInit");
 	private static final Timer2 t_dser_cluster = t_dser.getSubTimer("dser.cluster");
 	private static final Timer2 t_dser_cluster_or = t_dser_cluster.getSubTimer("dser.cluster.objectRepository");
@@ -101,6 +103,7 @@ public class ExecutorSerializer {
 
 			// perform the standard serialization
 			if(clusterID == null) {
+				oo.writeBoolean(false);
 				oo.writeObject(test.getCluster());
 				t_ser_cluster.stop();
 
@@ -113,7 +116,8 @@ public class ExecutorSerializer {
 				t_ser_test.start();
 
 			} else {
-				oo.writeObject(clusterID);
+				oo.writeBoolean(true);
+				writeString(oo, clusterID);
 				t_ser_cluster.stop();
 
 				t_ser_refs.start();
@@ -153,18 +157,15 @@ public class ExecutorSerializer {
 						oo.writeInt(ac.getValue() == null ? -1 : ac.getValue().getId());
 						t_ser_test_ac.stop();
 
-						writeOpInfo(oo, op);
-
 					} else if(op instanceof AssignPrimitive) {
 						t_ser_test_ap.start();
 						// op.type=2 target.id value {info ~ null}
 						oo.writeByte(2);
 						AssignPrimitive ap = (AssignPrimitive)op;
 						oo.writeInt(ap.getTarget() == null ? -1 : ap.getTarget().getId());
-						oo.writeObject(ap.getValue());
-						t_ser_test_ap.stop();
+						writePrimitive(oo, ap.getValue());
 
-						writeOpInfo(oo, op);
+						t_ser_test_ap.stop();
 
 					} else if(op instanceof CreateObject) {
 						t_ser_test_cr.start();
@@ -217,6 +218,52 @@ public class ExecutorSerializer {
 		}
 	}
 
+	private static void writePrimitive(ObjectOutputStream oo, Serializable value) throws IOException {
+
+		// isNull [ type value ]
+
+		if(value == null) oo.writeBoolean(true);
+		else {
+			oo.writeBoolean(false);
+
+			if(value instanceof Boolean)        { oo.writeShort(0); oo.writeBoolean((Boolean) value); }
+			else if(value instanceof Byte)      { oo.writeShort(1); oo.writeByte((Byte) value); }
+			else if(value instanceof Character) { oo.writeShort(2); oo.writeChar((Character) value); }
+			else if(value instanceof Double)    { oo.writeShort(3); oo.writeDouble((Double) value); }
+			else if(value instanceof Float)     { oo.writeShort(4); oo.writeFloat((Float) value); }
+			else if(value instanceof Integer)   { oo.writeShort(5); oo.writeInt((Integer) value); }
+			else if(value instanceof Long)      { oo.writeShort(6); oo.writeLong((Long) value); }
+			else if(value instanceof Short)     { oo.writeShort(7); oo.writeShort((Short) value); }
+			else if(value instanceof String)    { oo.writeShort(8); writeString(oo, (String) value); }
+			else { oo.writeShort(-1); logger.warning("Unexpected primitive: " + value); }
+		}
+	}
+
+	private static Serializable readPrimitive(ObjectInputStream oi) throws IOException {
+
+		// isNull [ type value ]
+
+		boolean isNull = oi.readBoolean();
+		if(isNull) return null;
+
+		final Serializable ret;
+		short type = oi.readShort();
+		switch(type) {
+		case 0: ret = oi.readBoolean(); break;
+		case 1: ret = oi.readByte(); break;
+		case 2: ret = oi.readChar(); break;
+		case 3: ret = oi.readDouble(); break;
+		case 4: ret = oi.readFloat(); break;
+		case 5: ret = oi.readInt(); break;
+		case 6: ret = oi.readLong(); break;
+		case 7: ret = oi.readShort(); break;
+		case 8: ret = readString(oi); break;
+		default: logger.warning("Unexpected serialized primitive type: " + type); ret = null;
+		}
+
+		return ret;
+	}
+
 	private static <T> void writeString(ObjectOutputStream oo, String string) throws IOException {
 		oo.writeShort(string.length());
 		oo.writeChars(string);
@@ -224,7 +271,7 @@ public class ExecutorSerializer {
 
 	public static IExecutor deserialize(byte[] serialized) {
 
-		ObjectInput oi = null;
+		ObjectInputStream oi = null;
 		try {
 
 			if(TestFul.DEBUG && !(ExecutorSerializer.class.getClassLoader() instanceof TestfulClassLoader))
@@ -246,12 +293,11 @@ public class ExecutorSerializer {
 			final Operation[] testOps;
 
 			t_dser_cluster.start();
-			Object clusterObj = oi.readObject();
-
-			if(clusterObj instanceof TestCluster) {
+			boolean optimized = oi.readBoolean();
+			if(!optimized) {
 
 				// perform the standard de-serialization
-				testCluster = (TestCluster) clusterObj;
+				testCluster = (TestCluster) oi.readObject();
 				t_dser_cluster.stop();
 
 				t_dser_refs.start();
@@ -262,11 +308,13 @@ public class ExecutorSerializer {
 				testOps = (Operation[]) oi.readObject();
 				t_dser_test.stop();
 
-			} else if(clusterObj instanceof String) {
+			} else {
+
+				String clusterID = readString(oi);
 
 				// use the ObjectRegistry and the advanced serialization
 				t_dser_cluster_or.start();
-				testCluster = (TestCluster) ObjectRegistry.singleton.getObject((String) clusterObj);
+				testCluster = (TestCluster) ObjectRegistry.singleton.getObject(clusterID);
 				t_dser_cluster_or.stop();
 
 				t_dser_cluster.stop();
@@ -306,8 +354,6 @@ public class ExecutorSerializer {
 						testOps[i] = new AssignConstant(ref, staticValue);
 						t_dser_test_ac.stop();
 
-						readOpInfo(oi, testOps[i]);
-
 						break;
 					}
 
@@ -317,12 +363,10 @@ public class ExecutorSerializer {
 						int targetId = oi.readInt();
 						Reference ref = (targetId < 0 ? null : testRefs[targetId]);
 
-						Serializable value = (Serializable) oi.readObject();
+						Serializable value = readPrimitive(oi);
 
 						testOps[i] = new AssignPrimitive(ref, value);
 						t_dser_test_ap.stop();
-
-						readOpInfo(oi, testOps[i]);
 
 						break;
 					}
@@ -385,9 +429,7 @@ public class ExecutorSerializer {
 				}
 				t_dser_test.stop();
 
-			} else
-				throw new Exception("Unexpected TestCluster: " + clusterObj + " (" + clusterObj.getClass().getCanonicalName() + ")");
-
+			}
 			t_dser_creation.start();
 
 			@SuppressWarnings("unchecked")
@@ -414,16 +456,15 @@ public class ExecutorSerializer {
 			}
 		}
 		return null;
-
 	}
 
 	private static String readString(ObjectInput oi) throws IOException {
+
 		short execCharArrayLen = oi.readShort();
 		char[] execCharArray = new char[execCharArrayLen];
 		for (int i = 0; i < execCharArray.length; i++)
 			execCharArray[i] = oi.readChar();
-		String str = new String(execCharArray);
-		return str;
+		return new String(execCharArray);
 	}
 
 	private static void writeOpInfo(ObjectOutputStream oo, Operation op) throws IOException {

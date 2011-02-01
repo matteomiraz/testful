@@ -39,7 +39,7 @@ public abstract class Timer2 {
 		else return Disabled.singleton;
 	}
 
-	private static class Disabled extends Timer2 {
+	public static class Disabled extends Timer2 {
 
 		public static Disabled singleton = new Disabled();
 
