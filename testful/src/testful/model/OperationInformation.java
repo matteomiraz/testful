@@ -22,6 +22,12 @@ import java.io.Serializable;
 
 import testful.utils.ElementWithKey;
 
+/**
+ * Attach some information to operations.
+ * These information are only available at design-time,
+ * unless the {@link ExecutorSerializer} explicitly serializes them.
+ * @author matteo
+ */
 public abstract class OperationInformation implements ElementWithKey<String>, Serializable {
 
 	private static final long serialVersionUID = -62965317854987267L;

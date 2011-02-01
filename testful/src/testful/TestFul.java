@@ -58,6 +58,9 @@ public class TestFul {
 	/** Monitor Testful to collect internal execution performances */
 	public static final String PROPERTY_MONITOR_PERFORMANCE = "testful.monitorPerformance";
 
+	/** Use the standard Java serialization instead of TestFul's custom protocol */
+	public static final String PROPERTY_JAVA_SERIALIZATION = "testful.javaSerialization";
+
 	// ---------- end of testful's properties ----------
 
 	// ------------------- debug -----------------------

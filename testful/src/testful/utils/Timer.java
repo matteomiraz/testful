@@ -49,6 +49,7 @@ public abstract class Timer {
 
 	public abstract void start(String name);
 	public abstract void stop();
+	public abstract void stop(String message);
 
 	public static Timer getTimer() {
 		if(MONITOR) return new Enabled();
@@ -70,6 +71,9 @@ public abstract class Timer {
 		 */
 		@Override
 		public void stop() { }
+
+		@Override
+		public void stop(String message) { }
 	}
 
 	private static class Enabled extends Timer {
@@ -88,9 +92,14 @@ public abstract class Timer {
 
 		@Override
 		public void stop() {
+			stop(null);
+		}
+
+		@Override
+		public void stop(String message) {
 			if(name != null) {
 				long end = System.nanoTime();
-				logger.fine(name + " " + (end - begin)/1000000.0 + " ms");
+				logger.fine(name + " " + (end - begin)/1000000.0 + " ms" + (message!=null?" " + message : ""));
 			}
 		}
 	}

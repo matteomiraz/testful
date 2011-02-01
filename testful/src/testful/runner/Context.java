@@ -77,7 +77,7 @@ public class Context<R extends Serializable, M extends IExecutionManager<R>> imp
 		this.executor = ExecutorSerializer.serialize(finder, executorType, test);
 		this.trackerDataSerGz = Cloner.serializeWithCache(data, true);
 
-		timer.stop();
+		timer.stop(Integer.toString(test.getTest().length));
 	}
 
 	public boolean isReloadClasses() {

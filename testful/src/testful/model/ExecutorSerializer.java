@@ -26,7 +26,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
-import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,6 +35,7 @@ import testful.runner.IExecutor;
 import testful.runner.ObjectRegistry;
 import testful.runner.ObjectType;
 import testful.runner.TestfulClassLoader;
+import testful.utils.Timer2;
 
 /**
  * Efficiently serializes and de-serializes Executors
@@ -48,25 +48,75 @@ public class ExecutorSerializer {
 	// checks the System property of the current JVM
 	private static final boolean DISCOVER_FAULTS = TestFul.getProperty(TestFul.PROPERTY_FAULT_DETECT, true);
 
-	public static <T extends IExecutor> byte[] serialize(DataFinder finder, Class<T> executor, Test test) {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try {
-			ObjectOutputStream oo = new ObjectOutputStream(baos);
+	private static final boolean JAVA_SERIALIZATION = TestFul.getProperty(TestFul.PROPERTY_JAVA_SERIALIZATION, false);
 
-			oo.writeObject(executor.getName());
+	private static final Timer2 t_ser = Timer2.getRootTimer("ser");
+	private static final Timer2 t_ser_sInit = t_ser.getSubTimer("ser.aStreamInit");
+	private static final Timer2 t_ser_sClose = t_ser.getSubTimer("ser.zStreamClose");
+	private static final Timer2 t_ser_cluster = t_ser.getSubTimer("ser.cluster");
+	private static final Timer2 t_ser_cluster_or = t_ser_cluster.getSubTimer("ser.cluster.objectRepository");
+	private static final Timer2 t_ser_refs = t_ser.getSubTimer("ser.refs");
+	private static final Timer2 t_ser_test = t_ser.getSubTimer("ser.test");
+	private static final Timer2 t_ser_test_opInfo = t_ser_test.getSubTimer("ser.test.opInfo");
+	private static final Timer2 t_ser_test_rst = t_ser_test.getSubTimer("ser.test.reset");
+	private static final Timer2 t_ser_test_cr = t_ser_test.getSubTimer("ser.test.cr");
+	private static final Timer2 t_ser_test_in = t_ser_test.getSubTimer("ser.test.in");
+	private static final Timer2 t_ser_test_ap = t_ser_test.getSubTimer("ser.test.ap");
+	private static final Timer2 t_ser_test_ac = t_ser_test.getSubTimer("ser.test.ac");
+
+	private static final Timer2 t_dser = Timer2.getRootTimer("dser");
+	private static final Timer2 t_dser_sInit = t_dser.getSubTimer("dser.aStreamInit");
+	private static final Timer2 t_dser_cluster = t_dser.getSubTimer("dser.cluster");
+	private static final Timer2 t_dser_cluster_or = t_dser_cluster.getSubTimer("dser.cluster.objectRepository");
+	private static final Timer2 t_dser_refs = t_dser.getSubTimer("dser.refs");
+	private static final Timer2 t_dser_test = t_dser.getSubTimer("dser.test");
+	private static final Timer2 t_dser_test_opInfo = t_dser_test.getSubTimer("dser.test.opInfo");
+	private static final Timer2 t_dser_test_cr = t_dser_test.getSubTimer("dser.test.cr");
+	private static final Timer2 t_dser_test_in = t_dser_test.getSubTimer("dser.test.in");
+	private static final Timer2 t_dser_test_ap = t_dser_test.getSubTimer("dser.test.ap");
+	private static final Timer2 t_dser_test_ac = t_dser_test.getSubTimer("dser.test.ac");
+	private static final Timer2 t_dser_creation = t_dser.getSubTimer("dser.zExecCreation");
+
+
+	public static <T extends IExecutor> byte[] serialize(DataFinder finder, Class<T> executor, Test test) {
+		try {
+			t_ser.start();
+
+			t_ser_sInit.start();
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ObjectOutputStream oo = new ObjectOutputStream(baos);
+			t_ser_sInit.stop();
+
+			writeString(oo, executor.getName());
+
 			oo.writeBoolean(DISCOVER_FAULTS);
 
-			String clusterID = ObjectType.contains(finder, test.getCluster());
+			t_ser_cluster.start();
+			String clusterID = null;
+			if(!JAVA_SERIALIZATION) {
+				t_ser_cluster_or.start();
+				clusterID = ObjectType.contains(finder, test.getCluster());
+				t_ser_cluster_or.stop();
+			}
 
 			// perform the standard serialization
 			if(clusterID == null) {
 				oo.writeObject(test.getCluster());
+				t_ser_cluster.stop();
+
+				t_ser_refs.start();
 				oo.writeObject(test.getReferenceFactory().getReferences());
+				t_ser_refs.stop();
+
+				t_ser_test.start();
 				oo.writeObject(test.getTest());
+				t_ser_test.start();
 
 			} else {
 				oo.writeObject(clusterID);
+				t_ser_cluster.stop();
 
+				t_ser_refs.start();
 				// write the references: refs.length { ref.class.id, ref.pos }
 				Reference[] refs = test.getReferenceFactory().getReferences();
 				oo.writeInt(refs.length);
@@ -80,38 +130,44 @@ public class ExecutorSerializer {
 						TestFul.debug(new Exception("Reference id is not its ordinal position in the 'referenceFactory.getReferences()' array"));
 				}
 
+				t_ser_refs.stop();
+
+				t_ser_test.start();
 
 				// write the test: test.length { op.type [op-specific data] }
 				oo.writeInt(test.getTest().length);
 				for (Operation op : test.getTest()) {
 
 					if (op instanceof ResetRepository) {
+						t_ser_test_rst.start();
 						// op.type=0 no_extra_data
 						oo.writeByte(0);
+						t_ser_test_rst.stop();
 
 					} else if(op instanceof AssignConstant) {
+						t_ser_test_ac.start();
 						// op.type=1 target.id staticValue.id {info ~ null}
 						oo.writeByte(1);
 						AssignConstant ac = (AssignConstant)op;
 						oo.writeInt(ac.getTarget() == null ? -1 : ac.getTarget().getId());
 						oo.writeInt(ac.getValue() == null ? -1 : ac.getValue().getId());
+						t_ser_test_ac.stop();
 
-						Iterator<OperationInformation> iter = op.getInfos();
-						while(iter.hasNext()) oo.writeObject(iter.next());
-						oo.writeObject(null);
+						writeOpInfo(oo, op);
 
 					} else if(op instanceof AssignPrimitive) {
+						t_ser_test_ap.start();
 						// op.type=2 target.id value {info ~ null}
 						oo.writeByte(2);
 						AssignPrimitive ap = (AssignPrimitive)op;
 						oo.writeInt(ap.getTarget() == null ? -1 : ap.getTarget().getId());
 						oo.writeObject(ap.getValue());
+						t_ser_test_ap.stop();
 
-						Iterator<OperationInformation> iter = op.getInfos();
-						while(iter.hasNext()) oo.writeObject(iter.next());
-						oo.writeObject(null);
+						writeOpInfo(oo, op);
 
 					} else if(op instanceof CreateObject) {
+						t_ser_test_cr.start();
 						// op.type=3 target.id cosntructor.id params.len {param.id} {info ~ null}
 						oo.writeByte(3);
 						CreateObject co = (CreateObject)op;
@@ -121,11 +177,12 @@ public class ExecutorSerializer {
 						for (Reference param : co.getParams())
 							oo.writeInt(param.getId());
 
-						Iterator<OperationInformation> iter = op.getInfos();
-						while(iter.hasNext()) oo.writeObject(iter.next());
-						oo.writeObject(null);
+						t_ser_test_cr.stop();
+
+						writeOpInfo(oo, op);
 
 					} else if(op instanceof Invoke) {
+						t_ser_test_in.start();
 						// op.type=3 target.id this.id method.id params.len {param.id} {info ~ null}
 						oo.writeByte(4);
 						Invoke in = (Invoke)op;
@@ -135,24 +192,34 @@ public class ExecutorSerializer {
 						oo.writeInt(in.getParams().length);
 						for (Reference param : in.getParams())
 							oo.writeInt(param.getId());
+						t_ser_test_in.stop();
 
-						Iterator<OperationInformation> iter = op.getInfos();
-						while(iter.hasNext()) oo.writeObject(iter.next());
-						oo.writeObject(null);
+						writeOpInfo(oo, op);
 
 					} else
 						logger.warning("Unknown operation: " + op.getClass().getName() + " - " + op);
-
-					oo.reset();
 				}
+				t_ser_test.stop();
 			}
 
+			t_ser_sClose.start();
 			oo.close();
-			return baos.toByteArray();
+			byte[] ret = baos.toByteArray();
+			t_ser_sClose.stop();
+
+			t_ser.stop();
+
+			return ret;
+
 		} catch (IOException e) {
 			logger.log(Level.WARNING, e.getMessage(), e);
 			return new byte[0];
 		}
+	}
+
+	private static <T> void writeString(ObjectOutputStream oo, String string) throws IOException {
+		oo.writeShort(string.length());
+		oo.writeChars(string);
 	}
 
 	public static IExecutor deserialize(byte[] serialized) {
@@ -163,30 +230,48 @@ public class ExecutorSerializer {
 			if(TestFul.DEBUG && !(ExecutorSerializer.class.getClassLoader() instanceof TestfulClassLoader))
 				throw new ClassCastException("ExecutorSerializer must be loaded by the Testful Class Loader, when executing method deserialize");
 
+			t_dser.start();
+
+			t_dser_sInit.start();
 			ByteArrayInputStream bais = new ByteArrayInputStream(serialized);
 			oi = new ObjectInputStream(bais);
+			t_dser_sInit.stop();
 
-			String execClassName = (String) oi.readObject();
+			String execClassName = readString(oi);
+
 			boolean discoverFaults = oi.readBoolean();
 
 			final TestCluster testCluster;
 			final Reference[] testRefs;
 			final Operation[] testOps;
 
+			t_dser_cluster.start();
 			Object clusterObj = oi.readObject();
 
 			if(clusterObj instanceof TestCluster) {
 
 				// perform the standard de-serialization
 				testCluster = (TestCluster) clusterObj;
+				t_dser_cluster.stop();
+
+				t_dser_refs.start();
 				testRefs = (Reference[]) oi.readObject();
+				t_dser_refs.stop();
+
+				t_dser_test.start();
 				testOps = (Operation[]) oi.readObject();
+				t_dser_test.stop();
 
 			} else if(clusterObj instanceof String) {
 
 				// use the ObjectRegistry and the advanced serialization
+				t_dser_cluster_or.start();
 				testCluster = (TestCluster) ObjectRegistry.singleton.getObject((String) clusterObj);
+				t_dser_cluster_or.stop();
 
+				t_dser_cluster.stop();
+
+				t_dser_refs.start();
 				// read the references: refs.length { ref.class.id, ref.pos, ref.id }
 				int refLen = oi.readInt();
 				testRefs = new Reference[refLen];
@@ -195,7 +280,9 @@ public class ExecutorSerializer {
 					int pos = oi.readInt();
 					testRefs[i] = new Reference(clazz, pos, i);
 				}
+				t_dser_refs.stop();
 
+				t_dser_test.start();
 				// read the operations
 				int testLen = oi.readInt();
 				testOps = new Operation[testLen];
@@ -209,6 +296,7 @@ public class ExecutorSerializer {
 					}
 
 					case 1: { // AssignConstant
+						t_dser_test_ac.start();
 						int targetId = oi.readInt();
 						Reference ref = (targetId < 0 ? null : testRefs[targetId]);
 
@@ -216,30 +304,32 @@ public class ExecutorSerializer {
 						StaticValue staticValue = valueId < 0 ? null : testCluster.getStaticValueById(valueId);
 
 						testOps[i] = new AssignConstant(ref, staticValue);
+						t_dser_test_ac.stop();
 
-						OperationInformation info;
-						while((info = (OperationInformation) oi.readObject()) != null)
-							testOps[i].addInfo(info);
+						readOpInfo(oi, testOps[i]);
 
 						break;
 					}
 
 					case 2: { // AssignPrimitive
+						t_dser_test_ap.start();
+
 						int targetId = oi.readInt();
 						Reference ref = (targetId < 0 ? null : testRefs[targetId]);
 
 						Serializable value = (Serializable) oi.readObject();
 
 						testOps[i] = new AssignPrimitive(ref, value);
+						t_dser_test_ap.stop();
 
-						OperationInformation info;
-						while((info = (OperationInformation) oi.readObject()) != null)
-							testOps[i].addInfo(info);
+						readOpInfo(oi, testOps[i]);
 
 						break;
 					}
 
 					case 3: { // CreateObject
+						t_dser_test_cr.start();
+
 						int targetId = oi.readInt();
 						Reference target = (targetId < 0 ? null : testRefs[targetId]);
 
@@ -254,15 +344,15 @@ public class ExecutorSerializer {
 						}
 
 						testOps[i] = new CreateObject(target, constructor, params);
+						t_dser_test_cr.stop();
 
-						OperationInformation info;
-						while((info = (OperationInformation) oi.readObject()) != null)
-							testOps[i].addInfo(info);
+						readOpInfo(oi, testOps[i]);
 
 						break;
 					}
 
 					case 4: { // Invoke
+						t_dser_test_in.start();
 
 						int targetId = oi.readInt();
 						Reference target = (targetId < 0 ? null : testRefs[targetId]);
@@ -281,10 +371,9 @@ public class ExecutorSerializer {
 						}
 
 						testOps[i] = new Invoke(target, _this, method, params);
+						t_dser_test_in.stop();
 
-						OperationInformation info;
-						while((info = (OperationInformation) oi.readObject()) != null)
-							testOps[i].addInfo(info);
+						readOpInfo(oi, testOps[i]);
 
 						break;
 					}
@@ -294,15 +383,22 @@ public class ExecutorSerializer {
 					}
 
 				}
+				t_dser_test.stop();
 
 			} else
 				throw new Exception("Unexpected TestCluster: " + clusterObj + " (" + clusterObj.getClass().getCanonicalName() + ")");
+
+			t_dser_creation.start();
 
 			@SuppressWarnings("unchecked")
 			Class<? extends IExecutor> execClass = (Class<? extends IExecutor>) Class.forName(execClassName);
 			Constructor<? extends IExecutor> execCns = execClass.getConstructor(TestCluster.class, Reference[].class, Operation[].class, Boolean.TYPE);
 
 			IExecutor exec = execCns.newInstance(testCluster, testRefs, testOps, discoverFaults);
+
+			t_dser_creation.stop();
+
+			t_dser.stop();
 
 			return exec;
 		} catch(Exception exc) {
@@ -319,5 +415,53 @@ public class ExecutorSerializer {
 		}
 		return null;
 
+	}
+
+	private static String readString(ObjectInput oi) throws IOException {
+		short execCharArrayLen = oi.readShort();
+		char[] execCharArray = new char[execCharArrayLen];
+		for (int i = 0; i < execCharArray.length; i++)
+			execCharArray[i] = oi.readChar();
+		String str = new String(execCharArray);
+		return str;
+	}
+
+	private static void writeOpInfo(ObjectOutputStream oo, Operation op) throws IOException {
+
+		t_ser_test_opInfo.start();
+
+		OperationResult or = (OperationResult) op.getInfo(OperationResult.KEY);
+
+		// isOpResult [ isVerifier [ verifier ] ]
+		if(or == null) oo.writeBoolean(false);
+		else {
+			oo.writeBoolean(true);
+			if(or instanceof OperationResult.Verifier) {
+				oo.writeBoolean(true);
+				oo.writeObject(or);
+			} else {
+				oo.writeBoolean(false);
+			}
+		}
+
+		t_ser_test_opInfo.stop();
+
+	}
+
+	private static void readOpInfo(ObjectInput oi, Operation op) throws ClassNotFoundException, IOException {
+
+		t_dser_test_opInfo.start();
+
+		boolean isOpResult = oi.readBoolean();
+		if(isOpResult) {
+
+			boolean isVerifier = oi.readBoolean();
+			if(isVerifier)
+				op.addInfo((OperationResult.Verifier) oi.readObject());
+			else
+				op.addInfo(new OperationResult());
+		}
+
+		t_dser_test_opInfo.stop();
 	}
 }

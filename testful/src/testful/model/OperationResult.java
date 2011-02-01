@@ -149,8 +149,8 @@ public class OperationResult extends OperationInformation {
 				op.addInfo(new OperationResult());
 	}
 
-	public static void remove(Test t) {
-		for(Operation op : t.getTest())
+	public static void remove(Operation[] ops) {
+		for(Operation op : ops)
 			op.removeInfo(OperationResult.KEY);
 	}
 

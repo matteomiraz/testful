@@ -94,7 +94,7 @@ public abstract class ExecutionManager<T extends Serializable> implements IExecu
 			testful.coverage.Tracker.setup(data);
 		}
 
-		timer.stop();
+		timer.stop(Integer.toString(this.executor.getTest().length));
 	}
 
 	/**
