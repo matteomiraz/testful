@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import testful.utils.Timer;
+import testful.utils.StopWatch;
 
 /**
  * ClassRegistry is a Façade to the remote class-loader
@@ -36,7 +36,7 @@ public class ClassRegistry {
 
 	private static final Logger logger = Logger.getLogger("testful.model.clazzRegistry");
 
-	private static final Timer timerClass = Timer.Disabled.singleton; // Timer.getTimer();
+	private static final StopWatch timerClass = StopWatch.Disabled.singleton; // Timer.getTimer();
 
 	/** When loaded by a TestfulClassLoader, the singleton stores the ClassRegistry to use. */
 	public static final ClassRegistry singleton;

@@ -48,7 +48,7 @@ import testful.model.faults.FaultyExecutionException;
 import testful.model.faults.PreconditionViolationException;
 import testful.model.faults.TestfulInternalException;
 import testful.runner.Executor;
-import testful.utils.Timer2;
+import testful.utils.StopWatchNested;
 
 /**
  * This class is able to host a pool of objects, and execute operations on them.
@@ -79,23 +79,23 @@ public class ReflectionExecutor extends Executor {
 
 	private static final String TIMER_PREFIX = "exec";
 
-	private static Timer2 timer = Timer2.getRootTimer(TIMER_PREFIX + ".1");
+	private static StopWatchNested timer = StopWatchNested.getRootTimer(TIMER_PREFIX + ".1");
 
-	private static Timer2 timer_pre_stop = timer.getSubTimer(TIMER_PREFIX + ".2.preStop");
+	private static StopWatchNested timer_pre_stop = timer.getSubTimer(TIMER_PREFIX + ".2.preStop");
 
-	private static Timer2 timer_stop = timer.getSubTimer(TIMER_PREFIX + ".3.stop");
+	private static StopWatchNested timer_stop = timer.getSubTimer(TIMER_PREFIX + ".3.stop");
 
-	private static Timer2 timer_exec = timer.getSubTimer(TIMER_PREFIX + ".3.exec");
+	private static StopWatchNested timer_exec = timer.getSubTimer(TIMER_PREFIX + ".3.exec");
 
-	private static Timer2 timer_assignPrimitive = timer_exec.getSubTimer(TIMER_PREFIX + ".4.assignPrimitive");
-	private static Timer2 timer_createObject = timer_exec.getSubTimer(TIMER_PREFIX + ".4.createObject");
-	private static Timer2 timer_createObjectCut = timer_createObject.getSubTimer(TIMER_PREFIX + ".4.createObject.cut");
-	private static Timer2 timer_invoke = timer_exec.getSubTimer(TIMER_PREFIX + ".4.invoke");
-	private static Timer2 timer_invokeCut = timer_invoke.getSubTimer(TIMER_PREFIX + ".4.invoke.cut");
-	private static Timer2 timer_assignConstant = timer_exec.getSubTimer(TIMER_PREFIX + ".4.assignConstant");
-	private static Timer2 timer_assignConstantCut = timer_assignConstant.getSubTimer(TIMER_PREFIX + ".4.assignConstant.cut");
+	private static StopWatchNested timer_assignPrimitive = timer_exec.getSubTimer(TIMER_PREFIX + ".4.assignPrimitive");
+	private static StopWatchNested timer_createObject = timer_exec.getSubTimer(TIMER_PREFIX + ".4.createObject");
+	private static StopWatchNested timer_createObjectCut = timer_createObject.getSubTimer(TIMER_PREFIX + ".4.createObject.cut");
+	private static StopWatchNested timer_invoke = timer_exec.getSubTimer(TIMER_PREFIX + ".4.invoke");
+	private static StopWatchNested timer_invokeCut = timer_invoke.getSubTimer(TIMER_PREFIX + ".4.invoke.cut");
+	private static StopWatchNested timer_assignConstant = timer_exec.getSubTimer(TIMER_PREFIX + ".4.assignConstant");
+	private static StopWatchNested timer_assignConstantCut = timer_assignConstant.getSubTimer(TIMER_PREFIX + ".4.assignConstant.cut");
 
-	private static Timer2 timer_post_stop = timer.getSubTimer(TIMER_PREFIX + ".5.postStop");
+	private static StopWatchNested timer_post_stop = timer.getSubTimer(TIMER_PREFIX + ".5.postStop");
 
 	@Override
 	public int execute(boolean stopOnBug) throws ClassNotFoundException, ClassCastException {

@@ -27,7 +27,7 @@ import testful.TestfulException;
 import testful.coverage.TrackerDatum;
 import testful.model.ExecutorSerializer;
 import testful.utils.Cloner;
-import testful.utils.Timer;
+import testful.utils.StopWatch;
 
 /**
  * Abstract manager for executing tests.<br/>
@@ -52,7 +52,7 @@ public abstract class ExecutionManager<T extends Serializable> implements IExecu
 
 	private static final Logger logger = Logger.getLogger("testful.runner");
 
-	private static final Timer timer = Timer.getTimer();
+	private static final StopWatch timer = StopWatch.getTimer();
 
 	protected final boolean reloadClasses;
 

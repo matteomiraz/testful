@@ -27,19 +27,19 @@ import testful.TestFul;
  * Measure execution performances of nested parts
  * @author matteo
  */
-public abstract class Timer2 {
+public abstract class StopWatchNested {
 
 	public abstract void start();
 	public abstract void stop();
 
-	public abstract Timer2 getSubTimer(String name);
+	public abstract StopWatchNested getSubTimer(String name);
 
-	public static Timer2 getRootTimer(String name) {
-		if(Timer.MONITOR) return new Enabled(name);
+	public static StopWatchNested getRootTimer(String name) {
+		if(StopWatch.MONITOR) return new Enabled(name);
 		else return Disabled.singleton;
 	}
 
-	public static class Disabled extends Timer2 {
+	public static class Disabled extends StopWatchNested {
 
 		public static Disabled singleton = new Disabled();
 
@@ -52,12 +52,12 @@ public abstract class Timer2 {
 		public void stop() { }
 
 		@Override
-		public Timer2 getSubTimer(String name) {
+		public StopWatchNested getSubTimer(String name) {
 			return this;
 		}
 	}
 
-	private static class Enabled extends Timer2 {
+	private static class Enabled extends StopWatchNested {
 		private final String name;
 		private final Enabled parent;
 		public Enabled(String name) {
@@ -72,7 +72,7 @@ public abstract class Timer2 {
 
 		private Collection<Enabled> subtimers = new LinkedList<Enabled>();
 		@Override
-		public Timer2 getSubTimer(String name) {
+		public StopWatchNested getSubTimer(String name) {
 			Enabled ret = new Enabled(this, name);
 			subtimers.add(ret);
 			return ret;
@@ -136,7 +136,7 @@ public abstract class Timer2 {
 		}
 
 		public void log() {
-			Timer.logger.fine(name + " " + duration/1000000.0 + " ms in " + n + " invocations");
+			StopWatch.logger.fine(name + " " + duration/1000000.0 + " ms in " + n + " invocations");
 			duration = 0;
 			n = 0;
 

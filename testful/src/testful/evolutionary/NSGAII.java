@@ -40,7 +40,7 @@ import jmetal.util.PseudoRandom;
 import jmetal.util.Ranking;
 import testful.IUpdate;
 import testful.evolutionary.IConfigEvolutionary.FitnessInheritance;
-import testful.utils.Timer;
+import testful.utils.StopWatch;
 
 /**
  * This class implements the NSGA-II algorithm. Adapted from JMetal.
@@ -134,7 +134,7 @@ implements IUpdate {
 	public SolutionSet<V> execute() throws JMException {
 		SolutionSet<V> population;
 		SolutionSet<V> union;
-		Timer timer = Timer.getTimer();
+		StopWatch timer = StopWatch.getTimer();
 
 		timer.start("nsga.initialization");
 

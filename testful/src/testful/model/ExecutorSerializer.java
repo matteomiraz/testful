@@ -35,7 +35,7 @@ import testful.runner.IExecutor;
 import testful.runner.ObjectRegistry;
 import testful.runner.ObjectType;
 import testful.runner.TestfulClassLoader;
-import testful.utils.Timer2;
+import testful.utils.StopWatchNested;
 
 /**
  * Efficiently serializes and de-serializes Executors
@@ -50,34 +50,34 @@ public class ExecutorSerializer {
 
 	private static final boolean JAVA_SERIALIZATION = TestFul.getProperty(TestFul.PROPERTY_JAVA_SERIALIZATION, false);
 
-	private static final Timer2 t_ser = Timer2.Disabled.singleton;
+	private static final StopWatchNested t_ser = StopWatchNested.Disabled.singleton;
 	//private static final Timer2 t_ser = Timer2.getRootTimer("ser");
-	private static final Timer2 t_ser_sInit = t_ser.getSubTimer("ser.aStreamInit");
-	private static final Timer2 t_ser_sClose = t_ser.getSubTimer("ser.zStreamClose");
-	private static final Timer2 t_ser_cluster = t_ser.getSubTimer("ser.cluster");
-	private static final Timer2 t_ser_cluster_or = t_ser_cluster.getSubTimer("ser.cluster.objectRepository");
-	private static final Timer2 t_ser_refs = t_ser.getSubTimer("ser.refs");
-	private static final Timer2 t_ser_test = t_ser.getSubTimer("ser.test");
-	private static final Timer2 t_ser_test_opInfo = t_ser_test.getSubTimer("ser.test.opInfo");
-	private static final Timer2 t_ser_test_rst = t_ser_test.getSubTimer("ser.test.reset");
-	private static final Timer2 t_ser_test_cr = t_ser_test.getSubTimer("ser.test.cr");
-	private static final Timer2 t_ser_test_in = t_ser_test.getSubTimer("ser.test.in");
-	private static final Timer2 t_ser_test_ap = t_ser_test.getSubTimer("ser.test.ap");
-	private static final Timer2 t_ser_test_ac = t_ser_test.getSubTimer("ser.test.ac");
+	private static final StopWatchNested t_ser_sInit = t_ser.getSubTimer("ser.aStreamInit");
+	private static final StopWatchNested t_ser_sClose = t_ser.getSubTimer("ser.zStreamClose");
+	private static final StopWatchNested t_ser_cluster = t_ser.getSubTimer("ser.cluster");
+	private static final StopWatchNested t_ser_cluster_or = t_ser_cluster.getSubTimer("ser.cluster.objectRepository");
+	private static final StopWatchNested t_ser_refs = t_ser.getSubTimer("ser.refs");
+	private static final StopWatchNested t_ser_test = t_ser.getSubTimer("ser.test");
+	private static final StopWatchNested t_ser_test_opInfo = t_ser_test.getSubTimer("ser.test.opInfo");
+	private static final StopWatchNested t_ser_test_rst = t_ser_test.getSubTimer("ser.test.reset");
+	private static final StopWatchNested t_ser_test_cr = t_ser_test.getSubTimer("ser.test.cr");
+	private static final StopWatchNested t_ser_test_in = t_ser_test.getSubTimer("ser.test.in");
+	private static final StopWatchNested t_ser_test_ap = t_ser_test.getSubTimer("ser.test.ap");
+	private static final StopWatchNested t_ser_test_ac = t_ser_test.getSubTimer("ser.test.ac");
 
-	private static final Timer2 t_dser = Timer2.Disabled.singleton;
+	private static final StopWatchNested t_dser = StopWatchNested.Disabled.singleton;
 	//private static final Timer2 t_dser = Timer2.getRootTimer("dser");
-	private static final Timer2 t_dser_sInit = t_dser.getSubTimer("dser.aStreamInit");
-	private static final Timer2 t_dser_cluster = t_dser.getSubTimer("dser.cluster");
-	private static final Timer2 t_dser_cluster_or = t_dser_cluster.getSubTimer("dser.cluster.objectRepository");
-	private static final Timer2 t_dser_refs = t_dser.getSubTimer("dser.refs");
-	private static final Timer2 t_dser_test = t_dser.getSubTimer("dser.test");
-	private static final Timer2 t_dser_test_opInfo = t_dser_test.getSubTimer("dser.test.opInfo");
-	private static final Timer2 t_dser_test_cr = t_dser_test.getSubTimer("dser.test.cr");
-	private static final Timer2 t_dser_test_in = t_dser_test.getSubTimer("dser.test.in");
-	private static final Timer2 t_dser_test_ap = t_dser_test.getSubTimer("dser.test.ap");
-	private static final Timer2 t_dser_test_ac = t_dser_test.getSubTimer("dser.test.ac");
-	private static final Timer2 t_dser_creation = t_dser.getSubTimer("dser.zExecCreation");
+	private static final StopWatchNested t_dser_sInit = t_dser.getSubTimer("dser.aStreamInit");
+	private static final StopWatchNested t_dser_cluster = t_dser.getSubTimer("dser.cluster");
+	private static final StopWatchNested t_dser_cluster_or = t_dser_cluster.getSubTimer("dser.cluster.objectRepository");
+	private static final StopWatchNested t_dser_refs = t_dser.getSubTimer("dser.refs");
+	private static final StopWatchNested t_dser_test = t_dser.getSubTimer("dser.test");
+	private static final StopWatchNested t_dser_test_opInfo = t_dser_test.getSubTimer("dser.test.opInfo");
+	private static final StopWatchNested t_dser_test_cr = t_dser_test.getSubTimer("dser.test.cr");
+	private static final StopWatchNested t_dser_test_in = t_dser_test.getSubTimer("dser.test.in");
+	private static final StopWatchNested t_dser_test_ap = t_dser_test.getSubTimer("dser.test.ap");
+	private static final StopWatchNested t_dser_test_ac = t_dser_test.getSubTimer("dser.test.ac");
+	private static final StopWatchNested t_dser_creation = t_dser.getSubTimer("dser.zExecCreation");
 
 
 	public static <T extends IExecutor> byte[] serialize(DataFinder finder, Class<T> executor, Test test) {

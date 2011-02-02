@@ -27,7 +27,7 @@ import testful.coverage.TrackerDatum;
 import testful.model.ExecutorSerializer;
 import testful.model.Test;
 import testful.utils.Cloner;
-import testful.utils.Timer;
+import testful.utils.StopWatch;
 
 /**
  * This class is able to set-up the evaluation context of the test (i.e. the
@@ -40,7 +40,7 @@ public class Context<R extends Serializable, M extends IExecutionManager<R>> imp
 
 	private static final long serialVersionUID = 1615872139934821021L;
 
-	private static final Timer timer = Timer.getTimer();
+	private static final StopWatch timer = StopWatch.getTimer();
 
 	private final static String ID_PREFIX = UUID.randomUUID().toString();
 	private final static AtomicLong ID_SUFFIX = new AtomicLong(0);

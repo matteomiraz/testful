@@ -31,7 +31,7 @@ import testful.TestFul;
  * Measure execution performances
  * @author matteo
  */
-public abstract class Timer {
+public abstract class StopWatch {
 
 	static final String PATTERN = "testful.timing";
 
@@ -51,12 +51,12 @@ public abstract class Timer {
 	public abstract void stop();
 	public abstract void stop(String message);
 
-	public static Timer getTimer() {
+	public static StopWatch getTimer() {
 		if(MONITOR) return new Enabled();
 		else return Disabled.singleton;
 	}
 
-	public static class Disabled extends Timer {
+	public static class Disabled extends StopWatch {
 
 		public static Disabled singleton = new Disabled();
 
@@ -76,7 +76,7 @@ public abstract class Timer {
 		public void stop(String message) { }
 	}
 
-	private static class Enabled extends Timer {
+	private static class Enabled extends StopWatch {
 		private String name = null;
 		private long begin = 0;
 
