@@ -40,6 +40,8 @@ public class TestStoppedException extends RuntimeException implements FaultyExec
 	 */
 	private static final boolean STOP_CLINIT = false;
 
+	//TODO: gestire clinit
+
 	/** the exception that is thrown */
 	private static TestStoppedException singleton = null;
 

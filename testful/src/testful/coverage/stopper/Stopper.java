@@ -21,121 +21,36 @@ package testful.coverage.stopper;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import testful.TestFul;
-import testful.coverage.fault.Fault;
+import testful.utils.Timer;
+import testful.utils.Timer.TimerCallBack;
 
 /**
  * Ensure that third-party code terminates within a given threshold.
  *
  * @author matteo
  */
-public final class Stopper {
+public final class Stopper implements TimerCallBack {
 
 	private static final Logger logger = Logger.getLogger("testful.coverage.stopper");
 	private static final boolean LOG_FINE = logger.isLoggable(Level.FINE);
 	private static final boolean LOG_FINER = logger.isLoggable(Level.FINER);
 
-	/** Milliseconds between two kills */
-	private static final int KILL_WAIT = 20;
+	private static ThreadLocal<Timer> timers = new ThreadLocal<Timer>() {
 
-	/** If the static initializer is being executed, delay the stop */
-	private static final int KILL_CLINIT = 1000;
+		@Override
+		protected Timer initialValue() {
+			return new Timer(Thread.currentThread().getName() + "-timer");
+		}
+	};
 
-	/** Standard waiting time if IDLE */
-	private static final int IDLE_WAIT = 10000;
-
-	/** wait and synchronize on this object */
-	private final Object wait = new Object();
-
-	/** if greater than zero, indicates when kill the worker (in mill-second, as reported by System.currentTimeMillis()) */
-	private long endOfTheWorld = -1;
-
-	/** If greater than zero, it is waiting until this milliseconds */
-	private long waiting = -1;
-
-	private boolean running = true;
+	private final Timer timer;
+	private final Thread controlledThread;
 
 	public Stopper() {
-		final Thread controlled = Thread.currentThread();
+		controlledThread = Thread.currentThread();
 
-		final Thread thread = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					while(running) {
-						synchronized (wait) {
-
-							final long curr = System.currentTimeMillis();
-							final long end, delta;
-
-							if(endOfTheWorld > 0) {
-								// if the killer is hired
-
-								if(endOfTheWorld <= curr) {
-									// if the killer is hired and armed (the deadline is expired)
-									// check if a static constructor is being executed.
-
-									if(KILL_CLINIT > 0) {
-										for (StackTraceElement ste : controlled.getStackTrace()) {
-											if(ste.getMethodName().equals("<clinit>")) {
-												logger.fine("Not killing the thread: executing the static initialization of " + ste.getClassName());
-												endOfTheWorld = curr + KILL_CLINIT;
-												break;
-											}
-										}
-									}
-								}
-
-								end = endOfTheWorld;
-								delta = end - curr;
-
-							} else {
-								// if the killer is not hired, go to sleep
-
-								end = curr + IDLE_WAIT;
-								delta = IDLE_WAIT;
-							}
-
-							if(delta <= 0) {
-								// KILL!
-
-								if(LOG_FINE) {
-									final Throwable e;
-									if(LOG_FINER) {
-										e = new Exception("Execution status of " + controlled.toString());
-										e.setStackTrace(Fault.simplify(controlled.getStackTrace()));
-									} else {
-										e = null;
-									}
-									logger.log(Level.FINE, "Killing controlled thread", e);
-								}
-
-								TestStoppedException.kill();
-								controlled.interrupt();
-								endOfTheWorld = curr + KILL_WAIT;
-
-							} else {
-								// Wait
-
-								waiting = end;
-								wait.wait(delta);
-								waiting = -1;
-							}
-						}
-					}
-					if(LOG_FINER) logger.finer("Stopper thread has finished its job.");
-				} catch (InterruptedException e) {
-					logger.log(Level.FINER, "Stopper thread has been interrupted", e);
-					running = false;
-					TestStoppedException.kill();
-					controlled.interrupt();
-				}
-			}
-		});
-
-		thread.setName(controlled.getName() + "-stopper");
-		thread.setDaemon(true);
-		thread.start();
+		timer = timers.get();
+		timer.setCallBack(this);
 	}
 
 	/**
@@ -143,28 +58,27 @@ public final class Stopper {
 	 * @param maxExecTime the amount of time to wait before killing the execution of the operation
 	 */
 	public void start(int maxExecTime) {
-
-		if(!running) throw new IllegalStateException("The Stopper is not running");
-
-		if(TestFul.DEBUG && endOfTheWorld > 0)
-			TestFul.debug(new IllegalStateException("The Stopper is running: its end is scheduled for " + endOfTheWorld));
-
-		synchronized (wait) {
-			endOfTheWorld = System.currentTimeMillis() + maxExecTime;
-			TestStoppedException.dontKill();
-
-			if(waiting > endOfTheWorld) wait.notify();
-		}
+		if(LOG_FINER) logger.finer("Alarm " + timer + " set " + maxExecTime + " ms from now");
+		timer.start(maxExecTime);
 	}
 
 	/**
 	 * Stops the timer: the Stopper does not try to kill the execution of any operation.
 	 */
 	public void stop() {
-		synchronized (wait) {
-			endOfTheWorld = -1;
-			TestStoppedException.dontKill();
-		}
+		timer.stop();
+		TestStoppedException.dontKill();
+		if(LOG_FINER) logger.finer("Alarm " + timer + " cleared");
+	}
+
+	/* (non-Javadoc)
+	 * @see testful.utils.Timer.TimerCallBack#timerExpired()
+	 */
+	@Override
+	public void timerExpired() {
+		TestStoppedException.kill();
+		controlledThread.interrupt();
+		if(LOG_FINE) logger.fine("Alarm " + timer + " is ringing");
 	}
 
 	/**
@@ -172,11 +86,7 @@ public final class Stopper {
 	 * Note: after invoking this method, the instance is no longer usable
 	 */
 	public void done() {
-		synchronized (wait) {
-			running = false;
-			stop();
-
-			wait.notify();
-		}
+		timer.setCallBack(null);
+		if(LOG_FINER) logger.finer("Alarm " + timer + " de-registered");
 	}
 }
