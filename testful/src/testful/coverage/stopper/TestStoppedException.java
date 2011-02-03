@@ -34,13 +34,8 @@ public class TestStoppedException extends RuntimeException implements FaultyExec
 	/** if set to true, stops the execution */
 	private static volatile boolean kill = false;
 
-	/**
-	 * If true (and if kill is true) interrupts the static initialization of classes.
-	 * See also {@link testful.coverage.stopper.Stopper.KILL_CLINIT }
-	 */
+	/** If true (and if kill is true) interrupts the static initialization of classes. */
 	private static final boolean STOP_CLINIT = false;
-
-	//TODO: gestire clinit
 
 	/** the exception that is thrown */
 	private static TestStoppedException singleton = null;

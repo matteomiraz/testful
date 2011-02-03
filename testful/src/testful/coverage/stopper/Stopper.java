@@ -21,6 +21,8 @@ package testful.coverage.stopper;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import testful.TestFul;
+import testful.runner.TestfulClassLoader;
 import testful.utils.Timer;
 import testful.utils.Timer.TimerCallBack;
 
@@ -30,6 +32,9 @@ import testful.utils.Timer.TimerCallBack;
  * @author matteo
  */
 public final class Stopper implements TimerCallBack {
+
+	/** If the kill switch is enabled and the classes' loading time is less then  this threshold, stops the execution of the controlled thread */
+	private static final long LOADING_THRESHOLD = 10;
 
 	private static final Logger logger = Logger.getLogger("testful.coverage.stopper");
 	private static final boolean LOG_FINE = logger.isLoggable(Level.FINE);
@@ -43,11 +48,16 @@ public final class Stopper implements TimerCallBack {
 		}
 	};
 
+	private final TestfulClassLoader loader;
 	private final Timer timer;
 	private final Thread controlledThread;
 
 	public Stopper() {
 		controlledThread = Thread.currentThread();
+
+		ClassLoader cl = Stopper.class.getClassLoader();
+		if(TestFul.DEBUG && !(cl instanceof TestfulClassLoader)) TestFul.debug("Stopper must be loaded by the Testful Class Loader");
+		loader = (TestfulClassLoader) cl;
 
 		timer = timers.get();
 		timer.setCallBack(this);
@@ -58,6 +68,10 @@ public final class Stopper implements TimerCallBack {
 	 * @param maxExecTime the amount of time to wait before killing the execution of the operation
 	 */
 	public void start(int maxExecTime) {
+
+		// reset the loading counter
+		loader.getLoadingTime();
+
 		if(LOG_FINER) logger.finer("Alarm " + timer + " set " + maxExecTime + " ms from now");
 		timer.start(maxExecTime);
 	}
@@ -68,6 +82,10 @@ public final class Stopper implements TimerCallBack {
 	public void stop() {
 		timer.stop();
 		TestStoppedException.dontKill();
+
+		// reset the loading counter
+		loader.getLoadingTime();
+
 		if(LOG_FINER) logger.finer("Alarm " + timer + " cleared");
 	}
 
@@ -76,9 +94,19 @@ public final class Stopper implements TimerCallBack {
 	 */
 	@Override
 	public void timerExpired() {
-		TestStoppedException.kill();
-		controlledThread.interrupt();
-		if(LOG_FINE) logger.fine("Alarm " + timer + " is ringing");
+
+		long loadingTime = loader.getLoadingTime();
+		if(LOG_FINER) logger.finer("Alarm " + timer + ": " + loadingTime + " ms spent to load classes");
+		if(loadingTime > LOADING_THRESHOLD) {
+			timer.stop();
+			timer.start(loadingTime);
+			System.err.println("Alarm " + timer + " is delayed of " + loadingTime + "ms to compensate the classes loading time");
+			if(LOG_FINE) logger.fine("Alarm " + timer + " is delayed of " + loadingTime + "ms to compensate the classes loading time");
+		} else {
+			TestStoppedException.kill();
+			controlledThread.interrupt();
+			if(LOG_FINE) logger.fine("Alarm " + timer + " is ringing");
+		}
 	}
 
 	/**

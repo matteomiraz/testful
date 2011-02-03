@@ -72,7 +72,7 @@ public class DataFinderCaching implements DataFinder {
 	 * @see testful.runner.DataFinder#getData(java.lang.String, java.lang.String)
 	 */
 	@Override
-	public byte[] getData(String type, String id) throws RemoteException {
+	public synchronized byte[] getData(String type, String id) throws RemoteException {
 		if(type == null || id == null) {
 			NoSuchElementException exc = new NoSuchElementException("Cannot find element " + type + " " + id);
 			logger.log(Level.WARNING, exc.getMessage(), exc);

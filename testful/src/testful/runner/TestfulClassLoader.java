@@ -109,18 +109,51 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 
 	@Override
 	public Class<?> findClass(String name) throws ClassNotFoundException {
+
+		final byte[] b;
 		try {
-			byte[] b = finder.getData(ClassType.NAME, name);
-			if(b == null) throw new ClassNotFoundException("Cannot find class " + name);
-			Class<?> c = defineClass(name, b, 0, b.length);
-			loaded.add(name);
-			return c;
+
+			synchronized (finder) {
+
+				final long start = System.currentTimeMillis();
+				b = finder.getData(ClassType.NAME, name);
+				final long end = System.currentTimeMillis();
+
+				time += (end - start);
+			}
+
 		} catch(RemoteException e) {
 			final ClassNotFoundException exc = new ClassNotFoundException("Cannot retrieve the class " + name, e);
 			logger.log(Level.WARNING, exc.getMessage(), exc);
 			throw exc;
 		}
+
+		if(b == null) throw new ClassNotFoundException("Cannot find class " + name);
+
+		Class<?> c = defineClass(name, b, 0, b.length);
+		loaded.add(name);
+		return c;
+
 	}
+
+	/** Total time used by method findClass */
+	private long time;
+
+	/**
+	 * Returns the amount of time spent to load classes (and reset the counter)
+	 * @return the amount of time (ms) spent to load classes
+	 */
+	public long getLoadingTime() {
+
+		final long ret;
+		synchronized (finder) {
+			ret = time;
+			time = 0;
+		}
+
+		return ret;
+	}
+
 
 	@Override
 	public String getKey() {

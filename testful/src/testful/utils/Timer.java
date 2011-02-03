@@ -112,7 +112,7 @@ public class Timer {
 	 * Starts the timer: in maxExecTime milliseconds calls the callBack.
 	 * @param maxExecTime the amount of time to wait before calling the callBack.
 	 */
-	public void start(int maxExecTime) {
+	public void start(long maxExecTime) {
 
 		synchronized (wait) {
 
