@@ -189,9 +189,18 @@ public class ReflectionExecutor extends Executor {
 	 * @throws ClassNotFoundException
 	 */
 	private Object get(Reference objRef) throws TestfulInternalException.Impl {
-		try {
-			if(repository == null) return null;
+		if(TestFul.DEBUG) {
+			if(objRef == null) {
+				TestFul.debug(new NullPointerException("objRef cannot be null"));
+				return null;
+			}
+			if(repository == null) {
+				TestFul.debug(new NullPointerException("repository cannot be null"));
+				return null;
+			}
+		}
 
+		try {
 			return repository[objRef.getId()];
 		} catch(Throwable e) {
 			// something very strange happens!
@@ -214,6 +223,17 @@ public class ReflectionExecutor extends Executor {
 	}
 
 	private void set(Reference objRef, Object value) throws TestfulInternalException.Impl {
+		if(TestFul.DEBUG) {
+			if(objRef == null) {
+				TestFul.debug(new NullPointerException("objRef cannot be null"));
+				return;
+			}
+			if(repository == null) {
+				TestFul.debug(new NullPointerException("repository cannot be null"));
+				return;
+			}
+		}
+
 		try {
 			repository[objRef.getId()] = value;
 		} catch(Throwable e) {
@@ -248,32 +268,30 @@ public class ReflectionExecutor extends Executor {
 		Constructorz constructor = op.getConstructor();
 		Reference[] params = op.getParams();
 
+		// initialize input parameters
+		Clazz[] constructozParamsType = constructor.getParameterTypes();
+		Object[] initargs = new Object[params.length];
+
+		for(int i = 0; i < initargs.length; i++) {
+			initargs[i] = get(params[i]);
+
+			if(constructozParamsType[i] instanceof PrimitiveClazz) {
+				if(initargs[i] == null) {
+					if(opRes != null) opRes.setPreconditionError();
+					throw new PreconditionViolationException.Impl("The primitive value has not been initialized", null);
+				} else {
+					initargs[i] = ((PrimitiveClazz) constructozParamsType[i]).cast(initargs[i]);
+				}
+			}
+		}
+
+		// get the Constructor object
 		Constructor<?> cons;
 		try {
 			cons = ClassRegistry.singleton.getConstructor(constructor);
 		} catch (Exception exc) {
 			logger.log(Level.WARNING, exc.getMessage(), exc);
 			throw new TestfulInternalException.Impl(exc);
-		}
-
-		// initialize input parameters
-		Clazz[] constructozParamsType = constructor.getParameterTypes();
-		Object[] initargs = new Object[params.length];
-
-		for(int i = 0; i < initargs.length; i++) {
-			if(params[i] == null) initargs[i] = null;
-			else {
-				initargs[i] = get(params[i]);
-
-				if(constructozParamsType[i] instanceof PrimitiveClazz) {
-					if(initargs[i] == null) {
-						if(opRes != null) opRes.setPreconditionError();
-						throw new PreconditionViolationException.Impl("The primitive value has not been initialized", null);
-					} else {
-						initargs[i] = ((PrimitiveClazz) constructozParamsType[i]).cast(initargs[i]);
-					}
-				}
-			}
 		}
 
 		// perform the real invocation
@@ -308,16 +326,14 @@ public class ReflectionExecutor extends Executor {
 				throw exc;
 			}
 
-			if(discoverFaults) {
+			if(discoverFaults)
 				FaultTracker.singleton.process(exc, cons.getExceptionTypes(), initargs, opRes, cons.getDeclaringClass().getName());
-			}
 
 			// a valid exception is thrown
 			if(opRes != null) opRes.setExceptional(exc, null, cluster);
 
 		} catch(Throwable e) {
 			logger.log(Level.WARNING, "Reflection error in createObject(" + op + "): " + e.getMessage(), e);
-
 			throw new TestfulInternalException.Impl(e);
 		}
 	}
@@ -343,7 +359,6 @@ public class ReflectionExecutor extends Executor {
 		if(value == null) {
 			try {
 				set(ref, null);
-
 				return;
 			} catch(Throwable e) {
 				// something very strange happens!
@@ -372,33 +387,35 @@ public class ReflectionExecutor extends Executor {
 		final Clazz[] paramsTypes = method.getParameterTypes();
 		final OperationResult opRes = (OperationResult) op.getInfo(OperationResult.KEY);
 
-		final Method m = ClassRegistry.singleton.getMethod(method);
-		final Object[] args = new Object[params.length];
-
 		final Object baseObject;
 		if(sourcePos != null) baseObject = get(sourcePos);
 		else baseObject = null;
 
+		// check if non-static methods have a baseObject set
 		if(baseObject == null && !method.isStatic()) {
 			if(opRes != null) opRes.setPreconditionError();
 			throw new PreconditionViolationException.Impl("The object accepting the method call is null", null);
 		}
 
+		// create parameters
+		final Object[] args = new Object[params.length];
 		for(int i = 0; i < args.length; i++) {
-			if(params[i] == null) args[i] = null;
-			else {
-				args[i] = get(params[i]);
+			args[i] = get(params[i]);
 
-				if(paramsTypes[i] instanceof PrimitiveClazz) {
-					if(args[i] == null) {
-						if(opRes != null) opRes.setPreconditionError();
-						throw new PreconditionViolationException.Impl("The primitive value has not been initialized", null);
-					} else
-						args[i] = ((PrimitiveClazz) paramsTypes[i]).cast(args[i]);
+			if(paramsTypes[i] instanceof PrimitiveClazz) {
+				if(args[i] == null) {
+					if(opRes != null) opRes.setPreconditionError();
+					throw new PreconditionViolationException.Impl("The primitive value has not been initialized", null);
+				} else {
+					args[i] = ((PrimitiveClazz) paramsTypes[i]).cast(args[i]);
 				}
 			}
 		}
 
+		// get the Method object
+		final Method m = ClassRegistry.singleton.getMethod(method);
+
+		// perform the method call
 		Object result = null;
 		try {
 
