@@ -99,7 +99,9 @@ public abstract class StopWatchNested {
 			start = System.nanoTime();
 		}
 
-		public void pause() {
+		private void pause() {
+			final long now = System.nanoTime();
+
 			if(TestFul.DEBUG && paused)
 				TestFul.debug(new IllegalStateException("The timer " + name + " is paused"));
 
@@ -107,10 +109,10 @@ public abstract class StopWatchNested {
 				TestFul.debug(new IllegalStateException("The timer " + name + " is not running"));
 
 			paused = true;
-			duration += (System.nanoTime() - start);
+			duration += (now - start);
 		}
 
-		public void resume() {
+		private void resume() {
 			if(TestFul.DEBUG && !paused)
 				TestFul.debug(new IllegalStateException("The timer " + name + " is not paused"));
 
@@ -123,10 +125,11 @@ public abstract class StopWatchNested {
 		 */
 		@Override
 		public void stop() {
+			final long end = System.nanoTime();
+
 			if(TestFul.DEBUG && start == 0)
 				TestFul.debug(new IllegalStateException("The timer " + name + " is not running"));
 
-			long end = System.nanoTime();
 			duration += end - start;
 
 			start = 0;

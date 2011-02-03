@@ -48,7 +48,7 @@ import testful.model.faults.FaultyExecutionException;
 import testful.model.faults.PreconditionViolationException;
 import testful.model.faults.TestfulInternalException;
 import testful.runner.Executor;
-import testful.utils.StopWatchNested;
+import testful.utils.StopWatch;
 
 /**
  * This class is able to host a pool of objects, and execute operations on them.
@@ -77,30 +77,12 @@ public class ReflectionExecutor extends Executor {
 			throw new ClassCastException("ClassRegistry not initialized");
 	}
 
-	private static final String TIMER_PREFIX = "exec";
-
-	private static StopWatchNested timer = StopWatchNested.getRootTimer(TIMER_PREFIX + ".1");
-
-	private static StopWatchNested timer_pre_stop = timer.getSubTimer(TIMER_PREFIX + ".2.preStop");
-
-	private static StopWatchNested timer_stop = timer.getSubTimer(TIMER_PREFIX + ".3.stop");
-
-	private static StopWatchNested timer_exec = timer.getSubTimer(TIMER_PREFIX + ".3.exec");
-
-	private static StopWatchNested timer_assignPrimitive = timer_exec.getSubTimer(TIMER_PREFIX + ".4.assignPrimitive");
-	private static StopWatchNested timer_createObject = timer_exec.getSubTimer(TIMER_PREFIX + ".4.createObject");
-	private static StopWatchNested timer_createObjectCut = timer_createObject.getSubTimer(TIMER_PREFIX + ".4.createObject.cut");
-	private static StopWatchNested timer_invoke = timer_exec.getSubTimer(TIMER_PREFIX + ".4.invoke");
-	private static StopWatchNested timer_invokeCut = timer_invoke.getSubTimer(TIMER_PREFIX + ".4.invoke.cut");
-	private static StopWatchNested timer_assignConstant = timer_exec.getSubTimer(TIMER_PREFIX + ".4.assignConstant");
-	private static StopWatchNested timer_assignConstantCut = timer_assignConstant.getSubTimer(TIMER_PREFIX + ".4.assignConstant.cut");
-
-	private static StopWatchNested timer_post_stop = timer.getSubTimer(TIMER_PREFIX + ".5.postStop");
+	private final static StopWatch timer_exec = StopWatch.getTimer();
 
 	@Override
 	public int execute(boolean stopOnBug) throws ClassNotFoundException, ClassCastException {
 
-		timer.start();
+		timer_exec.start("exec.1");
 
 		if(LOGGER_FINEST) {
 			StringBuilder sb = new StringBuilder();
@@ -121,9 +103,7 @@ public class ReflectionExecutor extends Executor {
 		/** Number of valid operations that reveal faults */
 		int nFaulty = 0;
 
-		timer_pre_stop.start();
 		final Stopper stopper = new Stopper();
-		timer_pre_stop.stop();
 
 		for(Operation op : test) {
 
@@ -133,12 +113,7 @@ public class ReflectionExecutor extends Executor {
 			else maxExecTime = null;
 
 			try {
-				if(LOGGER_FINEST) {
-					logger.finest(toString());
-					logger.finest("Executing " + op);
-				}
 
-				timer_stop.start();
 				final long start;
 				if(maxExecTime != null) {
 					stopper.start(maxExecTime);
@@ -147,9 +122,7 @@ public class ReflectionExecutor extends Executor {
 				} else {
 					start = -1;
 				}
-				timer_stop.stop();
 
-				timer_exec.start();
 				if(op instanceof AssignPrimitive) assignPrimitive((AssignPrimitive) op);
 				else if(op instanceof AssignConstant) assignConstant((AssignConstant) op);
 				else if(op instanceof CreateObject) createObject((CreateObject) op);
@@ -188,8 +161,6 @@ public class ReflectionExecutor extends Executor {
 					reset();
 				}
 			} finally {
-				timer_exec.stop();
-
 				if(maxExecTime != null) {
 					stopper.stop();
 					if(Thread.interrupted())
@@ -198,14 +169,12 @@ public class ReflectionExecutor extends Executor {
 			}
 		}
 
-		timer_post_stop.start();
 		stopper.done();
-		timer_post_stop.stop();
 
 		if(LOGGER_FINEST) logger.finest(toString());
 		if(LOGGER_FINE)   logger.fine(new StringBuilder("STATS").append(" ops:").append(test.length).append(" invalid:").append(nPre).append(" valid:").append(nValid).append(" faulty:").append(nFaulty).toString());
 
-		timer.stop();
+		timer_exec.stop();
 
 		return nFaulty;
 	}
@@ -273,254 +242,206 @@ public class ReflectionExecutor extends Executor {
 
 	/** createObject */
 	private void createObject(CreateObject op) throws Throwable {
+		OperationResult opRes = (OperationResult) op.getInfo(OperationResult.KEY);
+
+		Reference targetPos = op.getTarget();
+		Constructorz constructor = op.getConstructor();
+		Reference[] params = op.getParams();
+
+		Constructor<?> cons;
 		try {
-			timer_createObject.start();
+			cons = ClassRegistry.singleton.getConstructor(constructor);
+		} catch (Exception exc) {
+			logger.log(Level.WARNING, exc.getMessage(), exc);
+			throw new TestfulInternalException.Impl(exc);
+		}
 
-			OperationResult opRes = (OperationResult) op.getInfo(OperationResult.KEY);
+		// initialize input parameters
+		Clazz[] constructozParamsType = constructor.getParameterTypes();
+		Object[] initargs = new Object[params.length];
 
-			Reference targetPos = op.getTarget();
-			Constructorz constructor = op.getConstructor();
-			Reference[] params = op.getParams();
+		for(int i = 0; i < initargs.length; i++) {
+			if(params[i] == null) initargs[i] = null;
+			else {
+				initargs[i] = get(params[i]);
 
-			Constructor<?> cons;
-			try {
-				cons = ClassRegistry.singleton.getConstructor(constructor);
-			} catch (Exception exc) {
-				logger.log(Level.WARNING, exc.getMessage(), exc);
-				throw new TestfulInternalException.Impl(exc);
-			}
-
-			// initialize input parameters
-			Clazz[] constructozParamsType = constructor.getParameterTypes();
-			Object[] initargs = new Object[params.length];
-
-			for(int i = 0; i < initargs.length; i++) {
-				if(params[i] == null) initargs[i] = null;
-				else {
-					initargs[i] = get(params[i]);
-
-					if(constructozParamsType[i] instanceof PrimitiveClazz) {
-						if(initargs[i] == null) {
-							if(opRes != null) opRes.setPreconditionError();
-							throw new PreconditionViolationException.Impl("The primitive value has not been initialized", null);
-						} else {
-							initargs[i] = ((PrimitiveClazz) constructozParamsType[i]).cast(initargs[i]);
-						}
+				if(constructozParamsType[i] instanceof PrimitiveClazz) {
+					if(initargs[i] == null) {
+						if(opRes != null) opRes.setPreconditionError();
+						throw new PreconditionViolationException.Impl("The primitive value has not been initialized", null);
+					} else {
+						initargs[i] = ((PrimitiveClazz) constructozParamsType[i]).cast(initargs[i]);
 					}
 				}
 			}
+		}
 
-			// perform the real invocation
-			Object newObject = null;
-			try {
+		// perform the real invocation
+		Object newObject = null;
+		try {
 
-				timer_createObjectCut.start();
-				newObject = cons.newInstance(initargs);
-				timer_createObjectCut.stop();
+			newObject = cons.newInstance(initargs);
 
-				// save results
-				if(targetPos != null) set(targetPos, newObject);
+			// save results
+			if(targetPos != null) set(targetPos, newObject);
 
-				if(opRes != null) opRes.setSuccessful(null, newObject, cluster);
+			if(opRes != null) opRes.setSuccessful(null, newObject, cluster);
 
-				return;
+			return;
 
-			} catch(InvocationTargetException invocationException) {
-				timer_createObjectCut.stop();
+		} catch(InvocationTargetException invocationException) {
+			Throwable exc = invocationException.getTargetException();
 
-				Throwable exc = invocationException.getTargetException();
-
-				// check for nasty Errors (such as OutOfMemory errors)
-				if(exc instanceof VirtualMachineError && !(exc instanceof StackOverflowError)) {
-					reset(); // early free some memory
-					logger.fine("VirtualMachine Error " + exc + " (" + exc.getClass().getCanonicalName() + ") while executing "  + op);
-					throw new TestfulInternalException.Impl(exc);
-				}
-
-				// Internal error
-				if(exc instanceof TestfulInternalException) throw exc;
-
-				// precondition error
-				if(exc instanceof PreconditionViolationException) {
-					if(opRes != null) opRes.setPreconditionError();
-					throw exc;
-				}
-
-				if(discoverFaults) {
-					FaultTracker.singleton.process(exc, cons.getExceptionTypes(), initargs, opRes, cons.getDeclaringClass().getName());
-				}
-
-				// a valid exception is thrown
-				if(opRes != null) opRes.setExceptional(exc, null, cluster);
-
-			} catch(Throwable e) {
-				timer_createObjectCut.stop();
-
-				logger.log(Level.WARNING, "Reflection error in createObject(" + op + "): " + e.getMessage(), e);
-
-				throw new TestfulInternalException.Impl(e);
+			// check for nasty Errors (such as OutOfMemory errors)
+			if(exc instanceof VirtualMachineError && !(exc instanceof StackOverflowError)) {
+				reset(); // early free some memory
+				logger.fine("VirtualMachine Error " + exc + " (" + exc.getClass().getCanonicalName() + ") while executing "  + op);
+				throw new TestfulInternalException.Impl(exc);
 			}
-		} finally {
-			timer_createObject.stop();
+
+			// Internal error
+			if(exc instanceof TestfulInternalException) throw exc;
+
+			// precondition error
+			if(exc instanceof PreconditionViolationException) {
+				if(opRes != null) opRes.setPreconditionError();
+				throw exc;
+			}
+
+			if(discoverFaults) {
+				FaultTracker.singleton.process(exc, cons.getExceptionTypes(), initargs, opRes, cons.getDeclaringClass().getName());
+			}
+
+			// a valid exception is thrown
+			if(opRes != null) opRes.setExceptional(exc, null, cluster);
+
+		} catch(Throwable e) {
+			logger.log(Level.WARNING, "Reflection error in createObject(" + op + "): " + e.getMessage(), e);
+
+			throw new TestfulInternalException.Impl(e);
 		}
 	}
 
 	private void assignPrimitive(AssignPrimitive op) throws PreconditionViolationException.Impl, TestfulInternalException.Impl {
-		try {
-			timer_assignPrimitive.start();
+		Reference ref = op.getTarget();
+		Serializable value = op.getValue();
 
-			Reference ref = op.getTarget();
-			Serializable value = op.getValue();
+		if(ref == null) throw new PreconditionViolationException.Impl("The reference is not set", null);
 
-			if(ref == null) throw new PreconditionViolationException.Impl("The reference is not set", null);
-
-			// perform the assignment
-			set(ref, value);
-		} finally {
-			timer_assignPrimitive.stop();
-		}
+		// perform the assignment
+		set(ref, value);
 	}
 
 	private void assignConstant(AssignConstant op) throws PreconditionViolationException.Impl, TestfulInternalException.Impl {
-		try {
-			timer_assignConstant.start();
+		Reference ref = op.getTarget();
 
-			Reference ref = op.getTarget();
+		if(ref == null) throw new PreconditionViolationException.Impl("The reference is not set", null);
 
-			if(ref == null) throw new PreconditionViolationException.Impl("The reference is not set", null);
+		StaticValue value = op.getValue();
 
-			StaticValue value = op.getValue();
-
-			// set to null
-			if(value == null) {
-				try {
-					try {
-						timer_assignConstantCut.start();
-						set(ref, null);
-					} finally {
-						timer_assignConstantCut.stop();
-					}
-
-					return;
-				} catch(Throwable e) {
-					// something very strange happens!
-					logger.log(Level.WARNING, "Reflection error in assignConstant(" + op + "): " + e.getMessage(), e);
-					throw new TestfulInternalException.Impl(e);
-				}
-			}
-
-			// set to value
+		// set to null
+		if(value == null) {
 			try {
-				try {
-					timer_assignConstantCut.start();
+				set(ref, null);
 
-					Field field = ClassRegistry.singleton.getField(value);
-					Object newObject = field.get(null);
-					set(ref, newObject);
-				} finally {
-					timer_assignConstantCut.stop();
-				}
+				return;
 			} catch(Throwable e) {
 				// something very strange happens!
 				logger.log(Level.WARNING, "Reflection error in assignConstant(" + op + "): " + e.getMessage(), e);
 				throw new TestfulInternalException.Impl(e);
 			}
+		}
 
-		} finally {
-			timer_assignConstant.stop();
+		// set to value
+		try {
+			Field field = ClassRegistry.singleton.getField(value);
+			Object newObject = field.get(null);
+			set(ref, newObject);
+		} catch(Throwable e) {
+			// something very strange happens!
+			logger.log(Level.WARNING, "Reflection error in assignConstant(" + op + "): " + e.getMessage(), e);
+			throw new TestfulInternalException.Impl(e);
 		}
 	}
 
 	private void invoke(Invoke op) throws Throwable {
+		final Reference targetPos = op.getTarget();
+		final Reference sourcePos = op.getThis();
+		final Methodz method = op.getMethod();
+		final Reference[] params = op.getParams();
+		final Clazz[] paramsTypes = method.getParameterTypes();
+		final OperationResult opRes = (OperationResult) op.getInfo(OperationResult.KEY);
+
+		final Method m = ClassRegistry.singleton.getMethod(method);
+		final Object[] args = new Object[params.length];
+
+		final Object baseObject;
+		if(sourcePos != null) baseObject = get(sourcePos);
+		else baseObject = null;
+
+		if(baseObject == null && !method.isStatic()) {
+			if(opRes != null) opRes.setPreconditionError();
+			throw new PreconditionViolationException.Impl("The object accepting the method call is null", null);
+		}
+
+		for(int i = 0; i < args.length; i++) {
+			if(params[i] == null) args[i] = null;
+			else {
+				args[i] = get(params[i]);
+
+				if(paramsTypes[i] instanceof PrimitiveClazz) {
+					if(args[i] == null) {
+						if(opRes != null) opRes.setPreconditionError();
+						throw new PreconditionViolationException.Impl("The primitive value has not been initialized", null);
+					} else
+						args[i] = ((PrimitiveClazz) paramsTypes[i]).cast(args[i]);
+				}
+			}
+		}
+
+		Object result = null;
 		try {
-			timer_invoke.start();
 
-			final Reference targetPos = op.getTarget();
-			final Reference sourcePos = op.getThis();
-			final Methodz method = op.getMethod();
-			final Reference[] params = op.getParams();
-			final Clazz[] paramsTypes = method.getParameterTypes();
-			final OperationResult opRes = (OperationResult) op.getInfo(OperationResult.KEY);
+			result = m.invoke(baseObject, args);
 
-			final Method m = ClassRegistry.singleton.getMethod(method);
-			final Object[] args = new Object[params.length];
+			if(targetPos != null) set(targetPos, result);
+			if(opRes != null) opRes.setSuccessful(baseObject, result, cluster);
 
-			final Object baseObject;
-			if(sourcePos != null) baseObject = get(sourcePos);
-			else baseObject = null;
+			return;
 
-			if(baseObject == null && !method.isStatic()) {
+		} catch(InvocationTargetException invocationException) {
+			Throwable exc = invocationException.getTargetException();
+
+			// check for nasty Errors (such as OutOfMemory errors)
+			if(exc instanceof VirtualMachineError && !(exc instanceof StackOverflowError)) {
+				reset(); // early free some memory
+				logger.fine("VirtualMachine Error " + exc + " (" + exc.getClass().getCanonicalName() + ") while executing "  + op);
+				throw new TestfulInternalException.Impl(exc);
+			}
+
+			// Internal error
+			if(exc instanceof TestfulInternalException) throw exc;
+
+			// precondition error
+			if(exc instanceof PreconditionViolationException) {
 				if(opRes != null) opRes.setPreconditionError();
-				throw new PreconditionViolationException.Impl("The object accepting the method call is null", null);
+				throw exc;
 			}
 
-			for(int i = 0; i < args.length; i++) {
-				if(params[i] == null) args[i] = null;
-				else {
-					args[i] = get(params[i]);
-
-					if(paramsTypes[i] instanceof PrimitiveClazz) {
-						if(args[i] == null) {
-							if(opRes != null) opRes.setPreconditionError();
-							throw new PreconditionViolationException.Impl("The primitive value has not been initialized", null);
-						} else
-							args[i] = ((PrimitiveClazz) paramsTypes[i]).cast(args[i]);
-					}
-				}
+			if(discoverFaults) {
+				if(baseObject == null)
+					FaultTracker.singleton.process(exc, m.getExceptionTypes(), args, opRes, m.getDeclaringClass().getName());
+				else
+					FaultTracker.singleton.process(exc, m.getName(), m.getParameterTypes(), args, opRes, baseObject.getClass());
 			}
 
-			Object result = null;
-			try {
+			// a valid exception is thrown
+			if(opRes != null) opRes.setExceptional(exc, baseObject, cluster);
 
-				timer_invokeCut.start();
-				result = m.invoke(baseObject, args);
-				timer_invokeCut.stop();
+		} catch(Throwable e) {
+			logger.log(Level.WARNING, "Reflection error in invoke(" + op + "): " + e.getMessage(), e);
 
-				if(targetPos != null) set(targetPos, result);
-				if(opRes != null) opRes.setSuccessful(baseObject, result, cluster);
-
-				return;
-
-			} catch(InvocationTargetException invocationException) {
-				timer_invokeCut.stop();
-
-				Throwable exc = invocationException.getTargetException();
-
-				// check for nasty Errors (such as OutOfMemory errors)
-				if(exc instanceof VirtualMachineError && !(exc instanceof StackOverflowError)) {
-					reset(); // early free some memory
-					logger.fine("VirtualMachine Error " + exc + " (" + exc.getClass().getCanonicalName() + ") while executing "  + op);
-					throw new TestfulInternalException.Impl(exc);
-				}
-
-				// Internal error
-				if(exc instanceof TestfulInternalException) throw exc;
-
-				// precondition error
-				if(exc instanceof PreconditionViolationException) {
-					if(opRes != null) opRes.setPreconditionError();
-					throw exc;
-				}
-
-				if(discoverFaults) {
-					if(baseObject == null)
-						FaultTracker.singleton.process(exc, m.getExceptionTypes(), args, opRes, m.getDeclaringClass().getName());
-					else
-						FaultTracker.singleton.process(exc, m.getName(), m.getParameterTypes(), args, opRes, baseObject.getClass());
-				}
-
-				// a valid exception is thrown
-				if(opRes != null) opRes.setExceptional(exc, baseObject, cluster);
-
-			} catch(Throwable e) {
-				timer_invokeCut.stop();
-
-				logger.log(Level.WARNING, "Reflection error in invoke(" + op + "): " + e.getMessage(), e);
-
-				throw new TestfulInternalException.Impl(e);
-			}
-		} finally {
-			timer_invoke.stop();
+			throw new TestfulInternalException.Impl(e);
 		}
 	}
 
