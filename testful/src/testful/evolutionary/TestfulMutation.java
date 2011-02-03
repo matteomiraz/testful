@@ -26,6 +26,7 @@ import jmetal.base.Solution;
 import jmetal.base.operator.mutation.Mutation;
 import jmetal.util.JMException;
 import jmetal.util.PseudoRandom;
+import testful.TestFul;
 import testful.model.Operation;
 import testful.model.ReferenceFactory;
 import testful.model.Test;
@@ -42,38 +43,35 @@ public class TestfulMutation extends Mutation<Operation> {
 
 	private static final Logger logger = Logger.getLogger("testful.evolutionary");
 
-	private TestfulProblem problem;
+	/** probability to remove an operation */
+	private final float probRemove = TestFul.getProperty(TestFul.PROPERTY_MUTATION_REMOVE, 0.0f, 0.66f, 1.0f);
+
+	/** probability to simplify a test and remove all useless operations */
+	private float probSimplify = TestFul.getProperty(TestFul.PROPERTY_MUTATION_SIMPLIFY, 0.0f, 0, 1.0f);
+
+	/** the TestFul problem */
+	private final TestfulProblem problem;
+
 	public TestfulMutation(TestfulProblem problem) {
 		this.problem = problem;
 	}
 
-	private float probRemove = 0.5f;
-	public void setProbRemove(float probRemove) {
-		this.probRemove = probRemove;
-	}
-
-	private float probSimplify = 0.05f;
-	public void setProbSimplify(float probSimplify) {
-		this.probSimplify = probSimplify;
-	}
-
 	/**
-	 * Executes the operation
-	 *
+	 * Mutates the solution
 	 * @param solution An object containing a solution to mutate
 	 */
 	@Override
 	public void execute(Solution<Operation> solution) throws JMException {
 		List<Operation> repr = solution.getDecisionVariables().variables_;
 
-		MersenneTwisterFast random = PseudoRandom.getMersenneTwisterFast();
-		TestCluster cluster = problem.getCluster();
-		ReferenceFactory refFactory = problem.getReferenceFactory();
-
 		if(repr.isEmpty()) {
 			repr.addAll(problem.generateTest());
 			return;
 		}
+
+		TestCluster cluster = problem.getCluster();
+		ReferenceFactory refFactory = problem.getReferenceFactory();
+		MersenneTwisterFast random = PseudoRandom.getMersenneTwisterFast();
 
 		if(probSimplify > 0 && random.nextBoolean(probSimplify)) {
 			try {

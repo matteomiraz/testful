@@ -61,6 +61,12 @@ public class TestFul {
 	/** Use the standard Java serialization instead of TestFul's custom protocol */
 	public static final String PROPERTY_JAVA_SERIALIZATION = "testful.javaSerialization";
 
+	/** Probability to remove an operation during mutation (float, between 0 and 1, default: 0.75) */
+	public static final String PROPERTY_MUTATION_REMOVE = "testful.mutation.probRemove";
+
+	/** Probability to remove all the useless operations of a test during mutation (float, between 0 and 1, default: disabled (0) ) */
+	public static final String PROPERTY_MUTATION_SIMPLIFY = "testful.mutation.probRemove";
+
 	// ---------- end of testful's properties ----------
 
 	// ------------------- debug -----------------------
@@ -342,5 +348,23 @@ public class TestFul {
 
 	public static String getProperty(String key, String defaultValue) {
 		return System.getProperty(key, defaultValue);
+	}
+
+	public static float getProperty(String key, float min, float defaultValue, float max) {
+		try {
+			final String value = System.getProperty(key);
+
+			if(value != null) {
+				float v = Float.parseFloat(value);
+
+				if(v < min) v = min;
+				if(v > max) v = max;
+				return v;
+			}
+
+		} catch (NumberFormatException e) {
+			Logger.getLogger("testful").log(Level.FINE, "Cannot use " + key + "property: " + e.getMessage(), e);
+		}
+		return defaultValue;
 	}
 }

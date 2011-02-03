@@ -134,7 +134,6 @@ public class Launcher {
 
 		TestfulMutation mutation = new TestfulMutation(testfulProblem);
 		mutation.setProbability(0.05);
-		mutation.setProbRemove(0.75f);
 		algorithm.setMutation(mutation);
 
 		/* Selection Operator */
