@@ -100,7 +100,6 @@ public final class Stopper implements TimerCallBack {
 		if(loadingTime > LOADING_THRESHOLD) {
 			timer.stop();
 			timer.start(loadingTime);
-			System.err.println("Alarm " + timer + " is delayed of " + loadingTime + "ms to compensate the classes loading time");
 			if(LOG_FINE) logger.fine("Alarm " + timer + " is delayed of " + loadingTime + "ms to compensate the classes loading time");
 		} else {
 			TestStoppedException.kill();
