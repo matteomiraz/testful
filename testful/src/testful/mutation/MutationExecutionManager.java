@@ -31,7 +31,7 @@ public class MutationExecutionManager extends ExecutionManager<MutationCoverage>
 	private static Logger logger = Logger.getLogger("testful.mutation");
 
 	public static Context<MutationCoverage, MutationExecutionManager> getContext(DataFinder finder, Test test, TrackerDatum ... data) {
-		return new Context<MutationCoverage, MutationExecutionManager>(MutationExecutionManager.class, finder, ReflectionExecutor.class, test, data);
+		return new Context<MutationCoverage, MutationExecutionManager>(MutationExecutionManager.class, finder, ReflectionExecutor.class, test, true, data);
 	}
 
 	private static ClassLoader classLoader = MutationExecutionManager.class.getClassLoader();
@@ -48,10 +48,10 @@ public class MutationExecutionManager extends ExecutionManager<MutationCoverage>
 	/** the configuration class */
 	private Class<?> config;
 
-	public MutationExecutionManager(byte[] executorSerGz, byte[] trackerDataSerGz, boolean reloadClasses) throws TestfulException {
-		super(executorSerGz, trackerDataSerGz, reloadClasses);
+	public MutationExecutionManager(byte[] executorSer, byte[] trackerDataSer, boolean reloadClasses) throws TestfulException {
+		super(executorSer, trackerDataSer, reloadClasses);
 
-		TrackerDatum[] trackerDataTmp = (TrackerDatum[]) Cloner.deserialize(trackerDataSerGz, true);
+		TrackerDatum[] trackerDataTmp = (TrackerDatum[]) Cloner.deserialize(trackerDataSer, true);
 
 		int i = 1;
 		trackerData = new TrackerDatum[trackerDataTmp.length+1];

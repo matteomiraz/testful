@@ -34,8 +34,8 @@ import testful.runner.RunnerPool;
  */
 public class TestExecutionManager extends ExecutionManager<Operation[]> {
 
-	public TestExecutionManager(byte[] executorSerGz, byte[] trackerDataSerGz, boolean reloadClasses) throws TestfulException {
-		super(executorSerGz, trackerDataSerGz, reloadClasses);
+	public TestExecutionManager(byte[] executorSer, byte[] trackerDataSer, boolean reloadClasses) throws TestfulException {
+		super(executorSer, trackerDataSer, reloadClasses);
 	}
 
 	@Override
@@ -49,8 +49,7 @@ public class TestExecutionManager extends ExecutionManager<Operation[]> {
 	}
 
 	public static Operation[] execute(DataFinder finder, Test test, boolean reloadClasses, TrackerDatum ... data) throws InterruptedException, ExecutionException {
-		Context<Operation[], TestExecutionManager> ctx =  new Context<Operation[], TestExecutionManager>(TestExecutionManager.class, finder, ReflectionExecutor.class, test, data);
-		ctx.setStopOnBug(false);
+		Context<Operation[], TestExecutionManager> ctx =  new Context<Operation[], TestExecutionManager>(TestExecutionManager.class, finder, ReflectionExecutor.class, test, false, data);
 		ctx.setReloadClasses(reloadClasses);
 
 		Operation[] ops = RunnerPool.getRunnerPool().execute(ctx).get();
@@ -62,8 +61,7 @@ public class TestExecutionManager extends ExecutionManager<Operation[]> {
 	}
 
 	public static Test executeTest(DataFinder finder, Test test, boolean reloadClasses, TrackerDatum ... data) throws InterruptedException, ExecutionException {
-		Context<Operation[], TestExecutionManager> ctx =  new Context<Operation[], TestExecutionManager>(TestExecutionManager.class, finder, ReflectionExecutor.class, test, data);
-		ctx.setStopOnBug(false);
+		Context<Operation[], TestExecutionManager> ctx =  new Context<Operation[], TestExecutionManager>(TestExecutionManager.class, finder, ReflectionExecutor.class, test, false, data);
 		ctx.setReloadClasses(reloadClasses);
 
 		Operation[] ops = RunnerPool.getRunnerPool().execute(ctx).get();

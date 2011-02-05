@@ -70,7 +70,7 @@ public abstract class ExecutionManager<T extends Serializable> implements IExecu
 	 * <b>NOTICE:</b> subclasses must have the same constructor (same parameters. same order).
 	 * @throws TestfulException if something really weird goes wrong
 	 */
-	public ExecutionManager(byte[] executor, byte[] trackerDataSerGz, boolean reloadClasses) throws TestfulException {
+	public ExecutionManager(byte[] executorSer, byte[] trackerDataSer, boolean reloadClasses) throws TestfulException {
 
 		timer.start("exec.0.deserialization");
 
@@ -82,14 +82,14 @@ public abstract class ExecutionManager<T extends Serializable> implements IExecu
 		}
 
 		// Setup the executor
-		if(executor != null)
-			this.executor = ExecutorSerializer.deserialize(executor);
+		if(executorSer != null)
+			this.executor = ExecutorSerializer.deserialize(executorSer);
 		else
 			this.executor = null;
 
-		if(trackerDataSerGz != null) {
+		if(trackerDataSer != null) {
 			// Setup the tracker data
-			TrackerDatum[] data = (TrackerDatum[]) Cloner.deserialize(trackerDataSerGz, true);
+			TrackerDatum[] data = (TrackerDatum[]) Cloner.deserialize(trackerDataSer, false);
 
 			testful.coverage.Tracker.setup(data);
 		}

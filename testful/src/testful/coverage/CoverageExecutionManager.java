@@ -29,20 +29,17 @@ import testful.utils.ElementManager;
 public class CoverageExecutionManager extends ExecutionManager<ElementManager<String, CoverageInformation>> {
 
 	public static Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> getContext(DataFinder finder, Test test, boolean reloadClasses, TrackerDatum ... data) {
-		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = new Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager>(CoverageExecutionManager.class, finder, ReflectionExecutor.class, test, data);
-		ctx.setStopOnBug(false);
+		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = new Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager>(CoverageExecutionManager.class, finder, ReflectionExecutor.class, test, false, data);
 		ctx.setReloadClasses(reloadClasses);
 		return ctx;
 	}
 
-	public CoverageExecutionManager(byte[] executorSerGz, byte[] trackerDataSerGz, boolean reloadClasses) throws TestfulException {
-		super(executorSerGz, trackerDataSerGz, reloadClasses);
+	public CoverageExecutionManager(byte[] executorSer, byte[] trackerDataSer, boolean reloadClasses) throws TestfulException {
+		super(executorSer, trackerDataSer, reloadClasses);
 	}
 
 	@Override
 	protected ElementManager<String, CoverageInformation> getResult() {
-		// if this class has been loaded using the test's classloader, retrieve the result using a simple method call
-
 		return Tracker.getAllCoverage();
 	}
 

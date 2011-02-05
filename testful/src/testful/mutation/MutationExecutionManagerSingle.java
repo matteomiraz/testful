@@ -18,8 +18,8 @@ public class MutationExecutionManagerSingle extends ExecutionManager<Long> {
 
 	private static ClassLoader classLoader = MutationExecutionManager.class.getClassLoader();
 
-	public MutationExecutionManagerSingle(byte[] executorSerGz, byte[] trackerDataSerGz, boolean reloadClasses) throws TestfulException {
-		super(executorSerGz, trackerDataSerGz, reloadClasses);
+	public MutationExecutionManagerSingle(byte[] executorSer, byte[] trackerDataSer, boolean reloadClasses) throws TestfulException {
+		super(executorSer, trackerDataSer, reloadClasses);
 	}
 
 	public MutationExecutionManagerSingle(IExecutor executor, TrackerDatum[] data, boolean reloadClasses) throws TestfulException {

@@ -49,14 +49,14 @@ public class Context<R extends Serializable, M extends IExecutionManager<R>> imp
 	private final DataFinder finder;
 	private boolean reloadClasses = false;
 
-	public boolean stopOnBug = true;
+	public final boolean stopOnBug;
 	private final String execManager;
 
 	/** contains a compressed serialized array of Executor */
-	private final byte[] executor;
+	private final byte[] executorSer;
 
 	/** contains a compressed serialized array of TrackerDatum */
-	private final byte[] trackerDataSerGz;
+	private final byte[] trackerDataSer;
 
 	/**
 	 * Create a new evaluation context
@@ -66,7 +66,7 @@ public class Context<R extends Serializable, M extends IExecutionManager<R>> imp
 	 * @param test the test to execute
 	 * @param data the tracker data
 	 */
-	public Context(Class<M> execManager, DataFinder finder, Class<? extends IExecutor> executorType, Test test, TrackerDatum ... data) {
+	public Context(Class<M> execManager, DataFinder finder, Class<? extends IExecutor> executorType, Test test, boolean stopOnBug, TrackerDatum ... data) {
 
 		timer.start("exec.0.serialization");
 
@@ -74,8 +74,9 @@ public class Context<R extends Serializable, M extends IExecutionManager<R>> imp
 
 		this.finder = finder;
 		this.execManager = execManager.getName();
-		this.executor = ExecutorSerializer.serialize(finder, executorType, test);
-		this.trackerDataSerGz = Cloner.serializeWithCache(data, true);
+		this.executorSer = ExecutorSerializer.serialize(finder, executorType, test);
+		this.trackerDataSer = Cloner.serializeWithCache(data, false);
+		this.stopOnBug = stopOnBug;
 
 		timer.stop(Integer.toString(test.getTest().length));
 	}
@@ -96,16 +97,12 @@ public class Context<R extends Serializable, M extends IExecutionManager<R>> imp
 		return stopOnBug;
 	}
 
-	public void setStopOnBug(boolean stopOnBug) {
-		this.stopOnBug = stopOnBug;
-	}
-
 	public DataFinder getFinder() {
 		return finder;
 	}
 
 	public int getSize() {
-		return executor.length + trackerDataSerGz.length;
+		return executorSer.length + trackerDataSer.length;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -113,7 +110,7 @@ public class Context<R extends Serializable, M extends IExecutionManager<R>> imp
 		try {
 			Class<? extends IExecutionManager<R>> c = (Class<? extends IExecutionManager<R>>) loader.loadClass(execManager);
 			Constructor<? extends IExecutionManager<R>> cns = c.getConstructor(new Class<?>[] { byte[].class, byte[].class, boolean.class});
-			return cns.newInstance(executor, trackerDataSerGz, reloadClasses);
+			return cns.newInstance(executorSer, trackerDataSer, reloadClasses);
 		} catch(Exception e) {
 			throw new ClassNotFoundException("Cannot create the execution manager", e);
 		}
