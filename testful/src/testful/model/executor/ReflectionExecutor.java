@@ -49,6 +49,7 @@ import testful.model.faults.PreconditionViolationException;
 import testful.model.faults.TestfulInternalException;
 import testful.runner.Executor;
 import testful.utils.StopWatch;
+import testful.utils.StopWatchFast;
 
 /**
  * This class is able to host a pool of objects, and execute operations on them.
@@ -78,6 +79,7 @@ public class ReflectionExecutor extends Executor {
 	}
 
 	private final static StopWatch timer_exec = StopWatch.getTimer();
+	private final static StopWatchFast timer_cut = StopWatchFast.getTimer("exec.cut");
 
 	@Override
 	public int execute(boolean stopOnBug) throws ClassNotFoundException, ClassCastException {
@@ -175,6 +177,7 @@ public class ReflectionExecutor extends Executor {
 		if(LOGGER_FINE)   logger.fine(new StringBuilder("STATS").append(" ops:").append(test.length).append(" invalid:").append(nPre).append(" valid:").append(nValid).append(" faulty:").append(nFaulty).toString());
 
 		timer_exec.stop();
+		timer_cut.log();
 
 		return nFaulty;
 	}
@@ -298,7 +301,9 @@ public class ReflectionExecutor extends Executor {
 		Object newObject = null;
 		try {
 
+			timer_cut.start();
 			newObject = cons.newInstance(initargs);
+			timer_cut.stop();
 
 			// save results
 			if(targetPos != null) set(targetPos, newObject);
@@ -308,6 +313,8 @@ public class ReflectionExecutor extends Executor {
 			return;
 
 		} catch(InvocationTargetException invocationException) {
+			timer_cut.stop();
+
 			Throwable exc = invocationException.getTargetException();
 
 			// check for nasty Errors (such as OutOfMemory errors)
@@ -333,6 +340,8 @@ public class ReflectionExecutor extends Executor {
 			if(opRes != null) opRes.setExceptional(exc, null, cluster);
 
 		} catch(Throwable e) {
+			timer_cut.stop();
+
 			logger.log(Level.WARNING, "Reflection error in createObject(" + op + "): " + e.getMessage(), e);
 			throw new TestfulInternalException.Impl(e);
 		}
@@ -419,7 +428,9 @@ public class ReflectionExecutor extends Executor {
 		Object result = null;
 		try {
 
+			timer_cut.start();
 			result = m.invoke(baseObject, args);
+			timer_cut.stop();
 
 			if(targetPos != null) set(targetPos, result);
 			if(opRes != null) opRes.setSuccessful(baseObject, result, cluster);
@@ -427,6 +438,8 @@ public class ReflectionExecutor extends Executor {
 			return;
 
 		} catch(InvocationTargetException invocationException) {
+			timer_cut.stop();
+
 			Throwable exc = invocationException.getTargetException();
 
 			// check for nasty Errors (such as OutOfMemory errors)
@@ -456,8 +469,9 @@ public class ReflectionExecutor extends Executor {
 			if(opRes != null) opRes.setExceptional(exc, baseObject, cluster);
 
 		} catch(Throwable e) {
-			logger.log(Level.WARNING, "Reflection error in invoke(" + op + "): " + e.getMessage(), e);
+			timer_cut.stop();
 
+			logger.log(Level.WARNING, "Reflection error in invoke(" + op + "): " + e.getMessage(), e);
 			throw new TestfulInternalException.Impl(e);
 		}
 	}

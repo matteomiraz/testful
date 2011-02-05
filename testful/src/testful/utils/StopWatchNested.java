@@ -89,11 +89,10 @@ public abstract class StopWatchNested {
 		 */
 		@Override
 		public void start() {
+			if(parent != null) parent.pause();
+
 			if(TestFul.DEBUG && start != 0)
 				TestFul.debug(new IllegalStateException("The timer " + name + " is still running"));
-
-			if(parent != null)
-				parent.pause();
 
 			n++;
 			start = System.nanoTime();
@@ -138,7 +137,7 @@ public abstract class StopWatchNested {
 			else log();
 		}
 
-		public void log() {
+		private void log() {
 			StopWatch.logger.fine(name + " " + duration/1000000.0 + " ms in " + n + " invocations");
 			duration = 0;
 			n = 0;
