@@ -38,12 +38,10 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
-		assertEquals(3, testOperations.length);
+		OperationResultExecutionManager.execute(getFinder(), test, true);
 
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[1].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[2].getInfo(OperationResult.KEY)).status);
+		Operation[] testOperations = test.getTest();
+		assertEquals(3, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
@@ -58,11 +56,10 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
-		assertEquals(2, testOperations.length);
+		OperationResultExecutionManager.execute(getFinder(), test, true);
 
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[1].getInfo(OperationResult.KEY)).status);
+		Operation[] testOperations = test.getTest();
+		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
 		assertEquals(OperationResult.Status.EXCEPTIONAL, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
@@ -77,12 +74,10 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
-		assertEquals(3, testOperations.length);
+		OperationResultExecutionManager.execute(getFinder(), test, true);
 
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[1].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[2].getInfo(OperationResult.KEY)).status);
+		Operation[] testOperations = test.getTest();
+		assertEquals(3, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
@@ -97,11 +92,10 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
-		assertEquals(2, testOperations.length);
+		OperationResultExecutionManager.execute(getFinder(), test, true);
 
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[1].getInfo(OperationResult.KEY)).status);
+		Operation[] testOperations = test.getTest();
+		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
 		assertEquals(OperationResult.Status.EXCEPTIONAL, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
@@ -116,12 +110,10 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
-		assertEquals(3, testOperations.length);
+		OperationResultExecutionManager.execute(getFinder(), test, true);
 
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[1].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[2].getInfo(OperationResult.KEY)).status);
+		Operation[] testOperations = test.getTest();
+		assertEquals(3, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
@@ -136,11 +128,10 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
-		assertEquals(2, testOperations.length);
+		OperationResultExecutionManager.execute(getFinder(), test, true);
 
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[1].getInfo(OperationResult.KEY)).status);
+		Operation[] testOperations = test.getTest();
+		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
 		assertEquals(OperationResult.Status.EXCEPTIONAL, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
@@ -154,11 +145,10 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
-		assertEquals(2, testOperations.length);
+		OperationResultExecutionManager.execute(getFinder(), test, true);
 
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[1].getInfo(OperationResult.KEY)).status);
+		Operation[] testOperations = test.getTest();
+		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
 		assertEquals(OperationResult.Status.POSTCONDITION_ERROR, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
@@ -172,11 +162,10 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
-		assertEquals(2, testOperations.length);
+		OperationResultExecutionManager.execute(getFinder(), test, true);
 
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[1].getInfo(OperationResult.KEY)).status);
+		Operation[] testOperations = test.getTest();
+		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
 		assertEquals(OperationResult.Status.EXCEPTIONAL, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
@@ -190,11 +179,10 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
-		assertEquals(2, testOperations.length);
+		OperationResultExecutionManager.execute(getFinder(), test, true);
 
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[1].getInfo(OperationResult.KEY)).status);
+		Operation[] testOperations = test.getTest();
+		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
 		assertEquals(OperationResult.Status.POSTCONDITION_ERROR, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
@@ -208,11 +196,10 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
-		assertEquals(2, testOperations.length);
+		OperationResultExecutionManager.execute(getFinder(), test, true);
 
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[1].getInfo(OperationResult.KEY)).status);
+		Operation[] testOperations = test.getTest();
+		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
 		assertEquals(OperationResult.Status.EXCEPTIONAL, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
@@ -226,11 +213,10 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
-		assertEquals(2, testOperations.length);
+		OperationResultExecutionManager.execute(getFinder(), test, true);
 
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[1].getInfo(OperationResult.KEY)).status);
+		Operation[] testOperations = test.getTest();
+		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
 		assertEquals(OperationResult.Status.EXCEPTIONAL, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
@@ -244,11 +230,10 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
-		assertEquals(2, testOperations.length);
+		OperationResultExecutionManager.execute(getFinder(), test, true);
 
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[1].getInfo(OperationResult.KEY)).status);
+		Operation[] testOperations = test.getTest();
+		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
 		assertEquals(OperationResult.Status.EXCEPTIONAL, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
@@ -262,11 +247,10 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
-		assertEquals(2, testOperations.length);
+		OperationResultExecutionManager.execute(getFinder(), test, true);
 
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[1].getInfo(OperationResult.KEY)).status);
+		Operation[] testOperations = test.getTest();
+		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
 		assertEquals(OperationResult.Status.POSTCONDITION_ERROR, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
@@ -280,11 +264,10 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
-		assertEquals(2, testOperations.length);
+		OperationResultExecutionManager.execute(getFinder(), test, true);
 
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[1].getInfo(OperationResult.KEY)).status);
+		Operation[] testOperations = test.getTest();
+		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
 		assertEquals(OperationResult.Status.EXCEPTIONAL, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
@@ -298,14 +281,13 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test, true);
+		OperationResultExecutionManager.execute(getFinder(), test, true);
+
+		Operation[] testOperations = test.getTest();
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
-
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[1].getInfo(OperationResult.KEY)).status);
 	}
 
 	public void testDummy2() throws Exception {
@@ -316,33 +298,30 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		Operation[] ops = TestExecutionManager.execute(getFinder(), test, true);
-		Test test2 = new Test(cut.cluster, cut.refFactory, ops);
+		OperationResultExecutionManager.execute(getFinder(), test, true);
 
-		OperationResult.insert(test2.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), test2, true);
+		OperationResult.insert(test.getTest());
+		OperationResultExecutionManager.execute(getFinder(), test, true);
+
+		Operation[] testOperations = test.getTest();
 		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
-
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[0].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)test.getTest()[1].getInfo(OperationResult.KEY)).status);
 	}
 
 	public void testStoppedLongMethod1() throws Exception {
 		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
-		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+		Test test = new Test(cut.cluster, cut.refFactory, new Operation[] {
 				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
 				new Invoke(null, cut.cuts[0], cut.longMethod1, new Reference[] { } )
 		});
 
-		OperationResult.insert(t.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), t, true);
-		assertEquals(2, testOperations.length);
+		OperationResult.insert(test.getTest());
+		OperationResultExecutionManager.execute(getFinder(), test, true);
 
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)t.getTest()[0].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)t.getTest()[1].getInfo(OperationResult.KEY)).status);
+		Operation[] testOperations = test.getTest();
+		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
 		assertEquals(OperationResult.Status.POSTCONDITION_ERROR, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
@@ -350,18 +329,17 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 
 	public void testStoppedLongMethod2() throws Exception {
 		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
-		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+		Test test = new Test(cut.cluster, cut.refFactory, new Operation[] {
 				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
 				new Invoke(null, cut.cuts[0], cut.longMethod2, new Reference[] { } )
 		});
 
 
-		OperationResult.insert(t.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), t, true);
-		assertEquals(2, testOperations.length);
+		OperationResult.insert(test.getTest());
+		OperationResultExecutionManager.execute(getFinder(), test, true);
 
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)t.getTest()[0].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)t.getTest()[1].getInfo(OperationResult.KEY)).status);
+		Operation[] testOperations = test.getTest();
+		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
 		assertEquals(OperationResult.Status.POSTCONDITION_ERROR, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
@@ -369,17 +347,16 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 
 	public void testStoppedLongMethod3() throws Exception {
 		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
-		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+		Test test = new Test(cut.cluster, cut.refFactory, new Operation[] {
 				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
 				new Invoke(null, cut.cuts[0], cut.longMethod3, new Reference[] { } )
 		});
 
-		OperationResult.insert(t.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), t, true);
-		assertEquals(2, testOperations.length);
+		OperationResult.insert(test.getTest());
+		OperationResultExecutionManager.execute(getFinder(), test, true);
 
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)t.getTest()[0].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)t.getTest()[1].getInfo(OperationResult.KEY)).status);
+		Operation[] testOperations = test.getTest();
+		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
 		assertEquals(OperationResult.Status.POSTCONDITION_ERROR, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
@@ -387,17 +364,16 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 
 	public void testStoppedLongMethod4() throws Exception {
 		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
-		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+		Test test = new Test(cut.cluster, cut.refFactory, new Operation[] {
 				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
 				new Invoke(null, cut.cuts[0], cut.longMethod4, new Reference[] { } )
 		});
 
-		OperationResult.insert(t.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), t, true);
-		assertEquals(2, testOperations.length);
+		OperationResult.insert(test.getTest());
+		OperationResultExecutionManager.execute(getFinder(), test, true);
 
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)t.getTest()[0].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)t.getTest()[1].getInfo(OperationResult.KEY)).status);
+		Operation[] testOperations = test.getTest();
+		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
 		assertEquals(OperationResult.Status.POSTCONDITION_ERROR, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
@@ -405,17 +381,16 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 
 	public void testStoppedLongMethod5() throws Exception {
 		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
-		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+		Test test = new Test(cut.cluster, cut.refFactory, new Operation[] {
 				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
 				new Invoke(null, cut.cuts[0], cut.longMethod5, new Reference[] { } )
 		});
 
-		OperationResult.insert(t.getTest());
-		Operation[] testOperations = TestExecutionManager.execute(getFinder(), t, true);
-		assertEquals(2, testOperations.length);
+		OperationResult.insert(test.getTest());
+		OperationResultExecutionManager.execute(getFinder(), test, true);
 
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)t.getTest()[0].getInfo(OperationResult.KEY)).status);
-		assertEquals(OperationResult.Status.NOT_EXECUTED, ((OperationResult)t.getTest()[1].getInfo(OperationResult.KEY)).status);
+		Operation[] testOperations = test.getTest();
+		assertEquals(2, testOperations.length);
 
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
 		assertEquals(OperationResult.Status.POSTCONDITION_ERROR, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);

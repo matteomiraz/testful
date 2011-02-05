@@ -232,7 +232,7 @@ public class RunnerPool implements IRunner, ITestRepository {
 		}
 
 		void setResult(T result) {
-			if(completed) throw new Error("Future already completed!");
+			if(completed) throw new IllegalStateException("Future already completed!");
 
 			synchronized(this) {
 				this.result = result;
@@ -242,7 +242,7 @@ public class RunnerPool implements IRunner, ITestRepository {
 		}
 
 		void setException(Exception exc) {
-			if(completed) throw new Error("Future already completed!");
+			if(completed) throw new IllegalStateException("Future already completed!");
 
 			synchronized(this) {
 				this.exc = exc;

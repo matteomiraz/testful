@@ -43,6 +43,11 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 
 	private ElementManager<String, OperationInformation> infos;
 
+	/**
+	 * Adds the given operationInformation.
+	 * If the operation already contains an operation information with the same key, this operation does not do anything.
+	 * @param info the operation information to add
+	 */
 	public void addInfo(OperationInformation info) {
 		if(infos == null) infos = new ElementManager<String, OperationInformation>();
 		infos.put(info);
@@ -55,6 +60,16 @@ public abstract class Operation implements Serializable, Cloneable, Variable {
 	public void addInfo(Iterator<OperationInformation> iter) {
 		while(iter.hasNext())
 			addInfo(iter.next().clone());
+	}
+
+	/**
+	 * Adds the given operationInformation.
+	 * This operation removes any pre-existent operation information with the same key.
+	 * @param info the operation information to add
+	 */
+	public void setInfo(OperationInformation info) {
+		if(infos == null) infos = new ElementManager<String, OperationInformation>();
+		infos.putAndReplace(info);
 	}
 
 	public OperationInformation removeInfo(String key) {

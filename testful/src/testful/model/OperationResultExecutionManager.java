@@ -32,15 +32,21 @@ import testful.runner.RunnerPool;
  * This class executes a test and returns the OperationInformation.
  * @author matteo
  */
-public class TestExecutionManager extends ExecutionManager<Operation[]> {
+public class OperationResultExecutionManager extends ExecutionManager<OperationResult[]> {
 
-	public TestExecutionManager(byte[] executorSer, byte[] trackerDataSer, boolean reloadClasses) throws TestfulException {
+	public OperationResultExecutionManager(byte[] executorSer, byte[] trackerDataSer, boolean reloadClasses) throws TestfulException {
 		super(executorSer, trackerDataSer, reloadClasses);
 	}
 
 	@Override
-	protected Operation[] getResult() {
-		return executor.getTest();
+	protected OperationResult[] getResult() {
+
+		Operation[] ops = executor.getTest();
+		OperationResult[] ret = new OperationResult[ops.length];
+		for (int i = 0; i < ops.length; i++)
+			ret[i] = (OperationResult) ops[i].getInfo(OperationResult.KEY);
+
+		return ret;
 	}
 
 	@Override
@@ -48,28 +54,18 @@ public class TestExecutionManager extends ExecutionManager<Operation[]> {
 		Test.ensureNoDuplicateOps(executor.getTest());
 	}
 
-	public static Operation[] execute(DataFinder finder, Test test, boolean reloadClasses, TrackerDatum ... data) throws InterruptedException, ExecutionException {
-		Context<Operation[], TestExecutionManager> ctx =  new Context<Operation[], TestExecutionManager>(TestExecutionManager.class, finder, ReflectionExecutor.class, test, false, data);
+	public static void execute(DataFinder finder, Test test, boolean reloadClasses, TrackerDatum ... data) throws InterruptedException, ExecutionException {
+
+		Context<OperationResult[], OperationResultExecutionManager> ctx =
+			new Context<OperationResult[], OperationResultExecutionManager>(OperationResultExecutionManager.class, finder, ReflectionExecutor.class, test, false, data);
+
 		ctx.setReloadClasses(reloadClasses);
 
-		Operation[] ops = RunnerPool.getRunnerPool().execute(ctx).get();
+		OperationResult[] infos = RunnerPool.getRunnerPool().execute(ctx).get();
 
+		Operation[] ops = test.getTest();
 		for (int i = 0; i < ops.length; i++)
-			ops[i] = ops[i].adapt(test.getCluster(), test.getReferenceFactory());
-
-		return ops;
+			if(infos[i] != null)
+				ops[i].setInfo(infos[i]);
 	}
-
-	public static Test executeTest(DataFinder finder, Test test, boolean reloadClasses, TrackerDatum ... data) throws InterruptedException, ExecutionException {
-		Context<Operation[], TestExecutionManager> ctx =  new Context<Operation[], TestExecutionManager>(TestExecutionManager.class, finder, ReflectionExecutor.class, test, false, data);
-		ctx.setReloadClasses(reloadClasses);
-
-		Operation[] ops = RunnerPool.getRunnerPool().execute(ctx).get();
-
-		for (int i = 0; i < ops.length; i++)
-			ops[i] = ops[i].adapt(test.getCluster(), test.getReferenceFactory());
-
-		return new Test(test.getCluster(), test.getReferenceFactory(), ops);
-	}
-
 }

@@ -28,9 +28,9 @@ import testful.model.CreateObject;
 import testful.model.Invoke;
 import testful.model.Operation;
 import testful.model.OperationResult;
+import testful.model.OperationResultExecutionManager;
 import testful.model.Reference;
 import testful.model.Test;
-import testful.model.TestExecutionManager;
 import testful.testCut.DummySimpleCUT;
 
 /**
@@ -41,7 +41,7 @@ public class ReorganizerTestCase extends GenericTestCase {
 
 	protected List<Test> perform(Test test) throws Exception {
 		OperationResult.insert(test.getTest());
-		test = TestExecutionManager.executeTest(getFinder(), new Test(test.getCluster(), test.getReferenceFactory(), test.getTest()), true);
+		OperationResultExecutionManager.execute(getFinder(), test, true);
 
 		test = Reorganizer.singleton.perform(test);
 

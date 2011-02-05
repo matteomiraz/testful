@@ -33,8 +33,8 @@ import testful.TestFul;
 import testful.model.Operation;
 import testful.model.OperationResult;
 import testful.model.OperationResult.Status;
+import testful.model.OperationResultExecutionManager;
 import testful.model.Test;
-import testful.model.TestExecutionManager;
 import testful.model.TestReader;
 import testful.runner.ClassType;
 import testful.runner.DataFinder;
@@ -109,7 +109,8 @@ public class Replay extends TestReader {
 		try {
 			logger.info("Replaying " + fileName);
 			OperationResult.insert(test.getTest());
-			Operation[] operations = TestExecutionManager.execute(finder, test, reloadClasses);
+			OperationResultExecutionManager.execute(finder, test, reloadClasses);
+			Operation[] operations = test.getTest();
 
 			for(Operation op : operations) {
 				OperationResult info = (OperationResult) op.getInfo(OperationResult.KEY);
