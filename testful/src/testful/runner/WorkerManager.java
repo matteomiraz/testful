@@ -45,6 +45,8 @@ import testful.utils.Cloner;
 
 public class WorkerManager implements IWorkerManager, ITestRepository {
 
+	private static final boolean COMPRESS_SERIALIZED = TestFul.getProperty(TestFul.PROPERTY_COMPRESS_SERIALIZED, false);
+
 	private static Logger logger = Logger.getLogger("testful.executor.worker");
 	private static final boolean LOG_FINE = logger.isLoggable(Level.FINE);
 
@@ -81,11 +83,10 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 		classLoaders = new CachingMap<String, Queue<TestfulClassLoader>>(MAX_ELEMS, MIN_AGE, MIN_UNUSED);
 
 		if(cpu < 0) cpu = Runtime.getRuntime().availableProcessors();
-		for(int i = 0; i < cpu; i++)
-			createWorker();
 
-		String msg = "Started " + cpu + " workers";
-		logger.info(msg);
+		for(int i = 0; i < cpu; i++) createWorker();
+
+		logger.info("Started " + cpu + " workers");
 	}
 
 	@Override
@@ -210,16 +211,16 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	}
 
 	@Override
-	public void putException(String key, byte[] exc) throws RemoteException {
+	public void putException(String key, byte[] excSer, boolean compressed) throws RemoteException {
 		try {
 			ITestRepository rep = results.remove(key);
-			rep.putException(key, exc);
+			rep.putException(key, excSer, compressed);
 		} catch(Exception e) {
 			logger.log(Level.WARNING, "Cannot put the result back in the test repository: " + e.getMessage(), e);
 		}
 
 		executedJobs.incrementAndGet();
-		sentBytes.addAndGet(exc.length);
+		sentBytes.addAndGet(excSer.length);
 	}
 
 	public void putException(Context<?, ?> ctx, Exception exc, TestfulClassLoader cl) {
@@ -227,30 +228,30 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 			reuseClassLoader(cl);
 
 		try {
-			putException(ctx.id, Cloner.serialize(exc, true));
+			putException(ctx.id, Cloner.serialize(exc, COMPRESS_SERIALIZED), COMPRESS_SERIALIZED);
 		} catch(RemoteException e) {
 			// never happens
 		}
 	}
 
 	@Override
-	public void putResult(String key, byte[] result) throws RemoteException {
+	public void putResult(String key, byte[] resultSer, boolean compressed) throws RemoteException {
 		try {
 			ITestRepository rep = results.remove(key);
-			rep.putResult(key, result);
+			rep.putResult(key, resultSer, compressed);
 		} catch(Exception e) {
 			logger.log(Level.WARNING, "Cannot put the result back in the test repository: " + e.getMessage(), e);
 		}
 
 		executedJobs.incrementAndGet();
-		sentBytes.addAndGet(result.length);
+		sentBytes.addAndGet(resultSer.length);
 	}
 
 	public void putResult(Context<?, ?> ctx, Serializable result, TestfulClassLoader cl) {
 		reuseClassLoader(cl);
 
 		try {
-			putResult(ctx.id, Cloner.serialize(result, true));
+			putResult(ctx.id, Cloner.serialize(result, COMPRESS_SERIALIZED), COMPRESS_SERIALIZED);
 		} catch(RemoteException e) {
 			// never happens
 		}

@@ -16,12 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.runner;
 
 import java.io.Serializable;
 import java.util.concurrent.Future;
 
+/**
+ * Provide its users with the ability to execute something (and retrieve the future results).
+ * @author matteo
+ */
 public interface IRunner {
 
 	public <T extends Serializable> Future<T> execute(Context<T, ? extends IExecutionManager<T>> ctx);

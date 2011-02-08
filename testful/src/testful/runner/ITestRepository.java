@@ -16,19 +16,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.runner;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
+/**
+ * Hosts stuff to be executed, and allows Runners to put the result back.
+ * @author matteo
+ */
 public interface ITestRepository extends Remote {
 
 	public String getName() throws RemoteException;
-	
+
 	public Context<?, ?> getTest() throws RemoteException;
 
-	public void putResult(String key, byte[] result) throws RemoteException;
+	public void putResult(String key, byte[] resultSer, boolean compressed) throws RemoteException;
 
-	public void putException(String key, byte[] exception) throws RemoteException;
+	public void putException(String key, byte[] exceptionSer, boolean compressed) throws RemoteException;
 }

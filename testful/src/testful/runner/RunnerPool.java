@@ -45,8 +45,7 @@ import testful.utils.ElementWithKey;
 
 public class RunnerPool implements IRunner, ITestRepository {
 
-	/** maximum number of jobs that the executor pool allows to queue */
-	private static final int MAX_BUFFER = 25;
+	private static final int MAX_BUFFER = TestFul.getProperty(TestFul.PROPERTY_LOCAL_JOBS, 1000);
 
 	private static RunnerPool singleton;
 	public static RunnerPool getRunnerPool() {
@@ -196,23 +195,23 @@ public class RunnerPool implements IRunner, ITestRepository {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void putResult(String key, byte[] result) {
+	public void putResult(String key, byte[] resultSer, boolean compressed) {
 
 		testsEval.remove(key);
 		TestfulFuture<Serializable> future = (TestfulFuture<Serializable>) futures.remove(key);
 
 		if(future == null) logger.warning("Future with " + key + " not found");
-		else future.setResult(Cloner.deserialize(result, true));
+		else future.setResult(Cloner.deserialize(resultSer, compressed));
 	}
 
 	@Override
-	public void putException(String key, byte[] exception) throws RemoteException {
+	public void putException(String key, byte[] exceptionSer, boolean compressed) throws RemoteException {
 
 		testsEval.remove(key);
 		TestfulFuture<?> future = futures.remove(key);
 
 		if(future == null) logger.warning("Future with " + key + " not found");
-		else future.setException((Exception) Cloner.deserialize(exception, true));
+		else future.setException((Exception) Cloner.deserialize(exceptionSer, compressed));
 	}
 
 	private static class TestfulFuture<T extends Serializable> implements Future<T>, ElementWithKey<String> {

@@ -58,8 +58,14 @@ public class TestFul {
 	/** Monitor Testful to collect internal execution performances */
 	public static final String PROPERTY_MONITOR_PERFORMANCE = "testful.monitorPerformance";
 
-	/** Use the standard Java serialization instead of TestFul's custom protocol */
+	/** Use the standard Java serialization instead of TestFul's custom protocol (boolean, default: false) */
 	public static final String PROPERTY_JAVA_SERIALIZATION = "testful.javaSerialization";
+
+	/** Use CPU cycles to compress serialized objects to save bandwidth (boolean, default: false) */
+	public static final String PROPERTY_COMPRESS_SERIALIZED = "testful.compressSerialized";
+
+	/** Number of jobs to store on the client side (TestFul and jAutoTest put jobs here) (integer, default: 1000)  */
+	public static final String PROPERTY_LOCAL_JOBS = "testful.nLocalJobs";
 
 	/** Probability to remove an operation during mutation (float, between 0 and 1, default: 0.75) */
 	public static final String PROPERTY_MUTATION_REMOVE = "testful.mutation.probRemove";
