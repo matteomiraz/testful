@@ -57,9 +57,6 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	@Option(required = false, name = "-smartAncestors", usage = "Use an enhanced initial population")
 	private int smartInitialPopulation = 60;
 
-	@Option(required = false, name = "-useCpuTime", usage = "Use CPU time instead of wall-clock time")
-	private boolean useCpuTime;
-
 	@Option(required = false, name ="-seed", usage = "Set the seed of the random number generator")
 	private long seed = System.currentTimeMillis();
 
@@ -143,11 +140,6 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	@Override
 	public boolean isReloadClasses() {
 		return configGenerator.isReloadClasses();
-	}
-
-	@Override
-	public boolean isUseCpuTime() {
-		return useCpuTime;
 	}
 
 	@Override

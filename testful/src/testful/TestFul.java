@@ -49,6 +49,9 @@ public class TestFul {
 	/** Set the number of threads to use (integer; default: the number of CPUs of the machine) */
 	public static final String PROPERTY_N_WORKERS = "testful.nWorkers";
 
+	/** Measure the effective CPU time used, and not the wall clock (boolean; default: false) */
+	public static final String PROPERTY_TIME_CPU = "testful.cpuTime";
+
 	/** Enables the testful's fault detection feature (boolean; default: enabled) */
 	public static final String PROPERTY_FAULT_DETECT = "testful.fault";
 

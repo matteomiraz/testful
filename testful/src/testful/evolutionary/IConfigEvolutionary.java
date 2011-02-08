@@ -41,8 +41,6 @@ public interface IConfigEvolutionary extends IConfigGeneration, IConfigRunner, I
 
 	public int getSmartInitialPopulation();
 
-	public boolean isUseCpuTime();
-
 	/**
 	 * Returns the seed to use in the random number generator
 	 * @return the seed to use in the random number generator
