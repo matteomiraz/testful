@@ -18,6 +18,7 @@
 
 package testful.runner;
 
+import java.io.Serializable;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
@@ -31,7 +32,7 @@ public interface ITestRepository extends Remote {
 
 	public Context<?, ?> getTest() throws RemoteException;
 
-	public void putResult(String key, byte[] resultSer, boolean compressed) throws RemoteException;
+	public void putResult(String key, Serializable result) throws RemoteException;
 
-	public void putException(String key, byte[] exceptionSer, boolean compressed) throws RemoteException;
+	public void putException(String key, Exception exc) throws RemoteException;
 }

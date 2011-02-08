@@ -39,7 +39,6 @@ import java.util.logging.Logger;
 
 import testful.IConfigRunner;
 import testful.TestFul;
-import testful.utils.Cloner;
 import testful.utils.ElementManager;
 import testful.utils.ElementWithKey;
 
@@ -195,23 +194,23 @@ public class RunnerPool implements IRunner, ITestRepository {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void putResult(String key, byte[] resultSer, boolean compressed) {
+	public void putResult(String key, Serializable result) {
 
 		testsEval.remove(key);
 		TestfulFuture<Serializable> future = (TestfulFuture<Serializable>) futures.remove(key);
 
 		if(future == null) logger.warning("Future with " + key + " not found");
-		else future.setResult(Cloner.deserialize(resultSer, compressed));
+		else future.setResult(result);
 	}
 
 	@Override
-	public void putException(String key, byte[] exceptionSer, boolean compressed) throws RemoteException {
+	public void putException(String key, Exception exc) throws RemoteException {
 
 		testsEval.remove(key);
 		TestfulFuture<?> future = futures.remove(key);
 
 		if(future == null) logger.warning("Future with " + key + " not found");
-		else future.setException((Exception) Cloner.deserialize(exceptionSer, compressed));
+		else future.setException(exc);
 	}
 
 	private static class TestfulFuture<T extends Serializable> implements Future<T>, ElementWithKey<String> {

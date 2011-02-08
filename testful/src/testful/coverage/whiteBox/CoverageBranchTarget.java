@@ -88,7 +88,7 @@ public class CoverageBranchTarget implements CoverageInformation {
 		return defId;
 	}
 
-	void setDistance(double d) {
+	public void setDistance(double d) {
 		if(TestFul.DEBUG)
 			if(d < 0 && d != -1)
 				TestFul.debug("Invalid distance: " + d);

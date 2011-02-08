@@ -61,9 +61,6 @@ public class TestFul {
 	/** Use the standard Java serialization instead of TestFul's custom protocol (boolean, default: false) */
 	public static final String PROPERTY_JAVA_SERIALIZATION = "testful.javaSerialization";
 
-	/** Use CPU cycles to compress serialized objects to save bandwidth (boolean, default: false) */
-	public static final String PROPERTY_COMPRESS_SERIALIZED = "testful.compressSerialized";
-
 	/** Number of jobs to store on the client side (TestFul and jAutoTest put jobs here) (integer, default: 1000)  */
 	public static final String PROPERTY_LOCAL_JOBS = "testful.nLocalJobs";
 

@@ -41,11 +41,8 @@ import java.util.logging.Logger;
 import testful.TestFul;
 import testful.utils.CachingMap;
 import testful.utils.CachingMap.Cacheable;
-import testful.utils.Cloner;
 
 public class WorkerManager implements IWorkerManager, ITestRepository {
-
-	private static final boolean COMPRESS_SERIALIZED = TestFul.getProperty(TestFul.PROPERTY_COMPRESS_SERIALIZED, false);
 
 	private static Logger logger = Logger.getLogger("testful.executor.worker");
 	private static final boolean LOG_FINE = logger.isLoggable(Level.FINE);
@@ -211,16 +208,15 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	}
 
 	@Override
-	public void putException(String key, byte[] excSer, boolean compressed) throws RemoteException {
+	public void putException(String key, Exception exc) throws RemoteException {
 		try {
 			ITestRepository rep = results.remove(key);
-			rep.putException(key, excSer, compressed);
+			rep.putException(key, exc);
 		} catch(Exception e) {
 			logger.log(Level.WARNING, "Cannot put the result back in the test repository: " + e.getMessage(), e);
 		}
 
 		executedJobs.incrementAndGet();
-		sentBytes.addAndGet(excSer.length);
 	}
 
 	public void putException(Context<?, ?> ctx, Exception exc, TestfulClassLoader cl) {
@@ -228,30 +224,29 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 			reuseClassLoader(cl);
 
 		try {
-			putException(ctx.id, Cloner.serialize(exc, COMPRESS_SERIALIZED), COMPRESS_SERIALIZED);
+			putException(ctx.id, exc);
 		} catch(RemoteException e) {
 			// never happens
 		}
 	}
 
 	@Override
-	public void putResult(String key, byte[] resultSer, boolean compressed) throws RemoteException {
+	public void putResult(String key, Serializable result) throws RemoteException {
 		try {
 			ITestRepository rep = results.remove(key);
-			rep.putResult(key, resultSer, compressed);
+			rep.putResult(key, result);
 		} catch(Exception e) {
 			logger.log(Level.WARNING, "Cannot put the result back in the test repository: " + e.getMessage(), e);
 		}
 
 		executedJobs.incrementAndGet();
-		sentBytes.addAndGet(resultSer.length);
 	}
 
 	public void putResult(Context<?, ?> ctx, Serializable result, TestfulClassLoader cl) {
 		reuseClassLoader(cl);
 
 		try {
-			putResult(ctx.id, Cloner.serialize(result, COMPRESS_SERIALIZED), COMPRESS_SERIALIZED);
+			putResult(ctx.id, result);
 		} catch(RemoteException e) {
 			// never happens
 		}

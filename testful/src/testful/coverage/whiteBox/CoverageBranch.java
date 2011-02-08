@@ -32,7 +32,7 @@ public class CoverageBranch extends BitSetCoverage {
 	@Deprecated
 	public CoverageBranch() { }
 
-	CoverageBranch(BitSet coverage) {
+	public CoverageBranch(BitSet coverage) {
 		super(coverage);
 	}
 

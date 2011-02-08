@@ -32,7 +32,7 @@ public class CoverageBasicBlocks extends BitSetCoverage {
 	@Deprecated
 	public CoverageBasicBlocks() { }
 
-	CoverageBasicBlocks(BitSet coverage) {
+	public CoverageBasicBlocks(BitSet coverage) {
 		super(coverage);
 	}
 
