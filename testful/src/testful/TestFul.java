@@ -55,11 +55,8 @@ public class TestFul {
 	/** Set the maximum execution time for methods and constructors (long; default: 500) */
 	public static final String PROPERTY_MAX_EXEC_TIME = "testful.maxExecTime";
 
-	/** Monitor Testful to collect internal execution performances */
+	/** Monitor TestFul to collect internal execution performances */
 	public static final String PROPERTY_MONITOR_PERFORMANCE = "testful.monitorPerformance";
-
-	/** Use the standard Java serialization instead of TestFul's custom protocol (boolean, default: false) */
-	public static final String PROPERTY_JAVA_SERIALIZATION = "testful.javaSerialization";
 
 	/** Number of jobs to store on the client side (TestFul and jAutoTest put jobs here) (integer, default: 1000)  */
 	public static final String PROPERTY_LOCAL_JOBS = "testful.nLocalJobs";
