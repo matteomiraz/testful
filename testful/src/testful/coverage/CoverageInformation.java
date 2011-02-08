@@ -19,7 +19,7 @@
 
 package testful.coverage;
 
-import java.io.Serializable;
+import java.io.Externalizable;
 
 import testful.utils.ElementWithKey;
 
@@ -29,7 +29,7 @@ import testful.utils.ElementWithKey;
  * 
  * @author matteo
  */
-public interface CoverageInformation extends ElementWithKey<String>, Serializable, Cloneable {
+public interface CoverageInformation extends ElementWithKey<String>, Externalizable, Cloneable {
 
 	/**
 	 * Return the coverage as a floating-point number. The higher, the better.
@@ -79,10 +79,10 @@ public interface CoverageInformation extends ElementWithKey<String>, Serializabl
 	 * @return returns an empty coverage information
 	 */
 	public CoverageInformation createEmpty();
-	
+
 	@Override
 	public CoverageInformation clone() throws CloneNotSupportedException;
-	
+
 	@Override
 	public String toString();
 }

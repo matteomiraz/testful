@@ -18,6 +18,10 @@
 
 package testful.model;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 import testful.coverage.CoverageInformation;
 import testful.utils.ElementManager;
 
@@ -26,8 +30,10 @@ public class CoverageLight implements CoverageInformation {
 	private static final long serialVersionUID = 7899041916672179935L;
 
 	private float quality;
-	private final String key;
-	private final String name;
+	/** key of the information. This field is to be considered final */
+	private String key;
+	/** name of the information. This field is to be considered final */
+	private String name;
 
 	public static TestCoverage convert(TestCoverage test) {
 		ElementManager<String, CoverageInformation> coverage = new ElementManager<String, CoverageInformation>();
@@ -36,6 +42,9 @@ public class CoverageLight implements CoverageInformation {
 
 		return new TestCoverage(test.getCluster(), test.getReferenceFactory(), test.getTest(), coverage);
 	}
+
+	@Deprecated
+	public CoverageLight() { }
 
 	public CoverageLight(String key, String name, float quality) {
 		this.quality = quality;
@@ -80,5 +89,25 @@ public class CoverageLight implements CoverageInformation {
 	@Override
 	public CoverageLight clone() throws CloneNotSupportedException {
 		return (CoverageLight) super.clone();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
+	 */
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeUTF(key);
+		out.writeUTF(name);
+		out.writeFloat(quality);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
+	 */
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		key = in.readUTF();
+		name = in.readUTF();
+		quality = in.readFloat();
 	}
 }

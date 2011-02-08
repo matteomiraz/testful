@@ -1,5 +1,8 @@
 package testful.mutation;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.BitSet;
 
 import testful.coverage.CoverageInformation;
@@ -27,7 +30,7 @@ public class MutationCoverageSingle implements CoverageInformation {
 	/** alive = execAlive U notExecuted */
 	private transient BitSet alive = null;
 
-	private final BitSet execAlive, killed, notExecuted;
+	private BitSet execAlive, killed, notExecuted;
 
 	/** alive's execution time */
 	private long timeAlive;
@@ -216,19 +219,43 @@ public class MutationCoverageSingle implements CoverageInformation {
 
 		return sb.toString();
 	}
-	
+
 	@Override
 	public MutationCoverageSingle clone() {
 		MutationCoverageSingle ret = new MutationCoverageSingle();
-		
-		ret.alive.or(this.alive);
-		ret.execAlive.or(this.execAlive);
-		ret.killed.or(this.killed);
-		ret.notExecuted.or(this.notExecuted);
 
-		ret.timeAlive = this.timeAlive;
-		ret.timeAlive2 = this.timeAlive2;
-		
+		ret.alive.or(alive);
+		ret.execAlive.or(execAlive);
+		ret.killed.or(killed);
+		ret.notExecuted.or(notExecuted);
+
+		ret.timeAlive = timeAlive;
+		ret.timeAlive2 = timeAlive2;
+
 		return ret;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
+	 */
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeObject(execAlive);
+		out.writeObject(killed);
+		out.writeObject(notExecuted);
+		out.writeLong(timeAlive);
+		out.writeLong(timeAlive2);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
+	 */
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		execAlive = (BitSet) in.readObject();
+		killed = (BitSet) in.readObject();
+		notExecuted = (BitSet) in.readObject();
+		timeAlive = in.readLong();
+		timeAlive2 = in.readLong();
 	}
 }

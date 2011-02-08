@@ -18,6 +18,9 @@
 
 package testful.coverage.whiteBox;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -211,4 +214,51 @@ public class CoverageDataFlow implements CoverageInformation {
 		return sb.toString();
 	}
 
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
+	 */
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeInt(duPairs.size());
+
+		for (DefUse du : duPairs) {
+
+			if(du.def != null) {
+				out.writeBoolean(true);
+				out.writeInt(du.def.getId());
+				Stack.write(du.def.getContext(), out);
+
+			} else {
+				out.writeBoolean(false);
+			}
+
+			out.writeInt(du.use.getId());
+			Stack.write(du.use.getContext(), out);
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
+	 */
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		int num = in.readInt();
+
+		for (int i = 0; i < num; i++) {
+
+			ContextualId def = null;
+			if(in.readBoolean()) {
+				int id = in.readInt();
+				Stack ctx = Stack.read(in);
+				def = new ContextualId(id, ctx);
+			}
+
+			int id = in.readInt();
+			Stack ctx = Stack.read(in);
+			ContextualId use = new ContextualId(id, ctx);
+
+			duPairs.add(new DefUse(def, use));
+		}
+
+	}
 }

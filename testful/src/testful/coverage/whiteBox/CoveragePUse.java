@@ -18,6 +18,9 @@
 
 package testful.coverage.whiteBox;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -184,4 +187,36 @@ public class CoveragePUse implements CoverageInformation {
 		return sb.toString();
 	}
 
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
+	 */
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeInt(coverage.size());
+		for (PUse c : coverage) {
+			out.writeInt(c.getBranchId());
+
+			ContextualId def = c.getDef();
+			if(def != null) {
+				out.writeBoolean(true);
+				out.writeInt(def.getId());
+				Stack.write(def.getContext(), out);
+			} else {
+				out.writeBoolean(false);
+			}
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
+	 */
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		int size = in.readInt();
+		for (int i = 0; i < size; i++) {
+			int branchId = in.readInt();
+			ContextualId def = in.readBoolean() ? new ContextualId(in.readInt(), Stack.read(in)) : null;
+			coverage.add(new PUse(branchId, def));
+		}
+	}
 }

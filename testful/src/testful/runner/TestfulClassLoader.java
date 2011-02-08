@@ -38,7 +38,8 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 
 	/** for these classes, use always the system classloader */
 	private static final String[] SYSTEM_CLASSES = {
-		"testful.coverage.TrackerDatum"
+		"testful.coverage.TrackerDatum",
+		"testful.model.OperationResult"
 	};
 
 	/** for these classes force to use the testful classloader */

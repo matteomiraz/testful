@@ -18,6 +18,10 @@
 
 package testful.coverage.whiteBox;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -40,6 +44,11 @@ public class CoverageDefExp implements CoverageInformation {
 
 	private final Map<Stack, Set<ContextualId>> defExpo;
 	private int quality;
+
+	@Deprecated
+	public CoverageDefExp() {
+		defExpo = new LinkedHashMap<Stack, Set<ContextualId>>();
+	}
 
 	public CoverageDefExp(Map<Stack, Set<ContextualId>> defExpo) {
 		this.defExpo = defExpo;
@@ -111,5 +120,46 @@ public class CoverageDefExp implements CoverageInformation {
 		}
 
 		return sb.toString();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
+	 */
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeInt(quality);
+		out.writeInt(defExpo.size());
+
+		for (Entry<Stack, Set<ContextualId>> e : defExpo.entrySet()) {
+
+			Stack.write(e.getKey(), out);
+			out.writeInt(e.getValue().size());
+			for (ContextualId v : e.getValue()) {
+				out.writeInt(v.getId());
+				Stack.write(v.getContext(), out);
+			}
+		}
+
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
+	 */
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		quality = in.readInt();
+
+		int size = in.readInt();
+		for (int i = 0; i < size; i++) {
+
+			Stack key = Stack.read(in);
+
+			int valueSize = in.readInt();
+			Set<ContextualId> value = new HashSet<ContextualId>(valueSize*3/2);
+			for (int j = 0; j < valueSize; j++)
+				value.add(new ContextualId(in.readInt(), Stack.read(in)));
+
+			defExpo.put(key, value);
+		}
 	}
 }

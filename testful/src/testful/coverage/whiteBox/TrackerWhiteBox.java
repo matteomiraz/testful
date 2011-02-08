@@ -60,8 +60,8 @@ public class TrackerWhiteBox extends Tracker {
 	public ElementManager<String, CoverageInformation> getCoverage() {
 		ElementManager<String, CoverageInformation> ret = new ElementManager<String, CoverageInformation>();
 
-		ret.put(new CoverageBasicBlocks(CoverageBasicBlocks.KEY, CoverageBasicBlocks.NAME, covBlocks));
-		ret.put(new CoverageBranch(CoverageBranch.KEY, CoverageBranch.NAME, covBranches));
+		ret.put(new CoverageBasicBlocks(covBlocks));
+		ret.put(new CoverageBranch(covBranches));
 		ret.put(new CoverageDataFlow(defUse));
 		ret.put(new CoveragePUse(pUse));
 		ret.put(new CoverageDefExp(defExpo));

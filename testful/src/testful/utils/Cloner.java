@@ -90,6 +90,7 @@ public class Cloner<E extends Serializable> {
 			return (Serializable) oi.readObject();
 		} catch(Exception e) {
 			logger.log(Level.WARNING, e.getMessage() + " (Cloner is loaded by " + Cloner.class.getClassLoader() + ")", e);
+
 		} finally {
 			if(oi != null) try {
 				oi.close();

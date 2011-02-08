@@ -18,6 +18,9 @@
 
 package testful.coverage.fault;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -37,7 +40,8 @@ public class FaultsCoverage implements CoverageInformation {
 	/** only FaultTracker can access directly this field! */
 	public final Set<Fault> faults;
 
-	private FaultsCoverage() {
+	@Deprecated
+	public FaultsCoverage() {
 		faults = new LinkedHashSet<Fault>();
 	}
 
@@ -94,5 +98,25 @@ public class FaultsCoverage implements CoverageInformation {
 			ret.faults.add(b);
 
 		return ret;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
+	 */
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeInt(faults.size());
+		for (Fault f : faults)
+			Fault.write(f, out);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
+	 */
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		int faultSize = in.readInt();
+		for (int i = 0; i < faultSize; i++)
+			faults.add(Fault.read(in));
 	}
 }

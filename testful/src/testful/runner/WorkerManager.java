@@ -288,9 +288,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 		long total = Runtime.getRuntime().totalMemory();
 		long used = total-free;
 
-		sb.append("\n  mem: ")
-		.append(used/(1024*1024)).append("/")
-		.append(max/(1024*1024)).append(" Mb");
+		sb.append("\n  mem: ").append(used/(1024*1024)).append("/").append(max/(1024*1024)).append(" Mb");
 
 		sb.append("; net: ").append(String.format("%.2f", receivedBytes.get()/(1024*1024.0))).append(" Mb in")
 		.append(", ").append(String.format("%.2f", sentBytes.get()/(1024*1024.0))).append(" Mb out");

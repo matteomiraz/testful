@@ -29,38 +29,30 @@ public class CoverageBranch extends BitSetCoverage {
 	public static String KEY = "br";
 	public static String NAME = "Branch Coverage";
 
-	private final String key;
-	private final String name;
+	@Deprecated
+	public CoverageBranch() { }
 
-	private CoverageBranch(String key, String name) {
-		super();
-		this.key = key;
-		this.name = name;
-	}
-
-	CoverageBranch(String key, String name, BitSet coverage) {
+	CoverageBranch(BitSet coverage) {
 		super(coverage);
-		this.key = key;
-		this.name = name;
 	}
 
 	@Override
 	public String getKey() {
-		return key;
+		return KEY;
 	}
 
 	@Override
 	public String getName() {
-		return name;
+		return NAME;
 	}
 
 	@Override
 	public CoverageInformation createEmpty() {
-		return new CoverageBranch(key, name);
+		return new CoverageBranch();
 	}
 
 	@Override
 	public CoverageBranch clone() throws CloneNotSupportedException {
-		return new CoverageBranch(key, name, (BitSet) coverage.clone());
+		return new CoverageBranch((BitSet) coverage.clone());
 	}
 }

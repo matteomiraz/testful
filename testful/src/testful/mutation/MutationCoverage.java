@@ -1,5 +1,8 @@
 package testful.mutation;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -23,7 +26,11 @@ public class MutationCoverage implements CoverageInformation {
 		return NAME;
 	}
 
-	private final Map<String, MutationCoverageSingle> covs = new HashMap<String, MutationCoverageSingle>();
+	private final Map<String, MutationCoverageSingle> covs;
+
+	public MutationCoverage() {
+		covs = new HashMap<String, MutationCoverageSingle>();
+	}
 
 	public void add(String name, MutationCoverageSingle cov) {
 		MutationCoverageSingle add = covs.get(name);
@@ -100,5 +107,35 @@ public class MutationCoverage implements CoverageInformation {
 			ret.covs.put(e.getKey(), e.getValue().clone());
 
 		return ret;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
+	 */
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeShort(covs.size());
+
+		for (Entry<String, MutationCoverageSingle> c : covs.entrySet()) {
+			out.writeUTF(c.getKey());
+			c.getValue().writeExternal(out);
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
+	 */
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		int size = in.readShort();
+
+		for (int i = 0; i < size; i++) {
+
+			String key = in.readUTF();
+			MutationCoverageSingle value = new MutationCoverageSingle();
+			value.readExternal(in);
+
+			covs.put(key, value);
+		}
 	}
 }

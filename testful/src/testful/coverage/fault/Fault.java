@@ -18,6 +18,9 @@
 
 package testful.coverage.fault;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.logging.Logger;
@@ -74,6 +77,19 @@ public class Fault implements Serializable {
 			causeMessage= cause.getMessage();
 			causeExceptionName = cause.getClass().getName();
 		}
+
+		hashCode =
+			31*31*31*Arrays.hashCode(stackTrace) +
+			31*31*exceptionName.hashCode() +
+			31*((causeExceptionName == null) ? 0 : causeExceptionName.hashCode());
+	}
+
+	private Fault(String exceptionName, String message, StackTraceElement[] stackTrace, String causeExceptionName, String causeMessage) {
+		this.exceptionName = exceptionName;
+		this.message = message;
+		this.stackTrace = stackTrace;
+		this.causeExceptionName = causeExceptionName;
+		this.causeMessage = causeMessage;
 
 		hashCode =
 			31*31*31*Arrays.hashCode(stackTrace) +
@@ -248,5 +264,54 @@ public class Fault implements Serializable {
 		} else if (!causeExceptionName.equals(other.causeExceptionName)) return false;
 
 		return true;
+	}
+
+	public static void write(Fault f, ObjectOutput out) throws IOException {
+
+		out.writeUTF(f.exceptionName);
+		out.writeUTF(f.message);
+
+		out.writeShort(f.stackTrace.length);
+		for (StackTraceElement st : f.stackTrace) {
+			out.writeUTF(st.getClassName());
+			out.writeUTF(st.getMethodName());
+			out.writeUTF(st.getFileName());
+			out.writeInt(st.getLineNumber());
+		}
+
+		if(f.causeExceptionName != null) {
+			out.writeBoolean(true);
+			out.writeUTF(f.causeExceptionName);
+
+			if(f.causeMessage != null) {
+				out.writeBoolean(true);
+				out.writeUTF(f.causeMessage);
+			} else {
+				out.writeBoolean(false);
+			}
+		} else {
+			out.writeBoolean(false);
+		}
+	}
+
+	public static Fault read(ObjectInput in) throws IOException {
+		String exceptionName = in.readUTF();
+		String message = in.readUTF();
+
+		short stackTraceLen = in.readShort();
+		StackTraceElement[] stackTrace = new StackTraceElement[stackTraceLen];
+		for (int i = 0; i < stackTraceLen; i++)
+			stackTrace[i] = new StackTraceElement(in.readUTF(), in.readUTF(), in.readUTF(), in.readInt());
+
+		String causeExceptionName = null;
+		String causeMessage = null;
+		if(in.readBoolean()) {
+			causeExceptionName = in.readUTF();
+
+			if(in.readBoolean())
+				causeMessage = in.readUTF();
+		}
+
+		return new Fault(exceptionName, message, stackTrace, causeExceptionName, causeMessage);
 	}
 }

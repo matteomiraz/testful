@@ -18,6 +18,10 @@
 
 package testful.coverage.whiteBox;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 import testful.TestFul;
 import testful.coverage.CoverageInformation;
 
@@ -40,14 +44,20 @@ public class CoverageBranchTarget implements CoverageInformation {
 	private static String NAME = "Distance to branch ";
 	public static String KEY = "tbr";
 
-	private final int branchId;
+	/** the ID of the targeted branch. Do not assign values to this field (it is final) */
+	private int branchId;
 
+	/** whether the target is a p-use or not. Do not assign values to this field (it is final) */
 	private boolean pUse;
 
-	/** the definition to use (null means default) */
-	private final ContextualId defId;
+	/** the definition to use (null means default). Do not assign values to this field (it is final) */
+	private ContextualId defId;
 
+	/** The distance to reach the target */
 	private double distance;
+
+	@Deprecated
+	public CoverageBranchTarget() { }
 
 	public CoverageBranchTarget(int branchId, boolean pUse, ContextualId defId) {
 		this.branchId = branchId;
@@ -108,7 +118,6 @@ public class CoverageBranchTarget implements CoverageInformation {
 		return true;
 	}
 
-
 	@Override
 	public void merge(CoverageInformation other) {
 		if(!other.getKey().equals(getKey())) return;
@@ -134,5 +143,42 @@ public class CoverageBranchTarget implements CoverageInformation {
 	@Override
 	public String toString() {
 		return Double.toString(distance);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
+	 */
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeInt(branchId);
+		out.writeBoolean(pUse);
+		out.writeDouble(distance);
+		if(defId != null) {
+			out.writeBoolean(true);
+			out.writeInt(defId.getId());
+			Stack.write(defId.getContext(), out);
+
+		} else {
+			out.writeBoolean(false);
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
+	 */
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		branchId = in.readInt();
+		pUse = in.readBoolean();
+		distance = in.readDouble();
+
+		// if defId != null
+		if(in.readBoolean()) {
+			int id = in.readInt();
+			Stack context = Stack.read(in);
+			defId = new ContextualId(id, context);
+		} else {
+			defId = null;
+		}
 	}
 }

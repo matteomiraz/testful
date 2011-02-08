@@ -19,12 +19,16 @@
 
 package testful.coverage;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.BitSet;
 
 public abstract class BitSetCoverage implements CoverageInformation {
 	private static final long serialVersionUID = 3484091845044514922L;
 
-	protected final BitSet coverage;
+	/** This field is final (it is not only because the externalizable interface) */
+	protected BitSet coverage;
 
 	protected BitSetCoverage() {
 		coverage = new BitSet();
@@ -79,5 +83,21 @@ public abstract class BitSetCoverage implements CoverageInformation {
 		}
 
 		return sb.toString();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
+	 */
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeObject(coverage);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
+	 */
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		coverage = (BitSet) in.readObject();
 	}
 }

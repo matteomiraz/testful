@@ -18,6 +18,7 @@
 
 package testful.utils;
 
+import java.io.Externalizable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -28,7 +29,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -44,7 +44,7 @@ import java.util.zip.GZIPOutputStream;
  * @param <K> the type of the key
  * @param <T> the type of the element
  */
-public class ElementManager<K, T extends ElementWithKey<K>> implements Iterable<T>, Cloneable, Serializable {
+public class ElementManager<K, T extends ElementWithKey<K>> implements Iterable<T>, Cloneable, Externalizable {
 
 	private static final long serialVersionUID = -4011267075468446650L;
 
@@ -228,6 +228,31 @@ public class ElementManager<K, T extends ElementWithKey<K>> implements Iterable<
 			sb.append("(").append(e.getKey().toString()).append("=").append(e.getValue().toString()).append(")");
 
 		return sb.append("}").toString();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
+	 */
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeInt(map.size());
+
+		for (T v : map.values())
+			out.writeObject(v);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		int size = in.readInt();
+
+		for (int i = 0; i < size; i++) {
+			T v = (T) in.readObject();
+			map.put(v.getKey(), v);
+		}
 	}
 
 	/**

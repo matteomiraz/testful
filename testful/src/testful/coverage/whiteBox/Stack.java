@@ -18,6 +18,9 @@
 
 package testful.coverage.whiteBox;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.util.Arrays;
 
@@ -55,5 +58,29 @@ public final class Stack implements Serializable {
 	@Override
 	public String toString() {
 		return Arrays.toString(stack);
+	}
+
+	public static void write(Stack v, ObjectOutput out) throws IOException {
+
+		if(v != null) {
+			out.writeBoolean(true);
+			out.writeShort(v.stack.length);
+			for (Integer s : v.stack)
+				out.writeInt(s);
+
+		} else {
+			out.writeBoolean(false);
+		}
+	}
+
+	public static Stack read(ObjectInput in) throws IOException {
+		if(!in.readBoolean()) return null;
+
+		short stackLen = in.readShort();
+		Integer[] stack = new Integer[stackLen];
+		for (int i = 0; i < stackLen; i++)
+			stack[i] = in.readInt();
+
+		return new Stack(stack);
 	}
 }
