@@ -134,8 +134,8 @@ implements IUpdate {
 	public SolutionSet<V> execute() throws JMException {
 		SolutionSet<V> population;
 		SolutionSet<V> union;
-		StopWatch timer = StopWatch.getTimer();
 
+		StopWatch timer = StopWatch.getTimer();
 		timer.start("nsga.initialization");
 
 		//Read the parameters
@@ -175,7 +175,7 @@ implements IUpdate {
 			// perform the improvement
 			if(improvement != null && currentGeneration % localSearchPeriod == 0) {
 
-				timer.start("nsga.localSearch");
+				timer.start("nsga.localSearch"); //TODO: analyze this!
 				if(localSearchNum == 0 && improvement instanceof LocalSearchPopulation<?>) {
 					SolutionSet<V> front = new Ranking<V>(population).getSubfront(0);
 					logger.info("Local search on fronteer (" + front.size() + ")");

@@ -19,6 +19,9 @@
 package testful.model;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import testful.TestfulException;
 import testful.coverage.TrackerDatum;
@@ -52,6 +55,60 @@ public class OperationResultExecutionManager extends ExecutionManager<OperationR
 	@Override
 	protected void setup() throws ClassNotFoundException {
 		Test.ensureNoDuplicateOps(executor.getTest());
+	}
+
+	public static Future<Test> executeAsync(DataFinder finder, final Test test, boolean reloadClasses, TrackerDatum ... data) {
+
+		Context<OperationResult[], OperationResultExecutionManager> ctx =
+			new Context<OperationResult[], OperationResultExecutionManager>(OperationResultExecutionManager.class, finder, ReflectionExecutor.class, test, false, data);
+
+		ctx.setReloadClasses(reloadClasses);
+
+		final Future<OperationResult[]> infosFuture = RunnerPool.getRunnerPool().execute(ctx);
+		return new Future<Test>() {
+
+			@Override
+			public boolean cancel(boolean mayInterruptIfRunning) {
+				return infosFuture.cancel(mayInterruptIfRunning);
+			}
+
+			@Override
+			public boolean isCancelled() {
+				return infosFuture.isCancelled();
+			}
+
+			@Override
+			public boolean isDone() {
+				return infosFuture.isDone();
+			}
+
+			@Override
+			public Test get() throws InterruptedException, ExecutionException {
+
+				OperationResult[] infos = infosFuture.get();
+
+				Operation[] ops = test.getTest();
+				for (int i = 0; i < ops.length; i++)
+					if(infos[i] != null)
+						ops[i].setInfo(infos[i]);
+
+				return test;
+			}
+
+			@Override
+			public Test get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+				OperationResult[] infos = infosFuture.get(timeout, unit);
+
+				Operation[] ops = test.getTest();
+				for (int i = 0; i < ops.length; i++)
+					if(infos[i] != null)
+						ops[i].setInfo(infos[i]);
+
+				return test;
+			}
+
+		};
+
 	}
 
 	public static void execute(DataFinder finder, Test test, boolean reloadClasses, TrackerDatum ... data) throws InterruptedException, ExecutionException {

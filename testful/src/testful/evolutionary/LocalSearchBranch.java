@@ -20,6 +20,7 @@ package testful.evolutionary;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
@@ -69,6 +70,8 @@ import testful.coverage.whiteBox.Value;
 import testful.model.AssignPrimitive;
 import testful.model.Clazz;
 import testful.model.Operation;
+import testful.model.OperationResult;
+import testful.model.OperationResultExecutionManager;
 import testful.model.PrimitiveClazz;
 import testful.model.Test;
 import testful.model.TestCoverage;
@@ -76,6 +79,7 @@ import testful.model.transformation.SimplifierDynamic;
 import testful.model.transformation.Splitter;
 import testful.utils.ElementManager;
 import testful.utils.ElementWithKey;
+import testful.utils.StopWatchNested;
 import ec.util.MersenneTwisterFast;
 
 /**
@@ -92,7 +96,6 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 	private static final Logger logger = Logger.getLogger("testful.evolutionary.localSearch");
 	private static final boolean LOG_FINE = logger.isLoggable(Level.FINE);
 	private static final boolean LOG_FINER = logger.isLoggable(Level.FINER);
-	private static final boolean LOG_FINEST = logger.isLoggable(Level.FINEST);
 
 	private static final int ITERATIONS = 1000;
 
@@ -172,68 +175,105 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 		this.probRemove = probRemove;
 	}
 
+	StopWatchNested t_ls = StopWatchNested.getRootTimer("ls");
+	StopWatchNested t_ep = t_ls.getSubTimer("ls.evalParts");
+	StopWatchNested t_gt = t_ls.getSubTimer("ls.getTargets");
+	StopWatchNested t_gb = t_ls.getSubTimer("ls.getBestTarget");
+	StopWatchNested t_hc = t_ls.getSubTimer("ls.hillClimb");
+	StopWatchNested t_ret = t_ls.getSubTimer("ls.return");
+
 	@Override
 	public Solution<Operation> execute(Solution<Operation> solution) throws JMException {
+		t_ls.start();
 		try {
-			Collection<TestCoverage> tests = evalParts(solution);
+			t_ep.start();
+			@SuppressWarnings("unchecked")
+			Collection<TestCoverage> tests = evalParts(Arrays.asList(solution));
+			t_ep.stop();
 
+			t_gt.start();
 			Set<TestWithScore> testScore = getTargets(tests);
+			t_gt.stop();
 			if(LOG_FINER) logger.finer("Targets: " + testScore);
 
+			t_gb.start();
 			TestWithScore test = getBest(testScore);
+			t_gb.stop();
 			if(test == null) return null;
 
+			t_hc.start();
 			List<Operation> result = hillClimb(test);
+			t_hc.stop();
 			if(result == null) return null;
 
+			t_ret.start();
 			for(Operation op : result)
 				solution.getDecisionVariables().variables_.add(op);
+			t_ret.stop();
 
 			return solution;
 
 
 		} catch(Throwable e) {
 			throw new JMException(e);
+		} finally {
+			t_ls.stop();
 		}
 	}
 
 	@Override
 	public SolutionSet<Operation> execute(SolutionSet<Operation> solutionSet) throws JMException {
+		t_ls.start();
 		try {
 			Set<TestCoverage> tests = new LinkedHashSet<TestCoverage>();
-			for(Solution<Operation> solution : solutionSet)
-				tests.addAll(evalParts(solution));
 
+			t_ep.start();
+			tests = evalParts(solutionSet);
+			t_ep.stop();
+
+			t_gt.start();
 			Set<TestWithScore> testScore = getTargets(tests);
+			t_gt.stop();
+
 			if(LOG_FINER) logger.finer("Targets: " + testScore);
 
+			t_gb.start();
 			TestWithScore test = getBest(testScore);
+			t_gb.stop();
 			if(test == null) return null;
 
+			t_hc.start();
 			List<Operation> result = hillClimb(test);
+			t_hc.stop();
 			if(result == null) return null;
 
+			t_ret.start();
 			SolutionSet<Operation> ret = new SolutionSet<Operation>(solutionSet.size());
 			for(Solution<Operation> s : solutionSet) {
 				for(Operation op : result) s.getDecisionVariables().variables_.add(op);
 				ret.add(s);
 			}
+			t_ret.stop();
 
 			return ret;
 
 		} catch(Throwable e) {
 			throw new JMException(e);
+		} finally {
+			t_ls.stop();
 		}
 	}
 
 	private List<Operation> hillClimb(TestWithScore test) throws InterruptedException, ExecutionException {
-		final int localSearchId = this.localSearchId.incrementAndGet();
+
+		logger.info("Selected target: " + test.target + " (score: " + test.score + " length: " + test.test.getTest().length + ")");
 
 		TrackerDatum[] data = new TrackerDatum[]{ test.target };
+		final int localSearchId = this.localSearchId.incrementAndGet();
+		Integer nAttempts = attempts.containsKey(test.target) ? attempts.get(test.target) : 0;
 
 		final ElementManager<String, CoverageInformation> covs = problem.evaluate(test.test, data).get();
 		CoverageBranchTarget covCondOrig = (CoverageBranchTarget)covs.get(CoverageBranchTarget.KEY);
-
 
 		final boolean branchFeasible;
 		{
@@ -242,15 +282,10 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			else branchFeasible = checkFeasibility(test.test, test.target, duCov) >= 0;
 		}
 
-		logger.info("Selected target: " + test.target + " (score: " + test.score + " length: " + test.test.getTest().length + ")");
 		if(LOG_FINE) logger.fine("coverageLocalSearch " + localSearchId + " target=" + test.target + ";iter=" + 0 + ";cov=" + covCondOrig.getQuality() + ";distance=" + covCondOrig + ";len=" + test.test.getTest().length + ";feasible=" + (branchFeasible ? "true" : "n/a"));
 
 		List<Operation> opsOrig = new LinkedList<Operation>();
-		for(Operation op : test.test.getTest())
-			opsOrig.add(op);
-
-		Integer nAttempts = attempts.get(test.target);
-		if(nAttempts == null) nAttempts = 0;
+		for(Operation op : test.test.getTest()) opsOrig.add(op);
 
 		int pos = 0; // the position to target
 		int ttl = 0; // how many times the position can be targeted again
@@ -270,7 +305,6 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			CoverageBranchTarget covCond = (CoverageBranchTarget) cov.get(CoverageBranchTarget.KEY);
 			if(covCond == null) covCond = new CoverageBranchTarget(test.target.getBranchId(), test.target.isPUse(), test.target.getDefinitionId());
 
-
 			final boolean stillFeasible;
 			if(branchFeasible) {
 				CoverageDataFlow duCov = (CoverageDataFlow) test.test.getCoverage().get(CoverageDataFlow.KEY);
@@ -279,29 +313,6 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 				stillFeasible = true;
 
 			if(LOG_FINE) logger.fine("coverageLocalSearch " + localSearchId + " target=" + test.target + ";iter=" + (i+1) + ";cov=" + covCond.getQuality() + ";distance=" + covCond + ";len=" + ops.size() + ";feasible=" + (branchFeasible ? stillFeasible : "n/a"));
-
-			if(LOG_FINEST) {
-				StringBuilder sb = new StringBuilder();
-
-				if(covCond.getQuality() < covCondOrig.getQuality()) sb.append(" ");
-				else if(covCond.getQuality() == covCondOrig.getQuality()) {
-					if(ops.size() >= opsOrig.size()) sb.append(" ");
-					else sb.append("S");
-				} else sb.append("I");
-
-				if(canContinue) sb.append("C");
-				else sb.append(" ");
-
-				sb.append(" p:" + pos + " #" + ttl + " q:" + covCond.getQuality() + " oq:" + covCondOrig.getQuality() + " d:" + covCond + " od:" + covCondOrig).append("\n");
-
-				sb.append("Origiginal Test:\n");
-				for (Operation o : opsOrig)
-					sb.append("  " + o).append("\n");
-				sb.append("Modified Test:\n");
-				for (Operation o : ops)
-					sb.append("  " + o).append("\n");
-				logger.finest(sb.append("---").toString());
-			}
 
 			if(!stillFeasible) continue;
 
@@ -616,10 +627,30 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 	}
 
-	private Set<TestCoverage> evalParts(Solution<Operation> solution) throws InterruptedException, ExecutionException {
+	/**
+	 * Given a set of tests, this function returns an equivalent set of simpler tests
+	 * (the set is bigger than the original one, but each test is smaller).
+	 * Each returned test is associated with the coverage information.
+	 * @param solutionSet the set of tests to work on
+	 * @return a set of simple tests, with their coverage information
+	 * @throws InterruptedException if it is interrupted
+	 * @throws ExecutionException if something goes bad during the test execution
+	 */
+	private Set<TestCoverage> evalParts(Iterable<Solution<Operation>> solutionSet) throws InterruptedException, ExecutionException {
 
-		List<Test> parts = Splitter.split(true,
-				SimplifierDynamic.singleton.perform(problem.getFinder(), problem.getTest(solution.getDecisionVariables().variables_), problem.isReloadClasses()));
+		List<Future<Test>> opResultFuture = new LinkedList<Future<Test>>();
+		for (Solution<Operation> solution : solutionSet) {
+			Test t = problem.getTest(solution.getDecisionVariables().variables_);
+			OperationResult.insert(t.getTest());
+			opResultFuture.add(OperationResultExecutionManager.executeAsync(problem.getFinder(), t, problem.isReloadClasses(), problem.getData()));
+		}
+
+		List<Test> parts = new ArrayList<Test>();
+		for (Future<Test> opResult : opResultFuture) {
+			Test simpl = SimplifierDynamic.singleton.perform(opResult.get());
+			OperationResult.remove(simpl.getTest());
+			parts.addAll(Splitter.split(true, simpl));
+		}
 
 		List<Future<ElementManager<String, CoverageInformation>>> futures = new ArrayList<Future<ElementManager<String, CoverageInformation>>>(parts.size());
 		for(Test t : parts) futures.add(problem.evaluate(t));

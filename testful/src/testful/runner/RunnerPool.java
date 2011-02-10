@@ -251,7 +251,7 @@ public class RunnerPool implements IRunner, ITestRepository {
 
 		@Override
 		public boolean cancel(boolean mayInterruptIfRunning) {
-			throw new Error("Cannot cancel tasks");
+			throw new UnsupportedOperationException("Cannot cancel tasks");
 		}
 
 		@Override
