@@ -38,13 +38,14 @@ import testful.ConfigCut;
 import testful.IConfigCut;
 import testful.IConfigRunner;
 import testful.TestFul;
-import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
+import testful.coverage.CoverageTestExecutor;
 import testful.coverage.TrackerDatum;
 import testful.model.OptimalTestCreator;
 import testful.model.Test;
 import testful.model.TestCoverage;
 import testful.model.TestReader;
+import testful.model.executor.TestExecutorInput;
 import testful.model.transformation.RemoveUselessDefs;
 import testful.model.transformation.SimplifierDynamic;
 import testful.model.transformation.SimplifierStatic;
@@ -108,7 +109,8 @@ public class TestSuiteReducer {
 
 	private TestCoverage getCoverage(Test t) throws InterruptedException, ExecutionException {
 
-		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = CoverageExecutionManager.getContext(finder, t, reloadClasses, data);
+		Context<TestExecutorInput, ElementManager<String, CoverageInformation>, CoverageTestExecutor> ctx =
+			CoverageTestExecutor.getContext(finder, t, reloadClasses, data);
 		ctx.setReloadClasses(reloadClasses);
 		Future<ElementManager<String, CoverageInformation>> f = RunnerPool.getRunnerPool().execute(ctx);
 

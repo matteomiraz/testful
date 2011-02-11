@@ -18,30 +18,28 @@
 
 package testful.runner;
 
-import testful.model.Operation;
+import java.io.Serializable;
 
 /**
- * Interface for executing tests.
+ * Interface to execution a computation with some inputs and collect the result.
+ * @param <I> The type of information required by the execution manager
+ * @param <R> The result of the execution manager
  * @author matteo
  */
-public interface IExecutor {
-
-
-	/**
-	 * really execute the test, measuring the execution time.
-	 * @param stopOnBug specify if the execution should stop at the first bug
-	 *          revealed
-	 * @return the number of faults
-	 * @throws ClassNotFoundException if some class has not been found
-	 */
-	int execute(boolean stopOnBug) throws ClassNotFoundException;
+public interface IExecutor<I extends Serializable, R extends Serializable> {
 
 	/**
-	 * Returns the operations of the test.
-	 * If this method is invoked after the execution of the test,
-	 * each operation has the proper OperationInformation.
-	 * @return the operations of the test.
+	 * Provides the input to use for the computation
+	 * @param input the input to use for the computation
 	 */
-	Operation[] getTest();
+	void setInput(I input);
+
+	/**
+	 * Execute the computation and returns the result.
+	 * Before executing this method, method {@link IExecutor#setInput(Serializable)} must be called.
+	 * @return the desired result
+	 * @throws Exception if something goes wrong
+	 */
+	R execute() throws Exception;
 
 }

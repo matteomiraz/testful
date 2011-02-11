@@ -30,7 +30,7 @@ public interface ITestRepository extends Remote {
 
 	public String getName() throws RemoteException;
 
-	public Context<?, ?> getTest() throws RemoteException;
+	public <I extends Serializable, R extends Serializable> Context<I, R, ? extends IExecutor<I,R>> getTest() throws RemoteException;
 
 	public void putResult(String key, Serializable result) throws RemoteException;
 

@@ -108,6 +108,15 @@ public class Test implements Serializable {
 		}
 	}
 
+	@Override
+	public Test clone() {
+		Operation[] ops = new Operation[test.length];
+		for (int i = 0; i < ops.length; i++)
+			ops[i] = test[i].clone();
+
+		return new Test(cluster, refFactory, ops);
+	}
+
 	/**
 	 * Ensures that there are no duplicate operations.<br>
 	 * after this method holds: (\forall int i; 0 <= i && i < test.length;

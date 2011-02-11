@@ -24,10 +24,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Future;
 
-import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
+import testful.coverage.CoverageTestExecutor;
 import testful.model.Operation;
 import testful.model.Test;
+import testful.model.executor.TestExecutorInput;
 import testful.runner.Context;
 import testful.utils.ElementManager;
 import ec.util.MersenneTwisterFast;
@@ -151,7 +152,7 @@ public abstract class AutoTestCase extends GenericTestCase {
 
 			List<Future<ElementManager<String, CoverageInformation>>> futures = new ArrayList<Future<ElementManager<String,CoverageInformation>>>();
 			for(Test r : res) {
-				Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = CoverageExecutionManager.getContext(getFinder(), r, true);
+				Context<TestExecutorInput, ElementManager<String, CoverageInformation>, CoverageTestExecutor> ctx = CoverageTestExecutor.getContext(getFinder(), r, true);
 				futures.add(getExec().execute(ctx));
 			}
 			for(Future<ElementManager<String, CoverageInformation>> future : futures) {

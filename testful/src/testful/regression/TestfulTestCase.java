@@ -35,15 +35,14 @@ import org.kohsuke.args4j.Option;
 import testful.ConfigProject;
 import testful.IConfigProject;
 import testful.TestFul;
-import testful.TestfulException;
 import testful.model.TestReader;
-import testful.model.executor.ReflectionExecutor;
+import testful.model.executor.TestExecutor;
+import testful.model.executor.TestExecutorInput;
 import testful.runner.ClassType;
 import testful.runner.Context;
 import testful.runner.DataFinder;
 import testful.runner.DataFinderCaching;
 import testful.runner.DataFinderImpl;
-import testful.runner.ExecutionManager;
 import testful.runner.RunnerPool;
 
 /**
@@ -77,11 +76,7 @@ public class TestfulTestCase extends TestCase {
 		tests = config.tests;
 	}
 
-	public static class FaultExecutionManager extends ExecutionManager<Boolean> {
-
-		public FaultExecutionManager(byte[] executorSer, byte[] trackerDataSer, boolean reloadClasses) throws TestfulException {
-			super(executorSer, trackerDataSer, reloadClasses);
-		}
+	public static class FaultTestExecutor extends TestExecutor<Boolean> {
 
 		/* (non-Javadoc)
 		 * @see testful.runner.ExecutionManager#setup()
@@ -112,7 +107,10 @@ public class TestfulTestCase extends TestCase {
 
 				// OperationResult.Verifier.insertOperationResultVerifier(test.getTest());
 
-				Context<Boolean, FaultExecutionManager> ctx = new Context<Boolean, FaultExecutionManager>(FaultExecutionManager.class, finder, ReflectionExecutor.class, test, true);
+				Context<TestExecutorInput, Boolean, FaultTestExecutor> ctx =
+					new Context<TestExecutorInput, Boolean, FaultTestExecutor>(
+							FaultTestExecutor.class, finder, new TestExecutorInput(test, true));
+
 				ctx.setReloadClasses(true);
 
 				Future<Boolean> r = RunnerPool.getRunnerPool().execute(ctx);

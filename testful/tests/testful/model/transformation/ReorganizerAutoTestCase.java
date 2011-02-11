@@ -23,7 +23,7 @@ import java.util.List;
 
 import testful.AutoTestCase;
 import testful.model.OperationResult;
-import testful.model.OperationResultExecutionManager;
+import testful.model.OperationResultTestExecutor;
 import testful.model.Test;
 
 /**
@@ -34,7 +34,7 @@ public class ReorganizerAutoTestCase extends AutoTestCase {
 	@Override
 	protected List<Test> perform(Test test) throws Exception {
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 		test = Reorganizer.singleton.perform(test);
 
 		return Arrays.asList(test);

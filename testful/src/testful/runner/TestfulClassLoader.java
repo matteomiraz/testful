@@ -39,7 +39,7 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 	/** for these classes, use always the system class loader */
 	private static final String[] SYSTEM_CLASSES = {
 		"testful.coverage.TrackerDatum",
-		"testful.model.OperationResult"
+		"testful.model.OperationResult",
 	};
 
 	/** for these classes force the use of the TestFul class loader */
@@ -52,25 +52,25 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 		"testful.coverage.whiteBox.TrackerWhiteBox",
 
 		// Execution Managers
-		"testful.runner.ExecutionManager",
-		"testful.coverage.CoverageExecutionManager",
-		"testful.model.OperationResultExecutionManager",
-		"testful.mutation.MutationExecutionManager",
-		"testful.mutation.MutationExecutionManagerSingle",
-		"testful.regression.TestfulTestCase$FaultExecutionManager",
+		"testful.runner.Executor",
+		"testful.mutation.MutationTestExecutor",
+		"testful.model.executor.TestExecutor",
+		"testful.coverage.CoverageTestExecutor",
+		"testful.model.OperationResultTestExecutor",
+		"testful.regression.TestfulTestCase$FaultTestExecutor",
+
+		// Test Executor
+		"testful.model.executor.ReflectionExecutor",
 
 		// Utilities
-		"testful.model.ExecutorSerializer",
 		"testful.model.ClassRegistry",
 		"testful.runner.Executor",
 		"testful.runner.ObjectRegistry",
-		"testful.utils.Cloner"
+		"testful.utils.Cloner",
 	};
 
-	/** for these packages force to use the testful classloader */
+	/** for these packages force to use the TestFul class loader */
 	private static final String[] TESTFUL_PACKAGES = {
-		"testful.model.executor",
-		"testful.model.OperationResult",
 		"org.apache.commons.jexl"
 	};
 

@@ -23,28 +23,23 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import testful.TestfulException;
 import testful.coverage.TrackerDatum;
-import testful.model.executor.ReflectionExecutor;
+import testful.model.executor.TestExecutor;
+import testful.model.executor.TestExecutorInput;
 import testful.runner.Context;
 import testful.runner.DataFinder;
-import testful.runner.ExecutionManager;
 import testful.runner.RunnerPool;
 
 /**
  * This class executes a test and returns the OperationInformation.
  * @author matteo
  */
-public class OperationResultExecutionManager extends ExecutionManager<OperationResult[]> {
-
-	public OperationResultExecutionManager(byte[] executorSer, byte[] trackerDataSer, boolean reloadClasses) throws TestfulException {
-		super(executorSer, trackerDataSer, reloadClasses);
-	}
+public class OperationResultTestExecutor extends TestExecutor<OperationResult[]> {
 
 	@Override
 	protected OperationResult[] getResult() {
 
-		Operation[] ops = executor.getTest();
+		Operation[] ops = getInput().getTest().getTest();
 		OperationResult[] ret = new OperationResult[ops.length];
 		for (int i = 0; i < ops.length; i++)
 			ret[i] = (OperationResult) ops[i].getInfo(OperationResult.KEY);
@@ -54,13 +49,15 @@ public class OperationResultExecutionManager extends ExecutionManager<OperationR
 
 	@Override
 	protected void setup() throws ClassNotFoundException {
-		Test.ensureNoDuplicateOps(executor.getTest());
 	}
 
-	public static Future<Test> executeAsync(DataFinder finder, final Test test, boolean reloadClasses, TrackerDatum ... data) {
+	public static Future<Test> executeAsync(DataFinder finder, Test origTest, boolean reloadClasses, TrackerDatum ... data) {
 
-		Context<OperationResult[], OperationResultExecutionManager> ctx =
-			new Context<OperationResult[], OperationResultExecutionManager>(OperationResultExecutionManager.class, finder, ReflectionExecutor.class, test, false, data);
+		final Test test = origTest.clone();
+
+		Context<TestExecutorInput, OperationResult[], OperationResultTestExecutor> ctx =
+			new Context<TestExecutorInput, OperationResult[], OperationResultTestExecutor>(
+					OperationResultTestExecutor.class, finder, new TestExecutorInput(test, false, data));
 
 		ctx.setReloadClasses(reloadClasses);
 
@@ -113,8 +110,9 @@ public class OperationResultExecutionManager extends ExecutionManager<OperationR
 
 	public static void execute(DataFinder finder, Test test, boolean reloadClasses, TrackerDatum ... data) throws InterruptedException, ExecutionException {
 
-		Context<OperationResult[], OperationResultExecutionManager> ctx =
-			new Context<OperationResult[], OperationResultExecutionManager>(OperationResultExecutionManager.class, finder, ReflectionExecutor.class, test, false, data);
+		Context<TestExecutorInput, OperationResult[], OperationResultTestExecutor> ctx =
+			new Context<TestExecutorInput, OperationResult[], OperationResultTestExecutor>(
+					OperationResultTestExecutor.class, finder, new TestExecutorInput(test, false, data));
 
 		ctx.setReloadClasses(reloadClasses);
 

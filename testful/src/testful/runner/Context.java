@@ -19,66 +19,53 @@
 package testful.runner;
 
 import java.io.Serializable;
-import java.lang.reflect.Constructor;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
-
-import testful.coverage.TrackerDatum;
-import testful.model.ExecutorSerializer;
-import testful.model.Test;
-import testful.utils.Cloner;
-import testful.utils.StopWatch;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This class is able to set-up the evaluation context of the test (i.e. the
  * Execution Manager).<br/>
  * @author matteo
+ * @param <I> the type of the <b>I</b>nput
  * @param <R> the type of the <b>R</b>esult
  * @param <M> the Execution <b>M</b>anager
  */
-public class Context<R extends Serializable, M extends IExecutionManager<R>> implements Serializable {
+public class Context<I extends Serializable, R extends Serializable, M extends IExecutor<I,R>> implements Serializable {
+
+	private static Logger logger = Logger.getLogger("testful.executor");
 
 	private static final long serialVersionUID = 1615872139934821021L;
-
-	private static final StopWatch timer = StopWatch.getTimer();
 
 	private final static String ID_PREFIX = UUID.randomUUID().toString();
 	private final static AtomicLong ID_SUFFIX = new AtomicLong(0);
 	final String id;
 
 	private final DataFinder finder;
+
+	/** True if the function must be executed in a new class loader */
 	private boolean reloadClasses = false;
 
-	public final boolean stopOnBug;
+	/** The name of the execution manager to use */
 	private final String execManager;
 
-	/** contains a compressed serialized array of Executor */
-	private final byte[] executorSer;
-
-	/** contains a compressed serialized array of TrackerDatum */
-	private final byte[] trackerDataSer;
+	/** The input */
+	private final I input;
 
 	/**
 	 * Create a new evaluation context
 	 * @param execManager the execution manager to use
 	 * @param finder the data finder
-	 * @param executorType the type of the executor to use
-	 * @param test the test to execute
-	 * @param data the tracker data
+	 * @param input the input of the function
 	 */
-	public Context(Class<M> execManager, DataFinder finder, Class<? extends IExecutor> executorType, Test test, boolean stopOnBug, TrackerDatum ... data) {
-
-		timer.start("exec.0.serialization");
+	public Context(Class<M> execManager, DataFinder finder, I input) {
 
 		this.id = ID_PREFIX + ":" + ID_SUFFIX.incrementAndGet();
 
 		this.finder = finder;
 		this.execManager = execManager.getName();
-		this.executorSer = ExecutorSerializer.serialize(finder, executorType, test);
-		this.trackerDataSer = Cloner.serializeWithCache(data, false);
-		this.stopOnBug = stopOnBug;
-
-		timer.stop(Integer.toString(test.getTest().length));
+		this.input = input;
 	}
 
 	public boolean isReloadClasses() {
@@ -93,26 +80,24 @@ public class Context<R extends Serializable, M extends IExecutionManager<R>> imp
 		this.reloadClasses = reloadClasses;
 	}
 
-	public boolean isStopOnBug() {
-		return stopOnBug;
-	}
-
 	public DataFinder getFinder() {
 		return finder;
 	}
 
-	public int getSize() {
-		return executorSer.length + trackerDataSer.length;
-	}
-
 	@SuppressWarnings("unchecked")
-	public IExecutionManager<R> getExecManager(TestfulClassLoader loader) throws ClassNotFoundException {
+	public R execute(TestfulClassLoader loader) throws Exception {
 		try {
-			Class<? extends IExecutionManager<R>> c = (Class<? extends IExecutionManager<R>>) loader.loadClass(execManager);
-			Constructor<? extends IExecutionManager<R>> cns = c.getConstructor(new Class<?>[] { byte[].class, byte[].class, boolean.class});
-			return cns.newInstance(executorSer, trackerDataSer, reloadClasses);
+
+			Class<? extends IExecutor<I,R>> executorClass = (Class<? extends IExecutor<I,R>>) loader.loadClass(execManager);
+			IExecutor<I,R> executor = executorClass.newInstance();
+
+			executor.setInput(input);
+			R result = executor.execute();
+
+			return result;
 		} catch(Exception e) {
-			throw new ClassNotFoundException("Cannot create the execution manager", e);
+			logger.log(Level.FINER, "Exception in Context.execute: " + e.getMessage(), e);
+			throw e;
 		}
 	}
 }

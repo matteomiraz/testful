@@ -29,7 +29,7 @@ import testful.model.CreateObject;
 import testful.model.Invoke;
 import testful.model.Operation;
 import testful.model.OperationResult;
-import testful.model.OperationResultExecutionManager;
+import testful.model.OperationResultTestExecutor;
 import testful.model.ResetRepository;
 import testful.model.Test;
 import testful.runner.DataFinder;
@@ -78,7 +78,7 @@ public class SimplifierDynamic implements TestTransformation {
 		Operation[] ops = Arrays.copyOf(orig.getTest(), orig.getTest().length);
 
 		OperationResult.insert(ops);
-		OperationResultExecutionManager.execute(finder, new Test(orig.getCluster(), orig.getReferenceFactory(), ops), reloadClasses);
+		OperationResultTestExecutor.execute(finder, new Test(orig.getCluster(), orig.getReferenceFactory(), ops), reloadClasses);
 
 		ops = perform(ops);
 

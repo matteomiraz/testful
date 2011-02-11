@@ -56,7 +56,7 @@ public class Worker extends Thread {
 
 		try {
 			while(true) {
-				Context<?, ?> ctx = workerManager.getTest();
+				Context<?,?,?> ctx = workerManager.getTest();
 
 				t_run.start();
 
@@ -72,8 +72,7 @@ public class Worker extends Thread {
 				t_eval.start();
 				try {
 					if(LOG_FINER) logger.finer("Worker " + getName() + " is evaluating " + ctx.id);
-					IExecutionManager<?> execManager = ctx.getExecManager(cl);
-					Serializable result = execManager.execute(ctx.stopOnBug);
+					Serializable result = ctx.execute(cl);
 					t_eval.stop();
 					t_resOk.start();
 					workerManager.putResult(ctx, result, cl);

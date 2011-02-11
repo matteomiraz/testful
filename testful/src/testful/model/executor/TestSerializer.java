@@ -16,47 +16,117 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package testful.model;
+package testful.model.executor;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.lang.reflect.Constructor;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.TestFul;
-import testful.runner.DataFinder;
-import testful.runner.IExecutor;
+import testful.model.AssignConstant;
+import testful.model.AssignPrimitive;
+import testful.model.Clazz;
+import testful.model.Constructorz;
+import testful.model.CreateObject;
+import testful.model.Invoke;
+import testful.model.Methodz;
+import testful.model.Operation;
+import testful.model.OperationResult;
+import testful.model.Reference;
+import testful.model.ReferenceFactory;
+import testful.model.ResetRepository;
+import testful.model.StaticValue;
+import testful.model.Test;
+import testful.model.TestCluster;
 import testful.runner.ObjectRegistry;
 import testful.runner.ObjectType;
-import testful.runner.TestfulClassLoader;
 
 /**
- * Efficiently serializes and de-serializes Executors
+ * Efficiently serializes and de-serializes Tests
  * @author matteo
  */
-public class ExecutorSerializer {
+public class TestSerializer implements Externalizable {
 
 	private static final Logger logger = Logger.getLogger("testful.runner");
 
-	// checks the System property of the current JVM
-	private static final boolean DISCOVER_FAULTS = TestFul.getProperty(TestFul.PROPERTY_FAULT_DETECT, true);
+	private transient Test   test;
+	private transient byte[] serialized;
 
-	public static <T extends IExecutor> byte[] serialize(DataFinder finder, Class<T> executor, Test test) {
+	private transient ObjectRegistry registry;
+
+	@Deprecated
+	public TestSerializer() { }
+
+	public TestSerializer(Test test) {
+		this.test = test;
+	}
+
+	/**
+	 * Sets the ObjectRegistry to use during the (de)serialization.
+	 * @param registry uses this ObjectRegistry during the (de)serialization
+	 */
+	public void setObjectRegistry(ObjectRegistry registry) {
+		this.registry = registry;
+	}
+
+	/**
+	 * Returns the test
+	 * @return the test
+	 */
+	public Test getTest() {
+		if(test == null) {
+			test = deserialize(registry, serialized);
+		}
+
+		return test;
+	}
+
+	// ---------------------------------- serialize ----------------------------------
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
+	 */
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+
+		// serialized.length {serialized}
+
+		if(serialized == null) {
+			if(TestFul.DEBUG) {
+				if(test == null) TestFul.debug("The test to serialize is missing");
+				if(registry == null) TestFul.debug("The object registry has not been set");
+			}
+
+			serialized = serialize(registry, test);
+		}
+
+		out.writeInt(serialized.length);
+		out.write(serialized);
+
+	}
+
+	public static byte[] serialize(ObjectRegistry registry, Test test) {
 		try {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			ObjectOutputStream oo = new ObjectOutputStream(baos);
 
-			oo.writeUTF(executor.getName());
+			//			// checks the System property of the current JVM
+			//			private static final boolean DISCOVER_FAULTS = TestFul.getProperty(TestFul.PROPERTY_FAULT_DETECT, true);
+			//			oo.writeUTF(executor.getName());
+			//			oo.writeBoolean(DISCOVER_FAULTS);
 
-			oo.writeBoolean(DISCOVER_FAULTS);
-
-			String clusterID = ObjectType.contains(finder, test.getCluster());
+			String clusterID = ObjectType.contains(registry, test.getCluster());
 
 			// perform the standard serialization
 			if(clusterID == null) {
@@ -69,17 +139,12 @@ public class ExecutorSerializer {
 				oo.writeBoolean(true);
 				oo.writeUTF(clusterID);
 
-				// write the references: refs.length { ref.class.id, ref.pos }
-				Reference[] refs = test.getReferenceFactory().getReferences();
-				oo.writeInt(refs.length);
-				for (int i = 0; i < refs.length; i++) {
-					Reference ref = refs[i];
-
-					oo.writeInt(ref.getClazz().getId());
-					oo.writeInt(ref.getPos());
-
-					if(TestFul.DEBUG && ref.getId() != i)
-						TestFul.debug(new Exception("Reference id is not its ordinal position in the 'referenceFactory.getReferences()' array"));
+				// write the references: num.type.refs { ref.class.id, num.refs }
+				Map<Clazz, Integer> refNum = test.getReferenceFactory().getRefNum();
+				oo.writeInt(refNum.size());
+				for (Entry<Clazz, Integer> ref : refNum.entrySet()) {
+					oo.writeInt(ref.getKey().getId());
+					oo.writeInt(ref.getValue());
 				}
 
 				// write the test: test.length { op.type [op-specific data] }
@@ -142,7 +207,6 @@ public class ExecutorSerializer {
 			return new byte[0];
 		}
 	}
-
 	private static void writePrimitive(ObjectOutputStream oo, Serializable value) throws IOException {
 
 		// isNull [ type value ]
@@ -163,49 +227,50 @@ public class ExecutorSerializer {
 			else { oo.writeShort(-1); logger.warning("Unexpected primitive: " + value); }
 		}
 	}
+	private static void writeOpInfo(ObjectOutputStream oo, Operation op) throws IOException {
 
-	private static Serializable readPrimitive(ObjectInputStream oi) throws IOException {
+		OperationResult or = (OperationResult) op.getInfo(OperationResult.KEY);
 
-		// isNull [ type value ]
-
-		boolean isNull = oi.readBoolean();
-		if(isNull) return null;
-
-		final Serializable ret;
-		short type = oi.readShort();
-		switch(type) {
-		case 0: ret = oi.readBoolean(); break;
-		case 1: ret = oi.readByte(); break;
-		case 2: ret = oi.readChar(); break;
-		case 3: ret = oi.readDouble(); break;
-		case 4: ret = oi.readFloat(); break;
-		case 5: ret = oi.readInt(); break;
-		case 6: ret = oi.readLong(); break;
-		case 7: ret = oi.readShort(); break;
-		case 8: ret = oi.readUTF(); break;
-		default: logger.warning("Unexpected serialized primitive type: " + type); ret = null;
+		// isOpResult [ isVerifier [ verifier ] ]
+		if(or == null) oo.writeBoolean(false);
+		else {
+			oo.writeBoolean(true);
+			if(or instanceof OperationResult.Verifier) {
+				oo.writeBoolean(true);
+				oo.writeObject(or);
+			} else {
+				oo.writeBoolean(false);
+			}
 		}
-
-		return ret;
 	}
 
-	public static IExecutor deserialize(byte[] serialized) {
+	// --------------------------------- deserialize ---------------------------------
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
+	 */
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+
+		int len = in.readInt();
+		serialized = new byte[len];
+
+		in.readFully(serialized);
+	}
+
+	public static Test deserialize(ObjectRegistry registry, byte[] serialized) {
 
 		ObjectInputStream oi = null;
 		try {
 
-			if(TestFul.DEBUG && !(ExecutorSerializer.class.getClassLoader() instanceof TestfulClassLoader))
-				throw new ClassCastException("ExecutorSerializer must be loaded by the Testful Class Loader, when executing method deserialize");
-
 			ByteArrayInputStream bais = new ByteArrayInputStream(serialized);
 			oi = new ObjectInputStream(bais);
 
-			String execClassName = oi.readUTF();
-
-			boolean discoverFaults = oi.readBoolean();
+			//			String execClassName = oi.readUTF();
+			//			boolean discoverFaults = oi.readBoolean();
 
 			final TestCluster testCluster;
-			final Reference[] testRefs;
+			final ReferenceFactory testRefFactory;
 			final Operation[] testOps;
 
 			boolean optimized = oi.readBoolean();
@@ -213,7 +278,7 @@ public class ExecutorSerializer {
 
 				// perform the standard de-serialization
 				testCluster = (TestCluster) oi.readObject();
-				testRefs = (Reference[]) oi.readObject();
+				testRefFactory = (ReferenceFactory) oi.readObject();
 				testOps = (Operation[]) oi.readObject();
 
 			} else {
@@ -221,16 +286,20 @@ public class ExecutorSerializer {
 				String clusterID = oi.readUTF();
 
 				// use the ObjectRegistry and the advanced serialization
-				testCluster = (TestCluster) ObjectRegistry.singleton.getObject(clusterID);
+				testCluster = (TestCluster) registry.getObject(clusterID);
 
-				// read the references: refs.length { ref.class.id, ref.pos, ref.id }
+
+				// read the references: num.type.refs { ref.class.id, num.refs }
 				int refLen = oi.readInt();
-				testRefs = new Reference[refLen];
+
+				Map<Clazz, Integer> refMap = new TreeMap<Clazz, Integer>();
 				for(int i = 0; i < refLen; i++) {
 					Clazz clazz = testCluster.getClazzById(oi.readInt());
-					int pos = oi.readInt();
-					testRefs[i] = new Reference(clazz, pos, i);
+					int num = oi.readInt();
+					refMap.put(clazz, num);
 				}
+				testRefFactory = new ReferenceFactory(refMap);
+				final Reference[] testRefs = testRefFactory.getReferences();
 
 				// read the operations
 				int testLen = oi.readInt();
@@ -309,16 +378,16 @@ public class ExecutorSerializer {
 					default:
 						logger.warning("Unknown operation serialized type " + operationType);
 					}
-
 				}
-
 			}
 
-			@SuppressWarnings("unchecked")
-			Class<? extends IExecutor> execClass = (Class<? extends IExecutor>) Class.forName(execClassName);
-			Constructor<? extends IExecutor> execCns = execClass.getConstructor(TestCluster.class, Reference[].class, Operation[].class, Boolean.TYPE);
+			return new Test(testCluster, testRefFactory, testOps);
 
-			return execCns.newInstance(testCluster, testRefs, testOps, discoverFaults);
+			//			@SuppressWarnings("unchecked")
+			//			Class<? extends IExecutor> execClass = (Class<? extends IExecutor>) Class.forName(execClassName);
+			//			Constructor<? extends IExecutor> execCns = execClass.getConstructor(TestCluster.class, Reference[].class, Operation[].class, Boolean.TYPE);
+			//			return execCns.newInstance(testCluster, testRefs, testOps, discoverFaults);
+
 		} catch(Exception exc) {
 			logger.log(Level.WARNING, exc.getMessage(), exc);
 
@@ -334,21 +403,29 @@ public class ExecutorSerializer {
 		return null;
 	}
 
-	private static void writeOpInfo(ObjectOutputStream oo, Operation op) throws IOException {
+	private static Serializable readPrimitive(ObjectInputStream oi) throws IOException {
 
-		OperationResult or = (OperationResult) op.getInfo(OperationResult.KEY);
+		// isNull [ type value ]
 
-		// isOpResult [ isVerifier [ verifier ] ]
-		if(or == null) oo.writeBoolean(false);
-		else {
-			oo.writeBoolean(true);
-			if(or instanceof OperationResult.Verifier) {
-				oo.writeBoolean(true);
-				oo.writeObject(or);
-			} else {
-				oo.writeBoolean(false);
-			}
+		boolean isNull = oi.readBoolean();
+		if(isNull) return null;
+
+		final Serializable ret;
+		short type = oi.readShort();
+		switch(type) {
+		case 0: ret = oi.readBoolean(); break;
+		case 1: ret = oi.readByte(); break;
+		case 2: ret = oi.readChar(); break;
+		case 3: ret = oi.readDouble(); break;
+		case 4: ret = oi.readFloat(); break;
+		case 5: ret = oi.readInt(); break;
+		case 6: ret = oi.readLong(); break;
+		case 7: ret = oi.readShort(); break;
+		case 8: ret = oi.readUTF(); break;
+		default: logger.warning("Unexpected serialized primitive type: " + type); ret = null;
 		}
+
+		return ret;
 	}
 
 	private static void readOpInfo(ObjectInput oi, Operation op) throws ClassNotFoundException, IOException {
@@ -363,4 +440,5 @@ public class ExecutorSerializer {
 				op.addInfo(new OperationResult());
 		}
 	}
+
 }

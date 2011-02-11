@@ -67,17 +67,14 @@ public class ObjectType implements DataType {
 		return convertId(id);
 	}
 
-	public static String contains(DataFinder finder, ISerializable obj) {
-		try {
-			Long identifier = obj.getISerializableIdentifier();
-			if(identifier != null) {
+	public static String contains(ObjectRegistry registry, ISerializable obj) {
+		Long identifier = obj.getISerializableIdentifier();
+		if(identifier != null) {
 
-				String id = convertId(identifier);
+			String id = convertId(identifier);
 
-				byte[] b = finder.getData(ObjectType.NAME, id);
-				if(b != null) return id;
-			}
-		} catch (RemoteException e) {
+			ISerializable o = registry.getObject(id);
+			if(o != null) return id;
 		}
 
 		return null;

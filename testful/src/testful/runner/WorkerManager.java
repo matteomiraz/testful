@@ -54,7 +54,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 
 	private volatile boolean running = true;
 
-	private final BlockingQueue<Context<?, ?>> tests;
+	private final BlockingQueue<Context<?,?,?>> tests;
 	private final Map<String, ITestRepository> results;
 
 	private final static int MAX_ELEMS = 20;
@@ -66,14 +66,11 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 
 	private AtomicLong executedJobs = new AtomicLong();
 
-	private AtomicLong receivedBytes = new AtomicLong();
-	private AtomicLong sentBytes = new AtomicLong();
-
 	public WorkerManager(int cpu, int buffer) {
 		if(LOG_FINE) logger.fine("Starting: Worker Manager (" + TestFul.runId + ")");
 
 		if(buffer <= 0) buffer = CACHE_SIZE;
-		tests = new ArrayBlockingQueue<Context<?, ?>>(buffer);
+		tests = new ArrayBlockingQueue<Context<?,?,?>>(buffer);
 		results = new ConcurrentHashMap<String, ITestRepository>();
 
 		finders = new CachingMap<String, DataFinder>(MAX_ELEMS, MIN_AGE, MIN_UNUSED);
@@ -101,8 +98,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 					logger.info(msg);
 
 					while(running) {
-						Context<?, ?> t = rep.getTest();
-						receivedBytes.addAndGet(t.getSize());
+						Context<?,?,?> t = rep.getTest();
 						logger.finest("Retrieved test: " + t.id);
 						results.put(t.id, rep);
 						tests.put(t);
@@ -167,15 +163,16 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	}
 
 	@Override
-	public Context<?, ?> getTest() throws RemoteException {
+	@SuppressWarnings("unchecked")
+	public <I extends Serializable, R extends Serializable> Context<I, R, ? extends IExecutor<I,R>> getTest() throws RemoteException {
 		try {
-			return tests.take();
+			return (Context<I, R, ? extends IExecutor<I, R>>) tests.take();
 		} catch(InterruptedException e) {
 			throw new RemoteException("interrupted", e);
 		}
 	}
 
-	public TestfulClassLoader getClassLoader(Context<?, ?> ctx) throws RemoteException {
+	public TestfulClassLoader getClassLoader(Context<?,?,?> ctx) throws RemoteException {
 		DataFinder finder = ctx.getFinder();
 		String key = finder.getKey();
 
@@ -219,7 +216,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 		executedJobs.incrementAndGet();
 	}
 
-	public void putException(Context<?, ?> ctx, Exception exc, TestfulClassLoader cl) {
+	public void putException(Context<?,?,?> ctx, Exception exc, TestfulClassLoader cl) {
 		if(cl != null)
 			reuseClassLoader(cl);
 
@@ -242,7 +239,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 		executedJobs.incrementAndGet();
 	}
 
-	public void putResult(Context<?, ?> ctx, Serializable result, TestfulClassLoader cl) {
+	public void putResult(Context<?,?,?> ctx, Serializable result, TestfulClassLoader cl) {
 		reuseClassLoader(cl);
 
 		try {
@@ -284,9 +281,6 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 		long used = total-free;
 
 		sb.append("\n  mem: ").append(used/(1024*1024)).append("/").append(max/(1024*1024)).append(" Mb");
-
-		sb.append("; net: ").append(String.format("%.2f", receivedBytes.get()/(1024*1024.0))).append(" Mb in")
-		.append(", ").append(String.format("%.2f", sentBytes.get()/(1024*1024.0))).append(" Mb out");
 
 		return sb.toString();
 	}

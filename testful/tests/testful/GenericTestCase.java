@@ -29,8 +29,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import junit.framework.TestCase;
-import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
+import testful.coverage.CoverageTestExecutor;
 import testful.coverage.TrackerDatum;
 import testful.model.Operation;
 import testful.model.OperationInformation;
@@ -38,6 +38,7 @@ import testful.model.OperationPosition;
 import testful.model.ReferenceFactory;
 import testful.model.Test;
 import testful.model.TestCluster;
+import testful.model.executor.TestExecutorInput;
 import testful.runner.ClassType;
 import testful.runner.Context;
 import testful.runner.DataFinder;
@@ -175,8 +176,8 @@ public abstract class GenericTestCase extends TestCase {
 	}
 
 	protected static ElementManager<String, CoverageInformation> getCoverage(Test test, TrackerDatum ... data) throws InterruptedException, ExecutionException {
-		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx =
-			CoverageExecutionManager.getContext(getFinder(), test, true, data);
+		Context<TestExecutorInput, ElementManager<String, CoverageInformation>, CoverageTestExecutor> ctx =
+			CoverageTestExecutor.getContext(getFinder(), test, true, data);
 
 		ctx.setReloadClasses(true);
 		Future<ElementManager<String, CoverageInformation>> future = getExec().execute(ctx);

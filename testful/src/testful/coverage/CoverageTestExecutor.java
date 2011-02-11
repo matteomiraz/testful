@@ -18,24 +18,22 @@
 
 package testful.coverage;
 
-import testful.TestfulException;
 import testful.model.Test;
-import testful.model.executor.ReflectionExecutor;
+import testful.model.executor.TestExecutor;
+import testful.model.executor.TestExecutorInput;
 import testful.runner.Context;
 import testful.runner.DataFinder;
-import testful.runner.ExecutionManager;
 import testful.utils.ElementManager;
 
-public class CoverageExecutionManager extends ExecutionManager<ElementManager<String, CoverageInformation>> {
+public class CoverageTestExecutor extends TestExecutor<ElementManager<String, CoverageInformation>> {
 
-	public static Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> getContext(DataFinder finder, Test test, boolean reloadClasses, TrackerDatum ... data) {
-		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = new Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager>(CoverageExecutionManager.class, finder, ReflectionExecutor.class, test, false, data);
+	public static Context<TestExecutorInput, ElementManager<String, CoverageInformation>, CoverageTestExecutor> getContext(DataFinder finder, Test test, boolean reloadClasses, TrackerDatum ... data) {
+		Context<TestExecutorInput, ElementManager<String, CoverageInformation>, CoverageTestExecutor> ctx =
+			new Context<TestExecutorInput, ElementManager<String, CoverageInformation>, CoverageTestExecutor>(
+					CoverageTestExecutor.class, finder, new TestExecutorInput(test, false, data));
+
 		ctx.setReloadClasses(reloadClasses);
 		return ctx;
-	}
-
-	public CoverageExecutionManager(byte[] executorSer, byte[] trackerDataSer, boolean reloadClasses) throws TestfulException {
-		super(executorSer, trackerDataSer, reloadClasses);
 	}
 
 	@Override

@@ -63,19 +63,19 @@ public class RunnerPool implements IRunner, ITestRepository {
 	/** manager for futures; it is safe in a multi-threaded environment */
 	private final ElementManager<String, TestfulFuture<?>> futures;
 	/** tests in queue */
-	private final BlockingQueue<Context<?, ?>> tests;
+	private final BlockingQueue<Context<?,?,?>> tests;
 
 	/** tests being evaluated */
-	private final ConcurrentHashMap<String, Context<?, ?>> testsEval;
+	private final ConcurrentHashMap<String, Context<?,?,?>> testsEval;
 
 	private final String name;
 
 	private RunnerPool() {
-		tests = new ArrayBlockingQueue<Context<?, ?>>(MAX_BUFFER);
+		tests = new ArrayBlockingQueue<Context<?,?,?>>(MAX_BUFFER);
 		name = "testful-" + TestFul.runId;
 
 		futures = new ElementManager<String, TestfulFuture<?>>(new ConcurrentHashMap<String, TestfulFuture<?>>());
-		testsEval = new ConcurrentHashMap<String, Context<?, ?>>();
+		testsEval = new ConcurrentHashMap<String, Context<?,?,?>>();
 
 		if(LOG_FINE) logger.fine("Created Runner Pool ");
 
@@ -164,8 +164,8 @@ public class RunnerPool implements IRunner, ITestRepository {
 	}
 
 	@Override
-	public <T extends Serializable> Future<T> execute(Context<T, ? extends IExecutionManager<T>> ctx) {
-		TestfulFuture<T> ret = new TestfulFuture<T>(ctx.id);
+	public <I extends Serializable, R extends Serializable> Future<R> execute(Context<I, R, ? extends IExecutor<I,R>> ctx) {
+		TestfulFuture<R> ret = new TestfulFuture<R>(ctx.id);
 		futures.put(ret);
 
 		try {
@@ -179,10 +179,11 @@ public class RunnerPool implements IRunner, ITestRepository {
 	}
 
 	@Override
-	public Context<?, ?> getTest() throws RemoteException {
+	public <I extends Serializable, R extends Serializable> Context<I, R, ? extends IExecutor<I,R>> getTest() throws RemoteException {
 		try {
 
-			Context<?, ?> ret = tests.take();
+			@SuppressWarnings("unchecked")
+			Context<I, R, ? extends IExecutor<I, R>> ret = (Context<I, R, ? extends IExecutor<I, R>>) tests.take();
 			testsEval.put(ret.id, ret);
 
 			return ret;

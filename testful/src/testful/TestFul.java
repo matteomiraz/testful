@@ -84,8 +84,7 @@ public class TestFul {
 
 	public static void debug(String message) {
 		if(DEBUG)
-			loggerDebug.warning(message);
-		//loggerDebug.log(Level.WARNING, message, new Exception("Stack Trace"));
+			loggerDebug.log(Level.WARNING, message, new Exception("Stack Trace"));
 	}
 
 	public static void debug(Throwable exc) {

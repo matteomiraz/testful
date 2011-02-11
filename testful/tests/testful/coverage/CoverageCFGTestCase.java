@@ -66,6 +66,8 @@ public class CoverageCFGTestCase extends GenericTestCase {
 			ElementManager<String, CoverageInformation> cov = getCoverage(t, new ConditionTargetDatum(br));
 			CoverageBranchTarget ct = (CoverageBranchTarget) cov.get(CoverageBranchTarget.KEY);
 
+			assertNotNull(ct);
+
 			if(distance.get(br) == -1)
 				assertEquals("Wrong distance on branch " + br, Float.POSITIVE_INFINITY, ct.getQuality());
 			else

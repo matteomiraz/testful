@@ -35,7 +35,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.TestFul;
-import testful.coverage.CoverageExecutionManager;
+import testful.coverage.CoverageTestExecutor;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
 import testful.model.AssignConstant;
@@ -156,7 +156,7 @@ public class Splitter {
 
 		Map<Test, Future<ElementManager<String, CoverageInformation>>> futures = new HashMap<Test, Future<ElementManager<String,CoverageInformation>>>();
 		for(Test t : res)
-			futures.put(t, RunnerPool.getRunnerPool().execute(CoverageExecutionManager.getContext(finder, t, reloadClasses, data)));
+			futures.put(t, RunnerPool.getRunnerPool().execute(CoverageTestExecutor.getContext(finder, t, reloadClasses, data)));
 
 		SortedSet<TestCoverage> results = new TreeSet<TestCoverage>(new Comparator<TestCoverage>() {
 			@Override

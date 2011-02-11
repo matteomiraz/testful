@@ -18,76 +18,58 @@
 
 package testful.runner;
 
-import testful.TestFul;
-import testful.model.Operation;
-import testful.model.Reference;
-import testful.model.TestCluster;
+import java.io.Serializable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- * 
- * Classes implementing this interface must support their own serialization (and de-serialization) <b>in an efficient manner</b>.
- * 
- * Classes implementing this interface must not execute directly the test, but
- * must create another instance of another class, loaded using the specified
- * class loader, and use it to run the test.
+ * Abstract executor.<br/>
  *
+ * <b>This class must be loaded through the TestFul class loader.<b>
+ * 
  * @author matteo
+ * @param <I> The type of information required by the execution manager
+ * @param <R> The result of the execution manager
  */
-public abstract class Executor implements IExecutor {
+public abstract class Executor<I extends Serializable, R extends Serializable> implements IExecutor<I,R> {
 
-	/** Test cluster */
-	protected final TestCluster cluster;
+	private static final Logger logger = Logger.getLogger("testful.runner");
 
-	/** types of elements in the repository */
-	protected final Reference[] repositoryType;
-
-	protected final Operation[] test;
-
-	protected final boolean discoverFaults;
-
+	protected final TestfulClassLoader classLoader;
 	/**
-	 * Classes implementing this class MUST expose a constructor with EXACTLY these parameters.
-	 * @param testCluster the test cluster
-	 * @param testRefs the references used in the test
-	 * @param testOps the sequence of operations
-	 * @param faultDiscovery true if the fault discovery is enabled
+	 * Create a new execution manager.<br/>
+	 * <b>NOTICE:</b> subclasses must have a default constructor
 	 */
-	public Executor(TestCluster testCluster, Reference[] testRefs, Operation[] testOps, boolean faultDiscovery) {
-
-		if(TestFul.DEBUG && !(Executor.class.getClassLoader() instanceof TestfulClassLoader))
-			throw new ClassCastException("The executor must be loaded by the Testful Class Loader");
-
-		cluster = testCluster;
-		repositoryType = testRefs;
-		test = testOps;
-		discoverFaults = faultDiscovery;
+	public Executor() {
+		if(Executor.class.getClassLoader() instanceof TestfulClassLoader) {
+			classLoader = (TestfulClassLoader) Executor.class.getClassLoader();
+		} else {
+			classLoader = null;
+			ClassCastException exc = new ClassCastException("The Executor must be loaded by a testful class loader");
+			logger.log(Level.WARNING, exc.getMessage(), exc);
+		}
 	}
 
-	/**
-	 * Run the test, using the specified class loader.
-	 * @param stopOnBug true if the execution must stop as soon as the first bug is revealed
-	 * @return the number of bug found
-	 * @throws ClassNotFoundException if there is any problem resolving classes
-	 */
+	private I input;
+	private boolean reloadClasses;
+
 	@Override
-	public abstract int execute(boolean stopOnBug) throws ClassNotFoundException;
+	public void setInput(I input) {
+		this.input = input;
+	}
 
-	/**
-	 * Returns the operations of the test.
-	 * If this method is invoked after the execution of the test,
-	 * each operation has the proper OperationInformation.
-	 * @return the operations of the test.
-	 */
+	protected I getInput() {
+		return input;
+	}
+
+	public void setReloadClasses(boolean reloadClasses) {
+		this.reloadClasses = reloadClasses;
+	}
+
+	protected boolean isReloadClasses() {
+		return reloadClasses;
+	}
+
 	@Override
-	public Operation[] getTest() {
-		return test;
-	}
-
-	/**
-	 * Returns the length of the test
-	 * @return the length of the test
-	 */
-	public int getTestLength() {
-		return test.length;
-	}
+	public abstract R execute() throws Exception;
 }

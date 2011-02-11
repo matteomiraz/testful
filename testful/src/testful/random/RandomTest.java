@@ -29,8 +29,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
+import testful.coverage.CoverageTestExecutor;
 import testful.coverage.TrackerDatum;
 import testful.model.Operation;
 import testful.model.OptimalTestCreator;
@@ -39,6 +39,7 @@ import testful.model.Test;
 import testful.model.TestCluster;
 import testful.model.TestCoverage;
 import testful.model.TestSuite;
+import testful.model.executor.TestExecutorInput;
 import testful.runner.Context;
 import testful.runner.DataFinder;
 import testful.runner.RunnerPool;
@@ -84,7 +85,7 @@ public abstract class RandomTest {
 	}
 
 	protected Future<ElementManager<String, CoverageInformation>> execute(Operation[] ops) {
-		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx = CoverageExecutionManager.getContext(finder, new Test(cluster, refFactory, ops), reloadClasses, data);
+		Context<TestExecutorInput, ElementManager<String, CoverageInformation>, CoverageTestExecutor> ctx = CoverageTestExecutor.getContext(finder, new Test(cluster, refFactory, ops), reloadClasses, data);
 		return RunnerPool.getRunnerPool().execute(ctx);
 	}
 

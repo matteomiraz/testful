@@ -71,7 +71,7 @@ import testful.model.AssignPrimitive;
 import testful.model.Clazz;
 import testful.model.Operation;
 import testful.model.OperationResult;
-import testful.model.OperationResultExecutionManager;
+import testful.model.OperationResultTestExecutor;
 import testful.model.PrimitiveClazz;
 import testful.model.Test;
 import testful.model.TestCoverage;
@@ -274,6 +274,10 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 		final ElementManager<String, CoverageInformation> covs = problem.evaluate(test.test, data).get();
 		CoverageBranchTarget covCondOrig = (CoverageBranchTarget)covs.get(CoverageBranchTarget.KEY);
+
+		if(TestFul.DEBUG && covCondOrig == null) {
+			TestFul.debug("hillClimb: cannot retrieve the CoverageBranchTarget");
+		}
 
 		final boolean branchFeasible;
 		{
@@ -642,7 +646,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 		for (Solution<Operation> solution : solutionSet) {
 			Test t = problem.getTest(solution.getDecisionVariables().variables_);
 			OperationResult.insert(t.getTest());
-			opResultFuture.add(OperationResultExecutionManager.executeAsync(problem.getFinder(), t, problem.isReloadClasses(), problem.getData()));
+			opResultFuture.add(OperationResultTestExecutor.executeAsync(problem.getFinder(), t, problem.isReloadClasses(), problem.getData()));
 		}
 
 		List<Test> parts = new ArrayList<Test>();

@@ -30,8 +30,8 @@ import java.util.logging.Logger;
 
 import jmetal.util.PseudoRandom;
 import testful.IConfigGeneration;
-import testful.coverage.CoverageExecutionManager;
 import testful.coverage.CoverageInformation;
+import testful.coverage.CoverageTestExecutor;
 import testful.coverage.TrackerDatum;
 import testful.coverage.whiteBox.WhiteBoxAnalysisData;
 import testful.model.Operation;
@@ -41,6 +41,7 @@ import testful.model.Test;
 import testful.model.TestCluster;
 import testful.model.TestCoverage;
 import testful.model.TestSuite;
+import testful.model.executor.TestExecutorInput;
 import testful.runner.ClassType;
 import testful.runner.Context;
 import testful.runner.DataFinderCaching;
@@ -155,8 +156,8 @@ public class TestfulProblem implements Serializable {
 
 		invTot.addAndGet(test.getTest().length);
 
-		Context<ElementManager<String, CoverageInformation>, CoverageExecutionManager> ctx =
-			CoverageExecutionManager.getContext(finder, test, reloadClasses, data);
+		Context<TestExecutorInput, ElementManager<String, CoverageInformation>, CoverageTestExecutor> ctx =
+			CoverageTestExecutor.getContext(finder, test, reloadClasses, data);
 
 		return RunnerPool.getRunnerPool().execute(ctx);
 	}

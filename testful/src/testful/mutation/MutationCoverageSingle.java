@@ -32,17 +32,10 @@ public class MutationCoverageSingle implements CoverageInformation {
 
 	private BitSet execAlive, killed, notExecuted;
 
-	/** alive's execution time */
-	private long timeAlive;
-	/** alive's execution time (^2) */
-	private long timeAlive2;
-
 	public MutationCoverageSingle() {
 		execAlive = new BitSet();
 		notExecuted = new BitSet();
 		killed = new BitSet();
-		timeAlive = 0;
-		timeAlive2 = 0;
 	}
 
 	/**
@@ -61,17 +54,12 @@ public class MutationCoverageSingle implements CoverageInformation {
 		execAlive = new BitSet(max);
 		notExecuted = new BitSet();
 		killed = new BitSet(max);
-		timeAlive = 0;
-		timeAlive2 = 0;
 	}
 
 	public MutationCoverageSingle(MutationCoverageSingle clone) {
 		execAlive = (BitSet) clone.execAlive.clone();
 		killed = (BitSet) clone.killed.clone();
 		notExecuted = (BitSet) clone.notExecuted.clone();
-
-		timeAlive = clone.timeAlive;
-		timeAlive2 = clone.timeAlive2;
 	}
 
 	void setKilled(int num) {
@@ -80,13 +68,11 @@ public class MutationCoverageSingle implements CoverageInformation {
 		}
 	}
 
-	void setAlive(int num, long execTime) {
+	void setAlive(int num) {
 		alive = null;
 
 		synchronized(execAlive) {
 			execAlive.set(num);
-			timeAlive += execTime;
-			timeAlive2 += execTime * execTime;
 		}
 	}
 
@@ -110,23 +96,6 @@ public class MutationCoverageSingle implements CoverageInformation {
 
 	public int getAliveNum() {
 		return getAlive().cardinality();
-	}
-
-	public double getAliveAvgExecTime() {
-		return ((double) timeAlive) / execAlive.cardinality();
-	}
-
-	public double getAliveVarExecTime() {
-		// see http://it.wikipedia.org/wiki/Varianza_campionaria#Varianza_Campionaria
-		// var = sum(x(i)^2) / (n-1) - (n * avg^2) / (n-1)
-
-		final double n = execAlive.cardinality();
-		final double avg = getAliveAvgExecTime();
-		return (timeAlive2 - n * avg * avg) / (n - 1);
-	}
-
-	public double getAliveStdExecTime() {
-		return Math.sqrt(getAliveVarExecTime());
 	}
 
 	/** returns the kill ratio */
@@ -162,8 +131,6 @@ public class MutationCoverageSingle implements CoverageInformation {
 
 		execAlive.andNot(killed);
 		execAlive.andNot(notExecuted);
-		timeAlive = 0;
-		timeAlive2 = 0;
 	}
 
 	@Override
@@ -229,9 +196,6 @@ public class MutationCoverageSingle implements CoverageInformation {
 		ret.killed.or(killed);
 		ret.notExecuted.or(notExecuted);
 
-		ret.timeAlive = timeAlive;
-		ret.timeAlive2 = timeAlive2;
-
 		return ret;
 	}
 
@@ -243,8 +207,6 @@ public class MutationCoverageSingle implements CoverageInformation {
 		out.writeObject(execAlive);
 		out.writeObject(killed);
 		out.writeObject(notExecuted);
-		out.writeLong(timeAlive);
-		out.writeLong(timeAlive2);
 	}
 
 	/* (non-Javadoc)
@@ -255,7 +217,5 @@ public class MutationCoverageSingle implements CoverageInformation {
 		execAlive = (BitSet) in.readObject();
 		killed = (BitSet) in.readObject();
 		notExecuted = (BitSet) in.readObject();
-		timeAlive = in.readLong();
-		timeAlive2 = in.readLong();
 	}
 }

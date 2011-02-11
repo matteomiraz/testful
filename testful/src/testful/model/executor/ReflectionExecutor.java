@@ -43,11 +43,11 @@ import testful.model.PrimitiveClazz;
 import testful.model.Reference;
 import testful.model.ResetRepository;
 import testful.model.StaticValue;
+import testful.model.Test;
 import testful.model.TestCluster;
 import testful.model.faults.FaultyExecutionException;
 import testful.model.faults.PreconditionViolationException;
 import testful.model.faults.TestfulInternalException;
-import testful.runner.Executor;
 import testful.utils.StopWatch;
 import testful.utils.StopWatchFast;
 
@@ -59,7 +59,7 @@ import testful.utils.StopWatchFast;
  *
  * @author matteo
  */
-public class ReflectionExecutor extends Executor {
+public class ReflectionExecutor {
 
 	private static final Logger logger = Logger.getLogger("testful.model.ReflectionExecutor");
 	private static final boolean LOGGER_FINE   = logger.isLoggable(Level.FINE);
@@ -69,10 +69,28 @@ public class ReflectionExecutor extends Executor {
 	private static final long serialVersionUID = -1696826206324780022L;
 
 	/** The internal object repository */
-	private transient Object[] repository;
+	private final Object[] repository;
+	private final Operation[] ops;
+	private final Reference[] repositoryType;
+	private final TestCluster cluster;
+	private final boolean discoverFaults;
+	private final boolean stopOnBug;
 
-	public ReflectionExecutor(TestCluster testCluster, Reference[] testRefs, Operation[] test, boolean discoverFaults) {
-		super(testCluster, testRefs, test, discoverFaults);
+	public static int execute(Test test, boolean discoverFaults, boolean stopOnBug) {
+		ReflectionExecutor executor = new ReflectionExecutor(test, discoverFaults, stopOnBug);
+		return executor.execute();
+	}
+
+	private ReflectionExecutor(Test test, boolean discoverFaults, boolean stopOnBug) {
+
+		repositoryType = test.getReferenceFactory().getReferences();
+		ops = test.getTest();
+		cluster = test.getCluster();
+
+		repository = new Object[repositoryType.length];
+
+		this.discoverFaults = discoverFaults;
+		this.stopOnBug = stopOnBug;
 
 		if(TestFul.DEBUG && ClassRegistry.singleton == null)
 			throw new ClassCastException("ClassRegistry not initialized");
@@ -81,8 +99,7 @@ public class ReflectionExecutor extends Executor {
 	private final static StopWatch timer_exec = StopWatch.getTimer();
 	private final static StopWatchFast timer_cut = StopWatchFast.getTimer("exec.cut");
 
-	@Override
-	public int execute(boolean stopOnBug) throws ClassNotFoundException, ClassCastException {
+	public int execute() {
 
 		timer_exec.start("exec.1");
 
@@ -90,13 +107,11 @@ public class ReflectionExecutor extends Executor {
 			StringBuilder sb = new StringBuilder();
 
 			sb.append("Executing:\n");
-			for(Operation op : test)
+			for(Operation op : ops)
 				sb.append(" ").append(op).append("\n");
 
 			logger.finest(sb.toString());
 		}
-
-		repository = new Object[repositoryType.length];
 
 		/** Number of invalid operations: precondition errors */
 		int nPre = 0;
@@ -107,7 +122,7 @@ public class ReflectionExecutor extends Executor {
 
 		final Stopper stopper = new Stopper();
 
-		for(Operation op : test) {
+		for(Operation op : ops) {
 
 			final Integer maxExecTime;
 			if(op instanceof CreateObject) maxExecTime = ((CreateObject)op).getConstructor().getMaxExecutionTime();
@@ -174,7 +189,7 @@ public class ReflectionExecutor extends Executor {
 		stopper.done();
 
 		if(LOGGER_FINEST) logger.finest(toString());
-		if(LOGGER_FINE)   logger.fine(new StringBuilder("STATS").append(" ops:").append(test.length).append(" invalid:").append(nPre).append(" valid:").append(nValid).append(" faulty:").append(nFaulty).toString());
+		if(LOGGER_FINE)   logger.fine(new StringBuilder("STATS").append(" ops:").append(ops.length).append(" invalid:").append(nPre).append(" valid:").append(nValid).append(" faulty:").append(nFaulty).toString());
 
 		timer_exec.stop();
 		timer_cut.log();

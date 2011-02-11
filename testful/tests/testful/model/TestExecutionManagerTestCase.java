@@ -38,7 +38,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 
 		Operation[] testOperations = test.getTest();
 		assertEquals(3, testOperations.length);
@@ -56,7 +56,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 
 		Operation[] testOperations = test.getTest();
 		assertEquals(2, testOperations.length);
@@ -74,7 +74,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 
 		Operation[] testOperations = test.getTest();
 		assertEquals(3, testOperations.length);
@@ -92,7 +92,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 
 		Operation[] testOperations = test.getTest();
 		assertEquals(2, testOperations.length);
@@ -110,7 +110,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 
 		Operation[] testOperations = test.getTest();
 		assertEquals(3, testOperations.length);
@@ -128,7 +128,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 
 		Operation[] testOperations = test.getTest();
 		assertEquals(2, testOperations.length);
@@ -145,7 +145,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 
 		Operation[] testOperations = test.getTest();
 		assertEquals(2, testOperations.length);
@@ -162,7 +162,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 
 		Operation[] testOperations = test.getTest();
 		assertEquals(2, testOperations.length);
@@ -179,7 +179,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 
 		Operation[] testOperations = test.getTest();
 		assertEquals(2, testOperations.length);
@@ -196,7 +196,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 
 		Operation[] testOperations = test.getTest();
 		assertEquals(2, testOperations.length);
@@ -213,7 +213,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 
 		Operation[] testOperations = test.getTest();
 		assertEquals(2, testOperations.length);
@@ -230,7 +230,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 
 		Operation[] testOperations = test.getTest();
 		assertEquals(2, testOperations.length);
@@ -247,7 +247,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 
 		Operation[] testOperations = test.getTest();
 		assertEquals(2, testOperations.length);
@@ -264,7 +264,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 
 		Operation[] testOperations = test.getTest();
 		assertEquals(2, testOperations.length);
@@ -281,7 +281,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 
 		Operation[] testOperations = test.getTest();
 		assertEquals(2, testOperations.length);
@@ -298,10 +298,10 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 
 		Operation[] testOperations = test.getTest();
 		assertEquals(2, testOperations.length);
@@ -318,7 +318,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 
 		Operation[] testOperations = test.getTest();
 		assertEquals(2, testOperations.length);
@@ -336,7 +336,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 
 
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 
 		Operation[] testOperations = test.getTest();
 		assertEquals(2, testOperations.length);
@@ -353,7 +353,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 
 		Operation[] testOperations = test.getTest();
 		assertEquals(2, testOperations.length);
@@ -370,7 +370,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 
 		Operation[] testOperations = test.getTest();
 		assertEquals(2, testOperations.length);
@@ -387,7 +387,7 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		});
 
 		OperationResult.insert(test.getTest());
-		OperationResultExecutionManager.execute(getFinder(), test, true);
+		OperationResultTestExecutor.execute(getFinder(), test, true);
 
 		Operation[] testOperations = test.getTest();
 		assertEquals(2, testOperations.length);

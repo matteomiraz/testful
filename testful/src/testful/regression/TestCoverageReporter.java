@@ -34,7 +34,7 @@ import org.kohsuke.args4j.Option;
 import testful.ConfigProject;
 import testful.IConfigProject;
 import testful.TestFul;
-import testful.coverage.CoverageExecutionManager;
+import testful.coverage.CoverageTestExecutor;
 import testful.coverage.CoverageInformation;
 import testful.coverage.TrackerDatum;
 import testful.model.OptimalTestCreator;
@@ -131,7 +131,7 @@ public class TestCoverageReporter extends TestReader {
 
 			numInvocations += t.getTest().length;
 			TestCoverage tCov = new TestCoverage(t,
-					RunnerPool.getRunnerPool().execute(CoverageExecutionManager.getContext(finder, t, config.reload, TRACKER_DATA)).get());
+					RunnerPool.getRunnerPool().execute(CoverageTestExecutor.getContext(finder, t, config.reload, TRACKER_DATA)).get());
 
 			optimal.update(tCov);
 

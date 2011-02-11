@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import testful.utils.JavaUtils;
@@ -31,27 +32,22 @@ import ec.util.MersenneTwisterFast;
 
 public class ReferenceFactory implements Serializable {
 
-	private static final long serialVersionUID = -3020356606264676381L;
+	private static final long serialVersionUID = 4422953344530793154L;
 
-	private final Map<Clazz, Reference[]> refMap;
+	private final Map<Clazz, Integer> refNum;
+	private transient Map<Clazz, Reference[]> refMap;
 	private transient Reference[] all;
 
 	public ReferenceFactory(TestCluster cluster, int cutSize, int auxSize) {
 		Set<Clazz> refClasses = new TreeSet<Clazz>();
-
 		for(Clazz c : cluster.getCluster())
 			refClasses.add(c.getReferenceClazz());
 
-		int idGenerator = 0;
-		refMap = new HashMap<Clazz, Reference[]>();
-		for(Clazz c : refClasses) {
-			Reference[] refs = new Reference[c == cluster.getCut() ? cutSize : auxSize];
+		refNum = new TreeMap<Clazz, Integer>();
+		for(Clazz c : refClasses)
+			refNum.put(c, c == cluster.getCut() ? cutSize : auxSize);
 
-			for(int i = 0; i < refs.length; i++)
-				refs[i] = new Reference(c, i, idGenerator++);
-
-			refMap.put(c, refs);
-		}
+		createRefMap();
 	}
 
 	/**
@@ -59,9 +55,15 @@ public class ReferenceFactory implements Serializable {
 	 * @param map indicates how many references create for each clazz
 	 */
 	public ReferenceFactory(Map<Clazz, Integer> map) {
+		refNum = map;
+		createRefMap();
+	}
+
+	private void createRefMap() {
+
 		int idGenerator = 0;
 		refMap = new HashMap<Clazz, Reference[]>();
-		for(Entry<Clazz, Integer> e : map.entrySet()) {
+		for(Entry<Clazz, Integer> e : refNum.entrySet()) {
 			Reference[] refs = new Reference[e.getValue()];
 
 			for(int i = 0; i < refs.length; i++)
@@ -72,11 +74,21 @@ public class ReferenceFactory implements Serializable {
 	}
 
 	/**
+	 * Returns, for each type, the number of references
+	 * @return the refNum the map between the type and the number of references
+	 */
+	public Map<Clazz, Integer> getRefNum() {
+		return refNum;
+	}
+
+	/**
 	 * Returns the set of references (not ordered)
 	 * @return an unordered set of references
 	 */
 	public Reference[] getReferences() {
 		if(all == null) {
+			if(refMap == null) createRefMap();
+
 			int num = 0;
 			for(Reference[] refs : refMap.values())
 				num += refs.length;
@@ -94,10 +106,14 @@ public class ReferenceFactory implements Serializable {
 	}
 
 	public Reference[] getReferences(Clazz c) {
+		if(refMap == null) createRefMap();
+
 		return refMap.get(c.getReferenceClazz());
 	}
 
 	public Reference getReference(Clazz c, MersenneTwisterFast random) {
+		if(refMap == null) createRefMap();
+
 		Reference refs[] = refMap.get(c.getReferenceClazz());
 
 		if(refs == null) return null;
@@ -129,6 +145,8 @@ public class ReferenceFactory implements Serializable {
 	 */
 	public Reference adapt(Reference ref) {
 		if(ref == null) return null;
+		if(refMap == null) createRefMap();
+
 		return refMap.get(ref.getClazz())[ref.getPos()];
 	}
 
