@@ -39,7 +39,7 @@ import testful.model.TestReader;
 import testful.model.executor.TestExecutor;
 import testful.model.executor.TestExecutorInput;
 import testful.runner.ClassType;
-import testful.runner.Context;
+import testful.runner.Job;
 import testful.runner.DataFinder;
 import testful.runner.DataFinderCaching;
 import testful.runner.DataFinderImpl;
@@ -106,8 +106,8 @@ public class TestfulTestCase extends TestCase {
 
 				// OperationResult.Verifier.insertOperationResultVerifier(test.getTest());
 
-				Context<TestExecutorInput, Boolean, FaultTestExecutor> ctx =
-					new Context<TestExecutorInput, Boolean, FaultTestExecutor>(
+				Job<TestExecutorInput, Boolean, FaultTestExecutor> ctx =
+					new Job<TestExecutorInput, Boolean, FaultTestExecutor>(
 							FaultTestExecutor.class, finder, new TestExecutorInput(test, true));
 
 				ctx.setReloadClasses(true);

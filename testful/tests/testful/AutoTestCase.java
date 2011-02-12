@@ -29,7 +29,7 @@ import testful.coverage.CoverageTestExecutor;
 import testful.model.Operation;
 import testful.model.Test;
 import testful.model.executor.TestExecutorInput;
-import testful.runner.Context;
+import testful.runner.Job;
 import testful.utils.ElementManager;
 import ec.util.MersenneTwisterFast;
 
@@ -152,7 +152,7 @@ public abstract class AutoTestCase extends GenericTestCase {
 
 			List<Future<ElementManager<String, CoverageInformation>>> futures = new ArrayList<Future<ElementManager<String,CoverageInformation>>>();
 			for(Test r : res) {
-				Context<TestExecutorInput, ElementManager<String, CoverageInformation>, CoverageTestExecutor> ctx = CoverageTestExecutor.getContext(getFinder(), r, true);
+				Job<TestExecutorInput, ElementManager<String, CoverageInformation>, CoverageTestExecutor> ctx = CoverageTestExecutor.getContext(getFinder(), r, true);
 				futures.add(getExec().execute(ctx));
 			}
 			for(Future<ElementManager<String, CoverageInformation>> future : futures) {

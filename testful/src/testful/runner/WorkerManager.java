@@ -42,7 +42,7 @@ import testful.TestFul;
 import testful.utils.CachingMap;
 import testful.utils.CachingMap.Cacheable;
 
-public class WorkerManager implements IWorkerManager, ITestRepository {
+public class WorkerManager implements IWorkerManager, IJobRepository {
 
 	private static Logger logger = Logger.getLogger("testful.executor.worker");
 	private static final boolean LOG_FINE = logger.isLoggable(Level.FINE);
@@ -51,8 +51,8 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 
 	private volatile boolean running = true;
 
-	private final BlockingQueue<Context<?,?,?>> tests;
-	private final Map<String, ITestRepository> results;
+	private final BlockingQueue<Job<?,?,?>> jobs;
+	private final Map<String, IJobRepository> results;
 
 	private final static int MAX_ELEMS = 20;
 	private final static long MIN_AGE = 15 * 60 * 1000; // 15 min
@@ -67,8 +67,8 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 		if(LOG_FINE) logger.fine("Starting: Worker Manager (" + TestFul.runId + ")");
 
 		int buffer = TestFul.getProperty(TestFul.PROPERTY_RUNNER_WORKER_JOBS, 50);
-		tests = new ArrayBlockingQueue<Context<?,?,?>>(buffer);
-		results = new ConcurrentHashMap<String, ITestRepository>();
+		jobs = new ArrayBlockingQueue<Job<?,?,?>>(buffer);
+		results = new ConcurrentHashMap<String, IJobRepository>();
 
 		finders = new CachingMap<String, DataFinder>(MAX_ELEMS, MIN_AGE, MIN_UNUSED);
 		classLoaders = new CachingMap<String, Queue<TestfulClassLoader>>(MAX_ELEMS, MIN_AGE, MIN_UNUSED);
@@ -77,7 +77,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 		if(cpu > 0) {
 			logger.info("Starting with " + cpu + " local executor threads");
 		} else if (cpu == 0) {
-			logger.info("Starting without CPUs: acting as a test repository.");
+			logger.info("Starting without CPUs: acting as a job repository.");
 		} else { // cpu < 0
 			cpu = Runtime.getRuntime().availableProcessors();
 			logger.info("Detected " + cpu + " cpus (or cores): starting one thread per cpus.");
@@ -89,7 +89,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	}
 
 	@Override
-	public void addTestRepository(final ITestRepository rep) throws RemoteException {
+	public void addJobRepository(final IJobRepository rep) throws RemoteException {
 		final String name = rep.getName();
 
 		if(!testRepositories.add(name)) return;
@@ -103,10 +103,10 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 					logger.info(msg);
 
 					while(running) {
-						Context<?,?,?> t = rep.getTest();
-						logger.finest("Retrieved test: " + t.id);
-						results.put(t.id, rep);
-						tests.put(t);
+						Job<?,?,?> j = rep.getJob();
+						logger.finest("Retrieved test: " + j.id);
+						results.put(j.id, rep);
+						jobs.put(j);
 					}
 
 				} catch(InterruptedException e) {
@@ -115,10 +115,10 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 					return;
 				} catch(RemoteException e) {
 					if(e.getCause() instanceof EOFException) {
-						logger.info("Test Repository disconnected");
+						logger.info("Job Repository disconnected");
 						return;
 					} else {
-						String msg = "Cannot contact test repository: " + e.getMessage();
+						String msg = "Cannot contact job repository: " + e.getMessage();
 						logger.warning(msg);
 						return;
 					}
@@ -131,9 +131,9 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	}
 
 	@Override
-	public void addTestRepository(String repName) throws RemoteException, MalformedURLException, NotBoundException {
-		ITestRepository rep = (ITestRepository) Naming.lookup(repName);
-		addTestRepository(rep);
+	public void addJobRepository(String repName) throws RemoteException, MalformedURLException, NotBoundException {
+		IJobRepository rep = (IJobRepository) Naming.lookup(repName);
+		addJobRepository(rep);
 	}
 
 	@Override
@@ -150,8 +150,8 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 		} catch(InterruptedException e) {
 		}
 
-		while(!tests.isEmpty()) {
-			logger.info("Waiting for " + tests.size() + " tests to execute...");
+		while(!jobs.isEmpty()) {
+			logger.info("Waiting for " + jobs.size() + " jobs to execute...");
 			try {
 				TimeUnit.SECONDS.sleep(5);
 			} catch(InterruptedException e) {
@@ -169,15 +169,15 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <I extends Serializable, R extends Serializable> Context<I, R, ? extends IExecutor<I,R>> getTest() throws RemoteException {
+	public <I extends Serializable, R extends Serializable> Job<I, R, ? extends IExecutor<I,R>> getJob() throws RemoteException {
 		try {
-			return (Context<I, R, ? extends IExecutor<I, R>>) tests.take();
+			return (Job<I, R, ? extends IExecutor<I, R>>) jobs.take();
 		} catch(InterruptedException e) {
 			throw new RemoteException("interrupted", e);
 		}
 	}
 
-	public TestfulClassLoader getClassLoader(Context<?,?,?> ctx) throws RemoteException {
+	public TestfulClassLoader getClassLoader(Job<?,?,?> ctx) throws RemoteException {
 		DataFinder finder = ctx.getFinder();
 		String key = finder.getKey();
 
@@ -212,16 +212,16 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	@Override
 	public void putException(String key, Exception exc) throws RemoteException {
 		try {
-			ITestRepository rep = results.remove(key);
+			IJobRepository rep = results.remove(key);
 			rep.putException(key, exc);
 		} catch(Exception e) {
-			logger.log(Level.WARNING, "Cannot put the result back in the test repository: " + e.getMessage(), e);
+			logger.log(Level.WARNING, "Cannot put the result back in the job repository: " + e.getMessage(), e);
 		}
 
 		executedJobs.incrementAndGet();
 	}
 
-	public void putException(Context<?,?,?> ctx, Exception exc, TestfulClassLoader cl) {
+	public void putException(Job<?,?,?> ctx, Exception exc, TestfulClassLoader cl) {
 		if(cl != null)
 			reuseClassLoader(cl);
 
@@ -235,16 +235,16 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	@Override
 	public void putResult(String key, Serializable result) throws RemoteException {
 		try {
-			ITestRepository rep = results.remove(key);
+			IJobRepository rep = results.remove(key);
 			rep.putResult(key, result);
 		} catch(Exception e) {
-			logger.log(Level.WARNING, "Cannot put the result back in the test repository: " + e.getMessage(), e);
+			logger.log(Level.WARNING, "Cannot put the result back in the job repository: " + e.getMessage(), e);
 		}
 
 		executedJobs.incrementAndGet();
 	}
 
-	public void putResult(Context<?,?,?> ctx, Serializable result, TestfulClassLoader cl) {
+	public void putResult(Job<?,?,?> ctx, Serializable result, TestfulClassLoader cl) {
 		reuseClassLoader(cl);
 
 		try {
@@ -271,7 +271,7 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	public String toString() {
 		StringBuilder sb = new StringBuilder("Testful runner - ").append(new Date().toString());
 
-		int waiting = tests.size();
+		int waiting = jobs.size();
 		int current = results.size();
 		long done = executedJobs.get();
 

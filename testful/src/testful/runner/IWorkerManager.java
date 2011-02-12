@@ -25,7 +25,7 @@ import java.rmi.RemoteException;
 
 public interface IWorkerManager extends Remote {
 
-	public void addTestRepository(ITestRepository rep) throws RemoteException;
+	public void addJobRepository(IJobRepository rep) throws RemoteException;
 
-	public void addTestRepository(String rep) throws RemoteException, MalformedURLException, NotBoundException;
+	public void addJobRepository(String rep) throws RemoteException, MalformedURLException, NotBoundException;
 }

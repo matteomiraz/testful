@@ -23,14 +23,14 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 /**
- * Hosts stuff to be executed, and allows Runners to put the result back.
+ * Hosts jobs to be executed, and allows runners to put the result back.
  * @author matteo
  */
-public interface ITestRepository extends Remote {
+public interface IJobRepository extends Remote {
 
 	public String getName() throws RemoteException;
 
-	public <I extends Serializable, R extends Serializable> Context<I, R, ? extends IExecutor<I,R>> getTest() throws RemoteException;
+	public <I extends Serializable, R extends Serializable> Job<I, R, ? extends IExecutor<I,R>> getJob() throws RemoteException;
 
 	public void putResult(String key, Serializable result) throws RemoteException;
 

@@ -43,7 +43,7 @@ import testful.model.TestCoverage;
 import testful.model.TestSuite;
 import testful.model.executor.TestExecutorInput;
 import testful.runner.ClassType;
-import testful.runner.Context;
+import testful.runner.Job;
 import testful.runner.DataFinderCaching;
 import testful.runner.DataFinderImpl;
 import testful.runner.ObjectType;
@@ -156,7 +156,7 @@ public class TestfulProblem implements Serializable {
 
 		invTot.addAndGet(test.getTest().length);
 
-		Context<TestExecutorInput, ElementManager<String, CoverageInformation>, CoverageTestExecutor> ctx =
+		Job<TestExecutorInput, ElementManager<String, CoverageInformation>, CoverageTestExecutor> ctx =
 			CoverageTestExecutor.getContext(finder, test, reloadClasses, data);
 
 		return RunnerPool.getRunnerPool().execute(ctx);

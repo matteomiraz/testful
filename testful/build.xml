@@ -21,46 +21,39 @@
 	<property name="testCut.bin" value="${testCut}/bin" />
 	<property name="testCut.instrumented" value="${testCut}/instrumented" />
 
-	<!-- classes loaded using the TestfulClassLoader -->
+	<!-- classes that can be loaded by the TestfulClassLoader -->
 	<patternset id="testfulClassLoader">
-		<include name="testful/coverage/TestSizeInformation.class" />
-		<include name="testful/coverage/**/*.class" />
-		<exclude name="testful/coverage/TrackerDatum.class" />
-		<exclude name="testful/coverage/**/*Instrumenter*.class" />
-
-		<include name="testful/runner/ExecutionManager.class" />
-		<include name="testful/runner/Executor.class" />
+		
+		<!-- Execution Managers -->
+		<include name="testful/**/*Executor.class" />
 		<include name="testful/runner/ObjectRegistry.class" />
+		<include name="testful/utils/Cloner.class" />
 
+		<!-- testful.coverage --> 
+		<include name="testful/coverage/**/*.class" />
+		<exclude name="testful/coverage/**/*Instrumenter*.class" />
+		<include name="testful/coverage/stopper/TestStoppedException.class" />
+		<include name="testful/coverage/stopper/Stopper*.class" />
+
+		<!--  testful.model -->
 		<include name="testful/model/**/*.class" />
-		<!-- testful.model.Operation is a Variable -->
-		<include name="jmetal/base/Variable.class" />
+		<include name="jmetal/base/Variable.class" /> <!-- testful.model.Operation is a Variable -->
 
-		<include name="testful/regression/TestfulTestCase$FaultExecutionManager.class" />
-
-		<include name="testful/mutation/MutationExecution*.class" />
-		<include name="testful/mutation/MutationCoverage*.class" />
-		<include name="testful/mutation/TestStoppedException*.class" />
+		<!-- Mutation -->
 		<include name="testful/mutation/Utils*.class" />
 
+		<!-- External library: JEXL -->
 		<include name="org/apache/commons/jexl/**" />
 		<include name="org/apache/commons/logging/**/*" />
 
-		<include name="testful/utils/Cloner.class" />
 	</patternset>
 
 	<!-- classes needed for running tests -->
 	<patternset id="runner">
-		<include name="testful/TestFul*.class" />
-
+		<include name="testful/*.class" />
 		<include name="testful/coverage/TrackerDatum*.class" />
-		<include name="testful/coverage/RunnerCaching*.class" />
-
 		<include name="testful/runner/**" />
 		<include name="testful/utils/**" />
-		<include name="testful/*.class" />
-
-		<include name="ec/util/MersenneTwister*.class" />
 		<include name="org/kohsuke/args4j/**/*" />
 	</patternset>
 

@@ -52,7 +52,7 @@ import testful.model.transformation.Splitter;
 import testful.model.transformation.TestTransformation;
 import testful.model.transformation.TestTransformationPipeline;
 import testful.runner.ClassType;
-import testful.runner.Context;
+import testful.runner.Job;
 import testful.runner.DataFinder;
 import testful.runner.DataFinderCaching;
 import testful.runner.DataFinderImpl;
@@ -108,7 +108,7 @@ public class TestSuiteReducer {
 
 	private TestCoverage getCoverage(Test t) throws InterruptedException, ExecutionException {
 
-		Context<TestExecutorInput, ElementManager<String, CoverageInformation>, CoverageTestExecutor> ctx =
+		Job<TestExecutorInput, ElementManager<String, CoverageInformation>, CoverageTestExecutor> ctx =
 			CoverageTestExecutor.getContext(finder, t, reloadClasses, data);
 		ctx.setReloadClasses(reloadClasses);
 		Future<ElementManager<String, CoverageInformation>> f = RunnerPool.getRunnerPool().execute(ctx);

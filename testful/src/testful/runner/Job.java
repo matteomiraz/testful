@@ -25,14 +25,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * This class is able to set-up the evaluation context of the test (i.e. the
- * Execution Manager).<br/>
+ * This class models a job to do. It can be transferred to the (remote) worker (i.e., it MUST be serializable),
+ * and it is able to set-up the executor of the task (i.e., the one that performs the job and returns the result).
  * @author matteo
  * @param <I> the type of the <b>I</b>nput
  * @param <R> the type of the <b>R</b>esult
  * @param <M> the Execution <b>M</b>anager
  */
-public class Context<I extends Serializable, R extends Serializable, M extends IExecutor<I,R>> implements Serializable {
+public class Job<I extends Serializable, R extends Serializable, M extends IExecutor<I,R>> implements Serializable {
 
 	private static Logger logger = Logger.getLogger("testful.executor");
 
@@ -44,7 +44,7 @@ public class Context<I extends Serializable, R extends Serializable, M extends I
 
 	private final DataFinder finder;
 
-	/** True if the function must be executed in a new class loader */
+	/** True if the job must be executed in a new class loader */
 	private boolean reloadClasses = false;
 
 	/** The name of the execution manager to use */
@@ -57,9 +57,9 @@ public class Context<I extends Serializable, R extends Serializable, M extends I
 	 * Create a new evaluation context
 	 * @param execManager the execution manager to use
 	 * @param finder the data finder
-	 * @param input the input of the function
+	 * @param input the input of the job
 	 */
-	public Context(Class<M> execManager, DataFinder finder, I input) {
+	public Job(Class<M> execManager, DataFinder finder, I input) {
 
 		this.id = ID_PREFIX + ":" + ID_SUFFIX.incrementAndGet();
 
@@ -74,7 +74,7 @@ public class Context<I extends Serializable, R extends Serializable, M extends I
 
 	/**
 	 * Force the reload of all classes (i.e., does not enable the reuse of class loaders)
-	 * @param reloadClasses true if the classes must be reloaded for each test execution
+	 * @param reloadClasses true if the classes must be reloaded for each job
 	 */
 	public void setReloadClasses(boolean reloadClasses) {
 		this.reloadClasses = reloadClasses;

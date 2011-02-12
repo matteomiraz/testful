@@ -40,7 +40,7 @@ import testful.model.Test;
 import testful.model.TestCluster;
 import testful.model.executor.TestExecutorInput;
 import testful.runner.ClassType;
-import testful.runner.Context;
+import testful.runner.Job;
 import testful.runner.DataFinder;
 import testful.runner.DataFinderCaching;
 import testful.runner.DataFinderImpl;
@@ -167,7 +167,7 @@ public abstract class GenericTestCase extends TestCase {
 	}
 
 	protected static ElementManager<String, CoverageInformation> getCoverage(Test test, TrackerDatum ... data) throws InterruptedException, ExecutionException {
-		Context<TestExecutorInput, ElementManager<String, CoverageInformation>, CoverageTestExecutor> ctx =
+		Job<TestExecutorInput, ElementManager<String, CoverageInformation>, CoverageTestExecutor> ctx =
 			CoverageTestExecutor.getContext(getFinder(), test, true, data);
 
 		ctx.setReloadClasses(true);

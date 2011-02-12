@@ -26,7 +26,7 @@ import java.util.concurrent.TimeoutException;
 import testful.coverage.TrackerDatum;
 import testful.model.executor.TestExecutor;
 import testful.model.executor.TestExecutorInput;
-import testful.runner.Context;
+import testful.runner.Job;
 import testful.runner.DataFinder;
 import testful.runner.RunnerPool;
 
@@ -55,8 +55,8 @@ public class OperationResultTestExecutor extends TestExecutor<OperationResult[]>
 
 		final Test test = origTest.clone();
 
-		Context<TestExecutorInput, OperationResult[], OperationResultTestExecutor> ctx =
-			new Context<TestExecutorInput, OperationResult[], OperationResultTestExecutor>(
+		Job<TestExecutorInput, OperationResult[], OperationResultTestExecutor> ctx =
+			new Job<TestExecutorInput, OperationResult[], OperationResultTestExecutor>(
 					OperationResultTestExecutor.class, finder, new TestExecutorInput(test, false, data));
 
 		ctx.setReloadClasses(reloadClasses);
@@ -110,8 +110,8 @@ public class OperationResultTestExecutor extends TestExecutor<OperationResult[]>
 
 	public static void execute(DataFinder finder, Test test, boolean reloadClasses, TrackerDatum ... data) throws InterruptedException, ExecutionException {
 
-		Context<TestExecutorInput, OperationResult[], OperationResultTestExecutor> ctx =
-			new Context<TestExecutorInput, OperationResult[], OperationResultTestExecutor>(
+		Job<TestExecutorInput, OperationResult[], OperationResultTestExecutor> ctx =
+			new Job<TestExecutorInput, OperationResult[], OperationResultTestExecutor>(
 					OperationResultTestExecutor.class, finder, new TestExecutorInput(test, false, data));
 
 		ctx.setReloadClasses(reloadClasses);

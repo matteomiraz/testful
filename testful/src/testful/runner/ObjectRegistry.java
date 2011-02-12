@@ -27,7 +27,7 @@ import testful.utils.CachingMap.Cacheable;
 import testful.utils.Cloner;
 
 /**
- * ObjectRegistry allows one to retrieve objects (declared with {@link ObjectType}) while the test is running.
+ * ObjectRegistry allows one to retrieve objects (declared with {@link ObjectType}).
  * @author matteo
  */
 public class ObjectRegistry {

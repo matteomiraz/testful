@@ -14,7 +14,7 @@ import testful.model.OperationResult;
 import testful.model.Test;
 import testful.model.executor.ReflectionExecutor;
 import testful.model.executor.TestExecutorInput;
-import testful.runner.Context;
+import testful.runner.Job;
 import testful.runner.DataFinder;
 import testful.runner.Executor;
 import testful.runner.TestfulClassLoader;
@@ -30,8 +30,8 @@ public class MutationTestExecutor extends Executor<TestExecutorInput, MutationCo
 
 	private static Logger logger = Logger.getLogger("testful.mutation");
 
-	public static Context<TestExecutorInput, MutationCoverage, MutationTestExecutor> getContext(DataFinder finder, Test test, TrackerDatum ... data) {
-		return new Context<TestExecutorInput, MutationCoverage, MutationTestExecutor>(MutationTestExecutor.class, finder, new TestExecutorInput(test, true, data));
+	public static Job<TestExecutorInput, MutationCoverage, MutationTestExecutor> getContext(DataFinder finder, Test test, TrackerDatum ... data) {
+		return new Job<TestExecutorInput, MutationCoverage, MutationTestExecutor>(MutationTestExecutor.class, finder, new TestExecutorInput(test, true, data));
 	}
 
 	/** tracker data. trackerData[0] contains information about the mutation to run */

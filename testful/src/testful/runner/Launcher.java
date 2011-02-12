@@ -170,7 +170,7 @@ public class Launcher {
 	private static void connect(WorkerManager wm, String rmiName) {
 		logger.info("Connecting to " + rmiName);
 		try {
-			wm.addTestRepository(rmiName);
+			wm.addJobRepository(rmiName);
 			logger.info("Connected to " + rmiName);
 		} catch(Exception e) {
 			logger.log(Level.WARNING, "Cannot connect to " + rmiName, e);

@@ -56,7 +56,7 @@ public class Worker extends Thread {
 
 		try {
 			while(true) {
-				Context<?,?,?> ctx = workerManager.getTest();
+				Job<?,?,?> ctx = workerManager.getJob();
 
 				t_run.start();
 

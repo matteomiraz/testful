@@ -41,7 +41,7 @@ import testful.TestFul;
 import testful.utils.ElementManager;
 import testful.utils.ElementWithKey;
 
-public class RunnerPool implements IRunner, ITestRepository {
+public class RunnerPool implements IRunner, IJobRepository {
 
 	private static RunnerPool singleton;
 	public static RunnerPool getRunnerPool() {
@@ -58,27 +58,27 @@ public class RunnerPool implements IRunner, ITestRepository {
 	/** manager for futures; it is safe in a multi-threaded environment */
 	private final ElementManager<String, TestfulFuture<?>> futures;
 
-	/** tests in queue */
-	private final BlockingQueue<Context<?,?,?>> tests;
+	/** jobs in queue */
+	private final BlockingQueue<Job<?,?,?>> jobs;
 
-	/** tests being evaluated */
-	private final ConcurrentHashMap<String, Context<?,?,?>> testsEval;
+	/** jobs being evaluated */
+	private final ConcurrentHashMap<String, Job<?,?,?>> jobsEval;
 
 	private final String name;
 
 	private RunnerPool() {
 		int testBuffer = TestFul.getProperty(TestFul.PROPERTY_RUNNER_TESTREPOSITORY_JOBS, 1000);
-		tests = new ArrayBlockingQueue<Context<?,?,?>>(testBuffer);
+		jobs = new ArrayBlockingQueue<Job<?,?,?>>(testBuffer);
 		name = "testful-" + TestFul.runId;
 
 		futures = new ElementManager<String, TestfulFuture<?>>(new ConcurrentHashMap<String, TestfulFuture<?>>());
-		testsEval = new ConcurrentHashMap<String, Context<?,?,?>>();
+		jobsEval = new ConcurrentHashMap<String, Job<?,?,?>>();
 
 		if(LOG_FINE) logger.fine("Created Runner Pool ");
 
 		try {
 			WorkerManager wm = new WorkerManager();
-			wm.addTestRepository(this);
+			wm.addJobRepository(this);
 		} catch (RemoteException e) {
 			// never happens: it's done locally!
 		}
@@ -143,7 +143,7 @@ public class RunnerPool implements IRunner, ITestRepository {
 
 		try {
 			IWorkerManager wm = (IWorkerManager) Naming.lookup(rmiAddress);
-			wm.addTestRepository(this);
+			wm.addJobRepository(this);
 			return true;
 		} catch(MalformedURLException e) {
 			logger.log(Level.WARNING, "Invalid RMI address", e);
@@ -161,12 +161,12 @@ public class RunnerPool implements IRunner, ITestRepository {
 	}
 
 	@Override
-	public <I extends Serializable, R extends Serializable> Future<R> execute(Context<I, R, ? extends IExecutor<I,R>> ctx) {
+	public <I extends Serializable, R extends Serializable> Future<R> execute(Job<I, R, ? extends IExecutor<I,R>> ctx) {
 		TestfulFuture<R> ret = new TestfulFuture<R>(ctx.id);
 		futures.put(ret);
 
 		try {
-			tests.put(ctx);
+			jobs.put(ctx);
 		} catch(InterruptedException e) {
 			// this should not happens
 			logger.log(Level.WARNING, e.getMessage(), e);
@@ -176,12 +176,12 @@ public class RunnerPool implements IRunner, ITestRepository {
 	}
 
 	@Override
-	public <I extends Serializable, R extends Serializable> Context<I, R, ? extends IExecutor<I,R>> getTest() throws RemoteException {
+	public <I extends Serializable, R extends Serializable> Job<I, R, ? extends IExecutor<I,R>> getJob() throws RemoteException {
 		try {
 
 			@SuppressWarnings("unchecked")
-			Context<I, R, ? extends IExecutor<I, R>> ret = (Context<I, R, ? extends IExecutor<I, R>>) tests.take();
-			testsEval.put(ret.id, ret);
+			Job<I, R, ? extends IExecutor<I, R>> ret = (Job<I, R, ? extends IExecutor<I, R>>) jobs.take();
+			jobsEval.put(ret.id, ret);
 
 			return ret;
 
@@ -194,7 +194,7 @@ public class RunnerPool implements IRunner, ITestRepository {
 	@SuppressWarnings("unchecked")
 	public void putResult(String key, Serializable result) {
 
-		testsEval.remove(key);
+		jobsEval.remove(key);
 		TestfulFuture<Serializable> future = (TestfulFuture<Serializable>) futures.remove(key);
 
 		if(future == null) logger.warning("Future with " + key + " not found");
@@ -204,7 +204,7 @@ public class RunnerPool implements IRunner, ITestRepository {
 	@Override
 	public void putException(String key, Exception exc) throws RemoteException {
 
-		testsEval.remove(key);
+		jobsEval.remove(key);
 		TestfulFuture<?> future = futures.remove(key);
 
 		if(future == null) logger.warning("Future with " + key + " not found");

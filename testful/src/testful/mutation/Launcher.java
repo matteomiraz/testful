@@ -19,7 +19,7 @@ import testful.model.TestCoverage;
 import testful.model.TestReader;
 import testful.model.executor.TestExecutorInput;
 import testful.runner.ClassType;
-import testful.runner.Context;
+import testful.runner.Job;
 import testful.runner.DataFinder;
 import testful.runner.DataFinderCaching;
 import testful.runner.DataFinderImpl;
@@ -146,7 +146,7 @@ public class Launcher {
 		@Override
 		protected void read(String fileName, Test test) {
 			try {
-				Context<TestExecutorInput, MutationCoverage, MutationTestExecutor> ctx = MutationTestExecutor.getContext(finder, new Test(test.getCluster(), test.getReferenceFactory(), test.getTest()));
+				Job<TestExecutorInput, MutationCoverage, MutationTestExecutor> ctx = MutationTestExecutor.getContext(finder, new Test(test.getCluster(), test.getReferenceFactory(), test.getTest()));
 				ctx.setReloadClasses(reloadClasses);
 				MutJob mutJob = new MutJob(fileName, test, exec.execute(ctx));
 				submitted.put(mutJob);
