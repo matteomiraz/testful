@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+import testful.TestFul;
+
 /**
  * Retrieve the bytecode of classes.
  *
@@ -40,10 +42,12 @@ public class DataFinderImpl implements DataFinder {
 	public DataFinderImpl(DataType ... dataType) {
 		key = UUID.randomUUID().toString();
 
-		try {
-			UnicastRemoteObject.exportObject(this, 0);
-		} catch(Exception e) {
-			logger.warning("Unable to use the classloader " + toString() + " in a remote context: " + e);
+		if(TestFul.getProperty(TestFul.PROPERTY_RUNNER_REMOTE, false)) {
+			try {
+				UnicastRemoteObject.exportObject(this, 0);
+			} catch(Exception e) {
+				logger.warning("Unable to use the classloader " + toString() + " in a remote context: " + e);
+			}
 		}
 
 		types = new HashMap<String, DataType>((int) (dataType.length*1.5));

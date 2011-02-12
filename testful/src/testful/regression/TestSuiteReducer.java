@@ -36,7 +36,6 @@ import org.kohsuke.args4j.Option;
 
 import testful.ConfigCut;
 import testful.IConfigCut;
-import testful.IConfigRunner;
 import testful.TestFul;
 import testful.coverage.CoverageInformation;
 import testful.coverage.CoverageTestExecutor;
@@ -146,7 +145,7 @@ public class TestSuiteReducer {
 
 	// -------------------- main ----------------------
 
-	private static class Config extends ConfigCut implements IConfigCut.Args4j, IConfigRunner.Args4j {
+	private static class Config extends ConfigCut implements IConfigCut.Args4j {
 
 		@Option(required = true, name = "-dirOut", usage = "Specify the output directory")
 		private File out;
@@ -154,33 +153,9 @@ public class TestSuiteReducer {
 		@Argument
 		private List<String> tests = new ArrayList<String>();
 
-		private List<String> remote = new ArrayList<String>();
-
 		/** should I reload all classes every new test? */
 		@Option(required = false, name = "-reload", usage = "Reload classes before each run (reinitialize static fields)")
 		private boolean reloadClasses = false;
-
-		private boolean localEvaluation = true;
-
-		@Override
-		public List<String> getRemote() {
-			return remote;
-		}
-
-		@Override
-		public void addRemote(String remote) {
-			this.remote.add(remote);
-		}
-
-		@Override
-		public boolean isLocalEvaluation() {
-			return localEvaluation;
-		}
-
-		@Override
-		public void disableLocalEvaluation(boolean disableLocalEvaluation) {
-			localEvaluation = !disableLocalEvaluation;
-		}
 
 		public boolean isReloadClasses() {
 			return reloadClasses;
@@ -195,8 +170,6 @@ public class TestSuiteReducer {
 			testful.TestFul.printHeader("Test suite reducer");
 
 		TestFul.setupLogging(config);
-
-		RunnerPool.getRunnerPool().config(config);
 
 		DataFinderCaching finder = null;
 		try {

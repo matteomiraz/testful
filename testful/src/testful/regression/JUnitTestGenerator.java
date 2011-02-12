@@ -40,7 +40,6 @@ import org.kohsuke.args4j.Option;
 
 import testful.ConfigProject;
 import testful.IConfigProject;
-import testful.IConfigRunner;
 import testful.TestFul;
 import testful.coverage.CoverageInformation;
 import testful.model.Clazz;
@@ -64,7 +63,6 @@ import testful.model.transformation.TestTransformationPipeline;
 import testful.runner.ClassType;
 import testful.runner.DataFinderCaching;
 import testful.runner.DataFinderImpl;
-import testful.runner.RunnerPool;
 import testful.runner.TestfulClassLoader;
 import testful.utils.ElementManager;
 import testful.utils.ElementWithKey;
@@ -620,7 +618,6 @@ public class JUnitTestGenerator extends TestReader {
 			TestFul.printHeader("JUnit test generator");
 
 		TestFul.setupLogging(config);
-		RunnerPool.getRunnerPool().config(config);
 
 		DataFinderCaching finder = null;
 		TestfulClassLoader loader = null;
@@ -645,7 +642,7 @@ public class JUnitTestGenerator extends TestReader {
 		System.exit(0);
 	}
 
-	private static class Config extends ConfigProject implements IConfigProject.Args4j, IConfigRunner.Args4j {
+	private static class Config extends ConfigProject implements IConfigProject.Args4j {
 
 		@Option(required = false, name = "-reload", usage = "Reload classes before each run (reinitialize static fields)")
 		private boolean reloadClasses;
@@ -658,30 +655,6 @@ public class JUnitTestGenerator extends TestReader {
 
 		@Argument
 		private List<String> tests = new ArrayList<String>();
-
-		private List<String> remote = new ArrayList<String>();
-
-		private boolean localEvaluation = true;
-
-		@Override
-		public List<String> getRemote() {
-			return remote;
-		}
-
-		@Override
-		public void addRemote(String remote) {
-			this.remote.add(remote);
-		}
-
-		@Override
-		public boolean isLocalEvaluation() {
-			return localEvaluation;
-		}
-
-		@Override
-		public void disableLocalEvaluation(boolean disableLocalEvaluation) {
-			localEvaluation = !disableLocalEvaluation;
-		}
 
 		public File getDirGeneratedTests() {
 			if(!dirGeneratedTests.isAbsolute()) dirGeneratedTests = new File(getDirBase(), dirGeneratedTests.getPath()).getAbsoluteFile();

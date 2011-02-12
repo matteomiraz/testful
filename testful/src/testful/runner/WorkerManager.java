@@ -47,9 +47,6 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 	private static Logger logger = Logger.getLogger("testful.executor.worker");
 	private static final boolean LOG_FINE = logger.isLoggable(Level.FINE);
 
-	/** cache size: number of jobs to keep in local cache */
-	private static final int CACHE_SIZE = 50;
-
 	private final Set<String> testRepositories = Collections.synchronizedSet(new HashSet<String>());
 
 	private volatile boolean running = true;
@@ -66,17 +63,25 @@ public class WorkerManager implements IWorkerManager, ITestRepository {
 
 	private AtomicLong executedJobs = new AtomicLong();
 
-	public WorkerManager(int cpu, int buffer) {
+	public WorkerManager() {
 		if(LOG_FINE) logger.fine("Starting: Worker Manager (" + TestFul.runId + ")");
 
-		if(buffer <= 0) buffer = CACHE_SIZE;
+		int buffer = TestFul.getProperty(TestFul.PROPERTY_RUNNER_WORKER_JOBS, 50);
 		tests = new ArrayBlockingQueue<Context<?,?,?>>(buffer);
 		results = new ConcurrentHashMap<String, ITestRepository>();
 
 		finders = new CachingMap<String, DataFinder>(MAX_ELEMS, MIN_AGE, MIN_UNUSED);
 		classLoaders = new CachingMap<String, Queue<TestfulClassLoader>>(MAX_ELEMS, MIN_AGE, MIN_UNUSED);
 
-		if(cpu < 0) cpu = Runtime.getRuntime().availableProcessors();
+		int cpu = TestFul.getProperty(TestFul.PROPERTY_RUNNER_LOCAL_WORKERS, -1);
+		if(cpu > 0) {
+			logger.info("Starting with " + cpu + " local executor threads");
+		} else if (cpu == 0) {
+			logger.info("Starting without CPUs: acting as a test repository.");
+		} else { // cpu < 0
+			cpu = Runtime.getRuntime().availableProcessors();
+			logger.info("Detected " + cpu + " cpus (or cores): starting one thread per cpus.");
+		}
 
 		for(int i = 0; i < cpu; i++) createWorker();
 

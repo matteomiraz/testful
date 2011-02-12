@@ -89,7 +89,6 @@ public abstract class GenericTestCase extends TestCase {
 	//-------------------------- Runner --------------------------------------
 	static {
 		TestFul.setupLogging(GenericTestCase.getConfig());
-		RunnerPool.getRunnerPool().startLocalWorkers();
 	}
 	private static IRunner exec;
 	/** Returns the executor  */

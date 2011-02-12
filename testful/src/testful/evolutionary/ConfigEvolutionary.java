@@ -25,21 +25,18 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.Option;
 
 import testful.ConfigGeneration;
-import testful.ConfigRunner;
 import testful.IConfigCut;
 import testful.IConfigGeneration;
 import testful.IConfigProject;
-import testful.IConfigRunner;
 import testful.TestfulException;
 
 /**
  * Contains the information required to run Testful.
  * @author matteo
  */
-public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigRunner.Args4j, IConfigGeneration.Args4j, IConfigCut.Args4j, IConfigProject.Args4j {
+public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.Args4j, IConfigGeneration.Args4j, IConfigCut.Args4j, IConfigProject.Args4j {
 
 	private final IConfigGeneration.Args4j configGenerator = new ConfigGeneration();
-	private final IConfigRunner.Args4j configRunner = new ConfigRunner();
 	private final IConfigFitness.Args4j configFitness = new ConfigFitness();
 
 	@Option(required = false, name = "-localSearchPeriod", usage = "Period of the local search (default: every 20 generations; <= 0 to disable local search)")
@@ -266,31 +263,6 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 
 	public void setSmartInitialPopulation(int smartInitialPopulation) {
 		this.smartInitialPopulation = smartInitialPopulation;
-	}
-
-	@Override
-	public List<String> getRemote() {
-		return configRunner.getRemote();
-	}
-
-	public void setRemote(String remote) {
-		configRunner.getRemote().clear();
-		configRunner.addRemote(remote);
-	}
-
-	@Override
-	public boolean isLocalEvaluation() {
-		return configRunner.isLocalEvaluation();
-	}
-
-	@Override
-	public void addRemote(String remote) {
-		configRunner.addRemote(remote);
-	}
-
-	@Override
-	public void disableLocalEvaluation(boolean disableLocalEvaluation) {
-		configRunner.disableLocalEvaluation(disableLocalEvaluation);
 	}
 
 	@Override

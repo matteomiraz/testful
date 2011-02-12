@@ -64,8 +64,6 @@ public class Launcher {
 	public static void run(ConfigMutation config) {
 		if(config.getArguments().isEmpty()) return;
 
-		RunnerPool.getRunnerPool().config(config);
-
 		try {
 			IRunner exec = RunnerPool.getRunnerPool();
 

@@ -20,9 +20,8 @@
 package testful.random;
 
 import testful.IConfigGeneration;
-import testful.IConfigRunner;
 
-public interface IConfigRandom extends IConfigGeneration, IConfigRunner {
+public interface IConfigRandom extends IConfigGeneration {
 
 	public static enum RandomType {
 		SIMPLE, SPLIT

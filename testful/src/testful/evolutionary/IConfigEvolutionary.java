@@ -19,13 +19,12 @@
 package testful.evolutionary;
 
 import testful.IConfigGeneration;
-import testful.IConfigRunner;
 
 /**
  * Contains the information required to run Testful
  * @author matteo
  */
-public interface IConfigEvolutionary extends IConfigGeneration, IConfigRunner, IConfigFitness {
+public interface IConfigEvolutionary extends IConfigGeneration, IConfigFitness {
 
 	public static enum FitnessInheritance {
 		DISABLED, UNIFORM, FRONTEER;

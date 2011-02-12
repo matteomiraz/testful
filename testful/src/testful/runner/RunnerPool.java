@@ -37,14 +37,11 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import testful.IConfigRunner;
 import testful.TestFul;
 import testful.utils.ElementManager;
 import testful.utils.ElementWithKey;
 
 public class RunnerPool implements IRunner, ITestRepository {
-
-	private static final int MAX_BUFFER = TestFul.getProperty(TestFul.PROPERTY_LOCAL_JOBS, 1000);
 
 	private static RunnerPool singleton;
 	public static RunnerPool getRunnerPool() {
@@ -58,10 +55,9 @@ public class RunnerPool implements IRunner, ITestRepository {
 	private static final boolean LOG_FINE = logger.isLoggable(Level.FINE);
 	private static final boolean LOG_FINER = logger.isLoggable(Level.FINER);
 
-	private boolean localWorkersStarted = false;
-
 	/** manager for futures; it is safe in a multi-threaded environment */
 	private final ElementManager<String, TestfulFuture<?>> futures;
+
 	/** tests in queue */
 	private final BlockingQueue<Context<?,?,?>> tests;
 
@@ -71,7 +67,8 @@ public class RunnerPool implements IRunner, ITestRepository {
 	private final String name;
 
 	private RunnerPool() {
-		tests = new ArrayBlockingQueue<Context<?,?,?>>(MAX_BUFFER);
+		int testBuffer = TestFul.getProperty(TestFul.PROPERTY_RUNNER_TESTREPOSITORY_JOBS, 1000);
+		tests = new ArrayBlockingQueue<Context<?,?,?>>(testBuffer);
 		name = "testful-" + TestFul.runId;
 
 		futures = new ElementManager<String, TestfulFuture<?>>(new ConcurrentHashMap<String, TestfulFuture<?>>());
@@ -79,64 +76,64 @@ public class RunnerPool implements IRunner, ITestRepository {
 
 		if(LOG_FINE) logger.fine("Created Runner Pool ");
 
-		Registry registry;
 		try {
-			registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
-			registry.list();
-			if(LOG_FINER) logger.finer("Found a RMI registry");
-		} catch(Exception e) {
+			WorkerManager wm = new WorkerManager();
+			wm.addTestRepository(this);
+		} catch (RemoteException e) {
+			// never happens: it's done locally!
+		}
+
+		if(TestFul.getProperty(TestFul.PROPERTY_RUNNER_REMOTE, false)) {
+			Registry registry = null;
 			try {
-				registry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
-				if(LOG_FINER) logger.finer("Created a new RMI registry");
-			} catch(RemoteException e1) {
-				logger.log(Level.WARNING, "Distributed evaluation disabled", e);
-				registry = null;
+				registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
+				registry.list();
+				if(LOG_FINER) logger.finer("Found a RMI registry");
+			} catch(Exception e) {
+				try {
+					registry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
+					if(LOG_FINER) logger.finer("Created a new RMI registry");
+				} catch(RemoteException e1) {
+					logger.log(Level.WARNING, "Distributed evaluation disabled", e);
+				}
 			}
-		}
 
-		Remote remote = null;
-		if(registry != null) {
-			try {
-				remote = UnicastRemoteObject.exportObject(this, 0);
-			} catch(RemoteException e) {
-				logger.log(Level.WARNING, "Distributed evaluation disabled", e);
-				remote = null;
+			if(registry != null) {
+				Remote remote = null;
+				try {
+					remote = UnicastRemoteObject.exportObject(this, 0);
+				} catch(RemoteException e) {
+					logger.log(Level.WARNING, "Distributed evaluation disabled", e);
+					remote = null;
+				}
+
+				if (remote != null) {
+					try {
+						registry.bind(name, remote);
+						logger.info("Registered executorPool at " + name);
+
+					} catch (Exception e) {
+						logger.log(Level.WARNING, "Remote evaluation disabled: ", e);
+						registry = null;
+					}
+				}
 			}
-		}
 
-		try {
-			registry.bind(name, remote);
-			logger.info("Registered executorPool at " + name);
-
-		} catch(Exception e) {
-			logger.log(Level.WARNING, "Remote evaluation disabled: ", e);
-
-			registry = null;
-		}
-
-		if(registry == null || remote == null) startLocalWorkers();
-	}
-
-	public void config(IConfigRunner config) {
-		if(config.isLocalEvaluation()) startLocalWorkers();
-
-		if(config.getRemote() != null) {
-			for (String remote : config.getRemote()) {
-				addRemoteWorker(remote);
+			String remoteProp = TestFul.getProperty(TestFul.PROPERTY_RUNNER_REMOTE_ADDR, "");
+			String[] remotes = remoteProp.split(",");
+			for (String remote : remotes) {
+				remote = remote.trim();
+				if(!remote.isEmpty())
+					addRemoteWorker(remote);
 			}
-		}
-	}
 
-	public void startLocalWorkers() {
-		if (!localWorkersStarted) {
-			try {
-				int nWorkers = TestFul.getProperty(TestFul.PROPERTY_N_WORKERS, TestFul.DEBUG ? 1 : -1);
-				WorkerManager wm = new WorkerManager(nWorkers, 0);
-				wm.addTestRepository(this);
-				localWorkersStarted = true;
-			} catch (RemoteException e) {
-				// never happens: all it's done locally!
+		} else { // warn the user if he specifies any remote option
+
+			String remoteRunnersAddr = TestFul.getProperty(TestFul.PROPERTY_RUNNER_REMOTE_ADDR, "");
+			if(!remoteRunnersAddr.isEmpty()) {
+				logger.warning("Remote evaluation is disabled. Ignoring remote workers " + remoteRunnersAddr);
 			}
+
 		}
 	}
 

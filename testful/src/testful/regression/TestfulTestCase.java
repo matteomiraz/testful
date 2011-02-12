@@ -54,7 +54,6 @@ public class TestfulTestCase extends TestCase {
 
 	static {
 		TestFul.printHeader("JUnit Test Executor");
-		RunnerPool.getRunnerPool().startLocalWorkers();
 	}
 
 	private static final Logger logger = Logger.getLogger("testful.regression");

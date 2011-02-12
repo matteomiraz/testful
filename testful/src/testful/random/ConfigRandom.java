@@ -25,17 +25,14 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.Option;
 
 import testful.ConfigGeneration;
-import testful.ConfigRunner;
 import testful.IConfigCut;
 import testful.IConfigGeneration;
 import testful.IConfigProject;
-import testful.IConfigRunner;
 import testful.TestfulException;
 
-public class ConfigRandom implements IConfigRandom, IConfigRunner.Args4j, IConfigGeneration.Args4j, IConfigCut.Args4j, IConfigProject.Args4j {
+public class ConfigRandom implements IConfigRandom, IConfigGeneration.Args4j, IConfigCut.Args4j, IConfigProject.Args4j {
 
 	private final IConfigGeneration.Args4j configGenerator = new ConfigGeneration();
-	private final IConfigRunner.Args4j configRunner = new ConfigRunner();
 
 	@Option(required = false, name = "-pGenNewObj", usage = "Probability to create new objects")
 	private float pGenNewObj = 0.35f;
@@ -205,26 +202,6 @@ public class ConfigRandom implements IConfigRandom, IConfigRunner.Args4j, IConfi
 	@Override
 	public void setMaxTestLen(int maxTestLen) {
 		configGenerator.setMaxTestLen(maxTestLen);
-	}
-
-	@Override
-	public List<String> getRemote() {
-		return configRunner.getRemote();
-	}
-
-	@Override
-	public boolean isLocalEvaluation() {
-		return configRunner.isLocalEvaluation();
-	}
-
-	@Override
-	public void addRemote(String remote) {
-		configRunner.addRemote(remote);
-	}
-
-	@Override
-	public void disableLocalEvaluation(boolean disableLocalEvaluation) {
-		configRunner.disableLocalEvaluation(disableLocalEvaluation);
 	}
 
 	@Override

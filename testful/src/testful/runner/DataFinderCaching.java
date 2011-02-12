@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import testful.TestFul;
 import testful.utils.CachingMap;
 import testful.utils.CachingMap.Cacheable;
 
@@ -54,10 +55,12 @@ public class DataFinderCaching implements DataFinder {
 		finder = classFinder;
 		key = classFinder.getKey();
 
-		try {
-			UnicastRemoteObject.exportObject(this, 0);
-		} catch(Exception e) {
-			logger.log(Level.WARNING, "Unable to use the classloader " + toString() + " in a remote context: " + e.getMessage(), e);
+		if(TestFul.getProperty(TestFul.PROPERTY_RUNNER_REMOTE, false)) {
+			try {
+				UnicastRemoteObject.exportObject(this, 0);
+			} catch(Exception e) {
+				logger.log(Level.WARNING, "Unable to use the classloader " + toString() + " in a remote context: " + e.getMessage(), e);
+			}
 		}
 
 		logger.finest("Created classFinder with key: " + key);

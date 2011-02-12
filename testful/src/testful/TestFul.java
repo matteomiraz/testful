@@ -41,13 +41,15 @@ import org.kohsuke.args4j.CmdLineParser;
 
 public class TestFul {
 
+	//  ------------------------- Shared values --------------------------------------
+
+	/** The identification of this run */
+	public static final long runId = System.currentTimeMillis();
+
 	//  ---------- testful's system properties (settable with -Dprop=value) ----------
 
 	/** Enables the debug mode (boolean) */
 	public static final String PROPERTY_DEBUG = "testful.debug";
-
-	/** Set the number of threads to use (integer; default: the number of CPUs of the machine) */
-	public static final String PROPERTY_N_WORKERS = "testful.nWorkers";
 
 	/** Measure the effective CPU time used, and not the wall clock (boolean; default: false) */
 	public static final String PROPERTY_TIME_CPU = "testful.cpuTime";
@@ -61,14 +63,26 @@ public class TestFul {
 	/** Monitor TestFul to collect internal execution performances */
 	public static final String PROPERTY_MONITOR_PERFORMANCE = "testful.monitorPerformance";
 
-	/** Number of jobs to store on the client side (TestFul and jAutoTest put jobs here) (integer, default: 1000)  */
-	public static final String PROPERTY_LOCAL_JOBS = "testful.nLocalJobs";
-
 	/** Probability to remove an operation during mutation (float, between 0 and 1, default: 0.75) */
 	public static final String PROPERTY_MUTATION_REMOVE = "testful.mutation.probRemove";
 
 	/** Probability to remove all the useless operations of a test during mutation (float, between 0 and 1, default: disabled (0) ) */
 	public static final String PROPERTY_MUTATION_SIMPLIFY = "testful.mutation.probRemove";
+
+	/** The number of threads to use on the local machine (integer, 0 disables the evaluation, -1 uses as many threads as the number of CPUs; default: -1 (the number of CPUs) ) */
+	public static final String PROPERTY_RUNNER_LOCAL_WORKERS = "testful.runner.local";
+
+	/** Enables the remote evaluation infrastructure (Boolean, default: false) */
+	public static final String PROPERTY_RUNNER_REMOTE = "testful.runner.remote";
+
+	/** The list of remote workers, separated by commas (String, default: "") */
+	public static final String PROPERTY_RUNNER_REMOTE_ADDR = "testful.runner.remoteAddr";
+
+	/** Number of jobs to store on the client side (TestFul and jAutoTest put jobs here) (integer, default: 1000)  */
+	public static final String PROPERTY_RUNNER_TESTREPOSITORY_JOBS = "testful.runner.nLocalJobs";
+
+	/** Number of jobs to store on the worker side (integer, default: 50)  */
+	public static final String PROPERTY_RUNNER_WORKER_JOBS = "testful.runner.nWorkerJobs";
 
 	// ---------- end of testful's properties ----------
 
@@ -98,8 +112,6 @@ public class TestFul {
 	}
 
 	// ----------- command-line handling ---------------
-
-	public static final long runId = System.currentTimeMillis();
 
 	private static final String VERSION = "1.2.0";
 

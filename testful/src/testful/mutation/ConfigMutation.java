@@ -8,37 +8,12 @@ import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import testful.ConfigProject;
-import testful.ConfigRunner;
 import testful.IConfigProject;
-import testful.IConfigRunner;
 
-public class ConfigMutation extends ConfigProject
-implements IConfigProject.Args4j, IConfigRunner.Args4j {
-
-	private final ConfigRunner runner = new ConfigRunner();
+public class ConfigMutation extends ConfigProject implements IConfigProject.Args4j {
 
 	public ConfigMutation() {
 		setDirInstrumented(new File("mutants"));
-	}
-
-	@Override
-	public List<String> getRemote() {
-		return runner.getRemote();
-	}
-
-	@Override
-	public boolean isLocalEvaluation() {
-		return runner.isLocalEvaluation();
-	}
-
-	@Override
-	public void addRemote(String remote) {
-		runner.addRemote(remote);
-	}
-
-	@Override
-	public void disableLocalEvaluation(boolean disableLocalEvaluation) {
-		runner.disableLocalEvaluation(disableLocalEvaluation);
 	}
 
 	@Option(required = false, name = "-generateMutant", usage = "Generate mutants for this class", multiValued = true, metaVar = "full.qualified.ClassName")

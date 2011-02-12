@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package testful.runner;
 
 import java.io.File;
@@ -46,9 +45,6 @@ import testful.TestFul;
 public class Launcher {
 
 	private static Logger logger = Logger.getLogger("testful.executor");
-
-	@Option(required = false, name = "-cpu", usage = "The number of workers to allocate (default: number of available CPU cores)")
-	private int cpu;
 
 	@Option(required = false, name = "-buffer", usage = "The number of jobs to cache (must be >= 0)")
 	private int bufferSize;
@@ -80,6 +76,7 @@ public class Launcher {
 	public static final String RMI_NAME = "worker";
 
 	public static void main(String[] args) throws RemoteException {
+
 		TestFul.printHeader("Worker");
 
 		final Launcher config = new Launcher();
@@ -87,14 +84,18 @@ public class Launcher {
 
 		TestFul.setupLogging(config.log, config.logLevel.getLoggingLevel(), config.quiet);
 
+		// Runner must be execute in a distributed environment
+		System.setProperty(TestFul.PROPERTY_RUNNER_REMOTE, "true");
+
+		if(config.bufferSize > 0) {
+			String oldProp = System.setProperty(TestFul.PROPERTY_RUNNER_WORKER_JOBS, Integer.toString(config.bufferSize));
+			if(oldProp != null)
+				logger.warning("The option -buffer (" + config.bufferSize + ") is overriding the " + TestFul.PROPERTY_RUNNER_WORKER_JOBS + " property (" + oldProp + ")");
+		}
+
 		logger.config(TestFul.printGetters(config));
 
-		if(config.cpu < 0) {
-			logger.info("Starting without CPUs: acting as a test repository.");
-			config.cpu = 0;
-		} else if(config.cpu == 0) config.cpu = -1;
-
-		final WorkerManager wm = new WorkerManager(config.cpu, config.bufferSize);
+		final WorkerManager wm = new WorkerManager();
 
 		if(config.register) {
 			logger.info("Registering workerManager");

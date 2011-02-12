@@ -34,8 +34,8 @@ import org.kohsuke.args4j.Option;
 import testful.ConfigProject;
 import testful.IConfigProject;
 import testful.TestFul;
-import testful.coverage.CoverageTestExecutor;
 import testful.coverage.CoverageInformation;
+import testful.coverage.CoverageTestExecutor;
 import testful.coverage.TrackerDatum;
 import testful.model.OptimalTestCreator;
 import testful.model.Test;
@@ -101,8 +101,6 @@ public class TestCoverageReporter extends TestReader {
 			testful.TestFul.printHeader("Test coverage reporter");
 
 		TestFul.setupLogging(config);
-
-		RunnerPool.getRunnerPool().startLocalWorkers();
 
 		try {
 			TestCoverageReporter covReporter = new TestCoverageReporter(config);

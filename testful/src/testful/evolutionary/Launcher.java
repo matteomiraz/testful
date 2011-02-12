@@ -44,7 +44,6 @@ import testful.random.RandomTest;
 import testful.random.RandomTestSplit;
 import testful.regression.JUnitTestGenerator;
 import testful.regression.TestSuiteReducer;
-import testful.runner.RunnerPool;
 import testful.runner.TestfulClassLoader;
 
 /**
@@ -79,8 +78,6 @@ public class Launcher {
 		logger.config(TestFul.printGetters(config));
 
 		PseudoRandom.setupMersenneTwisterFast(config.getSeed());
-
-		RunnerPool.getRunnerPool().config(config);
 
 		if(config.getLog() != null && logger.isLoggable(Level.FINE)) {
 			try {

@@ -34,7 +34,6 @@ import testful.runner.ClassType;
 import testful.runner.DataFinder;
 import testful.runner.DataFinderCaching;
 import testful.runner.DataFinderImpl;
-import testful.runner.RunnerPool;
 import testful.runner.TestfulClassLoader;
 import testful.utils.ElementManager;
 
@@ -63,8 +62,6 @@ public class Launcher {
 	}
 
 	public static void run(IConfigRandom config) throws TestfulException {
-		RunnerPool.getRunnerPool().config(config);
-
 		DataFinder finder;
 		TestCluster tc;
 		try {

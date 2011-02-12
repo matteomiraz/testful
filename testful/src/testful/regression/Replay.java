@@ -40,7 +40,6 @@ import testful.runner.ClassType;
 import testful.runner.DataFinder;
 import testful.runner.DataFinderCaching;
 import testful.runner.DataFinderImpl;
-import testful.runner.RunnerPool;
 
 /**
  * Executes one or more tests on a given class.
@@ -77,8 +76,6 @@ public class Replay extends TestReader {
 			TestFul.printHeader("Regression Testing");
 
 		TestFul.setupLogging(config);
-
-		RunnerPool.getRunnerPool().startLocalWorkers();
 
 		try {
 			Replay replay = new Replay(config, config.exitOnBug, config.reloadClasses);
