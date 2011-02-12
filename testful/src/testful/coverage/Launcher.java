@@ -201,10 +201,7 @@ public class Launcher {
 
 		TestFul.parseCommandLine(config, args, Launcher.class, "Instrumenter");
 
-		if(!config.isQuiet())
-			testful.TestFul.printHeader("Instrumenter");
-
-		testful.TestFul.setupLogging(config);
+		testful.TestFul.printHeader("Instrumenter");
 
 		try {
 			TestfulClassLoader tcl = new TestfulClassLoader(new DataFinderCaching(new DataFinderImpl(new ClassType(config))));

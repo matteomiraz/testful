@@ -35,10 +35,7 @@ public class Launcher {
 		ConfigMutation config = new ConfigMutation();
 		TestFul.parseCommandLine(config, args, Launcher.class, "Mutation testing");
 
-		TestFul.setupLogging(config);
-
-		if(!config.isQuiet())
-			testful.TestFul.printHeader("Mutation testing");
+		testful.TestFul.printHeader("Mutation testing");
 
 		generate(config);
 

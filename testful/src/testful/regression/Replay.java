@@ -72,10 +72,7 @@ public class Replay extends TestReader {
 		Config config = new Config();
 		TestFul.parseCommandLine(config, args, Replay.class, "Replay");
 
-		if(!config.isQuiet())
-			TestFul.printHeader("Regression Testing");
-
-		TestFul.setupLogging(config);
+		TestFul.printHeader("Regression Testing");
 
 		try {
 			Replay replay = new Replay(config, config.exitOnBug, config.reloadClasses);

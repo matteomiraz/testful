@@ -18,7 +18,6 @@
 
 package testful.random;
 
-import java.io.File;
 import java.util.Map.Entry;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
@@ -67,10 +66,7 @@ public abstract class RandomTest {
 
 	protected volatile boolean keepRunning = true;
 
-	protected final File logDirectory;
-
-	public RandomTest(File logDirectory, DataFinder finder, boolean reloadClasses, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
-		this.logDirectory = logDirectory;
+	public RandomTest(DataFinder finder, boolean reloadClasses, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
 		optimal = new OptimalTestCreator();
 
 		logger.config("RandomTest: initializing MersenneTwisterFast with seed " + seed);

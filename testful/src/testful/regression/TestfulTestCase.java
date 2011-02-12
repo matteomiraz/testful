@@ -144,7 +144,6 @@ public class TestfulTestCase extends TestCase {
 
 		Config config = new Config();
 		TestFul.parseCommandLine(config, args, TestfulTestCase.class, "JUnit Test executor");
-		TestFul.setupLogging(config);
 
 		TestRunner runner = new TestRunner();
 		TestResult result = runner.doRun(new TestfulTestCase(config), false);

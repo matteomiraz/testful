@@ -38,6 +38,7 @@ public class AllTests {
 	public static Test suite() {
 		TestSuite suite = new TestSuite("Test for Testful");
 
+		suite.addTestSuite(TestingSetupTestCase.class);
 		suite.addTest(testful.model.AllTests.suite());
 		suite.addTest(testful.coverage.AllTests.suite());
 		suite.addTest(testful.regression.AllTests.suite());

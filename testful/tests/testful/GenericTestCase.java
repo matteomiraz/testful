@@ -56,16 +56,11 @@ import ec.util.MersenneTwisterFast;
  */
 public abstract class GenericTestCase extends TestCase {
 
-	//-------------------------- logging -------------------------------------
-	static {
-		TestFul.setupLogging(GenericTestCase.getConfig());
-	}
 	//-------------------------- config --------------------------------------
 	/** Returns the configuration for the TestCut */
 	public static IConfigProject getConfig() {
 		ConfigProject tmp = new ConfigProject();
 		tmp.setDirBase(new File("testCut"));
-		tmp.setQuiet(true);
 		return tmp;
 	}
 
@@ -87,9 +82,6 @@ public abstract class GenericTestCase extends TestCase {
 	}
 
 	//-------------------------- Runner --------------------------------------
-	static {
-		TestFul.setupLogging(GenericTestCase.getConfig());
-	}
 	private static IRunner exec;
 	/** Returns the executor  */
 	protected static IRunner getExec() {

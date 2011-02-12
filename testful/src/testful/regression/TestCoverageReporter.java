@@ -97,10 +97,7 @@ public class TestCoverageReporter extends TestReader {
 		Config config = new Config();
 		TestFul.parseCommandLine(config, args, TestCoverageReporter.class, "Test coverage reporter");
 
-		if(!config.isQuiet())
-			testful.TestFul.printHeader("Test coverage reporter");
-
-		TestFul.setupLogging(config);
+		testful.TestFul.printHeader("Test coverage reporter");
 
 		try {
 			TestCoverageReporter covReporter = new TestCoverageReporter(config);

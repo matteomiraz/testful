@@ -99,7 +99,6 @@ public class Parser {
 		IConfigCut config = new ConfigCut();
 
 		TestFul.parseCommandLine(config, args, Parser.class, "XML Creator");
-		testful.TestFul.setupLogging(config);
 
 		final TestfulClassLoader loader = new TestfulClassLoader(new DataFinderImpl(new ClassType(config)));
 

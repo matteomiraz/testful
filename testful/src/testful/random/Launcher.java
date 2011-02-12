@@ -45,10 +45,7 @@ public class Launcher {
 		IConfigRandom config = new ConfigRandom();
 		TestFul.parseCommandLine(config, args, Launcher.class, "Random testing");
 
-		if(!config.isQuiet())
-			testful.TestFul.printHeader("Random testing");
-
-		TestFul.setupLogging(config);
+		testful.TestFul.printHeader("Random testing");
 
 		logger.config(TestFul.printGetters(config));
 
@@ -81,10 +78,10 @@ public class Launcher {
 		logger.config("Using the " + config.getRandomType() + " algorithm");
 		switch(config.getRandomType()) {
 		case SIMPLE:
-			rt = new RandomTestSimple(config.getLog(), finder, config.isReloadClasses(), tc, refFactory, config.getSeed());
+			rt = new RandomTestSimple(finder, config.isReloadClasses(), tc, refFactory, config.getSeed());
 			break;
 		case SPLIT:
-			rt = new RandomTestSplit(config.getLog(), finder, config.isReloadClasses(), tc, refFactory, config.getSeed());
+			rt = new RandomTestSplit(finder, config.isReloadClasses(), tc, refFactory, config.getSeed());
 			break;
 		}
 
@@ -92,11 +89,11 @@ public class Launcher {
 
 		rt.test(config.getTime() * 1000);
 
-		if(config.getLog() != null) {
+		if(TestFul.logDir != null) {
 			ElementManager<String, CoverageInformation> coverage = rt.getExecutionInformation();
 			for(CoverageInformation info : coverage) {
 				try {
-					PrintWriter writer = new PrintWriter(TestFul.createFileWithBackup(config.getLog(), "coverage-" + info.getKey() + ".txt"));
+					PrintWriter writer = new PrintWriter(TestFul.createFileWithBackup(TestFul.logDir, "coverage-" + info.getKey() + ".txt"));
 					writer.println(info.getName() + ": " + info.getQuality());
 					writer.println();
 					writer.println(info);

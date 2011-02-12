@@ -18,11 +18,8 @@
 
 package testful.evolutionary;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.rmi.RemoteException;
-import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,10 +54,7 @@ public class Launcher {
 		ConfigEvolutionary config = new ConfigEvolutionary();
 		TestFul.parseCommandLine(config, args, Launcher.class, "Evolutionary test generator");
 
-		if(!config.isQuiet())
-			testful.TestFul.printHeader("Evolutionary test generator");
-
-		TestFul.setupLogging(config);
+		testful.TestFul.printHeader("Evolutionary test generator");
 
 		run(config);
 
@@ -78,17 +72,6 @@ public class Launcher {
 		logger.config(TestFul.printGetters(config));
 
 		PseudoRandom.setupMersenneTwisterFast(config.getSeed());
-
-		if(config.getLog() != null && logger.isLoggable(Level.FINE)) {
-			try {
-				final String logFile = new File(config.getLog(),  "NSGAII.log").getAbsolutePath();
-				jmetal.base.Configuration.logger_.addHandler(new FileHandler(logFile));
-
-				logger.info("Logging NSGAII to " + logFile);
-			} catch (IOException e) {
-				logger.warning("Cannot enable logging for NSGAII: " + e.getMessage());
-			}
-		}
 
 		TestfulProblem testfulProblem;
 		try {
@@ -188,7 +171,7 @@ public class Launcher {
 
 		TrackerDatum[] data = new TrackerDatum[] { };
 
-		RandomTest rt = new RandomTestSplit(config.getLog(), testfulProblem.getFinder(), config.isReloadClasses(), testfulProblem.getCluster(), testfulProblem.getReferenceFactory(), config.getSeed(), data);
+		RandomTest rt = new RandomTestSplit(testfulProblem.getFinder(), config.isReloadClasses(), testfulProblem.getCluster(), testfulProblem.getReferenceFactory(), config.getSeed(), data);
 
 		rt.test(smartTime * 1000);
 

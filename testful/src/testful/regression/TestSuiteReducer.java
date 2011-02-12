@@ -166,10 +166,7 @@ public class TestSuiteReducer {
 		Config config = new Config();
 		TestFul.parseCommandLine(config, args, TestSuiteReducer.class, "Test suite reducer");
 
-		if(config.isQuiet())
-			testful.TestFul.printHeader("Test suite reducer");
-
-		TestFul.setupLogging(config);
+		testful.TestFul.printHeader("Test suite reducer");
 
 		DataFinderCaching finder = null;
 		try {

@@ -41,15 +41,19 @@ import org.kohsuke.args4j.CmdLineParser;
 
 public class TestFul {
 
-	//  ------------------------- Shared values --------------------------------------
-
-	/** The identification of this run */
-	public static final long runId = System.currentTimeMillis();
-
 	//  ---------- testful's system properties (settable with -Dprop=value) ----------
 
-	/** Enables the debug mode (boolean) */
+	/** Enables the debug mode (boolean; default: false) */
 	public static final String PROPERTY_DEBUG = "testful.debug";
+
+	/** Do not print anything on the console (boolean; default: false) */
+	public static final String PROPERTY_QUIET = "testful.quiet";
+
+	/** Directory that holds the logs (String; default: "" (do not log to file) ) */
+	public static final String PROPERTY_LOG_DIR = "testful.log.dir";
+
+	/** Logging level (String, one of {SEVERE, WARNING, INFO, CONFIG, FINE, FINER, FINEST}; default: INFO) */
+	public static final String PROPERTY_LOG_LEVEL = "testful.log.level";
 
 	/** Measure the effective CPU time used, and not the wall clock (boolean; default: false) */
 	public static final String PROPERTY_TIME_CPU = "testful.cpuTime";
@@ -60,7 +64,7 @@ public class TestFul {
 	/** Set the maximum execution time for methods and constructors (long; default: 500) */
 	public static final String PROPERTY_MAX_EXEC_TIME = "testful.maxExecTime";
 
-	/** Monitor TestFul to collect internal execution performances */
+	/** Monitor TestFul to collect internal execution performances (boolean; default: false) */
 	public static final String PROPERTY_MONITOR_PERFORMANCE = "testful.monitorPerformance";
 
 	/** Probability to remove an operation during mutation (float, between 0 and 1, default: 0.75) */
@@ -84,7 +88,26 @@ public class TestFul {
 	/** Number of jobs to store on the worker side (integer, default: 50)  */
 	public static final String PROPERTY_RUNNER_WORKER_JOBS = "testful.runner.nWorkerJobs";
 
-	// ---------- end of testful's properties ----------
+	// --------------------- end of testful's system properties ----------------------
+
+	//  ------------------------- Shared values --------------------------------------
+
+	/** The identification of this run */
+	public static final long runId = System.currentTimeMillis();
+
+	/** if the user doesn't want to be annoyed */
+	public static final boolean quiet = TestFul.getProperty(PROPERTY_QUIET, false);
+
+	/** If not null, is the directory that contains all the logs. */
+	public static final File logDir;
+	static {
+		String property = TestFul.getProperty(PROPERTY_LOG_DIR, "").trim();
+		if(property.isEmpty()) logDir = null;
+		else logDir = new File(property);
+	}
+
+	//  --------------------- end of Shared values -----------------------------------
+
 
 	// ------------------- debug -----------------------
 	public static final boolean DEBUG;
@@ -145,13 +168,14 @@ public class TestFul {
 	}
 
 	public static void printHeader(String module) {
-
-		System.out.println("Testful v. " + VERSION + REVISION + (DEBUG ? " - debug mode" : "" ) + (module != null ? " - " + module : ""));
-		System.out.println("Copyright (c) 2010 Matteo Miraz - http://code.google.com/p/testful");
-		System.out.println("This program comes with ABSOLUTELY NO WARRANTY.");
-		System.out.println("This is free software, and you are welcome to redistribute it under certain conditions.");
-		System.out.println("For more information, read http://www.gnu.org/licenses/gpl-3.0.txt");
-		System.out.println();
+		if(!quiet) {
+			System.out.println("Testful v. " + VERSION + REVISION + (DEBUG ? " - debug mode" : "" ) + (module != null ? " - " + module : ""));
+			System.out.println("Copyright (c) 2010 Matteo Miraz - http://code.google.com/p/testful");
+			System.out.println("This program comes with ABSOLUTELY NO WARRANTY.");
+			System.out.println("This is free software, and you are welcome to redistribute it under certain conditions.");
+			System.out.println("For more information, read http://www.gnu.org/licenses/gpl-3.0.txt");
+			System.out.println();
+		}
 	}
 
 	private static String readRevision() {
@@ -256,15 +280,20 @@ public class TestFul {
 		}
 	};
 
-	public static void setupLogging(IConfigProject config) {
-		setupLogging(config.getLog(), config.getLogLevel().getLoggingLevel(), config.isQuiet());
-	}
-
-	public static void setupLogging(File logDir, Level loggingLevel, boolean quiet) {
+	static {
 		Logger logger = Logger.getLogger("testful");
 		logger.setUseParentHandlers(false);
+
+		Level loggingLevel;
+		try {
+			loggingLevel = Level.parse(getProperty(PROPERTY_LOG_LEVEL, "INFO"));
+		} catch (IllegalArgumentException e) {
+			System.err.println("Invalid Logging Level: " + e.getMessage());
+			loggingLevel = Level.INFO;
+		}
 		logger.setLevel(loggingLevel);
 
+		boolean quiet = TestFul.getProperty(PROPERTY_QUIET, false);
 		if(!quiet) {
 			ConsoleHandler ch = new ConsoleHandler();
 			ch.setFormatter(consoleFormatter);

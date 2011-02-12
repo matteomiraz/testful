@@ -204,36 +204,6 @@ public class ConfigRandom implements IConfigRandom, IConfigGeneration.Args4j, IC
 		configGenerator.setMaxTestLen(maxTestLen);
 	}
 
-	@Override
-	public boolean isQuiet() {
-		return configGenerator.isQuiet();
-	}
-
-	@Override
-	public void setQuiet(boolean quiet) {
-		configGenerator.setQuiet(quiet);
-	}
-
-	@Override
-	public File getLog() {
-		return configGenerator.getLog();
-	}
-
-	@Override
-	public void setLog(File log) {
-		configGenerator.setLog(log);
-	}
-
-	@Override
-	public LogLevel getLogLevel() {
-		return configGenerator.getLogLevel();
-	}
-
-	@Override
-	public void setLogLevel(LogLevel logLevel) {
-		configGenerator.setLogLevel(logLevel);
-	}
-
 	/* (non-Javadoc)
 	 * @see testful.IConfig#validate()
 	 */

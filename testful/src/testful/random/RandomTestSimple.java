@@ -18,7 +18,6 @@
 
 package testful.random;
 
-import java.io.File;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 
@@ -35,8 +34,8 @@ public class RandomTestSimple extends RandomTest {
 
 	private final int TEST_SIZE = 500;
 
-	public RandomTestSimple(File logDirectory, DataFinder finder, boolean reloadClasses, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
-		super(logDirectory, finder, reloadClasses, cluster, refFactory, seed, data);
+	public RandomTestSimple(DataFinder finder, boolean reloadClasses, TestCluster cluster, ReferenceFactory refFactory, long seed, TrackerDatum ... data) {
+		super(finder, reloadClasses, cluster, refFactory, seed, data);
 	}
 
 	@Override

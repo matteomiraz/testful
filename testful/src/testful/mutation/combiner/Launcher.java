@@ -1,9 +1,7 @@
 package testful.mutation.combiner;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import testful.TestFul;
 import testful.coverage.CoverageInformation;
 import testful.model.Test;
 import testful.model.TestCoverage;
@@ -14,8 +12,6 @@ public class Launcher {
 	private static Logger logger = Logger.getLogger("testful.evolutionary");
 
 	public static void main(String[] args) {
-		TestFul.setupLogging(null, Level.INFO, true);
-
 		Combiner c = new Combiner();
 		c.read(args);
 

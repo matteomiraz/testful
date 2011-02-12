@@ -18,7 +18,6 @@
 
 package testful.runner;
 
-import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.rmi.AlreadyBoundException;
@@ -39,7 +38,6 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import testful.IConfigProject.LogLevel;
 import testful.TestFul;
 
 public class Launcher {
@@ -58,18 +56,6 @@ public class Launcher {
 	@Option(required = false, name = "-nonInteractive", usage = "Starts a non-interactive executor")
 	private boolean nonInteractive;
 
-	/** if not null, enables the logging in the specified directory */
-	@Option(required = false, name = "-log", usage = "Enables logging in the specified directory")
-	private File log;
-
-	/** the logging level */
-	@Option(required = false, name = "-logLevel", usage = "Sets the logging level")
-	private LogLevel logLevel = LogLevel.INFO;
-
-	/** disable all the output to the console */
-	@Option(required = false, name = "-quiet", usage = "Do not print anything to the console")
-	private boolean quiet;
-
 	@Argument
 	private List<String> arguments = new ArrayList<String>();
 
@@ -81,8 +67,6 @@ public class Launcher {
 
 		final Launcher config = new Launcher();
 		config.parseArgs(args);
-
-		TestFul.setupLogging(config.log, config.logLevel.getLoggingLevel(), config.quiet);
 
 		// Runner must be execute in a distributed environment
 		System.setProperty(TestFul.PROPERTY_RUNNER_REMOTE, "true");

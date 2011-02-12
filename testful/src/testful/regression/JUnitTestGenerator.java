@@ -614,10 +614,7 @@ public class JUnitTestGenerator extends TestReader {
 		Config config = new Config();
 		TestFul.parseCommandLine(config, args, JUnitTestGenerator.class, "JUnit test generator");
 
-		if(!config.isQuiet())
-			TestFul.printHeader("JUnit test generator");
-
-		TestFul.setupLogging(config);
+		TestFul.printHeader("JUnit test generator");
 
 		DataFinderCaching finder = null;
 		TestfulClassLoader loader = null;
