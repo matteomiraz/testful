@@ -37,7 +37,7 @@ public class ConfigRandom implements IConfigRandom, IConfigGeneration.Args4j, IC
 	@Option(required = false, name = "-pGenNewObj", usage = "Probability to create new objects")
 	private float pGenNewObj = 0.35f;
 
-	@Option(required = false, name = "-type", usage = "Choose the falvor of random testing")
+	@Option(required = false, name = "-type", usage = "Choose the flavor of random testing")
 	private RandomType randomType = RandomType.SIMPLE;
 
 	@Option(required = false, name = "-seed", usage = "Set the seed of the random number generator")

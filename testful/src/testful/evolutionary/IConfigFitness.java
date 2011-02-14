@@ -33,13 +33,13 @@ public interface IConfigFitness {
 
 	public interface Args4j extends IConfigFitness {
 
-		@Option(required = false, name = "-disableBasicBlock", usage = "Removes the basic block coverage from the multi-objective fitness (shortcut for -disableBranchCode and -disableBranchContract)")
+		@Option(required = false, name = "-disableBasicBlock", usage = "Do not attempt to maximize the basic block coverage")
 		public void setDisableBasicBlock(boolean disable);
 
-		@Option(required = false, name = "-disableDefUse", usage = "Removes the def-use pairs coverage from the multi-objective fitness.")
-		public void setDisableDefUse(boolean disable);
-
-		@Option(required = false, name = "-disableBranch", usage = "Removes the branch coverage from the multi-objective fitness (shortcut for -disableBranchCode and -disableBranchContract)")
+		@Option(required = false, name = "-disableBranch", usage = "Do not attempt to maximize the branch coverage")
 		public void setDisableBranch(boolean disable);
+
+		@Option(required = false, name = "-disableDefUse", usage = "Do not attempt to maximize the def-use pairs coverage")
+		public void setDisableDefUse(boolean disable);
 	}
 }
