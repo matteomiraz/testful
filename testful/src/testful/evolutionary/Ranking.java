@@ -16,42 +16,58 @@ import testful.TestFul;
  */
 public class Ranking<T extends Variable> implements Iterator<SolutionSet<T>> {
 
-	private final Solution<T>[] pop;
+	private static class RankedElement<T extends Variable> {
+		final Solution<T> solution;
 
-	/** c[i] contains the number of points that dominate i */
-	private final int[] c;
+		/** number of points that dominate this solution */
+		int dominatedBy;
 
-	/** s[i] contains all elements dominated by i */
-	private final List<Integer>[] s;
+		/** elements dominated by this solution */
+		final List<RankedElement<T>> dominated;
+
+		public RankedElement(Solution<T> solution) {
+			this.solution = solution;
+			dominated = new LinkedList<RankedElement<T>>();
+		}
+
+		/**
+		 * This solution dominates the other solution
+		 * @param d the dominated solution
+		 */
+		public void dominates(RankedElement<T> d) {
+			dominated.add(d);
+			d.dominatedBy++;
+		}
+
+		/**
+		 * Removes an element that dominates this solution, and check if the solution is not dominated
+		 * @return whether the solution is NOT dominated
+		 */
+		public boolean promoteAndCheck() {
+			return --dominatedBy == 0;
+		}
+	}
 
 	/** elements belonging to the next front */
-	private List<Integer> nextFront;
+	private List<RankedElement<T>> nextFront;
 
 	/**
 	 * Constructor.
 	 * @param solutionSet The <code>SolutionSet</code> to be ranked.
 	 */
-	@SuppressWarnings("unchecked")
 	public Ranking(SolutionSet<T> solutionSet) {
 
-		pop = convert(solutionSet);
-		c = new int[pop.length];
-		s = new List[pop.length];
-		for(int i = 0; i < s.length; i++) s[i] = new LinkedList<Integer>();
+		RankedElement<T>[] pop = convert(solutionSet);
 
-		nextFront = new LinkedList<Integer>();
+		nextFront = new LinkedList<RankedElement<T>>();
 		for (int i=0; i<pop.length; i++) {
 			for (int k=i+1; k<pop.length; k++) {
-				int result = compare(pop[i].getObjectives(), pop[k].getObjectives());
-				if (result>0) {
-					c[i]++;
-					s[k].add(i);
-				} else if (result<0) {
-					c[k]++;
-					s[i].add(k);
-				}
+				int result = compare(pop[i].solution.getObjectives(), pop[k].solution.getObjectives());
+				if (result>0) pop[k].dominates(pop[i]);
+				else if (result<0) pop[i].dominates(pop[k]);
 			}
-			if (c[i]==0) nextFront.add(i);
+
+			if (pop[i].dominatedBy==0) nextFront.add(pop[i]);
 		}
 	}
 
@@ -69,15 +85,15 @@ public class Ranking<T extends Variable> implements Iterator<SolutionSet<T>> {
 	@Override
 	public SolutionSet<T> next() {
 		// process a new frontier: the next frontier becomes the last one
-		List<Integer> lastFront = nextFront;
-		nextFront = new LinkedList<Integer>();
+		List<RankedElement<T>> lastFront = nextFront;
+		nextFront = new LinkedList<RankedElement<T>>();
 
 		SolutionSet<T> ret = new SolutionSet<T>(lastFront.size());
-		for (Integer idx : lastFront) {
-			ret.add(pop[idx]);
+		for (RankedElement<T> e : lastFront) {
+			ret.add(e.solution);
 
-			for (int k : s[idx]) {
-				if(--c[k]==0)
+			for (RankedElement<T> k : e.dominated) {
+				if(k.promoteAndCheck())
 					nextFront.add(k);
 			}
 		}
@@ -94,12 +110,12 @@ public class Ranking<T extends Variable> implements Iterator<SolutionSet<T>> {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <T extends Variable> Solution<T>[] convert(SolutionSet<T> solutionSet) {
-		Solution<T>[] pop = new Solution[solutionSet.size()];
+	private static <T extends Variable> RankedElement<T>[] convert(SolutionSet<T> solutionSet) {
+		RankedElement<T>[] pop = new RankedElement[solutionSet.size()];
 
 		int i = 0;
 		for (Solution<T> sol : solutionSet)
-			pop[i++] = sol;
+			pop[i++] = new RankedElement<T>(sol);
 
 		return pop;
 	}
