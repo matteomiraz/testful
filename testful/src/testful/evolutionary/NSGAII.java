@@ -37,7 +37,6 @@ import jmetal.base.operator.selection.Selection;
 import jmetal.util.Distance;
 import jmetal.util.JMException;
 import jmetal.util.PseudoRandom;
-import jmetal.util.Ranking;
 import testful.IUpdate;
 import testful.evolutionary.IConfigEvolutionary.FitnessInheritance;
 import testful.utils.StopWatch;
@@ -177,7 +176,7 @@ implements IUpdate {
 
 				timer.start("nsga.localSearch");
 				if(localSearchNum == 0 && improvement instanceof LocalSearchPopulation<?>) {
-					SolutionSet<V> front = new Ranking<V>(population).getSubfront(0);
+					SolutionSet<V> front = new Ranking<V>(population).next();
 					logger.info("Local search on fronteer (" + front.size() + ")");
 					SolutionSet<V> mutated = ((LocalSearchPopulation<V>)improvement).execute(front);
 					if(mutated != null) problem_.evaluate(mutated);
@@ -227,15 +226,15 @@ implements IUpdate {
 				break;
 
 			case FRONTEER:
-				timer.start("nsga.fitnessInheritance_uniform");
+				timer.start("nsga.fitnessInheritance_fronteer");
 				List<Solution<V>> tmpf = new ArrayList<Solution<V>>();
 
 				final Ranking<V> ranking = new Ranking<V>(population);
-				final SolutionSet<V> fronteer = ranking.getSubfront(0);
+				final SolutionSet<V> fronteer = ranking.next();
 				final List<Solution<V>> others = new ArrayList<Solution<V>>();
 
-				for(int i = 1; i < ranking.getNumberOfSubfronts(); i++)
-					for(Solution<V> s : ranking.getSubfront(i))
+				while(ranking.hasNext())
+					for(Solution<V> s : ranking.next())
 						others.add(s);
 
 				final int n = offspringPopulation.size();
@@ -281,12 +280,11 @@ implements IUpdate {
 			timer.start("nsga.selection");
 
 			int remain = populationSize;
-			int index = 0;
 			SolutionSet<V> front = null;
 			population.clear();
 
 			// Obtain the next front
-			front = ranking.getSubfront(0);
+			front = ranking.next();
 
 			while ((remain > 0) && (remain >= front.size())) {
 				//Assign crowding distance to individuals
@@ -300,7 +298,7 @@ implements IUpdate {
 
 				//Obtain the next front
 				if (remain > 0)
-					front = ranking.getSubfront(++index);
+					front = ranking.next();
 			} // while
 
 			// Remain is less than front(index).size, insert only the best one
@@ -319,6 +317,6 @@ implements IUpdate {
 
 		// Return the first non-dominated front
 		Ranking<V> ranking = new Ranking<V>(population);
-		return ranking.getSubfront(0);
+		return ranking.next();
 	} // execute
 } // NSGA-II
