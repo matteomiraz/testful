@@ -74,9 +74,11 @@ public class Worker extends Thread {
 					if(LOG_FINER) logger.finer("Worker " + getName() + " is evaluating " + ctx.id);
 					Serializable result = ctx.execute(cl);
 					t_eval.stop();
+
 					t_resOk.start();
 					workerManager.putResult(ctx, result, cl);
 					t_resOk.stop();
+
 				} catch(Exception e) {
 					t_eval.stop();
 					t_resExc.start();

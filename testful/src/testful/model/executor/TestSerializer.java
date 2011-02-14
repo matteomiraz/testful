@@ -20,11 +20,9 @@ package testful.model.executor;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Map;
@@ -33,7 +31,6 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import testful.TestFul;
 import testful.model.AssignConstant;
 import testful.model.AssignPrimitive;
 import testful.model.Clazz;
@@ -50,73 +47,18 @@ import testful.model.StaticValue;
 import testful.model.Test;
 import testful.model.TestCluster;
 import testful.runner.ObjectRegistry;
-import testful.runner.ObjectType;
 
 /**
  * Efficiently serializes and de-serializes Tests
  * @author matteo
  */
-public class TestSerializer implements Externalizable {
+public class TestSerializer {
 
 	private static final Logger logger = Logger.getLogger("testful.runner");
 
-	private transient Test   test;
-	private transient byte[] serialized;
-
-	private transient ObjectRegistry registry;
-
-	@Deprecated
-	public TestSerializer() { }
-
-	public TestSerializer(Test test) {
-		this.test = test;
-	}
-
-	/**
-	 * Sets the ObjectRegistry to use during the (de)serialization.
-	 * @param registry uses this ObjectRegistry during the (de)serialization
-	 */
-	public void setObjectRegistry(ObjectRegistry registry) {
-		this.registry = registry;
-	}
-
-	/**
-	 * Returns the test
-	 * @return the test
-	 */
-	public Test getTest() {
-		if(test == null) {
-			test = deserialize(registry, serialized);
-		}
-
-		return test;
-	}
-
 	// ---------------------------------- serialize ----------------------------------
 
-	/* (non-Javadoc)
-	 * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
-	 */
-	@Override
-	public void writeExternal(ObjectOutput out) throws IOException {
-
-		// serialized.length {serialized}
-
-		if(serialized == null) {
-			if(TestFul.DEBUG) {
-				if(test == null) TestFul.debug("The test to serialize is missing");
-				if(registry == null) TestFul.debug("The object registry has not been set");
-			}
-
-			serialized = serialize(registry, test);
-		}
-
-		out.writeInt(serialized.length);
-		out.write(serialized);
-
-	}
-
-	public static byte[] serialize(ObjectRegistry registry, Test test) {
+	public static byte[] serialize(Test test) {
 		try {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			ObjectOutputStream oo = new ObjectOutputStream(baos);
@@ -126,7 +68,7 @@ public class TestSerializer implements Externalizable {
 			//			oo.writeUTF(executor.getName());
 			//			oo.writeBoolean(DISCOVER_FAULTS);
 
-			String clusterID = ObjectType.contains(registry, test.getCluster());
+			String clusterID = test.getCluster().getISerializableIdentifier();
 
 			// perform the standard serialization
 			if(clusterID == null) {
@@ -246,18 +188,6 @@ public class TestSerializer implements Externalizable {
 
 	// --------------------------------- deserialize ---------------------------------
 
-	/* (non-Javadoc)
-	 * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
-	 */
-	@Override
-	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-
-		int len = in.readInt();
-		serialized = new byte[len];
-
-		in.readFully(serialized);
-	}
-
 	public static Test deserialize(ObjectRegistry registry, byte[] serialized) {
 
 		ObjectInputStream oi = null;
@@ -287,7 +217,6 @@ public class TestSerializer implements Externalizable {
 
 				// use the ObjectRegistry and the advanced serialization
 				testCluster = (TestCluster) registry.getObject(clusterID);
-
 
 				// read the references: num.type.refs { ref.class.id, num.refs }
 				int refLen = oi.readInt();
@@ -383,11 +312,6 @@ public class TestSerializer implements Externalizable {
 
 			return new Test(testCluster, testRefFactory, testOps);
 
-			//			@SuppressWarnings("unchecked")
-			//			Class<? extends IExecutor> execClass = (Class<? extends IExecutor>) Class.forName(execClassName);
-			//			Constructor<? extends IExecutor> execCns = execClass.getConstructor(TestCluster.class, Reference[].class, Operation[].class, Boolean.TYPE);
-			//			return execCns.newInstance(testCluster, testRefs, testOps, discoverFaults);
-
 		} catch(Exception exc) {
 			logger.log(Level.WARNING, exc.getMessage(), exc);
 
@@ -400,6 +324,7 @@ public class TestSerializer implements Externalizable {
 				}
 			}
 		}
+
 		return null;
 	}
 

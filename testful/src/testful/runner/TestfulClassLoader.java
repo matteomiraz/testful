@@ -65,8 +65,7 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 		// Utilities
 		"testful.model.ClassRegistry",
 		"testful.runner.Executor",
-		"testful.runner.ObjectRegistry",
-		"testful.utils.Cloner",
+		"testful.runner.ObjectRegistry"
 	};
 
 	/** for these packages force to use the TestFul class loader */

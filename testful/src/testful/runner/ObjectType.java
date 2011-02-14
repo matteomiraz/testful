@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-import testful.utils.Cloner;
+import testful.utils.SerializationUtils;
 
 /**
  * Allows one to provide the executor with objects, which will be serialized, transferred, and cached automatically.
@@ -35,7 +35,7 @@ public class ObjectType implements DataType {
 	public static final boolean COMPRESS = false;
 
 	private final AtomicLong idGenerator = new AtomicLong();
-	private final Map<Long, byte[]> map = new HashMap<Long, byte[]>();
+	private final Map<String, byte[]> map = new HashMap<String, byte[]>();
 
 	public ObjectType() {
 	}
@@ -53,31 +53,27 @@ public class ObjectType implements DataType {
 	public String addObject(ISerializable obj) {
 
 		// get the id of the object
-		Long id = obj.getISerializableIdentifier();
+		String id = obj.getISerializableIdentifier();
 		if(id == null) {
-			id = idGenerator.incrementAndGet();
+			id = Long.toString(idGenerator.incrementAndGet(), Character.MAX_RADIX);
 			obj.setISerializableIdentifier(id);
 		}
 
 		// if it is a new object, insert it in the map
 		if(!map.containsKey(id))
-			map.put(id, Cloner.serialize(obj, COMPRESS));
+			map.put(id, SerializationUtils.serialize(obj, COMPRESS));
 
-		// return the String with the id
-		return convertId(id);
+		return id;
 	}
 
-	public static String contains(ObjectRegistry registry, ISerializable obj) {
-		Long identifier = obj.getISerializableIdentifier();
-		if(identifier != null) {
-
-			String id = convertId(identifier);
-
+	public static boolean contains(ObjectRegistry registry, ISerializable obj) {
+		String id = obj.getISerializableIdentifier();
+		if(id != null) {
 			ISerializable o = registry.getObject(id);
-			if(o != null) return id;
+			return o != null;
 		}
 
-		return null;
+		return false;
 	}
 
 	/* (non-Javadoc)
@@ -85,18 +81,6 @@ public class ObjectType implements DataType {
 	 */
 	@Override
 	public byte[] getData(String identifier) throws RemoteException {
-
-		return map.get(Long.parseLong(identifier, Character.MAX_RADIX));
-
+		return map.get(identifier);
 	}
-
-	/**
-	 * Convert the identifier from long to string
-	 * @param identifier the long identifier
-	 * @return the string identifier
-	 */
-	static String convertId(long id) {
-		return Long.toString(id, Character.MAX_RADIX);
-	}
-
 }

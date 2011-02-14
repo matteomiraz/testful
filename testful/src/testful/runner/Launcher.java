@@ -79,7 +79,8 @@ public class Launcher {
 
 		logger.config(TestFul.printGetters(config));
 
-		final WorkerManager wm = new WorkerManager();
+		int localWorkers = TestFul.getProperty(TestFul.PROPERTY_RUNNER_LOCAL_WORKERS, -1);
+		final WorkerManager wm = new WorkerManager(localWorkers);
 
 		if(config.register) {
 			logger.info("Registering workerManager");

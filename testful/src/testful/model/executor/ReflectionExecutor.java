@@ -188,7 +188,6 @@ public class ReflectionExecutor {
 
 		stopper.done();
 
-		if(LOGGER_FINEST) logger.finest(toString());
 		if(LOGGER_FINE)   logger.fine(new StringBuilder("STATS").append(" ops:").append(ops.length).append(" invalid:").append(nPre).append(" valid:").append(nValid).append(" faulty:").append(nFaulty).toString());
 
 		timer_exec.stop();
@@ -493,11 +492,6 @@ public class ReflectionExecutor {
 
 	@Override
 	public String toString() {
-		StringBuilder ret = new StringBuilder("Executor environment:\n");
-
-		for(Reference element : repositoryType)
-			ret.append("  ").append(String.format("%2d", element.getId())).append(" (").append(element.getClazz()).append(":").append(element.getPos()).append(") = ").append(repository[element.getId()]).append("\n");
-
-		return ret.toString();
+		return "ReflectionExecutor (" + ReflectionExecutor.class.getClassLoader() + ")";
 	}
 }

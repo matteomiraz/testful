@@ -29,7 +29,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.model.faults.FaultyExecutionException;
-import testful.utils.Cloner;
+import testful.utils.SerializationUtils;
 
 /**
  * Stores the result of an operation (Invoke or CreateObject).
@@ -249,12 +249,12 @@ public class OperationResult extends OperationInformation {
 			final int hash;
 
 			public ArrayObject(Serializable o) {
-				serialized = Cloner.serialize(o, false);
+				serialized = SerializationUtils.serialize(o, false);
 				hash = Arrays.hashCode(serialized);
 			}
 
 			public Serializable getObject() {
-				return Cloner.deserialize(serialized, false);
+				return SerializationUtils.deserialize(serialized, false, ArrayObject.class.getClassLoader());
 			}
 
 			@Override

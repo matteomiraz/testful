@@ -647,15 +647,15 @@ public class TestCluster implements ISerializable {
 		return null;
 	}
 
-	private transient long iSerializableIdentifier;
+	private transient String iSerializableIdentifier;
 
 	@Override
-	public void setISerializableIdentifier(long id) {
+	public void setISerializableIdentifier(String id) {
 		iSerializableIdentifier = id;
 	}
 
 	@Override
-	public Long getISerializableIdentifier() {
+	public String getISerializableIdentifier() {
 		return iSerializableIdentifier;
 	};
 }

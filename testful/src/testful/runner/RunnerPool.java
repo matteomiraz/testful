@@ -76,11 +76,14 @@ public class RunnerPool implements IRunner, IJobRepository {
 
 		if(LOG_FINE) logger.fine("Created Runner Pool ");
 
-		try {
-			WorkerManager wm = new WorkerManager();
-			wm.addJobRepository(this);
-		} catch (RemoteException e) {
-			// never happens: it's done locally!
+		int localWorkers = TestFul.getProperty(TestFul.PROPERTY_RUNNER_LOCAL_WORKERS, -1);
+		if(localWorkers != 0) {
+			try {
+				WorkerManager wm = new WorkerManager(localWorkers);
+				wm.addJobRepository(this);
+			} catch (RemoteException e) {
+				// never happens: it's done locally!
+			}
 		}
 
 		if(TestFul.getProperty(TestFul.PROPERTY_RUNNER_REMOTE, false)) {

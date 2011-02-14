@@ -19,10 +19,13 @@
 package testful.runner;
 
 import java.io.Serializable;
+import java.rmi.RemoteException;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import testful.utils.SerializableEnvelope;
 
 /**
  * This class models a job to do. It can be transferred to the (remote) worker (i.e., it MUST be serializable),
@@ -51,7 +54,7 @@ public class Job<I extends Serializable, R extends Serializable, M extends IExec
 	private final String execManager;
 
 	/** The input */
-	private final I input;
+	private final SerializableEnvelope<I> input;
 
 	/**
 	 * Create a new evaluation context
@@ -65,7 +68,7 @@ public class Job<I extends Serializable, R extends Serializable, M extends IExec
 
 		this.finder = finder;
 		this.execManager = execManager.getName();
-		this.input = input;
+		this.input = new SerializableEnvelope<I>(input);
 	}
 
 	public boolean isReloadClasses() {
@@ -84,6 +87,19 @@ public class Job<I extends Serializable, R extends Serializable, M extends IExec
 		return finder;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		try {
+			return "job:" + id + " finder:" + finder.getKey() + " input:" + input.getClass().getName();
+		} catch (RemoteException e) {
+			//never happens
+			return "job:" + id + " finder:N/A input:" + input.getClass().getName();
+		}
+	}
+
 	@SuppressWarnings("unchecked")
 	public R execute(TestfulClassLoader loader) throws Exception {
 		try {
@@ -91,7 +107,8 @@ public class Job<I extends Serializable, R extends Serializable, M extends IExec
 			Class<? extends IExecutor<I,R>> executorClass = (Class<? extends IExecutor<I,R>>) loader.loadClass(execManager);
 			IExecutor<I,R> executor = executorClass.newInstance();
 
-			executor.setInput(input);
+			executor.setInput(input.getObject(loader));
+
 			R result = executor.execute();
 
 			return result;

@@ -64,8 +64,14 @@ public class DataFinderImpl implements DataFinder {
 	 */
 	@Override
 	public byte[] getData(String type, String id) throws RemoteException {
+
 		DataType t = types.get(type);
-		if(t == null) return null;
+		if(t == null) {
+			if(TestFul.DEBUG)
+				TestFul.debug(new NullPointerException("Cannot find a data type " + type));
+
+			return null;
+		}
 
 		return t.getData(id);
 	}

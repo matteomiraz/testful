@@ -24,10 +24,12 @@
 	<!-- classes that can be loaded by the TestfulClassLoader -->
 	<patternset id="testfulClassLoader">
 		
+		<!-- Utilities -->
+		<include name="testful/runner/ObjectRegistry.class" />
+
 		<!-- Execution Managers -->
 		<include name="testful/**/*Executor.class" />
-		<include name="testful/runner/ObjectRegistry.class" />
-		<include name="testful/utils/Cloner.class" />
+		<include name="testful/model/executor/*.class" />
 
 		<!-- testful.coverage --> 
 		<include name="testful/coverage/**/*.class" />
@@ -36,6 +38,7 @@
 		<include name="testful/coverage/stopper/Stopper*.class" />
 
 		<!--  testful.model -->
+		<include name="testful/model/*.class" />
 		<include name="testful/model/**/*.class" />
 		<include name="jmetal/base/Variable.class" /> <!-- testful.model.Operation is a Variable -->
 
@@ -50,6 +53,7 @@
 
 	<!-- classes needed for running tests -->
 	<patternset id="runner">
+		
 		<include name="testful/*.class" />
 		<include name="testful/coverage/TrackerDatum*.class" />
 		<include name="testful/runner/**" />

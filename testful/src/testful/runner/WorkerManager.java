@@ -63,7 +63,7 @@ public class WorkerManager implements IWorkerManager, IJobRepository {
 
 	private AtomicLong executedJobs = new AtomicLong();
 
-	public WorkerManager() {
+	public WorkerManager(int cpu) {
 		if(LOG_FINE) logger.fine("Starting: Worker Manager (" + TestFul.runId + ")");
 
 		int buffer = TestFul.getProperty(TestFul.PROPERTY_RUNNER_WORKER_JOBS, 50);
@@ -73,7 +73,6 @@ public class WorkerManager implements IWorkerManager, IJobRepository {
 		finders = new CachingMap<String, DataFinder>(MAX_ELEMS, MIN_AGE, MIN_UNUSED);
 		classLoaders = new CachingMap<String, Queue<TestfulClassLoader>>(MAX_ELEMS, MIN_AGE, MIN_UNUSED);
 
-		int cpu = TestFul.getProperty(TestFul.PROPERTY_RUNNER_LOCAL_WORKERS, -1);
 		if(cpu > 0) {
 			logger.info("Starting with " + cpu + " local executor threads");
 		} else if (cpu == 0) {

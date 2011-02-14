@@ -18,7 +18,10 @@
 
 package testful.model.executor;
 
-import java.io.Serializable;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 
 import testful.TestFul;
 import testful.coverage.TrackerDatum;
@@ -29,18 +32,23 @@ import testful.runner.ObjectRegistry;
  * Provide a TestExecutor with all the inputs it requires.
  * @author matteo
  */
-public class TestExecutorInput implements Serializable {
+public class TestExecutorInput implements Externalizable {
 
 	private static final long serialVersionUID = 5081223682955495656L;
 
-	private final TestSerializer testSerializer;
-	private final TrackerDatum[] trackerData;
-	private final boolean stopOnBug;
+	private boolean stopOnBug;
 
-	private final boolean discoverFaults = TestFul.getProperty(TestFul.PROPERTY_FAULT_DETECT, true);
+	private boolean discoverFaults = TestFul.getProperty(TestFul.PROPERTY_FAULT_DETECT, true);
+
+	private TrackerDatum[] trackerData;
+
+	private Test test;
+
+	@Deprecated
+	public TestExecutorInput() { }
 
 	public TestExecutorInput(Test test, boolean stopOnBug, TrackerDatum... trackerData) {
-		testSerializer = new TestSerializer(test);
+		this.test = test;
 		this.stopOnBug = stopOnBug;
 		this.trackerData = trackerData;
 	}
@@ -50,8 +58,7 @@ public class TestExecutorInput implements Serializable {
 	 * @return the test test to execute
 	 */
 	public Test getTest() {
-		testSerializer.setObjectRegistry(ObjectRegistry.singleton);
-		return testSerializer.getTest();
+		return test;
 	}
 
 	public TrackerDatum[] getTrackerData() {
@@ -64,5 +71,45 @@ public class TestExecutorInput implements Serializable {
 
 	public boolean isStopOnBug() {
 		return stopOnBug;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
+	 */
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeBoolean(stopOnBug);
+
+		out.writeBoolean(discoverFaults);
+
+		out.writeShort(trackerData.length);
+		for (TrackerDatum datum : trackerData)
+			out.writeObject(datum);
+
+		byte[] testSerialized = TestSerializer.serialize(test);
+		out.writeInt(testSerialized.length);
+		out.write(testSerialized);
+
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
+	 */
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		stopOnBug = in.readBoolean();
+
+		discoverFaults = in.readBoolean();
+
+		short trackerDataLen = in.readShort();
+		trackerData = new TrackerDatum[trackerDataLen];
+		for (int i = 0; i < trackerDataLen; i++)
+			trackerData[i] = (TrackerDatum) in.readObject();
+
+		int testSerializedLen = in.readInt();
+		byte[] testSerialized = new byte[testSerializedLen];
+		in.readFully(testSerialized);
+
+		test = TestSerializer.deserialize(ObjectRegistry.singleton, testSerialized);
 	}
 }

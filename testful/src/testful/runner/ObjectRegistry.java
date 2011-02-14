@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 
 import testful.utils.CachingMap;
 import testful.utils.CachingMap.Cacheable;
-import testful.utils.Cloner;
+import testful.utils.SerializationUtils;
 
 /**
  * ObjectRegistry allows one to retrieve objects (declared with {@link ObjectType}).
@@ -39,19 +39,20 @@ public class ObjectRegistry {
 
 	static {
 		ClassLoader loader = ObjectRegistry.class.getClassLoader();
-
-		ObjectRegistry tmp = null;
 		if(loader instanceof TestfulClassLoader) {
-			tmp = new ObjectRegistry((TestfulClassLoader) loader);
+			singleton = new ObjectRegistry((TestfulClassLoader) loader);
+		} else {
+			singleton = null;
 		}
-		singleton = tmp;
 	}
 
 	private final CachingMap<String, ISerializable> cache = new CachingMap<String, ISerializable>(50, 5 * 60 * 1000,  1 * 60 * 1000);
 
 	private final DataFinder finder;
+	private final ClassLoader classLoader;
 	private ObjectRegistry(TestfulClassLoader loader) {
 		finder = loader.getFinder();
+		classLoader = loader;
 	}
 
 	public ISerializable getObject(String identifier) {
@@ -66,9 +67,10 @@ public class ObjectRegistry {
 			byte[] b = finder.getData(ObjectType.NAME, identifier);
 			if(b == null) return null;
 
-			ISerializable object = (ISerializable) Cloner.deserialize(b, ObjectType.COMPRESS);
-			object.setISerializableIdentifier(Long.parseLong(identifier, Character.MAX_RADIX));
+			ISerializable object = (ISerializable) SerializationUtils.deserialize(b, ObjectType.COMPRESS, classLoader);
+			object.setISerializableIdentifier(identifier);
 			cache.put(identifier, new Cacheable<ISerializable>(object));
+
 			return object;
 
 		} catch (RemoteException exc) {
