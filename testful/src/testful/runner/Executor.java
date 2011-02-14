@@ -35,14 +35,14 @@ public abstract class Executor<I extends Serializable, R extends Serializable> i
 
 	private static final Logger logger = Logger.getLogger("testful.runner");
 
-	protected final TestfulClassLoader classLoader;
+	protected final RemoteClassLoader classLoader;
 	/**
 	 * Create a new execution manager.<br/>
 	 * <b>NOTICE:</b> subclasses must have a default constructor
 	 */
 	public Executor() {
-		if(Executor.class.getClassLoader() instanceof TestfulClassLoader) {
-			classLoader = (TestfulClassLoader) Executor.class.getClassLoader();
+		if(Executor.class.getClassLoader() instanceof RemoteClassLoader) {
+			classLoader = (RemoteClassLoader) Executor.class.getClassLoader();
 		} else {
 			classLoader = null;
 			ClassCastException exc = new ClassCastException("The Executor must be loaded by a testful class loader");

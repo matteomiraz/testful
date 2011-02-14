@@ -25,7 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.TestFul;
-import testful.runner.TestfulClassLoader;
+import testful.runner.RemoteClassLoader;
 import testful.utils.ElementManager;
 
 /**
@@ -45,7 +45,7 @@ public abstract class Tracker {
 	private static final Logger logger = Logger.getLogger("testful.coverage");
 
 	static {
-		if(TestFul.DEBUG && !(Tracker.class.getClassLoader() instanceof TestfulClassLoader)) {
+		if(TestFul.DEBUG && !(Tracker.class.getClassLoader() instanceof RemoteClassLoader)) {
 			ClassCastException exc = new ClassCastException("Trackers must be loaded using a testful class loader!");
 			logger.log(Level.WARNING, exc.getMessage(), exc);
 		}

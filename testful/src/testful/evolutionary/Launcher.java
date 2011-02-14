@@ -41,7 +41,7 @@ import testful.random.RandomTest;
 import testful.random.RandomTestSplit;
 import testful.regression.JUnitTestGenerator;
 import testful.regression.TestSuiteReducer;
-import testful.runner.TestfulClassLoader;
+import testful.runner.RemoteClassLoader;
 
 /**
  * Main TestFul class.
@@ -139,9 +139,9 @@ public class Launcher {
 			reducer.process(t);
 
 		/* convert tests to jUnit */
-		TestfulClassLoader classLoader;
+		RemoteClassLoader classLoader;
 		try {
-			classLoader = new TestfulClassLoader(testfulProblem.getFinder());
+			classLoader = new RemoteClassLoader(testfulProblem.getFinder());
 		} catch (RemoteException e) {
 			logger.log(Level.WARNING, "Remote exception (should never happen): " + e.toString(), e);
 			classLoader = null;

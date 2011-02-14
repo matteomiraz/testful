@@ -27,7 +27,7 @@ import testful.model.PrimitiveClazz;
 import testful.model.Reference;
 import testful.model.ReferenceFactory;
 import testful.model.TestCluster;
-import testful.runner.TestfulClassLoader;
+import testful.runner.RemoteClassLoader;
 
 /**
  * TestCase tailored to a particular testCut class.
@@ -51,7 +51,7 @@ public abstract class SingleTestCUT {
 		try {
 			ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 			config.setCut(cutName);
-			cluster = new TestCluster(new TestfulClassLoader(GenericTestCase.getFinder()), config);
+			cluster = new TestCluster(new RemoteClassLoader(GenericTestCase.getFinder()), config);
 			refFactory = new ReferenceFactory(cluster, 4, 4);
 
 			cut = cluster.getCut();

@@ -7,7 +7,7 @@ import java.util.List;
 import testful.ConfigCut;
 import testful.GenericTestCase;
 import testful.coverage.CoverageInformation;
-import testful.runner.TestfulClassLoader;
+import testful.runner.RemoteClassLoader;
 import testful.utils.ElementManager;
 
 /**
@@ -19,8 +19,8 @@ public class ExecutorTestCase extends GenericTestCase {
 	public void testFraction() throws Exception {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("apache.Fraction");
-		TestfulClassLoader testfulClassLoader = new TestfulClassLoader(getFinder());
-		TestCluster cluster = new TestCluster(testfulClassLoader, config);
+		RemoteClassLoader remoteClassLoader = new RemoteClassLoader(getFinder());
+		TestCluster cluster = new TestCluster(remoteClassLoader, config);
 		ReferenceFactory refFactory = new ReferenceFactory(cluster, 4, 4);
 
 		Clazz cut = cluster.getCut();

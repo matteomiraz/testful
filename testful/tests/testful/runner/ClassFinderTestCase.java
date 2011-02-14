@@ -110,7 +110,7 @@ public class ClassFinderTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.testInnerClass.Container");
 
-		TestfulClassLoader classLoader = new TestfulClassLoader(getFinder());
+		RemoteClassLoader classLoader = new RemoteClassLoader(getFinder());
 		TestCluster tc = new TestCluster(classLoader, config);
 
 		assertEquals(2, tc.getCluster().length);

@@ -40,7 +40,7 @@ import testful.coverage.soot.Instrumenter;
 import testful.runner.ClassType;
 import testful.runner.DataFinderCaching;
 import testful.runner.DataFinderImpl;
-import testful.runner.TestfulClassLoader;
+import testful.runner.RemoteClassLoader;
 
 /**
  * Modify the class under test, adding trackers and other stuff.
@@ -204,7 +204,7 @@ public class Launcher {
 		testful.TestFul.printHeader("Instrumenter");
 
 		try {
-			TestfulClassLoader tcl = new TestfulClassLoader(new DataFinderCaching(new DataFinderImpl(new ClassType(config))));
+			RemoteClassLoader tcl = new RemoteClassLoader(new DataFinderCaching(new DataFinderImpl(new ClassType(config))));
 
 			final List<String> toInstrument;
 			if(config.project) toInstrument = getProjectClasses(tcl, config);

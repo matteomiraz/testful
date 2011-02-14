@@ -101,7 +101,7 @@ public class Job<I extends Serializable, R extends Serializable, M extends IExec
 	}
 
 	@SuppressWarnings("unchecked")
-	public R execute(TestfulClassLoader loader) throws Exception {
+	public R execute(RemoteClassLoader loader) throws Exception {
 		try {
 
 			Class<? extends IExecutor<I,R>> executorClass = (Class<? extends IExecutor<I,R>>) loader.loadClass(execManager);

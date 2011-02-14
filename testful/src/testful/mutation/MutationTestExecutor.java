@@ -17,7 +17,7 @@ import testful.model.executor.TestExecutorInput;
 import testful.runner.Job;
 import testful.runner.DataFinder;
 import testful.runner.Executor;
-import testful.runner.TestfulClassLoader;
+import testful.runner.RemoteClassLoader;
 
 /**
  * This is a fake execution manager: it is able to manage "real" mutant execution managers,
@@ -187,7 +187,7 @@ public class MutationTestExecutor extends Executor<TestExecutorInput, MutationCo
 	private boolean execute(String className, int mutationID) {
 
 		try {
-			TestfulClassLoader loader = isReloadClasses() ? classLoader.getNew() : classLoader;
+			RemoteClassLoader loader = isReloadClasses() ? classLoader.getNew() : classLoader;
 
 			Class<?> config = loader.loadClass(Utils.CONFIG_CLASS);
 			Field mutationField = config.getField(Utils.getCurField(className));

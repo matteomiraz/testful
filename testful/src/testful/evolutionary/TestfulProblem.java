@@ -48,7 +48,7 @@ import testful.runner.DataFinderCaching;
 import testful.runner.DataFinderImpl;
 import testful.runner.ObjectType;
 import testful.runner.RunnerPool;
-import testful.runner.TestfulClassLoader;
+import testful.runner.RemoteClassLoader;
 import testful.utils.ElementManager;
 
 /**
@@ -87,7 +87,7 @@ public class TestfulProblem implements Serializable {
 			classType.addClassData(whiteAnalysis);
 
 			finder = new DataFinderCaching(finderImpl);
-			TestfulClassLoader tcl = new TestfulClassLoader(finder);
+			RemoteClassLoader tcl = new RemoteClassLoader(finder);
 
 			cluster = new TestCluster(tcl, config);
 			objectType.addObject(cluster);

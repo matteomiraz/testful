@@ -34,13 +34,13 @@ public class ObjectRegistry {
 
 	private static Logger logger = Logger.getLogger("testful.executor");
 
-	/** When loaded by a TestfulClassLoader, this is the singleton to use */
+	/** When loaded by a RemoteClassLoader, this is the singleton to use */
 	public static final ObjectRegistry singleton;
 
 	static {
 		ClassLoader loader = ObjectRegistry.class.getClassLoader();
-		if(loader instanceof TestfulClassLoader) {
-			singleton = new ObjectRegistry((TestfulClassLoader) loader);
+		if(loader instanceof RemoteClassLoader) {
+			singleton = new ObjectRegistry((RemoteClassLoader) loader);
 		} else {
 			singleton = null;
 		}
@@ -50,7 +50,7 @@ public class ObjectRegistry {
 
 	private final DataFinder finder;
 	private final ClassLoader classLoader;
-	private ObjectRegistry(TestfulClassLoader loader) {
+	private ObjectRegistry(RemoteClassLoader loader) {
 		finder = loader.getFinder();
 		classLoader = loader;
 	}

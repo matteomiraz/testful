@@ -108,17 +108,17 @@ public class OperationResult extends OperationInformation {
 		status = Status.POSTCONDITION_ERROR;
 	}
 
-	public void setSuccessful(Object object, Object result, TestCluster cluster) throws ReplayException {
+	public void setSuccessful(Object object, Object result, TestCluster cluster, ClassRegistry classRegistry) throws ReplayException {
 		status = Status.SUCCESSFUL;
-		this.object = new Value(object, cluster);
-		this.result = new Value(result, cluster);
+		this.object = new Value(object, cluster, classRegistry);
+		this.result = new Value(result, cluster, classRegistry);
 	}
 
-	public void setExceptional(Throwable exc, Object object, TestCluster cluster) throws ReplayException {
+	public void setExceptional(Throwable exc, Object object, TestCluster cluster, ClassRegistry classRegistry) throws ReplayException {
 		status = Status.EXCEPTIONAL;
 		excClassName = exc.getClass().getName();
 		excMessage = exc.getMessage();
-		this.object = new Value(object, cluster);
+		this.object = new Value(object, cluster, classRegistry);
 	}
 
 	public Status getStatus() {
@@ -178,7 +178,7 @@ public class OperationResult extends OperationInformation {
 		private final Serializable object;
 		private final Map<String, Serializable> observers;
 
-		public Value(Object o, TestCluster cluster) {
+		public Value(Object o, TestCluster cluster, ClassRegistry classRegistry) {
 			if(o == null) {
 				isNull = true;
 				type = null;
@@ -197,7 +197,7 @@ public class OperationResult extends OperationInformation {
 						if(m.getParameterTypes().length == 0 && m.getMethodInformation().getType() == MethodInformation.Kind.OBSERVER) {
 
 							try {
-								Method method = ClassRegistry.singleton.getMethod(m);
+								Method method = classRegistry.getMethod(m);
 
 								Object res = method.invoke(o);
 								Serializable res1 = saveObject(res);
@@ -393,22 +393,22 @@ public class OperationResult extends OperationInformation {
 		}
 
 		@Override
-		public void setSuccessful(Object object, Object result, TestCluster cluster) throws ReplayException {
+		public void setSuccessful(Object object, Object result, TestCluster cluster, ClassRegistry classRegistry) throws ReplayException {
 			if(status != Status.SUCCESSFUL) throw new OperationVerifierException(status, Status.SUCCESSFUL);
 
-			this.object.check(new Value(object, cluster));
-			this.result.check(new Value(result, cluster));
+			this.object.check(new Value(object, cluster, classRegistry));
+			this.result.check(new Value(result, cluster, classRegistry));
 		}
 
 		@Override
-		public void setExceptional(Throwable exc, Object object, TestCluster cluster) throws ReplayException {
+		public void setExceptional(Throwable exc, Object object, TestCluster cluster, ClassRegistry classRegistry) throws ReplayException {
 			if(status != Status.EXCEPTIONAL) throw new OperationVerifierException(status, Status.EXCEPTIONAL);
 
 			if(!excClassName.equals(exc.getClass().getName())) throw new OperationVerifierException(excClassName, exc.getClass().getName());
 			if(excMessage == null && exc.getMessage() != null) throw new OperationVerifierException(excMessage, exc.getMessage());
 			if(excMessage != null && !excMessage.equals(exc.getMessage())) throw new OperationVerifierException(excMessage, exc.getMessage());
 
-			this.object.check(new Value(object, cluster));
+			this.object.check(new Value(object, cluster, classRegistry));
 		}
 
 		public static void insertOperationResultVerifier(Operation[] ops) {

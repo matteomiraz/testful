@@ -34,7 +34,7 @@ import testful.runner.ClassType;
 import testful.runner.DataFinder;
 import testful.runner.DataFinderCaching;
 import testful.runner.DataFinderImpl;
-import testful.runner.TestfulClassLoader;
+import testful.runner.RemoteClassLoader;
 import testful.utils.ElementManager;
 
 public class Launcher {
@@ -63,7 +63,7 @@ public class Launcher {
 		TestCluster tc;
 		try {
 			finder = new DataFinderCaching(new DataFinderImpl(new ClassType(config)));
-			tc = new TestCluster(new TestfulClassLoader(finder), config);
+			tc = new TestCluster(new RemoteClassLoader(finder), config);
 		} catch (RemoteException e) {
 			// never happens
 			throw new TestfulException("Cannot create the local classfinder");

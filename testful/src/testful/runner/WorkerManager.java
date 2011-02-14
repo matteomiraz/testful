@@ -59,7 +59,7 @@ public class WorkerManager implements IWorkerManager, IJobRepository {
 	private final static long MIN_UNUSED = 5 * 60 * 1000; //  5 min
 
 	private final CachingMap<String, DataFinder> finders;
-	private final CachingMap<String, Queue<TestfulClassLoader>> classLoaders;
+	private final CachingMap<String, Queue<RemoteClassLoader>> classLoaders;
 
 	private AtomicLong executedJobs = new AtomicLong();
 
@@ -71,7 +71,7 @@ public class WorkerManager implements IWorkerManager, IJobRepository {
 		results = new ConcurrentHashMap<String, IJobRepository>();
 
 		finders = new CachingMap<String, DataFinder>(MAX_ELEMS, MIN_AGE, MIN_UNUSED);
-		classLoaders = new CachingMap<String, Queue<TestfulClassLoader>>(MAX_ELEMS, MIN_AGE, MIN_UNUSED);
+		classLoaders = new CachingMap<String, Queue<RemoteClassLoader>>(MAX_ELEMS, MIN_AGE, MIN_UNUSED);
 
 		if(cpu > 0) {
 			logger.info("Starting with " + cpu + " local executor threads");
@@ -176,14 +176,14 @@ public class WorkerManager implements IWorkerManager, IJobRepository {
 		}
 	}
 
-	public TestfulClassLoader getClassLoader(Job<?,?,?> ctx) throws RemoteException {
+	public RemoteClassLoader getClassLoader(Job<?,?,?> ctx) throws RemoteException {
 		DataFinder finder = ctx.getFinder();
 		String key = finder.getKey();
 
-		TestfulClassLoader ret = null;
+		RemoteClassLoader ret = null;
 		if(!ctx.isReloadClasses()) {
 			synchronized(classLoaders) {
-				Cacheable<Queue<TestfulClassLoader>> q = classLoaders.get(key);
+				Cacheable<Queue<RemoteClassLoader>> q = classLoaders.get(key);
 				if(q != null) ret = q.getElement().poll();
 			}
 		}
@@ -203,7 +203,7 @@ public class WorkerManager implements IWorkerManager, IJobRepository {
 			}
 		}
 
-		ret = new TestfulClassLoader(cacheableFinder.getElement());
+		ret = new RemoteClassLoader(cacheableFinder.getElement());
 
 		return ret;
 	}
@@ -220,7 +220,7 @@ public class WorkerManager implements IWorkerManager, IJobRepository {
 		executedJobs.incrementAndGet();
 	}
 
-	public void putException(Job<?,?,?> ctx, Exception exc, TestfulClassLoader cl) {
+	public void putException(Job<?,?,?> ctx, Exception exc, RemoteClassLoader cl) {
 		if(cl != null)
 			reuseClassLoader(cl);
 
@@ -243,7 +243,7 @@ public class WorkerManager implements IWorkerManager, IJobRepository {
 		executedJobs.incrementAndGet();
 	}
 
-	public void putResult(Job<?,?,?> ctx, Serializable result, TestfulClassLoader cl) {
+	public void putResult(Job<?,?,?> ctx, Serializable result, RemoteClassLoader cl) {
 		reuseClassLoader(cl);
 
 		try {
@@ -253,12 +253,12 @@ public class WorkerManager implements IWorkerManager, IJobRepository {
 		}
 	}
 
-	private void reuseClassLoader(TestfulClassLoader cl) {
+	private void reuseClassLoader(RemoteClassLoader cl) {
 		synchronized(classLoaders) {
-			Cacheable<Queue<TestfulClassLoader>> q = classLoaders.get(cl.getKey());
+			Cacheable<Queue<RemoteClassLoader>> q = classLoaders.get(cl.getKey());
 
 			if(q == null) {
-				q = new Cacheable<Queue<TestfulClassLoader>>(new ArrayBlockingQueue<TestfulClassLoader>(10));
+				q = new Cacheable<Queue<RemoteClassLoader>>(new ArrayBlockingQueue<RemoteClassLoader>(10));
 				classLoaders.put(cl.getKey(), q);
 			}
 

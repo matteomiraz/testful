@@ -63,7 +63,7 @@ import testful.model.transformation.TestTransformationPipeline;
 import testful.runner.ClassType;
 import testful.runner.DataFinderCaching;
 import testful.runner.DataFinderImpl;
-import testful.runner.TestfulClassLoader;
+import testful.runner.RemoteClassLoader;
 import testful.utils.ElementManager;
 import testful.utils.ElementWithKey;
 import testful.utils.JavaUtils;
@@ -89,9 +89,9 @@ public class JUnitTestGenerator extends TestReader {
 
 	private final File destDir;
 	private final boolean saveBinaryTests;
-	private final TestfulClassLoader classLoader;
+	private final RemoteClassLoader classLoader;
 	private final TestSuite suite = new TestSuite();
-	public JUnitTestGenerator(File destDir, TestfulClassLoader classLoader, boolean saveBinaryTests) {
+	public JUnitTestGenerator(File destDir, RemoteClassLoader classLoader, boolean saveBinaryTests) {
 		this.destDir = destDir;
 		this.classLoader = classLoader;
 		this.saveBinaryTests = saveBinaryTests;
@@ -617,10 +617,10 @@ public class JUnitTestGenerator extends TestReader {
 		TestFul.printHeader("JUnit test generator");
 
 		DataFinderCaching finder = null;
-		TestfulClassLoader loader = null;
+		RemoteClassLoader loader = null;
 		try {
 			finder = new DataFinderCaching(new DataFinderImpl(new ClassType(config)));
-			loader = new TestfulClassLoader(finder);
+			loader = new RemoteClassLoader(finder);
 		} catch (RemoteException e) {
 			// never happens
 			logger.log(Level.WARNING, "Remote exception (should never happen): " + e.toString(), e);

@@ -60,7 +60,7 @@ public class Worker extends Thread {
 
 				t_run.start();
 
-				TestfulClassLoader cl;
+				RemoteClassLoader cl;
 				try {
 					cl = workerManager.getClassLoader(ctx);
 				} catch(RemoteException e) {

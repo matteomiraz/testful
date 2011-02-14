@@ -322,7 +322,7 @@ public class ReflectionExecutor {
 			// save results
 			if(targetPos != null) set(targetPos, newObject);
 
-			if(opRes != null) opRes.setSuccessful(null, newObject, cluster);
+			if(opRes != null) opRes.setSuccessful(null, newObject, cluster, ClassRegistry.singleton);
 
 			return;
 
@@ -351,7 +351,7 @@ public class ReflectionExecutor {
 				FaultTracker.singleton.process(exc, cons.getExceptionTypes(), initargs, opRes, cons.getDeclaringClass().getName());
 
 			// a valid exception is thrown
-			if(opRes != null) opRes.setExceptional(exc, null, cluster);
+			if(opRes != null) opRes.setExceptional(exc, null, cluster, ClassRegistry.singleton);
 
 		} catch(Throwable e) {
 			timer_cut.stop();
@@ -447,7 +447,7 @@ public class ReflectionExecutor {
 			timer_cut.stop();
 
 			if(targetPos != null) set(targetPos, result);
-			if(opRes != null) opRes.setSuccessful(baseObject, result, cluster);
+			if(opRes != null) opRes.setSuccessful(baseObject, result, cluster, ClassRegistry.singleton);
 
 			return;
 
@@ -480,7 +480,7 @@ public class ReflectionExecutor {
 			}
 
 			// a valid exception is thrown
-			if(opRes != null) opRes.setExceptional(exc, baseObject, cluster);
+			if(opRes != null) opRes.setExceptional(exc, baseObject, cluster, ClassRegistry.singleton);
 
 		} catch(Throwable e) {
 			timer_cut.stop();

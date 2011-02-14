@@ -46,7 +46,7 @@ import testful.runner.DataFinderCaching;
 import testful.runner.DataFinderImpl;
 import testful.runner.IRunner;
 import testful.runner.RunnerPool;
-import testful.runner.TestfulClassLoader;
+import testful.runner.RemoteClassLoader;
 import testful.utils.ElementManager;
 import ec.util.MersenneTwisterFast;
 
@@ -156,7 +156,7 @@ public abstract class GenericTestCase extends TestCase {
 		ConfigCut testfulConfig = new ConfigCut(getConfig());
 		testfulConfig.setCut(cut);
 
-		TestCluster cluster = new TestCluster(new TestfulClassLoader(getFinder()), testfulConfig);
+		TestCluster cluster = new TestCluster(new RemoteClassLoader(getFinder()), testfulConfig);
 		ReferenceFactory refFactory = new ReferenceFactory(cluster, 4, 4);
 
 		Operation[] ops = new Operation[lenght];

@@ -21,8 +21,8 @@
 	<property name="testCut.bin" value="${testCut}/bin" />
 	<property name="testCut.instrumented" value="${testCut}/instrumented" />
 
-	<!-- classes that can be loaded by the TestfulClassLoader -->
-	<patternset id="testfulClassLoader">
+	<!-- classes that can be loaded by the RemoteClassLoader -->
+	<patternset id="remoteClassLoader">
 		
 		<!-- Utilities -->
 		<include name="testful/runner/ObjectRegistry.class" />
@@ -75,6 +75,7 @@
 		<include name="testful/coverage/whiteBox/*.class" />
 		<exclude name="testful/coverage/whiteBox/Factory*.class" />
 		<exclude name="testful/coverage/whiteBox/WhiteInstrumenter*.class" />
+
 		<include name="testful/model/**" />
 
 		<include name="testful/Config*.class" />
@@ -161,7 +162,7 @@
 
 		<copy todir="${build.classes}">
 			<fileset dir="${build.classes}">
-				<patternset refid="testfulClassLoader" />
+				<patternset refid="remoteClassLoader" />
 			</fileset>
 			<mapper type="glob" from="*.class" to="*.clazz" />
 		</copy>
@@ -192,7 +193,7 @@
 				<include name="testful/utils/**/*.class" />
 				<include name="testful/runner/DataFinder*.class" />
 				<include name="testful/runner/*Type.class" />
-				<include name="testful/runner/TestfulClassLoader*.class" />
+				<include name="testful/runner/RemoteClassLoader*.class" />
 				<include name="testful/TestFul.class" />
 				<include name="testful/TestFul$*.class" />
 				<include name="testful/TestfulException.class" />
@@ -548,7 +549,7 @@
 		<!-- create .clazzes -->
 		<copy todir="${build.cobertura}">
 			<fileset dir="${build.cobertura}">
-				<patternset refid="testfulClassLoader" />
+				<patternset refid="remoteClassLoader" />
 			</fileset>
 			<mapper type="glob" from="*.class" to="*.clazz" />
 		</copy>

@@ -27,19 +27,18 @@ import java.util.logging.Logger;
 import testful.utils.ElementWithKey;
 
 /**
- * Testful's class loader.
+ * Remote class loader.
  * @author matteo
  */
-public class TestfulClassLoader extends ClassLoader implements ElementWithKey<String> {
+public class RemoteClassLoader extends ClassLoader implements ElementWithKey<String> {
 
 	private static Logger logger = Logger.getLogger("testful.executor");
 
-	private static final ClassLoader superClassLoader = TestfulClassLoader.class.getClassLoader();
+	private static final ClassLoader superClassLoader = RemoteClassLoader.class.getClassLoader();
 
 	/** for these classes, use always the system class loader */
 	private static final String[] SYSTEM_CLASSES = {
 		"testful.coverage.TrackerDatum",
-		"testful.model.OperationResult",
 	};
 
 	/** for these classes force the use of the TestFul class loader */
@@ -65,12 +64,17 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 		// Utilities
 		"testful.model.ClassRegistry",
 		"testful.runner.Executor",
-		"testful.runner.ObjectRegistry"
+		"testful.runner.ObjectRegistry",
+	};
+
+	/** for these packages, use always the system class loader */
+	private static final String[] SYSTEM_PACKAGES = {
+		"testful.model.OperationResult", // this class and its inner classes
 	};
 
 	/** for these packages force to use the TestFul class loader */
 	private static final String[] TESTFUL_PACKAGES = {
-		"org.apache.commons.jexl"
+		"org.apache.commons.jexl",
 	};
 
 	public static boolean canUseSystemClassLoader(String name) {
@@ -79,6 +83,9 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 
 		for(String forbid : TESTFUL_CLASSES)
 			if(name.equals(forbid)) return false;
+
+		for(String allow : SYSTEM_PACKAGES)
+			if(name.startsWith(allow)) return true;
 
 		for(String forbid : TESTFUL_PACKAGES)
 			if(name.startsWith(forbid)) return false;
@@ -93,7 +100,7 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 	private final Set<String> loaded;
 	private final String key;
 
-	public TestfulClassLoader(DataFinder finder) throws RemoteException {
+	public RemoteClassLoader(DataFinder finder) throws RemoteException {
 		super(superClassLoader);
 
 		id = idGenerator++;
@@ -103,8 +110,8 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 		key = finder.getKey();
 	}
 
-	public TestfulClassLoader getNew() throws RemoteException {
-		return new TestfulClassLoader(finder);
+	public RemoteClassLoader getNew() throws RemoteException {
+		return new RemoteClassLoader(finder);
 	}
 
 	public DataFinder getFinder() {
@@ -178,7 +185,7 @@ public class TestfulClassLoader extends ClassLoader implements ElementWithKey<St
 	}
 
 	@Override
-	public TestfulClassLoader clone() throws CloneNotSupportedException {
-		throw new CloneNotSupportedException("Clone not supported in TestfulClassLoader");
+	public RemoteClassLoader clone() throws CloneNotSupportedException {
+		throw new CloneNotSupportedException("Clone not supported in RemoteClassLoader");
 	}
 }

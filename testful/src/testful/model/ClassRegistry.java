@@ -38,7 +38,7 @@ public class ClassRegistry {
 
 	private static final StopWatch timerClass = StopWatch.Disabled.singleton; // Timer.getTimer();
 
-	/** When loaded by a TestfulClassLoader, the singleton stores the ClassRegistry to use. */
+	/** When loaded by a RemoteClassLoader, the singleton stores the ClassRegistry to use. */
 	public static final ClassRegistry singleton;
 
 	static {

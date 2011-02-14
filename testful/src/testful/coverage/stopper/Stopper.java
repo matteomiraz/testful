@@ -22,7 +22,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.TestFul;
-import testful.runner.TestfulClassLoader;
+import testful.runner.RemoteClassLoader;
 import testful.utils.Timer;
 import testful.utils.Timer.TimerCallBack;
 
@@ -48,7 +48,7 @@ public final class Stopper implements TimerCallBack {
 		}
 	};
 
-	private final TestfulClassLoader loader;
+	private final RemoteClassLoader loader;
 	private final Timer timer;
 	private final Thread controlledThread;
 
@@ -56,8 +56,8 @@ public final class Stopper implements TimerCallBack {
 		controlledThread = Thread.currentThread();
 
 		ClassLoader cl = Stopper.class.getClassLoader();
-		if(TestFul.DEBUG && !(cl instanceof TestfulClassLoader)) TestFul.debug("Stopper must be loaded by the Testful Class Loader");
-		loader = (TestfulClassLoader) cl;
+		if(TestFul.DEBUG && !(cl instanceof RemoteClassLoader)) TestFul.debug("Stopper must be loaded by the Testful Class Loader");
+		loader = (RemoteClassLoader) cl;
 
 		timer = timers.get();
 		timer.setCallBack(this);
