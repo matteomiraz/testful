@@ -34,11 +34,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.IConfigCut;
-import testful.IConfigProject;
 import testful.TestfulException;
 import testful.model.xml.XmlClass;
 import testful.model.xml.XmlConstructor;
 import testful.model.xml.XmlMethod;
+import testful.model.xml.XmlRegistry;
 import testful.runner.ISerializable;
 import testful.utils.ClassComparator;
 import testful.utils.ElementManager;
@@ -51,8 +51,8 @@ public class TestCluster implements ISerializable {
 
 	private static class Builder {
 
-		private final IConfigProject config;
 		private final ClassLoader classLoader;
+		private final XmlRegistry xmlRegistry;
 
 		/** all clazzes of the test cluster, including ALL primitive types, String, and all methods' return types */
 		private final ElementManager<String, Clazz> all;
@@ -67,7 +67,7 @@ public class TestCluster implements ISerializable {
 
 		public Builder(ClassLoader classLoader, IConfigCut config) throws ClassNotFoundException {
 			this.classLoader = classLoader;
-			this.config = config;
+			xmlRegistry = new XmlRegistry(classLoader, config);
 
 			cluster = new ElementManager<String, Clazz>();
 
@@ -76,9 +76,8 @@ public class TestCluster implements ISerializable {
 			for (Clazz c : PrimitiveClazz.createPrimitive(clazzIdGenerator))
 				all.put(c);
 
-			//TODO: remove xmls!
 			// calculate the test cluster and the set of types involved in the test (all)
-			Map<String,XmlClass> xml = calculateCluster(config.getCut());
+			calculateCluster(config.getCut());
 
 			// calculate constructors, methods, and assignableTo
 			for(Clazz c : all) {
@@ -98,7 +97,7 @@ public class TestCluster implements ISerializable {
 				} else {
 					javaClass = classLoader.loadClass(c.getClassName());
 
-					XmlClass xmlClass = xml.get(c.getClassName());
+					XmlClass xmlClass = xmlRegistry.getXmlClass(c);
 					if(xmlClass != null) // java.lang.String usually does not have any XML description
 						calculateMethods(c, xmlClass, javaClass);
 				}
@@ -123,8 +122,7 @@ public class TestCluster implements ISerializable {
 			calculateSubClasses(classLoader);
 		}
 
-		private Map<String, XmlClass> calculateCluster(String cutClass) throws ClassNotFoundException {
-			Map<String, XmlClass> xml = new HashMap<String, XmlClass>();
+		private void calculateCluster(String cutClass) throws ClassNotFoundException {
 			Set<String> toDo = new HashSet<String>();
 			toDo.add(cutClass);
 
@@ -140,17 +138,11 @@ public class TestCluster implements ISerializable {
 
 					} else {
 						Class<?> javaClass = classLoader.loadClass(className);
+						XmlClass xmlClass = xmlRegistry.getXmlClass(className);
 
 						clazz = new Clazz(clazzIdGenerator.incrementAndGet(), className, javaClass.isInterface() || Modifier.isAbstract(javaClass.getModifiers()));
 						all.put(clazz);
 						cluster.put(clazz);
-
-						XmlClass xmlClass = xml.get(className);
-						if(xmlClass == null) {
-							xmlClass = XmlClass.get(config, javaClass);
-							assert(xmlClass != null);
-							xml.put(className, xmlClass);
-						}
 
 						// Include types used in public fields
 						for(Field f : javaClass.getFields()) {
@@ -187,8 +179,6 @@ public class TestCluster implements ISerializable {
 					}
 				}
 			}
-
-			return xml;
 		}
 
 		private void calculateMethods(Clazz _class, XmlClass xmlClass, Class<?> javaClass) {

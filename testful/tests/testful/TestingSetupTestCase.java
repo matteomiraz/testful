@@ -21,7 +21,7 @@ package testful;
 import junit.framework.TestCase;
 
 /**
- * TODO describe me!
+ * Checks the user runs the tests by using the adequate settings
  * @author matteo
  */
 public class TestingSetupTestCase extends TestCase {

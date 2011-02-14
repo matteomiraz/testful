@@ -35,7 +35,7 @@ import java.util.zip.GZIPOutputStream;
 
 /**
  * 
- * TODO describe me!
+ * Utilities for the (de-)serialization of objects.
  * @author matteo
  */
 public class SerializationUtils {

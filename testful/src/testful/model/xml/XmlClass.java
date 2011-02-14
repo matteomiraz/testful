@@ -29,15 +29,12 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.xml.bind.JAXBException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
-
-import testful.IConfigProject;
 /**
  * Contains the following information on a class:
  * <ul>
@@ -68,30 +65,6 @@ public class XmlClass {
 
 	@XmlElement
 	protected List<Extra> extra;
-
-	/**
-	 * Retrieves the XML description for the class, either by reading it from the proper file or creating one on-the-fly.
-	 * @param config the project configuration
-	 * @param clazz the class
-	 * @return the XML of the class
-	 */
-	public static XmlClass get(IConfigProject config, Class<?> clazz) {
-		final String className = clazz.getName();
-		try {
-			return Parser.singleton.parse(config, className);
-		} catch (JAXBException e) {
-
-			if(clazz.isPrimitive()) {
-				logger.log(Level.FINE, "Ignoring primitive type " + className + ": no XML description: " + e.getCause());
-				return null;
-			}
-
-			if(!className.startsWith("java.") && !className.startsWith("javax.") && !className.startsWith("sun."))
-				logger.log(Level.WARNING, "Cannot parse XML descriptor of class " + className + ": " + e.getCause());
-
-			return create(clazz);
-		}
-	}
 
 	/**
 	 * Creates the default description of a class
