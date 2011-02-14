@@ -32,14 +32,14 @@ import testful.utils.StopWatch;
  * and allows one to convert testful.model's element into java.lang.reflect ones.
  * @author matteo
  */
-public class ClassRegistry {
+public class ClassRegistry implements IClassRegistry {
 
 	private static final Logger logger = Logger.getLogger("testful.model.clazzRegistry");
 
 	private static final StopWatch timerClass = StopWatch.Disabled.singleton; // Timer.getTimer();
 
 	/** When loaded by a RemoteClassLoader, the singleton stores the ClassRegistry to use. */
-	public static final ClassRegistry singleton;
+	public static final IClassRegistry singleton;
 
 	static {
 		singleton = new ClassRegistry(ClassRegistry.class.getClassLoader());
@@ -51,6 +51,10 @@ public class ClassRegistry {
 	}
 
 	private final Map<Integer, Class<?>> clazzCache = new HashMap<Integer, Class<?>>();
+	/* (non-Javadoc)
+	 * @see testful.model.IClassRegistry#getClass(testful.model.Clazz)
+	 */
+	@Override
 	public Class<?> getClass(Clazz clazz) throws ClassNotFoundException {
 
 		timerClass.start("clazzRegistry.getClass");
@@ -136,6 +140,10 @@ public class ClassRegistry {
 		return ret;
 	}
 
+	/* (non-Javadoc)
+	 * @see testful.model.IClassRegistry#getClasses(testful.model.Clazz[])
+	 */
+	@Override
 	public Class<?>[] getClasses(Clazz[] c) throws ClassNotFoundException {
 
 		Class<?>[] ret = new Class<?>[c.length];
@@ -146,6 +154,10 @@ public class ClassRegistry {
 	}
 
 	private final Map<Integer, Field> fieldCache = new HashMap<Integer, Field>();
+	/* (non-Javadoc)
+	 * @see testful.model.IClassRegistry#getField(testful.model.StaticValue)
+	 */
+	@Override
 	public Field getField(StaticValue value) throws ClassNotFoundException, SecurityException, NoSuchFieldException {
 
 		Field cache = fieldCache.get(value.getId());
@@ -159,6 +171,10 @@ public class ClassRegistry {
 	}
 
 	private final Map<Integer, Method> methodCache = new HashMap<Integer, Method>();
+	/* (non-Javadoc)
+	 * @see testful.model.IClassRegistry#getMethod(testful.model.Methodz)
+	 */
+	@Override
 	public Method getMethod(Methodz m) throws ClassNotFoundException, SecurityException, NoSuchMethodException {
 
 		Method cache = methodCache.get(m.getId());
@@ -173,6 +189,10 @@ public class ClassRegistry {
 	}
 
 	private final Map<Integer, Constructor<?>> constructorCache = new HashMap<Integer, Constructor<?>>();
+	/* (non-Javadoc)
+	 * @see testful.model.IClassRegistry#getConstructor(testful.model.Constructorz)
+	 */
+	@Override
 	public Constructor<?> getConstructor(Constructorz cns) throws ClassNotFoundException, SecurityException, NoSuchMethodException {
 
 		Constructor<?> cache = constructorCache.get(cns.getId());

@@ -39,6 +39,7 @@ public class RemoteClassLoader extends ClassLoader implements ElementWithKey<Str
 	/** for these classes, use always the system class loader */
 	private static final String[] SYSTEM_CLASSES = {
 		"testful.coverage.TrackerDatum",
+		"testful.model.IClassRegistry",
 	};
 
 	/** for these classes force the use of the TestFul class loader */

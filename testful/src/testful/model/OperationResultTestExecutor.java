@@ -26,8 +26,8 @@ import java.util.concurrent.TimeoutException;
 import testful.coverage.TrackerDatum;
 import testful.model.executor.TestExecutor;
 import testful.model.executor.TestExecutorInput;
-import testful.runner.Job;
 import testful.runner.DataFinder;
+import testful.runner.Job;
 import testful.runner.RunnerPool;
 
 /**
@@ -38,8 +38,8 @@ public class OperationResultTestExecutor extends TestExecutor<OperationResult[]>
 
 	@Override
 	protected OperationResult[] getResult() {
-
 		Operation[] ops = getInput().getTest().getTest();
+
 		OperationResult[] ret = new OperationResult[ops.length];
 		for (int i = 0; i < ops.length; i++)
 			ret[i] = (OperationResult) ops[i].getInfo(OperationResult.KEY);

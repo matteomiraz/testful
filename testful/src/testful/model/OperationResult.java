@@ -108,13 +108,13 @@ public class OperationResult extends OperationInformation {
 		status = Status.POSTCONDITION_ERROR;
 	}
 
-	public void setSuccessful(Object object, Object result, TestCluster cluster, ClassRegistry classRegistry) throws ReplayException {
+	public void setSuccessful(Object object, Object result, TestCluster cluster, IClassRegistry classRegistry) throws ReplayException {
 		status = Status.SUCCESSFUL;
 		this.object = new Value(object, cluster, classRegistry);
 		this.result = new Value(result, cluster, classRegistry);
 	}
 
-	public void setExceptional(Throwable exc, Object object, TestCluster cluster, ClassRegistry classRegistry) throws ReplayException {
+	public void setExceptional(Throwable exc, Object object, TestCluster cluster, IClassRegistry classRegistry) throws ReplayException {
 		status = Status.EXCEPTIONAL;
 		excClassName = exc.getClass().getName();
 		excMessage = exc.getMessage();
@@ -178,7 +178,7 @@ public class OperationResult extends OperationInformation {
 		private final Serializable object;
 		private final Map<String, Serializable> observers;
 
-		public Value(Object o, TestCluster cluster, ClassRegistry classRegistry) {
+		public Value(Object o, TestCluster cluster, IClassRegistry classRegistry) {
 			if(o == null) {
 				isNull = true;
 				type = null;
@@ -393,7 +393,7 @@ public class OperationResult extends OperationInformation {
 		}
 
 		@Override
-		public void setSuccessful(Object object, Object result, TestCluster cluster, ClassRegistry classRegistry) throws ReplayException {
+		public void setSuccessful(Object object, Object result, TestCluster cluster, IClassRegistry classRegistry) throws ReplayException {
 			if(status != Status.SUCCESSFUL) throw new OperationVerifierException(status, Status.SUCCESSFUL);
 
 			this.object.check(new Value(object, cluster, classRegistry));
@@ -401,7 +401,7 @@ public class OperationResult extends OperationInformation {
 		}
 
 		@Override
-		public void setExceptional(Throwable exc, Object object, TestCluster cluster, ClassRegistry classRegistry) throws ReplayException {
+		public void setExceptional(Throwable exc, Object object, TestCluster cluster, IClassRegistry classRegistry) throws ReplayException {
 			if(status != Status.EXCEPTIONAL) throw new OperationVerifierException(status, Status.EXCEPTIONAL);
 
 			if(!excClassName.equals(exc.getClass().getName())) throw new OperationVerifierException(excClassName, exc.getClass().getName());

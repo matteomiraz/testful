@@ -310,6 +310,31 @@ public class TestExecutionManagerTestCase extends GenericTestCase {
 		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[1].getInfo(OperationResult.KEY)).status);
 	}
 
+	public void testExecutor() throws Exception {
+		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();
+		Test test = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.objects[0], cut.oCns, new Reference[] { })
+		});
+
+		OperationResult.insert(test.getTest());
+		OperationResultTestExecutor.execute(getFinder(), test, true);
+
+		Operation[] testOperations = test.getTest();
+		assertEquals(1, testOperations.length);
+		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)testOperations[0].getInfo(OperationResult.KEY)).status);
+
+		Test test2 = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.objects[0], cut.oCns, new Reference[] { })
+		});
+
+		OperationResult.insert(test2.getTest());
+		OperationResultTestExecutor.execute(getFinder(), test2, true);
+
+		Operation[] test2Operations = test2.getTest();
+		assertEquals(1, test2Operations.length);
+		assertEquals(OperationResult.Status.SUCCESSFUL, ((OperationResult)test2Operations[0].getInfo(OperationResult.KEY)).status);
+	}
+
 	public void testStoppedLongMethod1() throws Exception {
 		TestCoverageStoppedCUT cut = new TestCoverageStoppedCUT();
 		Test test = new Test(cut.cluster, cut.refFactory, new Operation[] {
