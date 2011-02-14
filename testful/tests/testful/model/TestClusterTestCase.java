@@ -57,6 +57,18 @@ public class TestClusterTestCase extends GenericTestCase {
 		assertEquals("remove()", iter.getMethods()[2].toString());
 	}
 
+	public void testInnerClass() throws Exception {
+		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
+		config.setCut("test.model.cluster.testInnerClass.Container");
+
+		RemoteClassLoader classLoader = new RemoteClassLoader(getFinder());
+		TestCluster tc = new TestCluster(classLoader, config);
+
+		assertEquals(2, tc.getCluster().length);
+		assertEquals("test.model.cluster.testInnerClass.Container", tc.getCluster()[0].getClassName());
+		assertEquals("test.model.cluster.testInnerClass.Container$Contained", tc.getCluster()[1].getClassName());
+	}
+
 	/**
 	 * Test the ability to skip constructors and methods'
 	 */

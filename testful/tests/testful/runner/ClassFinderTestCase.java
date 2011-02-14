@@ -21,10 +21,8 @@ package testful.runner;
 import java.io.File;
 import java.net.URL;
 
-import testful.ConfigCut;
 import testful.ConfigProject;
 import testful.GenericTestCase;
-import testful.model.TestCluster;
 
 /**
  * Tests the class finder
@@ -107,14 +105,10 @@ public class ClassFinderTestCase extends GenericTestCase {
 	}
 
 	public void testInnerClass() throws Exception {
-		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
-		config.setCut("test.model.cluster.testInnerClass.Container");
+		ClassType classType = new ClassType(GenericTestCase.getConfig());
+		DataFinderImpl finder = new DataFinderImpl(classType);
 
-		RemoteClassLoader classLoader = new RemoteClassLoader(getFinder());
-		TestCluster tc = new TestCluster(classLoader, config);
-
-		assertEquals(2, tc.getCluster().length);
-		assertEquals("test.model.cluster.testInnerClass.Container", tc.getCluster()[0].getClassName());
-		assertEquals("test.model.cluster.testInnerClass.Container$Contained", tc.getCluster()[1].getClassName());
+		byte[] b = finder.getData(ClassType.NAME, "test.model.cluster.testInnerClass.Container$Contained");
+		assertNotNull(b);
 	}
 }
