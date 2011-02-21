@@ -65,7 +65,7 @@ public abstract class AutoTestCase extends GenericTestCase {
 
 		// ensure that static initializers are executed
 		for(String cut : getCuts())
-			getCoverage(createRandomTest(cut, 1000, 17l));
+			getCoverage(createRandomTest(cut, 1000, 17L));
 
 	}
 
@@ -76,7 +76,7 @@ public abstract class AutoTestCase extends GenericTestCase {
 			else
 				System.out.print("setup");
 
-			assertEquals("Setup correctly your environment!", true, autoTest(cut, 500, 17l));
+			assertEquals("Setup correctly your environment!", true, autoTest(cut, 500, 17L));
 		}
 	}
 

@@ -117,7 +117,7 @@ public class Fault implements Serializable {
 
 		// remove initial elements in the stack
 		if(baseClassName != null) {
-			while(--n >= 0 && !baseClassName.equals(stackTrace[n].getClassName()));
+			while(--n >= 0 && !baseClassName.equals(stackTrace[n].getClassName())) /* do nothing */;
 
 			if(n >= 0) n++;
 			else n = stackTrace.length;

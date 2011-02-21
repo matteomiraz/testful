@@ -489,8 +489,8 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable {
 		int y;
 
 		if(probability < 0.0f || probability > 1.0f) throw new IllegalArgumentException("probability must be between 0.0 and 1.0 inclusive.");
-		if(probability == 0.0f) return false; // fix half-open issues
-		else if(probability == 1.0f) return true; // fix half-open issues
+		if(probability <= 0.0f) return false; // fix half-open issues
+		else if(probability >= 1.0f) return true; // fix half-open issues
 		if(mti >= N) // generate N words at one time
 		{
 			int kk;

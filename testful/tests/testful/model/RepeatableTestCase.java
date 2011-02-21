@@ -308,7 +308,7 @@ public class RepeatableTestCase extends GenericTestCase {
 	}
 
 	public void testRandomGeneration() throws Exception {
-		Operation[] ops = GenericTestCase.createRandomTest("apache.Fraction", 10, 12012010l).getTest();
+		Operation[] ops = GenericTestCase.createRandomTest("apache.Fraction", 10, 12012010L).getTest();
 
 		assertEquals(10, ops.length);
 		assertEquals("java_lang_Double_2 = (double) apache_Fraction_2.intValue()", ops[0].toString());

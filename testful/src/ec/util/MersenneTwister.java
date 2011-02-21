@@ -426,8 +426,8 @@ public strictfp class MersenneTwister extends java.util.Random implements Serial
 
 	public boolean nextBoolean(final float probability) {
 		if(probability < 0.0f || probability > 1.0f) throw new IllegalArgumentException("probability must be between 0.0 and 1.0 inclusive.");
-		if(probability == 0.0f) return false; // fix half-open issues
-		else if(probability == 1.0f) return true; // fix half-open issues
+		if(probability <= 0.0f) return false; // fix half-open issues
+		else if(probability >= 1.0f) return true; // fix half-open issues
 		return nextFloat() < probability;
 	}
 
@@ -439,8 +439,8 @@ public strictfp class MersenneTwister extends java.util.Random implements Serial
 
 	public boolean nextBoolean(final double probability) {
 		if(probability < 0.0 || probability > 1.0) throw new IllegalArgumentException("probability must be between 0.0 and 1.0 inclusive.");
-		if(probability == 0.0) return false; // fix half-open issues
-		else if(probability == 1.0) return true; // fix half-open issues
+		if(probability <= 0.0) return false; // fix half-open issues
+		else if(probability >= 1.0) return true; // fix half-open issues
 		return nextDouble() < probability;
 	}
 

@@ -30,4 +30,7 @@ public class TestingSetupTestCase extends TestCase {
 		assertTrue("It is strongly suggested to run the tests with the option \"-Dtestful.quiet=true\"", TestFul.quiet);
 	}
 
+	public void testDebug() throws Exception {
+		assertTrue("It is strongly suggested to run the tests in DEBUG mode: \"-Dtestful.debug=true\"", TestFul.DEBUG);
+	}
 }
