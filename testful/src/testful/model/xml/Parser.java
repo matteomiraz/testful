@@ -71,7 +71,7 @@ public class Parser {
 		marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 	}
 
-	XmlClass parse(IConfigProject config, String fullQualifiedClassName) throws JAXBException {
+	public XmlClass parse(IConfigProject config, String fullQualifiedClassName) throws JAXBException {
 		File file = new File(config.getDirSource(), fullQualifiedClassName.replace('.', File.separatorChar) + ".xml");
 		return (XmlClass) unmarshaller.unmarshal(file);
 	}

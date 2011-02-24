@@ -23,6 +23,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -132,6 +133,11 @@ public class XmlClass {
 			cluster.remove(className);
 	}
 
+	public Collection<XmlConstructor> getConstructors() {
+		if(constructor == null) return Collections.emptySet();
+		return constructor;
+	}
+
 	/**
 	 * Get the XML descriptor for a constructor.
 	 * If it is not in the XML file, a default descriptor is created on-the-fly.
@@ -181,6 +187,11 @@ public class XmlClass {
 		constructor.add(cns);
 	}
 
+	public Collection<XmlMethod> getMethods() {
+		if(method == null) return Collections.emptySet();
+		return method;
+	}
+
 	/**
 	 * Get the XML descriptor for a method.
 	 * If it is not in the XML file, a default descriptor is created on-the-fly.
@@ -189,28 +200,13 @@ public class XmlClass {
 	 */
 	public XmlMethod getMethod(Method meth) {
 		if (method != null) {
-			final String methodName = meth.getName();
-
 			final Class<?>[] params = meth.getParameterTypes();
 			final String[] paramsString = new String[params.length];
 			for (int i = 0; i < params.length; i++)
 				paramsString[i] = params[i].getName();
 
-			for (XmlMethod xmlMeth : method) {
-				if (!xmlMeth.getName().equals(methodName))
-					continue;
-
-				List<XmlParameter> xmlParams = xmlMeth.getParameter();
-				if (xmlParams.size() != params.length)
-					continue;
-
-				boolean ok = true;
-				for (int i = 0; i < params.length && ok; i++)
-					if (!params[i].getName().equals(xmlParams.get(i).getType()))
-						ok = false;
-				if (ok)
-					return xmlMeth;
-			}
+			XmlMethod xmlMeth = getMethod(meth.getName(), paramsString);
+			if(xmlMeth != null) return xmlMeth;
 		}
 
 		final XmlMethod xmlMeth = XmlMethod.create(meth);
@@ -223,6 +219,24 @@ public class XmlClass {
 		}
 
 		return xmlMeth;
+	}
+
+	public XmlMethod getMethod(final String name, final String[] params) {
+		for (XmlMethod xmlMeth : method) {
+			if (xmlMeth.getName().equals(name)) {
+				final List<XmlParameter> xmlParams = xmlMeth.getParameter();
+				if (params.length == xmlParams.size()) {
+
+					boolean ok = true;
+					for (int i = 0; i < params.length && ok; i++)
+						ok = params[i].equals(xmlParams.get(i).getType());
+
+					if (ok) return xmlMeth;
+				}
+			}
+		}
+
+		return null;
 	}
 
 	/**
