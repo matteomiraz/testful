@@ -411,7 +411,7 @@ public class TrackerWhiteBox extends Tracker {
 				manageArrayDefUses(array[i], use);
 
 		} else {
-			if(TestFul.DEBUG && !(defs instanceof ContextualId)) TestFul.debug("_trackArrayDefUses: " + c.getCanonicalName() + " instead of a ContextualId");
+			if(TestFul.DEBUG && !(defs instanceof ContextualId)) TestFul.debug("_trackArrayDefUses: " + c.getName() + " instead of a ContextualId");
 
 			manageDefUse((ContextualId) defs, use);
 		}

@@ -52,6 +52,7 @@ import soot.tagkit.LineNumberTag;
 import soot.tagkit.StringTag;
 import soot.util.Chain;
 import testful.IConfigProject;
+import testful.TestFul;
 
 public class Instrumenter {
 
@@ -108,11 +109,9 @@ public class Instrumenter {
 	private static final boolean deadCodeRemoverPre  = true;
 	private static final boolean instrumenter        = true;
 	private static final boolean postWriter          = false;
-	private static final boolean postValidator       = false;
 	private static final boolean nopEliminator       = true;
 	private static final boolean deadCodeRemoverPost = true;
 	private static final boolean finalWriter         = false;
-	private static final boolean finalValidator      = false;
 
 	public static void prepare(IConfigProject config, List<String> toInstrument) {
 		String[] SOOT_CONF = new String[] { "-validate", "-keep-line-number", "-f", "c", "-output-dir", config.getDirInstrumented().getAbsolutePath() };
@@ -191,7 +190,7 @@ public class Instrumenter {
 			last = newPhase;
 		}
 
-		if(logger.isLoggable(Level.FINE) || postValidator) {
+		if(TestFul.DEBUG) {
 			String newPhase = "jtp.postValidator";
 			logger.fine("Enabled phase: " + newPhase);
 			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(BodyValidator.singleton)));
@@ -223,7 +222,7 @@ public class Instrumenter {
 			last = newPhase;
 		}
 
-		if(logger.isLoggable(Level.FINEST) || finalValidator) {
+		if(TestFul.DEBUG) {
 			String newPhase = "jtp.finalValidator";
 			logger.fine("Enabled phase: " + newPhase);
 			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(BodyValidator.singleton)));

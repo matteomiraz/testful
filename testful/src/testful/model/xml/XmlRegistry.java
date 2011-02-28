@@ -25,11 +25,11 @@ import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBException;
 
-import testful.IConfigCut;
+import testful.IConfigProject;
 import testful.model.Clazz;
 
 /**
- * TODO describe me!
+ * For each class allows one to get its XML description.
  * @author matteo
  */
 public class XmlRegistry {
@@ -40,20 +40,15 @@ public class XmlRegistry {
 	private final Map<String, XmlClass> xmlClasses = new HashMap<String, XmlClass>();
 
 	/** I need to read XML files from the source directory... */
-	private final IConfigCut config;
+	private final IConfigProject config;
 
 	/** I need java classes ( {@link Class} ) to auto-generate missing XML descriptors */
 	private final ClassLoader classLoader;
 
-	public XmlRegistry(ClassLoader classLoader, IConfigCut config) {
+	public XmlRegistry(ClassLoader classLoader, IConfigProject config) {
 		this.classLoader = classLoader;
 		this.config = config;
 	}
-
-	public XmlClass getXmlClass(Clazz c) {
-		return getXmlClass(c.getClassName());
-	}
-
 
 	/**
 	 * Returns the XML description for the class, either by reading it from the proper file or creating one on-the-fly.
@@ -91,5 +86,14 @@ public class XmlRegistry {
 		}
 
 		return xmlClass;
+	}
+
+	/**
+	 * Returns the XML description for the class, either by reading it from the proper file or creating one on-the-fly.
+	 * @param c the clazz
+	 * @return the XML of the class
+	 */
+	public XmlClass getXmlClass(Clazz c) {
+		return getXmlClass(c.getClassName());
 	}
 }

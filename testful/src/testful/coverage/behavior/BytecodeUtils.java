@@ -1,3 +1,21 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2011  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful.coverage.behavior;
 
 import java.util.List;
@@ -6,6 +24,10 @@ import testful.model.xml.XmlConstructor;
 import testful.model.xml.XmlMethod;
 import testful.model.xml.XmlParameter;
 
+/**
+ * Some utilities to deal with the bytecode
+ * @author matteo
+ */
 public class BytecodeUtils {
 
 	//result: <init>(DDII)
@@ -45,77 +67,4 @@ public class BytecodeUtils {
 
 		return "L" + type.getType() + ";";
 	}
-
-	//	// (DDII)V
-	//	public static Class[] getArgumentTypes(final String methodDescriptor) {
-	//    char[] buf = methodDescriptor.toCharArray();
-	//    int off = 1;
-	//    int size = 0;
-	//    while (true) {
-	//        char car = buf[off++];
-	//        if (car == ')') {
-	//            break;
-	//        } else if (car == 'L') {
-	//            while (buf[off++] != ';') {
-	//            }
-	//            ++size;
-	//        } else if (car != '[') {
-	//            ++size;
-	//        }
-	//    }
-	//    Class[] args = new Class[size];
-	//    off = 1;
-	//    size = 0;
-	//    while (buf[off] != ')') {
-	//        args[size] = getType(buf, off);
-	//        off += args[size].len + (args[size].sort == OBJECT ? 2 : 0);
-	//        size += 1;
-	//    }
-	//    return args;
-	//}
-	//
-	//  private static Class<?> getType(final char[] buf, final int off) {
-	//    int len;
-	//    switch (buf[off]) {
-	//        case 'V':
-	//            return Void.class;
-	//        case 'Z':
-	//            return Boolean.TYPE;
-	//        case 'C':
-	//            return Character.TYPE;
-	//        case 'B':
-	//            return Byte.TYPE;
-	//        case 'S':
-	//            return Short.TYPE;
-	//        case 'I':
-	//            return Integer.TYPE;
-	//        case 'F':
-	//            return Float.TYPE;
-	//        case 'J':
-	//            return Long.TYPE;
-	//        case 'D':
-	//            return Double.TYPE;
-	//        case '[':
-	//            len = 1;
-	//            while (buf[off + len] == '[') {
-	//                ++len;
-	//            }
-	//            if (buf[off + len] == 'L') {
-	//                ++len;
-	//                while (buf[off + len] != ';') {
-	//                    ++len;
-	//                }
-	//            }
-	//            return new Type(ARRAY, buf, off, len + 1);
-	//            // case 'L':
-	//        default:
-	//            len = 1;
-	//            while (buf[off + len] != ';') {
-	//                ++len;
-	//            }
-	//            return new Type(OBJECT, buf, off + 1, len - 1);
-	//    }
-	//}
-	//
-
 }

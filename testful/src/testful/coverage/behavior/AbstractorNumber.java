@@ -1,14 +1,35 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2011  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful.coverage.behavior;
 
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.Map.Entry;
+import java.util.logging.Level;
 
 import org.apache.commons.jexl.Expression;
 import org.apache.commons.jexl.ExpressionFactory;
 import org.apache.commons.jexl.JexlContext;
 import org.apache.commons.jexl.JexlHelper;
+
+import testful.TestFul;
 
 /**
  * Abstract a number using an user-provided domain subdivision. The user can use
@@ -38,7 +59,7 @@ public class AbstractorNumber extends Abstractor {
 
 	public static Abstraction get(String expression, Object obj) {
 		if(!(obj instanceof Number)) {
-			System.err.println("ERR: expected a number in AbstractorNumber!");
+			logger.warning("Expected a number in AbstractorNumber for expression \"" + expression + "\"");
 			return new Abstraction.AbstractionError(expression);
 		}
 
@@ -56,16 +77,22 @@ public class AbstractorNumber extends Abstractor {
 	private final String[] intervalsString;
 	private transient Expression[] intervals;
 
-	public AbstractorNumber(String value, String range) throws Exception {
-		super(value, range);
+	/**
+	 * Instantiate a <i>parametric</i> abstraction function on the <i>expression</i> property.
+	 * @param expression the expression that collects the property to abstract
+	 * @param parameters the parameters for the abstraction function
+	 * @throws Exception if anything goes wrong (e.g., the expression has syntax errors)
+	 */
+	public AbstractorNumber(String expression, String parameters) throws Exception {
+		super(expression, parameters);
 
-		range = range.trim();
+		parameters = parameters.trim();
 
-		if(range.length() <= 0) {
+		if(parameters.length() <= 0) {
 			intervalsString = null;
 			intervals = null;
 		} else {
-			intervalsString = range.split(":");
+			intervalsString = parameters.split(":");
 
 			intervals = new Expression[intervalsString.length];
 			for(int i = 0; i < intervalsString.length; i++)
@@ -74,13 +101,14 @@ public class AbstractorNumber extends Abstractor {
 	}
 
 	private Expression[] getIntervals() {
-		if(intervals == null && intervalsString != null) try {
-			intervals = new Expression[intervalsString.length];
-			for(int i = 0; i < intervalsString.length; i++)
-				intervals[i] = ExpressionFactory.createExpression(intervalsString[i]);
-		} catch(Exception e) {
-			// This should never happen
-			e.printStackTrace();
+		if(intervals == null && intervalsString != null) {
+			try {
+				intervals = new Expression[intervalsString.length];
+				for(int i = 0; i < intervalsString.length; i++)
+					intervals[i] = ExpressionFactory.createExpression(intervalsString[i]);
+			} catch(Exception e) {
+				TestFul.debug("This should never happen", e);
+			}
 		}
 
 		return intervals;
@@ -94,7 +122,7 @@ public class AbstractorNumber extends Abstractor {
 		if(obj == null) return new AbstractionObjectReference(expression, true);
 
 		if(!(obj instanceof Number)) {
-			System.err.println("ERR: expected a number in AbstractorNumber!");
+			logger.warning("Expected a number in AbstractorNumber!");
 			return new Abstraction.AbstractionError(expression);
 		}
 
@@ -140,7 +168,8 @@ public class AbstractorNumber extends Abstractor {
 			if(elem == entry.getKey()) return new AbstractionNumber(expression, expression + " = " + entry.getValue());
 			prev = entry.getValue();
 		}
-		System.err.println("ERROR: Cannot reach this point!");
+
+		if(TestFul.DEBUG) TestFul.debug("This point was not supposed to be reachable.");
 		return new AbstractionNumber(expression, expression + " = " + AbstractionNumber.P_INF);
 	}
 
@@ -160,7 +189,7 @@ public class AbstractorNumber extends Abstractor {
 					if(evaluate != null) ret[i] = evaluate.doubleValue();
 				}
 			} catch(Exception e) {
-				System.err.println("ERR: cannot execute the JEXL query \"" + intervals[i].getExpression() + "\" : " + e.getMessage() + " due to: " + e.getCause());
+				logger.log(Level.WARNING, "Cannot execute the JEXL query \"" + intervals[i].getExpression() + "\" : " + e.getMessage() + " due to: " + e.getCause(), e);
 			}
 
 			return ret;

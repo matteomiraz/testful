@@ -36,7 +36,7 @@ import javax.xml.bind.annotation.XmlType;
 import testful.TestFul;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(namespace = "http://testful.sourceforge.net/schema/1.2/testful.xsd", name = "method", propOrder = { "parameter", "extra" })
+@XmlType(namespace = "http://testful.sourceforge.net/schema/2.0/testful.xsd", name = "method", propOrder = { "parameter", "extra" })
 public class XmlMethod implements Comparable<XmlMethod> {
 
 	private static final Logger logger = Logger.getLogger("testful.model.xml");
@@ -45,7 +45,7 @@ public class XmlMethod implements Comparable<XmlMethod> {
 	static final Integer MAX_EXEC_TIME = TestFul.getProperty(TestFul.PROPERTY_MAX_EXEC_TIME, 500);
 
 	@XmlEnum
-	@XmlType(namespace = "http://testful.sourceforge.net/schema/1.2/testful.xsd")
+	@XmlType(namespace = "http://testful.sourceforge.net/schema/2.0/testful.xsd")
 	public static enum Kind {
 		/** the method is static */
 		@XmlEnumValue("static")
@@ -146,7 +146,6 @@ public class XmlMethod implements Comparable<XmlMethod> {
 	 * @return the maximum execution time (in milliseconds)
 	 */
 	public int getMaxExecTime() {
-		if(maxExecTime == null) return XmlMethod.MAX_EXEC_TIME;
 		return maxExecTime;
 	}
 

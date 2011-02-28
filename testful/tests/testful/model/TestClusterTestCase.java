@@ -35,7 +35,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut(ArrayList.class.getName());
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		assertEquals(8, tc.getClusterSize());
 		assertEquals("java.lang.Integer", tc.getCluster(0).toString());
@@ -61,8 +62,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.testInnerClass.Container");
 
-		RemoteClassLoader classLoader = new RemoteClassLoader(getFinder());
-		TestCluster tc = new TestCluster(classLoader, config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		assertEquals(2, tc.getCluster().length);
 		assertEquals("test.model.cluster.testInnerClass.Container", tc.getCluster()[0].getClassName());
@@ -76,7 +77,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("java.util.Random");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		assertNotNull(tc.getCut());
 
@@ -101,7 +103,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.testEnum.Normal");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		assertEquals(3, tc.getClasses().length);
 		assertEquals("java.lang.Integer", tc.getClasses()[0].toString());
@@ -123,7 +126,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.testAbstract.AbstractClass");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		assertTrue(tc.getCut().isAbstract());
 
@@ -138,7 +142,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.testFields.Fields");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		assertEquals(1, tc.getCut().getConstants().length);
 		assertEquals("test.model.cluster.testFields.Fields._public_static", tc.getCut().getConstants()[0].toString());
@@ -148,7 +153,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut(StringBuffer.class.getName());
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		// java.lang.AbstractStringBuilder is not visible (hence it is not present)
 		assertEquals(10, tc.getCluster().length);
@@ -168,7 +174,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.generic.Generic");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 		Clazz cut = tc.getCut();
 
 		assertEquals(2, tc.getCluster().length);
@@ -189,7 +196,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.generic.Concrete");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 		Clazz cut = tc.getCut();
 
 		assertEquals(3, tc.getCluster().length);
@@ -220,7 +228,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test01.Cut");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		try {
 			tc.isValid();
@@ -233,7 +242,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test02.Cut");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		try {
 			tc.isValid();
@@ -248,7 +258,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test03.Cut");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		try {
 			tc.isValid();
@@ -261,7 +272,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test04.Cut");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		try {
 			tc.isValid();
@@ -276,7 +288,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test05.Cut");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		try {
 			tc.isValid();
@@ -289,7 +302,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test10.Cut");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		try {
 			tc.isValid();
@@ -302,7 +316,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test11.Cut");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		try {
 			tc.isValid();
@@ -315,7 +330,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test12.Cut");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		try {
 			tc.isValid();
@@ -328,7 +344,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test13.Cut");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		try {
 			tc.isValid();
@@ -411,7 +428,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test19.Cut");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		try {
 			tc.isValid();
@@ -441,7 +459,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test21.Cut");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		try {
 			tc.isValid();
@@ -471,7 +490,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test23.Cut");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		try {
 			tc.isValid();
@@ -484,7 +504,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test24.Cut");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		try {
 			tc.isValid();
@@ -497,7 +518,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test25.Cut");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		try {
 			tc.isValid();
@@ -527,7 +549,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test27.Cut");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		try {
 			tc.isValid();
@@ -540,7 +563,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test28.Cut");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		try {
 			tc.isValid();
@@ -553,7 +577,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test29.Cut");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		try {
 			tc.isValid();
@@ -583,7 +608,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test31.Cut");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		try {
 			tc.isValid();
@@ -596,7 +622,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test32.Cut");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		try {
 			tc.isValid();
@@ -639,7 +666,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test35.Cut");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		try {
 			tc.isValid();
@@ -652,7 +680,8 @@ public class TestClusterTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.cluster.test36.Cut");
 
-		TestCluster tc = new TestCluster(new RemoteClassLoader(getFinder()), config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster tc = clusterBuilder.getTestCluster();
 
 		try {
 			tc.isValid();

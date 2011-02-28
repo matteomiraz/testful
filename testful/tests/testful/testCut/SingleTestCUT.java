@@ -27,6 +27,7 @@ import testful.model.PrimitiveClazz;
 import testful.model.Reference;
 import testful.model.ReferenceFactory;
 import testful.model.TestCluster;
+import testful.model.TestClusterBuilder;
 import testful.runner.RemoteClassLoader;
 
 /**
@@ -34,6 +35,9 @@ import testful.runner.RemoteClassLoader;
  * @author matteo
  */
 public abstract class SingleTestCUT {
+
+	/** The test cluster builder */
+	protected final TestClusterBuilder clusterBuilder;
 
 	/** The test cluster */
 	public final TestCluster cluster;
@@ -51,7 +55,8 @@ public abstract class SingleTestCUT {
 		try {
 			ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 			config.setCut(cutName);
-			cluster = new TestCluster(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+			clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+			cluster = clusterBuilder.getTestCluster();
 			refFactory = new ReferenceFactory(cluster, 4, 4);
 
 			cut = cluster.getCut();

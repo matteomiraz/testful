@@ -1,8 +1,25 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2011  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful.coverage.behavior;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBException;
 
@@ -35,6 +52,7 @@ import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
 import soot.util.Chain;
 import testful.IConfigProject;
+import testful.coverage.Launcher.ConfigInstrumenter;
 import testful.coverage.soot.Instrumenter.UnifiedInstrumentator;
 import testful.model.xml.Parser;
 import testful.model.xml.XmlClass;
@@ -43,102 +61,98 @@ import testful.model.xml.XmlMethod.Kind;
 
 public class BehaviorInstrumenter implements UnifiedInstrumentator {
 
-	private static BehaviorInstrumenter singleton;
-
-	public static BehaviorInstrumenter getSingleton(IConfigProject config) {
-		if(singleton == null)
-			singleton = new BehaviorInstrumenter(config);
-
-		return singleton;
-	}
+	private static final Logger logger = Logger.getLogger("testful.coverage.instrumenter.behavioral");
 
 	/** this local contains a copy of the tracker */
 	private static final String LOCAL_TRACKER = "__testful_behavioral_tracker__";
 
-	private final SootClass object;
+	private static final SootClass object;
 	/** java.lang.Boolean.valueOf() */
-	private final SootMethod boxBoolean;
+	private static final SootMethod boxBoolean;
 	/** java.lang.Byte.valueOf() */
-	private final SootMethod boxByte;
+	private static final SootMethod boxByte;
 	/** java.lang.Character.valueOf() */
-	private final SootMethod boxChar;
+	private static final SootMethod boxChar;
 	/** java.lang.Short.valueOf() */
-	private final SootMethod boxShort;
+	private static final SootMethod boxShort;
 	/** java.lang.Integer.valueOf() */
-	private final SootMethod boxInt;
+	private static final SootMethod boxInt;
 	/** java.lang.Long.valueOf() */
-	private final SootMethod boxLong;
+	private static final SootMethod boxLong;
 	/** java.lang.Float.valueOf() */
-	private final SootMethod boxFloat;
+	private static final SootMethod boxFloat;
 	/** java.lang.Double.valueOf() */
-	private final SootMethod boxDouble;
+	private static final SootMethod boxDouble;
+
+	private final static SootClass abstractionState;
+
+	private final static SootClass abstractionMethod;
+
+	/** testful.coverage.behavior.BehaviorTracker */
+	private final static SootClass trackerClass;
+
+	/** public static BehaviorTracker getTracker() */
+	private final static SootMethod trackerSingleton;
+
+	/** public void add(Abstraction pre, AbstractionMethod partition, Abstraction post) */
+	private final static SootMethod trackerAdd;
 
 	/** public Abstraction abstractState(Object _this); */
-	private final SootMethod abstractState;
+	private final static SootMethod abstractState;
 
 	/** public AbstractionMethod abstractMethod(String className, Object _this, String methodName, Object[] params); */
-	private final SootMethod abstractMethod;
+	private final static SootMethod abstractMethod;
 
-	private final SootClass abstractionState;
-	private final SootClass abstractionMethod;
+	static {
+		Scene.v().loadClassAndSupport(Object.class.getName());
+		object = Scene.v().getSootClass(Object.class.getName());
 
-	private final String COVERAGE_TRACKER;
-	private final SootClass trackerClass;
-	private final SootMethod trackerSingleton;
-	private final SootMethod trackerAdd;
+		Scene.v().loadClassAndSupport(Boolean.class.getName());
+		boxBoolean = Scene.v().getSootClass(Boolean.class.getName()).getMethod("valueOf", Arrays.asList(new Type[] { BooleanType.v() }));
+		Scene.v().loadClassAndSupport(Character.class.getName());
+		boxChar = Scene.v().getSootClass(Character.class.getName()).getMethod("valueOf", Arrays.asList(new Type[] { CharType.v() }));
+		Scene.v().loadClassAndSupport(Byte.class.getName());
+		boxByte = Scene.v().getSootClass(Byte.class.getName()).getMethod("valueOf", Arrays.asList(new Type[] { ByteType.v() }));
+		Scene.v().loadClassAndSupport(Short.class.getName());
+		boxShort = Scene.v().getSootClass(Short.class.getName()).getMethod("valueOf", Arrays.asList(new Type[] { ShortType.v() }));
+		Scene.v().loadClassAndSupport(Integer.class.getName());
+		boxInt = Scene.v().getSootClass(Integer.class.getName()).getMethod("valueOf", Arrays.asList(new Type[] { IntType.v() }));
+		Scene.v().loadClassAndSupport(Long.class.getName());
+		boxLong = Scene.v().getSootClass(Long.class.getName()).getMethod("valueOf", Arrays.asList(new Type[] { LongType.v() }));
+		Scene.v().loadClassAndSupport(Float.class.getName());
+		boxFloat = Scene.v().getSootClass(Float.class.getName()).getMethod("valueOf", Arrays.asList(new Type[] { FloatType.v() }));
+		Scene.v().loadClassAndSupport(Double.class.getName());
+		boxDouble = Scene.v().getSootClass(Double.class.getName()).getMethod("valueOf", Arrays.asList(new Type[] { DoubleType.v() }));
 
-	private final Map<String, XmlClass> xml;
-
-	private final IConfigProject config;
-
-	private BehaviorInstrumenter(IConfigProject config) {
-		Scene.v().loadClassAndSupport(Object.class.getCanonicalName());
-		object = Scene.v().getSootClass(Object.class.getCanonicalName());
-
-		Scene.v().loadClassAndSupport(Boolean.class.getCanonicalName());
-		boxBoolean = Scene.v().getSootClass(Boolean.class.getCanonicalName()).getMethod("valueOf", Arrays.asList(new Type[] { BooleanType.v() }));
-		Scene.v().loadClassAndSupport(Character.class.getCanonicalName());
-		boxChar = Scene.v().getSootClass(Character.class.getCanonicalName()).getMethod("valueOf", Arrays.asList(new Type[] { CharType.v() }));
-		Scene.v().loadClassAndSupport(Byte.class.getCanonicalName());
-		boxByte = Scene.v().getSootClass(Byte.class.getCanonicalName()).getMethod("valueOf", Arrays.asList(new Type[] { ByteType.v() }));
-		Scene.v().loadClassAndSupport(Short.class.getCanonicalName());
-		boxShort = Scene.v().getSootClass(Short.class.getCanonicalName()).getMethod("valueOf", Arrays.asList(new Type[] { ShortType.v() }));
-		Scene.v().loadClassAndSupport(Integer.class.getCanonicalName());
-		boxInt = Scene.v().getSootClass(Integer.class.getCanonicalName()).getMethod("valueOf", Arrays.asList(new Type[] { IntType.v() }));
-		Scene.v().loadClassAndSupport(Long.class.getCanonicalName());
-		boxLong = Scene.v().getSootClass(Long.class.getCanonicalName()).getMethod("valueOf", Arrays.asList(new Type[] { LongType.v() }));
-		Scene.v().loadClassAndSupport(Float.class.getCanonicalName());
-		boxFloat = Scene.v().getSootClass(Float.class.getCanonicalName()).getMethod("valueOf", Arrays.asList(new Type[] { FloatType.v() }));
-		Scene.v().loadClassAndSupport(Double.class.getCanonicalName());
-		boxDouble = Scene.v().getSootClass(Double.class.getCanonicalName()).getMethod("valueOf", Arrays.asList(new Type[] { DoubleType.v() }));
-
-		COVERAGE_TRACKER = BehaviorTracker.class.getCanonicalName();
-		Scene.v().loadClassAndSupport(COVERAGE_TRACKER);
-
-		trackerClass = Scene.v().getSootClass(COVERAGE_TRACKER);
+		Scene.v().loadClassAndSupport(BehaviorTracker.class.getName());
+		trackerClass = Scene.v().getSootClass(BehaviorTracker.class.getName());
 		trackerSingleton = trackerClass.getMethodByName("getTracker");
 		trackerAdd = trackerClass.getMethodByName("add");
 		abstractState = trackerClass.getMethodByName("abstractState");
 		abstractMethod = trackerClass.getMethodByName("abstractMethod");
 
-		Scene.v().loadClassAndSupport(Abstraction.class.getCanonicalName());
-		abstractionState = Scene.v().getSootClass(Abstraction.class.getCanonicalName());
-		Scene.v().loadClassAndSupport(AbstractionMethod.class.getCanonicalName());
-		abstractionMethod = Scene.v().getSootClass(AbstractionMethod.class.getCanonicalName());
+		Scene.v().loadClassAndSupport(Abstraction.class.getName());
+		abstractionState = Scene.v().getSootClass(Abstraction.class.getName());
+		Scene.v().loadClassAndSupport(AbstractionMethod.class.getName());
+		abstractionMethod = Scene.v().getSootClass(AbstractionMethod.class.getName());
+	}
 
-		xml = new HashMap<String, XmlClass>();
+	private final ConfigInstrumenter config;
+	public BehaviorInstrumenter(ConfigInstrumenter config) {
+		logger.config("White-Box instrumenter loaded");
 		this.config = config;
 	}
 
+	private static enum MethodType {
+		SKIP, STATIC, CONSTRUCTOR, METHOD
+	}
 
-	private boolean toSkip;
-	private boolean isStatic;
+	private MethodType methodType;
 
 	private Local thisLocal;
 	private Local localTracker;
 	private Local pre;
 	private Local post;
-	private Local bool;
 	private Local tmpObj;
 	private Local partition;
 	private Local params;
@@ -151,53 +165,97 @@ public class BehaviorInstrumenter implements UnifiedInstrumentator {
 	 */
 	@Override
 	public void init(Body oldBody, Body newBody, Chain<Unit> newUnits, IdentityStmt[] paramDefs) {
-		SootMethod method = newBody.getMethod();
-		boolean cns = SootMethod.constructorName.equals(method.getName());
-		String className = method.getDeclaringClass().getName();
+		final SootMethod method = newBody.getMethod();
+		final String className = method.getDeclaringClass().getName();
 
-		toSkip = checkSkip(method, cns, className);
-		if(toSkip) return;
+		// check if the method must be skipped
+		methodType = MethodType.SKIP;
 
-		isStatic = method.isStatic();
+		// If the behavioral coverage has been disabled, skip all the methods
+		if(!config.isBehavioralCoverage()) return;
 
-		thisLocal = (isStatic ? null : newBody.getThisLocal());
+		// skip non-public methods
+		if(!method.isPublic()) return;
+
+		// for methods, read the xml descriptor
+		if(!SootMethod.constructorName.equals(method.getName())) {
+			// Check xml annotations
+			XmlClass xmlClass = getXmlClass(className);
+			if(xmlClass == null) {
+				System.out.println("WARN: no xml description for class " + className);
+				return;
+			}
+
+			// converts the params into an array of strings
+			String[] params = new String[method.getParameterCount()];
+			for(int i = 0; i < params.length; i++) {
+				Type t = method.getParameterType(i);
+				if(t instanceof PrimType) {
+					if(t instanceof BooleanType) params[i] = "boolean";
+					else if(t instanceof ByteType) params[i] = "byte";
+					else if(t instanceof CharType) params[i] = "char";
+					else if(t instanceof DoubleType) params[i] = "double";
+					else if(t instanceof FloatType) params[i] = "float";
+					else if(t instanceof IntType) params[i] = "int";
+					else if(t instanceof LongType) params[i] = "long";
+					else if(t instanceof ShortType) params[i] = "short";
+					else {
+						System.err.println("ERROR: unexpected primitive type: " + t + " (" + t.getClass().getName() + ")");
+						params[i] = null;
+					}
+				} else if(t instanceof RefType) params[i] = ((RefType) t).getClassName();
+				else {
+					System.err.println("ERROR: unexpected type: " + t + " (" + t.getClass().getName() + ")");
+					params[i] = null;
+				}
+			}
+
+			XmlMethod xmlMeth = xmlClass.getMethod(method.getName(), params);
+			if(xmlMeth == null) System.out.println("WARN: no xml description for method " + className + "." + method.getName() + " " + Arrays.toString(params));
+			else if(xmlMeth.getKind() == Kind.OBSERVER) return;
+		}
+
+		// if the method must not be skipped
+		methodType = method.isStatic() ?
+				MethodType.STATIC :
+					SootMethod.constructorName.equals(method.getName()) ? MethodType.CONSTRUCTOR : MethodType.METHOD;
 
 		// some useful locals
+		thisLocal = methodType == MethodType.STATIC ? null : newBody.getThisLocal();
+
 		localTracker = Jimple.v().newLocal(LOCAL_TRACKER, trackerClass.getType());
 		newBody.getLocals().add(localTracker);
 		newUnits.add(Jimple.v().newAssignStmt(localTracker, Jimple.v().newStaticInvokeExpr(trackerSingleton.makeRef())));
 
-		pre = Jimple.v().newLocal("__testful_behavior_pre_abstraction__", abstractionState.getType());
-		newBody.getLocals().add(pre);
+		// track initial abstraction
+		if(methodType != MethodType.STATIC) {
+			pre = Jimple.v().newLocal("__testful_behavior_pre_abstraction__", abstractionState.getType());
+			newBody.getLocals().add(pre);
 
-		post = Jimple.v().newLocal("__testful_behavior_post_abstraction__", abstractionState.getType());
-		newBody.getLocals().add(post);
+			if(methodType == MethodType.METHOD)
+				newUnits.add(Jimple.v().newAssignStmt(pre, Jimple.v().newVirtualInvokeExpr(localTracker, abstractState.makeRef(), thisLocal)));
+			else // constructor
+				newUnits.add(Jimple.v().newAssignStmt(pre, NullConstant.v()));
 
-		bool = Jimple.v().newLocal("__testful_behavior_bool_tmp__", BooleanType.v());
-		newBody.getLocals().add(bool);
+		} else pre = null;
 
-		tmpObj = Jimple.v().newLocal("__testful_behavior_obj_tmp__", object.getType());
-		newBody.getLocals().add(tmpObj);
+		if(methodType != MethodType.STATIC) {
+			post = Jimple.v().newLocal("__testful_behavior_post_abstraction__", abstractionState.getType());
+			newBody.getLocals().add(post);
+		} else post = null;
 
-		partition = Jimple.v().newLocal("__testful_behavior_partition__", abstractionMethod.getType());
-		newBody.getLocals().add(partition);
-
+		// create params array
 		params = Jimple.v().newLocal("__testful_behavior_params__", ArrayType.v(object.getType(), 1));
 		newBody.getLocals().add(params);
 
+		tmpObj = Jimple.v().newLocal("__testful_behavior_tmp_obj__", object.getType());
+		newBody.getLocals().add(tmpObj);
 
-		// track initial abstraction
-		if(!isStatic) {
-			if(cns) newUnits.add(Jimple.v().newAssignStmt(pre, NullConstant.v()));
-			else newUnits.add(Jimple.v().newAssignStmt(pre, Jimple.v().newVirtualInvokeExpr(localTracker, abstractState.makeRef(), newBody.getThisLocal())));
-		}
-
-		// create params array
 		int nParams = method.getParameterCount();
 		newUnits.add(Jimple.v().newAssignStmt(params, Jimple.v().newNewArrayExpr(object.getType(), IntConstant.v(nParams))));
 
 		// fill params array
-		for(int i = 0; i < nParams; i++)
+		for(int i = 0; i < nParams; i++) {
 			if(BooleanType.v().equals(newBody.getParameterLocal(i).getType())) {
 				newUnits.add(Jimple.v().newAssignStmt(tmpObj, Jimple.v().newStaticInvokeExpr(boxBoolean.makeRef(), newBody.getParameterLocal(i))));
 				newUnits.add(Jimple.v().newAssignStmt(Jimple.v().newArrayRef(params, IntConstant.v(i)), tmpObj));
@@ -223,24 +281,26 @@ public class BehaviorInstrumenter implements UnifiedInstrumentator {
 				newUnits.add(Jimple.v().newAssignStmt(tmpObj, Jimple.v().newStaticInvokeExpr(boxDouble.makeRef(), newBody.getParameterLocal(i))));
 				newUnits.add(Jimple.v().newAssignStmt(Jimple.v().newArrayRef(params, IntConstant.v(i)), tmpObj));
 			} else newUnits.add(Jimple.v().newAssignStmt(Jimple.v().newArrayRef(params, IntConstant.v(i)), newBody.getParameterLocal(i)));
+		}
 
 		// call method abstraction
+		partition = Jimple.v().newLocal("__testful_behavior_partition__", abstractionMethod.getType());
+		newBody.getLocals().add(partition);
+
 		newUnits.add(Jimple.v().newAssignStmt(
 				partition,
 				Jimple.v().newVirtualInvokeExpr(localTracker, abstractMethod.makeRef(),
-						Arrays.asList(new Value[] { StringConstant.v(className), newBody.getThisLocal(), StringConstant.v(method.getName() + "(" + method.getBytecodeParms() + ")"), params }))));
+						Arrays.asList(new Value[] { StringConstant.v(className), methodType == MethodType.METHOD ? thisLocal : NullConstant.v(), StringConstant.v(method.getName() + "(" + method.getBytecodeParms() + ")"), params }))));
 
-		if(isStatic) {
-			newUnits.add(Jimple.v().newAssignStmt(pre, NullConstant.v()));
-			newUnits.add(Jimple.v().newAssignStmt(post, NullConstant.v()));
-			newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, trackerAdd.makeRef(), Arrays.asList(new Value[] { pre, partition, post }))));
-			toSkip = true;
+		// if static, there is no pre and post state
+		if(methodType == MethodType.STATIC) {
+			newUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(localTracker, trackerAdd.makeRef(), Arrays.asList(new Value[] { NullConstant.v(), partition, NullConstant.v() }))));
 		}
 	}
 
 	@Override
 	public void processPre(Chain<Unit> newUnits, Stmt op) {
-		if(toSkip) return;
+		if(methodType == MethodType.SKIP || methodType == MethodType.STATIC) return;
 
 		if((op instanceof ReturnStmt) || (op instanceof ReturnVoidStmt)) {
 			// calculates post abstraction
@@ -256,7 +316,7 @@ public class BehaviorInstrumenter implements UnifiedInstrumentator {
 
 	@Override
 	public void exceptional(Chain<Unit> newUnits, Local exc) {
-		if(toSkip) return;
+		if(methodType == MethodType.SKIP || methodType == MethodType.STATIC || methodType == MethodType.CONSTRUCTOR) return;
 
 		// calculates post abstraction
 		newUnits.add(Jimple.v().newAssignStmt(post, Jimple.v().newVirtualInvokeExpr(localTracker, abstractState.makeRef(), thisLocal)));
@@ -266,63 +326,12 @@ public class BehaviorInstrumenter implements UnifiedInstrumentator {
 	}
 
 	private XmlClass getXmlClass(String className) {
-		XmlClass xmlClass = xml.get(className);
-
-		if(xmlClass == null) {
-			try {
-				xmlClass = Parser.singleton.parse(config, className);
-				xml.put(className, xmlClass);
-			} catch(JAXBException e) {
-				System.err.println("ERROR: cannot read xml descriptor: " + e.getMessage());
-			}
+		try {
+			return Parser.singleton.parse(config, className);
+		} catch(JAXBException e) {
+			System.err.println("ERROR: cannot read xml descriptor: " + e.getMessage());
+			return null;
 		}
-
-		return xmlClass;
-	}
-
-	private boolean checkSkip(SootMethod method, boolean cns, String className) {
-		// skip non-public methods
-		if(!method.isPublic()) return true;
-
-		// for methods, read the xml descriptor
-		if(!cns) {
-			// Check xml annotations
-			XmlClass xmlClass = getXmlClass(className);
-			if(xmlClass == null) System.out.println("WARN: no xml description for class " + className);
-			else {
-
-				// converts the params into an array of strings
-				String[] params = new String[method.getParameterCount()];
-				for(int i = 0; i < params.length; i++) {
-					Type t = method.getParameterType(i);
-					if(t instanceof PrimType) {
-						if(t instanceof BooleanType) params[i] = "boolean";
-						else if(t instanceof ByteType) params[i] = "byte";
-						else if(t instanceof CharType) params[i] = "char";
-						else if(t instanceof DoubleType) params[i] = "double";
-						else if(t instanceof FloatType) params[i] = "float";
-						else if(t instanceof IntType) params[i] = "int";
-						else if(t instanceof LongType) params[i] = "long";
-						else if(t instanceof ShortType) params[i] = "short";
-						else {
-							System.err.println("ERROR: unexpected primitive type: " + t + " (" + t.getClass().getCanonicalName() + ")");
-							params[i] = null;
-						}
-					} else if(t instanceof RefType) params[i] = ((RefType) t).getClassName();
-					else {
-						System.err.println("ERROR: unexpected type: " + t + " (" + t.getClass().getCanonicalName() + ")");
-						params[i] = null;
-					}
-				}
-
-				XmlMethod xmlMeth = xmlClass.getMethod(method.getName(), params);
-				if(xmlMeth == null) System.out.println("WARN: no xml description for method " + className + "." + method.getName() + " " + Arrays.toString(params));
-				else
-					if(xmlMeth.getKind() == Kind.OBSERVER) return true;
-			}
-		}
-
-		return false;
 	}
 
 	/* (non-Javadoc)

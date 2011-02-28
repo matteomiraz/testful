@@ -1,3 +1,21 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2011  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful.coverage.behavior;
 
 import java.util.ArrayList;
@@ -6,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.logging.Level;
 
 import org.apache.commons.jexl.Expression;
 import org.apache.commons.jexl.ExpressionFactory;
@@ -13,7 +32,7 @@ import org.apache.commons.jexl.JexlContext;
 import org.apache.commons.jexl.JexlHelper;
 
 /**
- * Extra = p0.getSingoloOggetto():{p0.getCollezione()}
+ * Extra = p0.getSingleObject():{p0.getCollection()}
  */
 public class AbstractorRefCtx extends Abstractor {
 
@@ -25,14 +44,20 @@ public class AbstractorRefCtx extends Abstractor {
 	private transient Expression[] objects;
 	private transient Expression[] aggregates;
 
-	private AbstractorRefCtx(String value, String range) throws Exception {
-		super(value, range);
+	/**
+	 * Instantiate a <i>parametric</i> abstraction function on the <i>expression</i> property
+	 * @param expression the expression that collects the property to abstract
+	 * @param parameters the parameters for the abstraction function
+	 * @throws Exception if anything goes wrong (e.g., the expression has syntax errors)
+	 */
+	private AbstractorRefCtx(String expression, String parameters) throws Exception {
+		super(expression, parameters);
 
-		if(range.length() <= 0) {
+		if(parameters.length() <= 0) {
 			objectsString = aggregatesString = new String[0];
 			objects = aggregates = new Expression[0];
 		} else {
-			String[] ranges = range.split(":");
+			String[] ranges = parameters.split(":");
 			List<String> tmpObj = new ArrayList<String>(ranges.length);
 			List<String> tmpAggr = new ArrayList<String>(ranges.length);
 
@@ -93,15 +118,14 @@ public class AbstractorRefCtx extends Abstractor {
 				Object o = item.evaluate(jc);
 				if(elem == o) objs.add(item.getExpression());
 			} catch(Exception e) {
-				System.err.println("ERR: (" + this.getClass().getCanonicalName() + ") cannot execute the JEXL query \"" + item.getExpression() + "\" : " + e.getMessage() + " due to: " + e.getCause());
-				e.printStackTrace();
+				logger.log(Level.WARNING, this.getClass().getName() + ": cannot execute the JEXL query \"" + item.getExpression() + "\" : " + e.getMessage() + " due to: " + e.getCause(), e);
 			}
 
 			for(Expression item : getAggregates())
 				try {
 					Object aggr = item.evaluate(jc);
 					if(aggr == null) {
-						System.err.println("WARN: null aggregate " + item.getExpression());
+						logger.warning(this.getClass().getName() + ": null aggregate " + item.getExpression());
 						continue;
 					}
 
@@ -115,10 +139,9 @@ public class AbstractorRefCtx extends Abstractor {
 						Iterator<?> iter = (Iterator<?>) aggr;
 						while(iter.hasNext())
 							if(elem == iter.next()) objs.add(item.getExpression());
-					} else System.err.println("Unknown aggregate type: " + aggr.getClass().getCanonicalName());
+					} else logger.warning(this.getClass().getName() + ": Unknown aggregate type: " + aggr.getClass().getName());
 				} catch(Exception e) {
-					System.err.println("ERR: (" + this.getClass().getCanonicalName() + ") cannot execute the JEXL query \"" + item.getExpression() + "\" : " + e.getMessage() + " due to: " + e.getCause());
-					e.printStackTrace();
+					logger.log(Level.WARNING, this.getClass().getName() + ": cannot execute the JEXL query \"" + item.getExpression() + "\" : " + e.getMessage() + " due to: " + e.getCause(), e);
 				}
 
 				for(String s : ctx.keySet())

@@ -63,82 +63,63 @@ public class TestSerializer {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			ObjectOutputStream oo = new ObjectOutputStream(baos);
 
-			//			// checks the System property of the current JVM
-			//			private static final boolean DISCOVER_FAULTS = TestFul.getProperty(TestFul.PROPERTY_FAULT_DETECT, true);
-			//			oo.writeUTF(executor.getName());
-			//			oo.writeBoolean(DISCOVER_FAULTS);
+			// write the references: num.type.refs { ref.class.id, num.refs }
+			Map<Clazz, Integer> refNum = test.getReferenceFactory().getRefNum();
+			oo.writeInt(refNum.size());
+			for (Entry<Clazz, Integer> ref : refNum.entrySet()) {
+				oo.writeInt(ref.getKey().getId());
+				oo.writeInt(ref.getValue());
+			}
 
-			String clusterID = test.getCluster().getISerializableIdentifier();
+			// write the test: test.length { op.type [op-specific data] }
+			oo.writeInt(test.getTest().length);
+			for (Operation op : test.getTest()) {
 
-			// perform the standard serialization
-			if(clusterID == null) {
-				oo.writeBoolean(false);
-				oo.writeObject(test.getCluster());
-				oo.writeObject(test.getReferenceFactory().getReferences());
-				oo.writeObject(test.getTest());
+				if (op instanceof ResetRepository) {
+					// op.type=0 no_extra_data
+					oo.writeByte(0);
 
-			} else {
-				oo.writeBoolean(true);
-				oo.writeUTF(clusterID);
+				} else if(op instanceof AssignConstant) {
+					// op.type=1 target.id staticValue.id {info ~ null}
+					oo.writeByte(1);
+					AssignConstant ac = (AssignConstant)op;
+					oo.writeInt(ac.getTarget() == null ? -1 : ac.getTarget().getId());
+					oo.writeInt(ac.getValue() == null ? -1 : ac.getValue().getId());
 
-				// write the references: num.type.refs { ref.class.id, num.refs }
-				Map<Clazz, Integer> refNum = test.getReferenceFactory().getRefNum();
-				oo.writeInt(refNum.size());
-				for (Entry<Clazz, Integer> ref : refNum.entrySet()) {
-					oo.writeInt(ref.getKey().getId());
-					oo.writeInt(ref.getValue());
-				}
+				} else if(op instanceof AssignPrimitive) {
+					// op.type=2 target.id value {info ~ null}
+					oo.writeByte(2);
+					AssignPrimitive ap = (AssignPrimitive)op;
+					oo.writeInt(ap.getTarget() == null ? -1 : ap.getTarget().getId());
+					writePrimitive(oo, ap.getValue());
 
-				// write the test: test.length { op.type [op-specific data] }
-				oo.writeInt(test.getTest().length);
-				for (Operation op : test.getTest()) {
+				} else if(op instanceof CreateObject) {
+					// op.type=3 target.id cosntructor.id params.len {param.id} {info ~ null}
+					oo.writeByte(3);
+					CreateObject co = (CreateObject)op;
+					oo.writeInt(co.getTarget() == null ? -1 : co.getTarget().getId());
+					oo.writeInt(co.getConstructor().getId());
+					oo.writeInt(co.getParams().length);
+					for (Reference param : co.getParams())
+						oo.writeInt(param.getId());
 
-					if (op instanceof ResetRepository) {
-						// op.type=0 no_extra_data
-						oo.writeByte(0);
+					writeOpInfo(oo, op);
 
-					} else if(op instanceof AssignConstant) {
-						// op.type=1 target.id staticValue.id {info ~ null}
-						oo.writeByte(1);
-						AssignConstant ac = (AssignConstant)op;
-						oo.writeInt(ac.getTarget() == null ? -1 : ac.getTarget().getId());
-						oo.writeInt(ac.getValue() == null ? -1 : ac.getValue().getId());
+				} else if(op instanceof Invoke) {
+					// op.type=3 target.id this.id method.id params.len {param.id} {info ~ null}
+					oo.writeByte(4);
+					Invoke in = (Invoke)op;
+					oo.writeInt(in.getTarget() == null ? -1 : in.getTarget().getId());
+					oo.writeInt(in.getThis() == null ? -1 : in.getThis().getId());
+					oo.writeInt(in.getMethod().getId());
+					oo.writeInt(in.getParams().length);
+					for (Reference param : in.getParams())
+						oo.writeInt(param.getId());
 
-					} else if(op instanceof AssignPrimitive) {
-						// op.type=2 target.id value {info ~ null}
-						oo.writeByte(2);
-						AssignPrimitive ap = (AssignPrimitive)op;
-						oo.writeInt(ap.getTarget() == null ? -1 : ap.getTarget().getId());
-						writePrimitive(oo, ap.getValue());
+					writeOpInfo(oo, op);
 
-					} else if(op instanceof CreateObject) {
-						// op.type=3 target.id cosntructor.id params.len {param.id} {info ~ null}
-						oo.writeByte(3);
-						CreateObject co = (CreateObject)op;
-						oo.writeInt(co.getTarget() == null ? -1 : co.getTarget().getId());
-						oo.writeInt(co.getConstructor().getId());
-						oo.writeInt(co.getParams().length);
-						for (Reference param : co.getParams())
-							oo.writeInt(param.getId());
-
-						writeOpInfo(oo, op);
-
-					} else if(op instanceof Invoke) {
-						// op.type=3 target.id this.id method.id params.len {param.id} {info ~ null}
-						oo.writeByte(4);
-						Invoke in = (Invoke)op;
-						oo.writeInt(in.getTarget() == null ? -1 : in.getTarget().getId());
-						oo.writeInt(in.getThis() == null ? -1 : in.getThis().getId());
-						oo.writeInt(in.getMethod().getId());
-						oo.writeInt(in.getParams().length);
-						for (Reference param : in.getParams())
-							oo.writeInt(param.getId());
-
-						writeOpInfo(oo, op);
-
-					} else
-						logger.warning("Unknown operation: " + op.getClass().getName() + " - " + op);
-				}
+				} else
+					logger.warning("Unknown operation: " + op.getClass().getName() + " - " + op);
 			}
 
 			oo.close();
@@ -203,110 +184,97 @@ public class TestSerializer {
 			final ReferenceFactory testRefFactory;
 			final Operation[] testOps;
 
-			boolean optimized = oi.readBoolean();
-			if(!optimized) {
+			// use the ObjectRegistry and the advanced serialization
+			testCluster = (TestCluster) registry.getObject(TestCluster.ISERIALIZABLE_ID);
 
-				// perform the standard de-serialization
-				testCluster = (TestCluster) oi.readObject();
-				testRefFactory = (ReferenceFactory) oi.readObject();
-				testOps = (Operation[]) oi.readObject();
+			// read the references: num.type.refs { ref.class.id, num.refs }
+			int refLen = oi.readInt();
 
-			} else {
+			Map<Clazz, Integer> refMap = new TreeMap<Clazz, Integer>();
+			for(int i = 0; i < refLen; i++) {
+				Clazz clazz = testCluster.getClazzById(oi.readInt());
+				int num = oi.readInt();
+				refMap.put(clazz, num);
+			}
+			testRefFactory = new ReferenceFactory(refMap);
+			final Reference[] testRefs = testRefFactory.getReferences();
 
-				String clusterID = oi.readUTF();
+			// read the operations
+			int testLen = oi.readInt();
+			testOps = new Operation[testLen];
+			for (int i = 0; i < testLen; i++) {
 
-				// use the ObjectRegistry and the advanced serialization
-				testCluster = (TestCluster) registry.getObject(clusterID);
-
-				// read the references: num.type.refs { ref.class.id, num.refs }
-				int refLen = oi.readInt();
-
-				Map<Clazz, Integer> refMap = new TreeMap<Clazz, Integer>();
-				for(int i = 0; i < refLen; i++) {
-					Clazz clazz = testCluster.getClazzById(oi.readInt());
-					int num = oi.readInt();
-					refMap.put(clazz, num);
+				byte operationType = oi.readByte();
+				switch(operationType) {
+				case 0: { // ResetRepository
+					testOps[i] = ResetRepository.singleton;
+					break;
 				}
-				testRefFactory = new ReferenceFactory(refMap);
-				final Reference[] testRefs = testRefFactory.getReferences();
 
-				// read the operations
-				int testLen = oi.readInt();
-				testOps = new Operation[testLen];
-				for (int i = 0; i < testLen; i++) {
+				case 1: { // AssignConstant
+					int targetId = oi.readInt();
+					Reference ref = (targetId < 0 ? null : testRefs[targetId]);
 
-					byte operationType = oi.readByte();
-					switch(operationType) {
-					case 0: { // ResetRepository
-						testOps[i] = ResetRepository.singleton;
-						break;
+					int valueId = oi.readInt();
+					StaticValue staticValue = valueId < 0 ? null : testCluster.getStaticValueById(valueId);
+
+					testOps[i] = new AssignConstant(ref, staticValue);
+					break;
+				}
+
+				case 2: { // AssignPrimitive
+					int targetId = oi.readInt();
+					Reference ref = (targetId < 0 ? null : testRefs[targetId]);
+
+					Serializable value = readPrimitive(oi);
+
+					testOps[i] = new AssignPrimitive(ref, value);
+					break;
+				}
+
+				case 3: { // CreateObject
+					int targetId = oi.readInt();
+					Reference target = (targetId < 0 ? null : testRefs[targetId]);
+
+					int constructorId = oi.readInt();
+					Constructorz constructor = testCluster.getConstructorById(constructorId);
+
+					int paramLen = oi.readInt();
+					Reference[] params = new Reference[paramLen];
+					for (int j = 0; j < paramLen; j++) {
+						int paramId = oi.readInt();
+						params[j] = testRefs[paramId];
 					}
 
-					case 1: { // AssignConstant
-						int targetId = oi.readInt();
-						Reference ref = (targetId < 0 ? null : testRefs[targetId]);
+					testOps[i] = new CreateObject(target, constructor, params);
+					readOpInfo(oi, testOps[i]);
+					break;
+				}
 
-						int valueId = oi.readInt();
-						StaticValue staticValue = valueId < 0 ? null : testCluster.getStaticValueById(valueId);
+				case 4: { // Invoke
+					int targetId = oi.readInt();
+					Reference target = (targetId < 0 ? null : testRefs[targetId]);
 
-						testOps[i] = new AssignConstant(ref, staticValue);
-						break;
+					int thisId = oi.readInt();
+					Reference _this = (thisId < 0 ? null : testRefs[thisId]);
+
+					int methodId = oi.readInt();
+					Methodz method = testCluster.getMethodById(methodId);
+
+					int paramLen = oi.readInt();
+					Reference[] params = new Reference[paramLen];
+					for (int j = 0; j < paramLen; j++) {
+						int paramId = oi.readInt();
+						params[j] = testRefs[paramId];
 					}
 
-					case 2: { // AssignPrimitive
-						int targetId = oi.readInt();
-						Reference ref = (targetId < 0 ? null : testRefs[targetId]);
+					testOps[i] = new Invoke(target, _this, method, params);
+					readOpInfo(oi, testOps[i]);
+					break;
+				}
 
-						Serializable value = readPrimitive(oi);
-
-						testOps[i] = new AssignPrimitive(ref, value);
-						break;
-					}
-
-					case 3: { // CreateObject
-						int targetId = oi.readInt();
-						Reference target = (targetId < 0 ? null : testRefs[targetId]);
-
-						int constructorId = oi.readInt();
-						Constructorz constructor = testCluster.getConstructorById(constructorId);
-
-						int paramLen = oi.readInt();
-						Reference[] params = new Reference[paramLen];
-						for (int j = 0; j < paramLen; j++) {
-							int paramId = oi.readInt();
-							params[j] = testRefs[paramId];
-						}
-
-						testOps[i] = new CreateObject(target, constructor, params);
-						readOpInfo(oi, testOps[i]);
-						break;
-					}
-
-					case 4: { // Invoke
-						int targetId = oi.readInt();
-						Reference target = (targetId < 0 ? null : testRefs[targetId]);
-
-						int thisId = oi.readInt();
-						Reference _this = (thisId < 0 ? null : testRefs[thisId]);
-
-						int methodId = oi.readInt();
-						Methodz method = testCluster.getMethodById(methodId);
-
-						int paramLen = oi.readInt();
-						Reference[] params = new Reference[paramLen];
-						for (int j = 0; j < paramLen; j++) {
-							int paramId = oi.readInt();
-							params[j] = testRefs[paramId];
-						}
-
-						testOps[i] = new Invoke(target, _this, method, params);
-						readOpInfo(oi, testOps[i]);
-						break;
-					}
-
-					default:
-						logger.warning("Unknown operation serialized type " + operationType);
-					}
+				default:
+					logger.warning("Unknown operation serialized type " + operationType);
 				}
 			}
 

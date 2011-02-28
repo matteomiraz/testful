@@ -38,22 +38,26 @@ public class BodyValidator extends BodyTransformer {
 	@SuppressWarnings("rawtypes")
 	protected void internalTransform(Body body, String phaseName, Map options) {
 
-		System.out.println("validateLocals");
+		System.out.print("Validating");
+
+		System.out.print(" locals");
 		body.validateLocals();
 
-		System.out.println("validateTraps");
+		System.out.print(" traps");
 		body.validateTraps();
 
-		System.out.println("validateUnitBoxes");
+		System.out.print(" unitBoxes");
 		body.validateUnitBoxes();
 
-		System.out.println("validateValueBoxes");
+		System.out.print(" valueBoxes");
 		body.validateValueBoxes();
 
-		System.out.println("validateUses");
+		System.out.print(" uses");
 		body.validateUses();
 
-		System.out.println("validate");
+		System.out.print(" everything");
 		body.validate();
+
+		System.out.println(" done");
 	}
 }

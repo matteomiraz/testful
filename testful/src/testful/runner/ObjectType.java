@@ -21,7 +21,6 @@ package testful.runner;
 import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 import testful.utils.SerializationUtils;
 
@@ -34,10 +33,16 @@ public class ObjectType implements DataType {
 
 	public static final boolean COMPRESS = false;
 
-	private final AtomicLong idGenerator = new AtomicLong();
 	private final Map<String, byte[]> map = new HashMap<String, byte[]>();
 
 	public ObjectType() {
+	}
+
+	public ObjectType(ISerializable[] elems) {
+		this();
+
+		for (ISerializable e : elems)
+			addObject(e);
 	}
 
 	@Override
@@ -54,10 +59,6 @@ public class ObjectType implements DataType {
 
 		// get the id of the object
 		String id = obj.getISerializableIdentifier();
-		if(id == null) {
-			id = Long.toString(idGenerator.incrementAndGet(), Character.MAX_RADIX);
-			obj.setISerializableIdentifier(id);
-		}
 
 		// if it is a new object, insert it in the map
 		if(!map.containsKey(id))

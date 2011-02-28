@@ -28,49 +28,45 @@ public class ConfigFitness implements IConfigFitness, IConfigFitness.Args4j {
 	private boolean basicBlock = true;
 	private boolean branch = true;
 	private boolean defUse = true;
+	private boolean behavioral = true;
+
+	@Override
+	public boolean isBasicBlock() {
+		return basicBlock;
+	}
+
+	@Override
+	public void setDisableBranch(boolean disable) {
+		basicBlock = !disable;
+	}
+
+	@Override
+	public boolean isBranch() {
+		return branch;
+	}
+
+	@Override
+	public void setDisableBasicBlock(boolean disable) {
+		basicBlock = !disable;
+	}
 
 	@Override
 	public boolean isDefUse() {
 		return defUse;
 	}
 
-	/* (non-Javadoc)
-	 * @see testful.evolutionary.IConfigFitness.Args4j#setDisableDefUse(boolean)
-	 */
 	@Override
 	public void setDisableDefUse(boolean disable) {
 		defUse = !disable;
 	}
 
-	/* (non-Javadoc)
-	 * @see testful.evolutionary.IConfigFitness#isBasicBlock()
-	 */
 	@Override
-	public boolean isBasicBlock() {
-		return basicBlock;
+	public boolean isBehavioral() {
+		return behavioral;
 	}
 
-	/* (non-Javadoc)
-	 * @see testful.evolutionary.IConfigFitness.Args4j#setDisableBranch(boolean)
-	 */
 	@Override
-	public void setDisableBranch(boolean disable) {
-		basicBlock = !disable;
-	}
-
-	/* (non-Javadoc)
-	 * @see testful.evolutionary.IFitness#isBranch()
-	 */
-	@Override
-	public boolean isBranch() {
-		return branch;
-	}
-
-	/* (non-Javadoc)
-	 * @see testful.evolutionary.IConfigFitness.Args4j#setDisableBasicBlock(boolean)
-	 */
-	@Override
-	public void setDisableBasicBlock(boolean disable) {
-		basicBlock = !disable;
+	public void setDisableBehavioral(boolean disable) {
+		behavioral = !disable;
 	}
 }

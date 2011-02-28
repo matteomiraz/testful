@@ -193,11 +193,13 @@
 				<include name="testful/utils/**/*.class" />
 				<include name="testful/runner/DataFinder*.class" />
 				<include name="testful/runner/*Type.class" />
+				<include name="testful/runner/ISerializable.class" />
+				<include name="testful/runner/ObjectRegistry.class" />
 				<include name="testful/runner/RemoteClassLoader*.class" />
 				<include name="testful/TestFul.class" />
 				<include name="testful/TestFul$*.class" />
 				<include name="testful/TestfulException.class" />
-
+				
 				<include name="testful/IConfig.class" />
 				<include name="testful/IConfigProject*.class" />
 				<include name="testful/ConfigProject.class" />
@@ -457,6 +459,18 @@
 
 			<arg value="test.coverage.DataFlowCtx"/>
 			<arg value="test.coverage.DataFlowCtx$Inner"/>
+		</java>
+
+		<java jar="${artifacts}/instrumenter.jar" fork="true">
+			<jvmarg value="-Dtestful.debug=true"/>
+			<arg value="-behavioralCoverage"/>
+			<arg value="-dataFlowCoverage"/>
+			<arg value="DISABLED"/>
+
+			<arg value="-dir"/>
+			<arg value="${testCut}"/>
+
+			<arg value="test.coverage.Behavior"/>
 		</java>
 	</target>
 

@@ -106,6 +106,12 @@ public class Launcher {
 			return dataFlowCoverage;
 		}
 
+		@Option(required = false, name = "-behavioralCoverage", usage = "Enables the behavioral coverage")
+		private boolean behavioralCoverage = false;
+		public boolean isBehavioralCoverage() {
+			return behavioralCoverage;
+		}
+
 		/**
 		 * @param project instrument the whole project
 		 */
@@ -219,6 +225,7 @@ public class Launcher {
 			} else {
 				Instrumenter.run(config, toInstrument,
 						new testful.coverage.whiteBox.WhiteInstrumenter(config),
+						new testful.coverage.behavior.BehaviorInstrumenter(config),
 						testful.coverage.stopper.ExecutionStopperInstrumenter.singleton
 				);
 			}

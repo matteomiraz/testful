@@ -20,7 +20,8 @@ public class ExecutorTestCase extends GenericTestCase {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("apache.Fraction");
 		RemoteClassLoader remoteClassLoader = new RemoteClassLoader(getFinder());
-		TestCluster cluster = new TestCluster(remoteClassLoader, config);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(remoteClassLoader, config);
+		TestCluster cluster = clusterBuilder.getTestCluster();
 		ReferenceFactory refFactory = new ReferenceFactory(cluster, 4, 4);
 
 		Clazz cut = cluster.getCut();

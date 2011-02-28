@@ -29,26 +29,27 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jmetal.util.PseudoRandom;
-import testful.IConfigGeneration;
 import testful.coverage.CoverageInformation;
 import testful.coverage.CoverageTestExecutor;
 import testful.coverage.TrackerDatum;
+import testful.coverage.behavior.AbstractorRegistry;
 import testful.coverage.whiteBox.WhiteBoxAnalysisData;
 import testful.model.Operation;
 import testful.model.OptimalTestCreator;
 import testful.model.ReferenceFactory;
 import testful.model.Test;
 import testful.model.TestCluster;
+import testful.model.TestClusterBuilder;
 import testful.model.TestCoverage;
 import testful.model.TestSuite;
 import testful.model.executor.TestExecutorInput;
 import testful.runner.ClassType;
-import testful.runner.Job;
 import testful.runner.DataFinderCaching;
 import testful.runner.DataFinderImpl;
+import testful.runner.Job;
 import testful.runner.ObjectType;
-import testful.runner.RunnerPool;
 import testful.runner.RemoteClassLoader;
+import testful.runner.RunnerPool;
 import testful.utils.ElementManager;
 
 /**
@@ -75,7 +76,7 @@ public class TestfulProblem implements Serializable {
 	/** cumulative number of invocations */
 	private AtomicLong invTot = new AtomicLong(0);
 
-	public TestfulProblem(IConfigGeneration config) throws ClassNotFoundException {
+	public TestfulProblem(IConfigEvolutionary config) throws ClassNotFoundException {
 		try {
 			reloadClasses = config.isReloadClasses();
 
@@ -89,8 +90,12 @@ public class TestfulProblem implements Serializable {
 			finder = new DataFinderCaching(finderImpl);
 			RemoteClassLoader tcl = new RemoteClassLoader(finder);
 
-			cluster = new TestCluster(tcl, config);
+			TestClusterBuilder clusterBuilder = new TestClusterBuilder(tcl, config);
+
+			cluster = clusterBuilder.getTestCluster();
 			objectType.addObject(cluster);
+
+			if(config.isBehavioral()) objectType.addObject(new AbstractorRegistry(cluster, clusterBuilder.getXmlRegistry()));
 
 			data = new TrackerDatum[0];
 

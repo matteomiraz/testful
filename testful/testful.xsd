@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<xs:schema version="1.0" targetNamespace="http://testful.sourceforge.net/schema/1.2/testful.xsd" xmlns:tns="http://testful.sourceforge.net/schema/1.2/testful.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:schema version="1.0" targetNamespace="http://testful.sourceforge.net/schema/2.0/testful.xsd" xmlns:tns="http://testful.sourceforge.net/schema/2.0/testful.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
   <xs:element name="class" type="tns:class"/>
 

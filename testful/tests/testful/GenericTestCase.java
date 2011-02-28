@@ -38,15 +38,19 @@ import testful.model.OperationPosition;
 import testful.model.ReferenceFactory;
 import testful.model.Test;
 import testful.model.TestCluster;
+import testful.model.TestClusterBuilder;
 import testful.model.executor.TestExecutorInput;
 import testful.runner.ClassType;
-import testful.runner.Job;
 import testful.runner.DataFinder;
 import testful.runner.DataFinderCaching;
 import testful.runner.DataFinderImpl;
+import testful.runner.DataType;
 import testful.runner.IRunner;
-import testful.runner.RunnerPool;
+import testful.runner.ISerializable;
+import testful.runner.Job;
+import testful.runner.ObjectType;
 import testful.runner.RemoteClassLoader;
+import testful.runner.RunnerPool;
 import testful.utils.ElementManager;
 import ec.util.MersenneTwisterFast;
 
@@ -65,20 +69,14 @@ public abstract class GenericTestCase extends TestCase {
 	}
 
 	//-------------------------- class finder --------------------------------
-	private static final DataFinderCaching finder;
-	static {
-		DataFinderCaching tmp;
-		try {
-			tmp = new DataFinderCaching(new DataFinderImpl(new ClassType(getConfig())));
-		} catch (RemoteException e) {
-			tmp = null;
-			fail(e.getMessage());
-		}
-		finder = tmp;
-	}
 	/** Returns the class finder for the TestCut */
-	public static DataFinder getFinder() {
-		return finder;
+	public static DataFinder getFinder(ISerializable ... serializables) {
+		try {
+			return new DataFinderCaching(new DataFinderImpl( new DataType[] { new ClassType(getConfig()), new ObjectType(serializables) } ));
+		} catch (RemoteException e) {
+			fail(e.getMessage());
+			return null;
+		}
 	}
 
 	//-------------------------- Runner --------------------------------------
@@ -142,7 +140,7 @@ public abstract class GenericTestCase extends TestCase {
 	public static void createCoveragesAssertions(ElementManager<String, CoverageInformation> covs) {
 		for (CoverageInformation cov : covs) {
 			System.err.println("{");
-			System.err.println("  CoverageInformation cov = covs.get(" + cov.getClass().getCanonicalName() + ".KEY);");
+			System.err.println("  CoverageInformation cov = covs.get(" + cov.getClass().getName() + ".KEY);");
 			System.err.println("  assertNotNull(cov);");
 			System.err.println("  assertEquals(" + cov.getQuality() + "f, cov.getQuality());");
 			System.err.println("  assertEquals(\"" + cov.toString().replaceAll("\n", "\\\\n") + "\", cov.toString());");
@@ -156,7 +154,9 @@ public abstract class GenericTestCase extends TestCase {
 		ConfigCut testfulConfig = new ConfigCut(getConfig());
 		testfulConfig.setCut(cut);
 
-		TestCluster cluster = new TestCluster(new RemoteClassLoader(getFinder()), testfulConfig);
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(getFinder()), testfulConfig);
+
+		TestCluster cluster = clusterBuilder.getTestCluster();
 		ReferenceFactory refFactory = new ReferenceFactory(cluster, 4, 4);
 
 		Operation[] ops = new Operation[lenght];
@@ -166,15 +166,23 @@ public abstract class GenericTestCase extends TestCase {
 		return new Test(cluster, refFactory, ops);
 	}
 
-	protected static ElementManager<String, CoverageInformation> getCoverage(Test test, TrackerDatum ... data) throws InterruptedException, ExecutionException {
-		Job<TestExecutorInput, ElementManager<String, CoverageInformation>, CoverageTestExecutor> ctx =
-			CoverageTestExecutor.getContext(getFinder(), test, true, data);
+	protected static ElementManager<String, CoverageInformation> getCoverage(Test test, TrackerDatum datum, ISerializable ... serializables) throws InterruptedException, ExecutionException {
 
-		ctx.setReloadClasses(true);
+		if(serializables == null) serializables = new ISerializable[0];
+
+		TrackerDatum[] data = datum == null ? new TrackerDatum[0] : new TrackerDatum[] { datum };
+
+		Job<TestExecutorInput, ElementManager<String, CoverageInformation>, CoverageTestExecutor> ctx =
+			CoverageTestExecutor.getContext(getFinder(serializables), test, true, data);
+
 		Future<ElementManager<String, CoverageInformation>> future = getExec().execute(ctx);
 		ElementManager<String, CoverageInformation> coverage = future.get();
 
 		return coverage;
+	}
+
+	protected static ElementManager<String, CoverageInformation> getCoverage(Test test) throws InterruptedException, ExecutionException {
+		return getCoverage(test, null);
 	}
 
 	private static final Comparator<Operation[]> dummyTestComparator = new Comparator<Operation[]>() {

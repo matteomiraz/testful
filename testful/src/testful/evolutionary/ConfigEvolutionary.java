@@ -85,43 +85,13 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 		return fitnessInheritance;
 	}
 
-	@Override
-	public boolean isDefUse() {
-		return configFitness.isDefUse();
-	}
-
 	public void setFitnessInheritance(FitnessInheritance fitnessInheritance) {
 		this.fitnessInheritance = fitnessInheritance;
 	}
 
 	@Override
-	public boolean isBasicBlock() {
-		return configFitness.isBasicBlock();
-	}
-
-	@Override
-	public boolean isBranch() {
-		return configFitness.isBranch();
-	}
-
-	@Override
 	public int getSmartInitialPopulation() {
 		return smartInitialPopulation;
-	}
-
-	@Override
-	public void setDisableBasicBlock(boolean disable) {
-		configFitness.setDisableBasicBlock(disable);
-	}
-
-	@Override
-	public void setDisableBranch(boolean disable) {
-		configFitness.setDisableBranch(disable);
-	}
-
-	@Override
-	public void setDisableDefUse(boolean disable) {
-		configFitness.setDisableDefUse(disable);
 	}
 
 	@Override
@@ -264,6 +234,50 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	public void setSmartInitialPopulation(int smartInitialPopulation) {
 		this.smartInitialPopulation = smartInitialPopulation;
 	}
+
+	// --------------- fitness -----------------------
+
+	@Override
+	public boolean isBasicBlock() {
+		return configFitness.isBasicBlock();
+	}
+
+	@Override
+	public void setDisableBasicBlock(boolean disable) {
+		configFitness.setDisableBasicBlock(disable);
+	}
+
+	@Override
+	public boolean isBranch() {
+		return configFitness.isBranch();
+	}
+
+	@Override
+	public void setDisableBranch(boolean disable) {
+		configFitness.setDisableBranch(disable);
+	}
+
+	@Override
+	public boolean isDefUse() {
+		return configFitness.isDefUse();
+	}
+
+	@Override
+	public void setDisableDefUse(boolean disable) {
+		configFitness.setDisableDefUse(disable);
+	}
+
+	@Override
+	public boolean isBehavioral() {
+		return configFitness.isBehavioral();
+	}
+
+	@Override
+	public void setDisableBehavioral(boolean disable) {
+		configFitness.setDisableBehavioral(disable);
+	}
+
+	// --------------- validate -----------------------
 
 	/* (non-Javadoc)
 	 * @see testful.IConfig#validate()

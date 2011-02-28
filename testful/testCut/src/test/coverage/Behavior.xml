@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testful:class xmlns:testful="http://testful.sourceforge.net/schema/2.0/testful.xsd" xmlns:beh="http://testful.sourceforge.net/schema/2.0/behavioral.xsd">
+
+    <constructor skip="false">
+        <extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior"/>
+    </constructor>
+
+    <constructor skip="false">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="boolean"/>
+        <extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior">
+        	<abstraction function="testful.coverage.behavior.Abstractor" expression="p0" parameters=""/>
+        </extra>
+    </constructor>
+
+    <constructor skip="false">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="int"/>
+        <extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior">
+        	<abstraction function="testful.coverage.behavior.Abstractor" expression="p0" parameters=""/>
+        </extra>
+    </constructor>
+
+    <constructor skip="false">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="true" mutated="true" type="java.lang.Object"/>
+        <extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior">
+        	<abstraction function="testful.coverage.behavior.Abstractor" expression="p0" parameters=""/>
+        </extra>
+    </constructor>
+    
+    <constructor skip="false">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="true" mutated="true" type="java.lang.String"/>
+        <extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior">
+        	<abstraction function="testful.coverage.behavior.Abstractor" expression="p0" parameters=""/>
+        </extra>
+    </constructor>
+
+    <method kind="static" exposeState="false" name="sMethod0">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="boolean"/>
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="boolean"/>
+        <extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior"/>
+    </method>
+    <method kind="static" exposeState="false" name="sMethod1">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="int"/>
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="int"/>
+        <extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior"/>
+    </method>
+    <method kind="static" exposeState="false" name="sMethod2">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="true" mutated="true" type="java.lang.Object"/>
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="true" mutated="true" type="java.lang.Object"/>
+        <extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior"/>
+    </method>
+    <method kind="static" exposeState="false" name="sMethod3">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="true" mutated="true" type="java.lang.String"/>
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="true" mutated="true" type="java.lang.String"/>
+        <extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior"/>
+    </method>
+     
+    
+    <method kind="observer" exposeState="false" name="getN"/>
+    <method kind="observer" exposeState="false" name="getThree"/>
+    
+    <method kind="mutator" exposeState="false" name="method0">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="boolean"/>
+        <extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior"/>
+    </method>
+    <method kind="mutator" exposeState="false" name="method1">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="int"/>
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="int"/>
+        <extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior"/>
+    </method>
+    <method kind="mutator" exposeState="false" name="method2">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="true" mutated="true" type="java.lang.Object"/>
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="true" mutated="true" type="java.lang.Object"/>
+        <extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior"/>
+    </method>
+    <method kind="mutator" exposeState="false" name="method3">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="true" mutated="true" type="java.lang.String"/>
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="true" mutated="true" type="java.lang.String"/>
+        <extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior"/>
+    </method>
+    
+    <extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior">
+		<abstraction function="testful.coverage.behavior.AbstractorNumber" expression="this.getN()" parameters="0:1:this.getThree()"/>
+    </extra>
+    
+</testful:class>

@@ -20,5 +20,5 @@ package testful.model.xml;
 
 import javax.xml.bind.annotation.XmlType;
 
-@XmlType(namespace = "http://testful.sourceforge.net/schema/1.2/testful.xsd", name = "extra")
+@XmlType(namespace = "http://testful.sourceforge.net/schema/2.0/testful.xsd", name = "extra")
 public abstract class Extra {}

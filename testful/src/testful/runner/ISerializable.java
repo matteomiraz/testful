@@ -27,16 +27,8 @@ import java.io.Serializable;
 public interface ISerializable extends Serializable {
 
 	/**
-	 * Returns the (ISerializable) identifier of this object, or null if it has not been set yet.
-	 * @return the (ISerializable) identifier of this object, or null if it has not been set yet.
+	 * Returns the (ISerializable) identifier of this object (NOT NULL)
+	 * @return the (ISerializable) identifier of this object (NOT NULL)
 	 */
 	public String getISerializableIdentifier();
-
-	/**
-	 * When the identifier is required, the system sets it by invoking this method with the id of the object as argument.
-	 * This must be stored in a <b>transient</b> field, and returned to subsequent invocations to method {@link ISerializable#getISerializableIdentifier()}.
-	 * @param id the (ISerializable) identifier of this object.
-	 */
-	public void setISerializableIdentifier(String id);
-
 }

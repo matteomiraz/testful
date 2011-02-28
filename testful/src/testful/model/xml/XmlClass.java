@@ -46,8 +46,8 @@ import javax.xml.bind.annotation.XmlType;
  * @author matteo
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(namespace = "http://testful.sourceforge.net/schema/1.2/testful.xsd", name = "class", propOrder = { "cluster", "constructor", "method", "extra" })
-@XmlRootElement(name = "class", namespace = "http://testful.sourceforge.net/schema/1.2/testful.xsd")
+@XmlType(namespace = "http://testful.sourceforge.net/schema/2.0/testful.xsd", name = "class", propOrder = { "cluster", "constructor", "method", "extra" })
+@XmlRootElement(name = "class", namespace = "http://testful.sourceforge.net/schema/2.0/testful.xsd")
 public class XmlClass {
 
 	private static final Logger logger = Logger.getLogger("testful.model.xml");

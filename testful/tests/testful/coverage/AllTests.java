@@ -32,6 +32,7 @@ public class AllTests {
 
 		//$JUnit-BEGIN$
 		suite.addTestSuite(FaultTestCase.class);
+		suite.addTestSuite(CoverageBehavioralTestCase.class);
 		suite.addTestSuite(CoverageCFGTestCase.class);
 		suite.addTestSuite(CoverageDataFlowTestCase.class);
 		suite.addTestSuite(CoveragePUseTestCase.class);

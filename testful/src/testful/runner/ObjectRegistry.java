@@ -68,7 +68,6 @@ public class ObjectRegistry {
 			if(b == null) return null;
 
 			ISerializable object = (ISerializable) SerializationUtils.deserialize(b, ObjectType.COMPRESS, classLoader);
-			object.setISerializableIdentifier(identifier);
 			cache.put(identifier, new Cacheable<ISerializable>(object));
 
 			return object;

@@ -36,15 +36,22 @@ import testful.ConfigCut;
 import testful.IConfigCut;
 import testful.IConfigProject;
 import testful.TestFul;
+import testful.model.xml.behavior.Abstraction;
+import testful.model.xml.behavior.Behavior;
 import testful.runner.ClassType;
 import testful.runner.DataFinderImpl;
 import testful.runner.RemoteClassLoader;
 
 public class Parser {
 
+	/**
+	 * TODO describe me!
+	 */
+	private static final boolean CREATE_BEHAVIORAL_ENTRIES = true;
+
 	private static final Logger logger = Logger.getLogger("testful.model.xml");
 
-	private static final Class<?>[] CLASSES = { XmlClass.class };
+	private static final Class<?>[] CLASSES = { XmlClass.class, Behavior.class };
 
 	public static final Parser singleton;
 	static {
@@ -105,6 +112,24 @@ public class Parser {
 		try {
 			Class<?> clazz = loader.loadClass(config.getCut());
 			XmlClass xmlClass = XmlClass.create(clazz);
+
+			if(CREATE_BEHAVIORAL_ENTRIES) {
+				final Abstraction abs = new Abstraction();
+				abs.setFunction("testful.coverage.behavior.AbstractorNumber");
+				abs.setExpression("this.size()");
+				abs.setParameters("0:10");
+
+				Behavior beh = new Behavior();
+				beh.getAbstraction().add(abs);
+
+				xmlClass.getExtra().add(beh);
+
+				for (XmlConstructor xCns : xmlClass.getConstructors())
+					xCns.getExtra().add(new Behavior());
+
+				for (XmlMethod xMet : xmlClass.getMethods())
+					xMet.getExtra().add(new Behavior());
+			}
 
 			singleton.encode(config.getCut(), xmlClass, config);
 		} catch(ClassNotFoundException e) {

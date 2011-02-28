@@ -28,7 +28,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(namespace = "http://testful.sourceforge.net/schema/1.2/testful.xsd", name = "parameter")
+@XmlType(namespace = "http://testful.sourceforge.net/schema/2.0/testful.xsd", name = "parameter")
 public class XmlParameter implements Comparable<XmlParameter> {
 
 	@XmlAttribute(required = true)

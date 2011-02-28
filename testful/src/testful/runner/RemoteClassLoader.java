@@ -42,10 +42,11 @@ public class RemoteClassLoader extends ClassLoader implements ElementWithKey<Str
 		"testful.model.IClassRegistry",
 	};
 
-	/** for these classes force the use of the TestFul class loader */
-	private static final String[] TESTFUL_CLASSES = {
+	/** for these classes force the use of the remote class loader */
+	private static final String[] REMOTE_CLASSES = {
 		// Trackers
 		"testful.coverage.Tracker",
+		"testful.coverage.behavior.BehaviorTracker",
 		"testful.coverage.fault.FaultTracker",
 		"testful.coverage.stopper.Stopper",
 		"testful.coverage.stopper.Stopper$1",
@@ -73,8 +74,9 @@ public class RemoteClassLoader extends ClassLoader implements ElementWithKey<Str
 		"testful.model.OperationResult", // this class and its inner classes
 	};
 
-	/** for these packages force to use the TestFul class loader */
-	private static final String[] TESTFUL_PACKAGES = {
+	/** for these packages force to use the remote class loader */
+	private static final String[] REMOTE_PACKAGES = {
+		"testful.coverage.behavior.Abstractor", // common prefix to all Abstractors
 		"org.apache.commons.jexl",
 	};
 
@@ -82,13 +84,13 @@ public class RemoteClassLoader extends ClassLoader implements ElementWithKey<Str
 		for(String allow : SYSTEM_CLASSES)
 			if(name.equals(allow)) return true;
 
-		for(String forbid : TESTFUL_CLASSES)
+		for(String forbid : REMOTE_CLASSES)
 			if(name.equals(forbid)) return false;
 
 		for(String allow : SYSTEM_PACKAGES)
 			if(name.startsWith(allow)) return true;
 
-		for(String forbid : TESTFUL_PACKAGES)
+		for(String forbid : REMOTE_PACKAGES)
 			if(name.startsWith(forbid)) return false;
 
 		return true;

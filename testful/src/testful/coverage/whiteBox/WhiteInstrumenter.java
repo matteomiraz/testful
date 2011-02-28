@@ -792,7 +792,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 			if(expr instanceof EqExpr) condType = ConditionType.EQ;
 			if(expr instanceof GeExpr) condType = ConditionType.GE;
 			if(expr instanceof GtExpr) condType = ConditionType.GT;
-			if(TestFul.DEBUG && condType == null) TestFul.debug("Unknown condition type: " + expr + " (" + expr.getClass().getCanonicalName() + ")");
+			if(TestFul.DEBUG && condType == null) TestFul.debug("Unknown condition type: " + expr + " (" + expr.getClass().getName() + ")");
 
 			ConditionIf c = new ConditionIf(expr.toString(), current.getId(), condDataType, v1, use1, condType, v2, use2);
 			current.setCondition(c);

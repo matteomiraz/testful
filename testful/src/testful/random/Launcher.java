@@ -30,6 +30,7 @@ import testful.coverage.CoverageInformation;
 import testful.model.Operation;
 import testful.model.ReferenceFactory;
 import testful.model.TestCluster;
+import testful.model.TestClusterBuilder;
 import testful.runner.ClassType;
 import testful.runner.DataFinder;
 import testful.runner.DataFinderCaching;
@@ -60,10 +61,17 @@ public class Launcher {
 
 	public static void run(IConfigRandom config) throws TestfulException {
 		DataFinder finder;
-		TestCluster tc;
+		TestCluster cluster;
 		try {
 			finder = new DataFinderCaching(new DataFinderImpl(new ClassType(config)));
-			tc = new TestCluster(new RemoteClassLoader(finder), config);
+
+			TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(finder), config);
+
+			cluster = clusterBuilder.getTestCluster();
+			// TODO: objectType.addObject(cluster);
+
+			// TODO: if(config.isBehavioral()) objectType.addObject(new AbstractorRegistry(cluster, clusterBuilder.getXmlRegistry()));
+
 		} catch (RemoteException e) {
 			// never happens
 			throw new TestfulException("Cannot create the local classfinder");
@@ -71,17 +79,17 @@ public class Launcher {
 			throw new TestfulException("Cannot find some classes: " + e);
 		}
 
-		ReferenceFactory refFactory = new ReferenceFactory(tc, config.getNumVarCut(), config.getNumVar());
+		ReferenceFactory refFactory = new ReferenceFactory(cluster, config.getNumVarCut(), config.getNumVar());
 
 		RandomTest rt = null;
 
 		logger.config("Using the " + config.getRandomType() + " algorithm");
 		switch(config.getRandomType()) {
 		case SIMPLE:
-			rt = new RandomTestSimple(finder, config.isReloadClasses(), tc, refFactory, config.getSeed());
+			rt = new RandomTestSimple(finder, config.isReloadClasses(), cluster, refFactory, config.getSeed());
 			break;
 		case SPLIT:
-			rt = new RandomTestSplit(finder, config.isReloadClasses(), tc, refFactory, config.getSeed());
+			rt = new RandomTestSplit(finder, config.isReloadClasses(), cluster, refFactory, config.getSeed());
 			break;
 		}
 

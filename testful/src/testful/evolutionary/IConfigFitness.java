@@ -27,9 +27,11 @@ import org.kohsuke.args4j.Option;
 public interface IConfigFitness {
 
 	public boolean isBasicBlock();
-
 	public boolean isBranch();
+
 	public boolean isDefUse();
+
+	public boolean isBehavioral();
 
 	public interface Args4j extends IConfigFitness {
 
@@ -41,5 +43,8 @@ public interface IConfigFitness {
 
 		@Option(required = false, name = "-disableDefUse", usage = "Do not attempt to maximize the def-use pairs coverage")
 		public void setDisableDefUse(boolean disable);
+
+		@Option(required = false, name = "-disableBehavioral", usage = "Do not collect and do not maximize the behavioral coverage")
+		public void setDisableBehavioral(boolean disable);
 	}
 }

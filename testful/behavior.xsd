@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<xs:schema version="1.0" targetNamespace="http://home.dei.polimi.it/miraz/testful/behavior" xmlns:ns1="http://home.dei.polimi.it/miraz/testful" xmlns:tns="http://home.dei.polimi.it/miraz/testful/behavior" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:schema version="1.0" targetNamespace="http://testful.sourceforge.net/schema/2.0/behavioral.xsd" xmlns:testful="http://testful.sourceforge.net/schema/2.0/testful.xsd" xmlns:tns="http://testful.sourceforge.net/schema/2.0/behavioral.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
-  <xs:import namespace="http://home.dei.polimi.it/miraz/testful" schemaLocation="schema2.xsd"/>
+  <xs:import namespace="http://testful.sourceforge.net/schema/2.0/testful.xsd" schemaLocation="schema1.xsd"/>
 
   <xs:complexType name="behavior">
     <xs:complexContent>
-      <xs:extension base="ns1:extra">
+      <xs:extension base="testful:extra">
         <xs:sequence>
           <xs:element name="abstraction" type="tns:abstraction" maxOccurs="unbounded"/>
         </xs:sequence>
@@ -15,9 +15,9 @@
 
   <xs:complexType name="abstraction">
     <xs:sequence/>
-    <xs:attribute name="value" type="xs:string" use="required"/>
-    <xs:attribute name="range" type="xs:string" use="required"/>
-    <xs:attribute name="function" type="xs:string"/>
+    <xs:attribute name="parameters" type="xs:string"/>
+    <xs:attribute name="expression" type="xs:string" use="required"/>
+    <xs:attribute name="function" type="xs:string" use="required"/>
   </xs:complexType>
 </xs:schema>
 

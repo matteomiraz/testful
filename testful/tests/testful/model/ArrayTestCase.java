@@ -27,7 +27,9 @@ public class ArrayTestCase extends GenericTestCase {
 	public void testCluster() throws Exception {
 		ConfigCut config = new ConfigCut(GenericTestCase.getConfig());
 		config.setCut("test.model.Array");
-		TestCluster cluster = new TestCluster(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+
+		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
+		TestCluster cluster = clusterBuilder.getTestCluster();
 
 		assertEquals(2, cluster.getClusterSize());
 

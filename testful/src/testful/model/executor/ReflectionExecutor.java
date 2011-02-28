@@ -334,7 +334,7 @@ public class ReflectionExecutor {
 			// check for nasty Errors (such as OutOfMemory errors)
 			if(exc instanceof VirtualMachineError && !(exc instanceof StackOverflowError)) {
 				reset(); // early free some memory
-				logger.fine("VirtualMachine Error " + exc + " (" + exc.getClass().getCanonicalName() + ") while executing "  + op);
+				logger.fine("VirtualMachine Error " + exc + " (" + exc.getClass().getName() + ") while executing "  + op);
 				throw new TestfulInternalException.Impl(exc);
 			}
 
@@ -459,7 +459,7 @@ public class ReflectionExecutor {
 			// check for nasty Errors (such as OutOfMemory errors)
 			if(exc instanceof VirtualMachineError && !(exc instanceof StackOverflowError)) {
 				reset(); // early free some memory
-				logger.fine("VirtualMachine Error " + exc + " (" + exc.getClass().getCanonicalName() + ") while executing "  + op);
+				logger.fine("VirtualMachine Error " + exc + " (" + exc.getClass().getName() + ") while executing "  + op);
 				throw new TestfulInternalException.Impl(exc);
 			}
 

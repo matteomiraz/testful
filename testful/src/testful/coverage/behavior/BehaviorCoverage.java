@@ -1,3 +1,21 @@
+/*
+ * TestFul - http://code.google.com/p/testful/
+ * Copyright (C) 2011  Matteo Miraz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package testful.coverage.behavior;
 
 import java.io.IOException;
@@ -24,6 +42,10 @@ public class BehaviorCoverage implements CoverageInformation {
 
 	private static transient int stateNumberGenerator = 1;
 	private static transient Map<Abstraction, Integer> stateNumber = new LinkedHashMap<Abstraction, Integer>();
+
+	public static void resetLabels() {
+		stateNumber = new LinkedHashMap<Abstraction, Integer>();
+	}
 
 	private static int getNumber(Abstraction state) {
 		if(state == null || (state instanceof AbstractionObjectReference && ((AbstractionObjectReference) state).isNull())) return 0;
@@ -72,7 +94,7 @@ public class BehaviorCoverage implements CoverageInformation {
 			post = new AbstractionObjectReference("", true);
 		} else if(pre == null) pre = new AbstractionObjectReference("", true);
 
-		if(TestFul.DEBUG) if(post == null) System.err.println("post is NULL!");
+		if(TestFul.DEBUG && post == null) TestFul.debug("post is NULL!", new NullPointerException());
 
 		Set<Operation> state = stateMachine.get(pre);
 		if(state == null) {

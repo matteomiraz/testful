@@ -1,6 +1,6 @@
 /*
  * TestFul - http://code.google.com/p/testful/
- * Copyright (C) 2010  Matteo Miraz
+ * Copyright (C) 2011  Matteo Miraz
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-@javax.xml.bind.annotation.XmlSchema(namespace = "http://testful.sourceforge.net/schema/1.2/testful.xsd", location="testful.xsd")
+@javax.xml.bind.annotation.XmlSchema(namespace = "http://testful.sourceforge.net/schema/2.0/testful.xsd")
 package testful.model.xml;
 

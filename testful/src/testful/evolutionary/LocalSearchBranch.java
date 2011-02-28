@@ -844,7 +844,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 					if(c.getV2() == null) return 0;
 
 					if(!(c.getV2() instanceof Constant) && !(c.getV2() instanceof Data)) {
-						if(TestFul.DEBUG) TestFul.debug("Ambiguous Value (1): " + c.getV2() + (c.getV2() == null ? "" : " (" + c.getV2().getClass().getCanonicalName() + ")"));
+						if(TestFul.DEBUG) TestFul.debug("Ambiguous Value (1): " + c.getV2() + (c.getV2() == null ? "" : " (" + c.getV2().getClass().getName() + ")"));
 						return SCORE_AMBIGUOUS;
 					}
 
@@ -857,20 +857,20 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 					return checkFeasibilitySwitch(getStaticValue(def1), target.getBranchId(), (ConditionSwitch) c);
 
 				} else {
-					if(TestFul.DEBUG) TestFul.debug("Unexpected contition type: " + c.getClass().getCanonicalName());
+					if(TestFul.DEBUG) TestFul.debug("Unexpected contition type: " + c.getClass().getName());
 					return SCORE_AMBIGUOUS;
 				}
 
 			} else if(use1 == null && use2 != null) { // p-use is on use2
 				if(!(c instanceof ConditionIf)) {
-					if(TestFul.DEBUG) TestFul.debug("Unexpected contition type: " + c.getClass().getCanonicalName());
+					if(TestFul.DEBUG) TestFul.debug("Unexpected contition type: " + c.getClass().getName());
 					return SCORE_AMBIGUOUS;
 				}
 
 				if(c.getV1() == null) return 0;
 
 				if(!(c.getV1() instanceof Constant) && !(c.getV1() instanceof Data)) {
-					if(TestFul.DEBUG) TestFul.debug("Ambiguous Value (2): " + c.getV1() + (c.getV1() == null ? "" : " (" + c.getV1().getClass().getCanonicalName() + ")"));
+					if(TestFul.DEBUG) TestFul.debug("Ambiguous Value (2): " + c.getV1() + (c.getV1() == null ? "" : " (" + c.getV1().getClass().getName() + ")"));
 					return SCORE_AMBIGUOUS;
 				}
 
@@ -890,7 +890,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 			} else { // use1 != null && use2 != null
 				if(!(c instanceof ConditionIf)) {
-					if(TestFul.DEBUG) TestFul.debug("Unexpected contition type: " + c.getClass().getCanonicalName());
+					if(TestFul.DEBUG) TestFul.debug("Unexpected contition type: " + c.getClass().getName());
 					return SCORE_AMBIGUOUS;
 				}
 
@@ -917,7 +917,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 					if(c.getV2() == null) return 0;
 
 					if(!(c.getV2() instanceof Constant) && !(c.getV2() instanceof Data)) {
-						if(TestFul.DEBUG) TestFul.debug("Ambiguous Value (3a): " + c.getV2() + (c.getV2() == null ? "" : " (" + c.getV2().getClass().getCanonicalName() + ")"));
+						if(TestFul.DEBUG) TestFul.debug("Ambiguous Value (3a): " + c.getV2() + (c.getV2() == null ? "" : " (" + c.getV2().getClass().getName() + ")"));
 						return SCORE_AMBIGUOUS;
 					}
 
@@ -933,7 +933,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 					if(c.getV1() == null) return 0;
 
 					if(!(c.getV1() instanceof Constant) && !(c.getV1() instanceof Data)) {
-						if(TestFul.DEBUG) TestFul.debug("Ambiguous Value (3b): " + c.getV1() + (c.getV1() == null ? "" : " (" + c.getV1().getClass().getCanonicalName() + ")"));
+						if(TestFul.DEBUG) TestFul.debug("Ambiguous Value (3b): " + c.getV1() + (c.getV1() == null ? "" : " (" + c.getV1().getClass().getName() + ")"));
 						return SCORE_AMBIGUOUS;
 					}
 
@@ -958,7 +958,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 		if(c.getV1() == null) return 0;
 
 		if(!(c.getV1() instanceof Constant) && !(c.getV1() instanceof Data)) {
-			if(TestFul.DEBUG) TestFul.debug("Ambiguous Value (4): " + c.getV1() + (c.getV1() == null ? "" : " (" + c.getV1().getClass().getCanonicalName() + ")"));
+			if(TestFul.DEBUG) TestFul.debug("Ambiguous Value (4): " + c.getV1() + (c.getV1() == null ? "" : " (" + c.getV1().getClass().getName() + ")"));
 			return SCORE_AMBIGUOUS;
 		}
 
@@ -966,7 +966,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			if(c.getV2() == null) return 0;
 
 			if(!(c.getV2() instanceof Constant) && !(c.getV2() instanceof Data)) {
-				if(TestFul.DEBUG) TestFul.debug("Ambiguous Value (4b): " + c.getV2() + (c.getV2() == null ? "" : " (" + c.getV2().getClass().getCanonicalName() + ")"));
+				if(TestFul.DEBUG) TestFul.debug("Ambiguous Value (4b): " + c.getV2() + (c.getV2() == null ? "" : " (" + c.getV2().getClass().getName() + ")"));
 				return SCORE_AMBIGUOUS;
 			}
 
@@ -979,7 +979,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			return checkFeasibilitySwitch(getDynamicValues(duCov, c.getV1(), use1), target.getBranchId(), (ConditionSwitch) c);
 
 		} else {
-			if(TestFul.DEBUG) TestFul.debug("Unexpected contition type: " + c.getClass().getCanonicalName());
+			if(TestFul.DEBUG) TestFul.debug("Unexpected contition type: " + c.getClass().getName());
 			return SCORE_AMBIGUOUS;
 		}
 	}
@@ -1063,7 +1063,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			return Collections.singleton((Constant) def.getValue());
 
 		if(TestFul.DEBUG)
-			TestFul.debug("Unexpected value: " + def.getValue().getClass().getCanonicalName());
+			TestFul.debug("Unexpected value: " + def.getValue().getClass().getName());
 
 		return null;
 	}

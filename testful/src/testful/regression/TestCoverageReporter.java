@@ -73,7 +73,7 @@ public class TestCoverageReporter extends TestReader {
 
 	private final static TrackerDatum[] TRACKER_DATA = new TrackerDatum[] {};
 
-	private static final Logger logger = Logger.getLogger(TestCoverageReporter.class.getCanonicalName());
+	private static final Logger logger = Logger.getLogger(TestCoverageReporter.class.getName());
 	@Override public Logger getLogger() { return logger; }
 
 	private final Config config;
