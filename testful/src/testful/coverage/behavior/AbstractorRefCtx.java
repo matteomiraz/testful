@@ -31,14 +31,18 @@ import org.apache.commons.jexl.ExpressionFactory;
 import org.apache.commons.jexl.JexlContext;
 import org.apache.commons.jexl.JexlHelper;
 
+import testful.TestFul;
+
 /**
- * Extra = p0.getSingleObject():{p0.getCollection()}
+ * parameters = p0.getSingleObject():{p0.getCollection()}
  */
 public class AbstractorRefCtx extends Abstractor {
 
 	private static final long serialVersionUID = -8970130020923978348L;
 
+	/** parameters that requires an equality comparison (i.e. == ) */
 	private final String[] objectsString;
+	/** parameters that requires a containment check (i.e. contains ) */
 	private final String[] aggregatesString;
 
 	private transient Expression[] objects;
@@ -50,7 +54,7 @@ public class AbstractorRefCtx extends Abstractor {
 	 * @param parameters the parameters for the abstraction function
 	 * @throws Exception if anything goes wrong (e.g., the expression has syntax errors)
 	 */
-	private AbstractorRefCtx(String expression, String parameters) throws Exception {
+	public AbstractorRefCtx(String expression, String parameters) throws Exception {
 		super(expression, parameters);
 
 		if(parameters.length() <= 0) {
@@ -78,26 +82,30 @@ public class AbstractorRefCtx extends Abstractor {
 	}
 
 	public Expression[] getObjects() {
-		if(objects == null) try {
-			objects = new Expression[objectsString.length];
-			for(int i = 0; i < objectsString.length; i++)
-				objects[i] = ExpressionFactory.createExpression(objectsString[i]);
-		} catch(Exception e) {
-			// This should never happen!
-			e.printStackTrace();
+		if(objects == null) {
+			try {
+				objects = new Expression[objectsString.length];
+				for(int i = 0; i < objectsString.length; i++)
+					objects[i] = ExpressionFactory.createExpression(objectsString[i]);
+			} catch(Exception e) {
+				// This should never happen!
+				TestFul.debug(e);
+			}
 		}
 
 		return objects;
 	}
 
 	public Expression[] getAggregates() {
-		if(aggregates == null) try {
-			aggregates = new Expression[aggregatesString.length];
-			for(int i = 0; i < aggregatesString.length; i++)
-				aggregates[i] = ExpressionFactory.createExpression(aggregatesString[i]);
-		} catch(Exception e) {
-			// This should never happen!
-			e.printStackTrace();
+		if(aggregates == null) {
+			try {
+				aggregates = new Expression[aggregatesString.length];
+				for(int i = 0; i < aggregatesString.length; i++)
+					aggregates[i] = ExpressionFactory.createExpression(aggregatesString[i]);
+			} catch(Exception e) {
+				// This should never happen!
+				TestFul.debug(e);
+			}
 		}
 
 		return aggregates;
@@ -110,44 +118,65 @@ public class AbstractorRefCtx extends Abstractor {
 
 		SortedSet<String> objs = new TreeSet<String>();
 
+		if(elem == null) objs.add("null");
+
 		JexlContext jc = JexlHelper.createContext();
 		jc.getVars().putAll(ctx);
 
-		for(Expression item : getObjects())
+		for(Expression item : getObjects()) {
 			try {
 				Object o = item.evaluate(jc);
 				if(elem == o) objs.add(item.getExpression());
 			} catch(Exception e) {
 				logger.log(Level.WARNING, this.getClass().getName() + ": cannot execute the JEXL query \"" + item.getExpression() + "\" : " + e.getMessage() + " due to: " + e.getCause(), e);
+				TestFul.debug(e);
 			}
+		}
 
-			for(Expression item : getAggregates())
-				try {
-					Object aggr = item.evaluate(jc);
-					if(aggr == null) {
-						logger.warning(this.getClass().getName() + ": null aggregate " + item.getExpression());
-						continue;
-					}
-
-					if(aggr.getClass().isArray()) {
-						for(Object o : (Object[]) aggr)
-							if(elem == o) objs.add(item.getExpression());
-					} else if(aggr instanceof Iterable<?>) {
-						for(Object o : (Iterable<?>) aggr)
-							if(elem == o) objs.add(item.getExpression());
-					} else if(aggr instanceof Iterator<?>) {
-						Iterator<?> iter = (Iterator<?>) aggr;
-						while(iter.hasNext())
-							if(elem == iter.next()) objs.add(item.getExpression());
-					} else logger.warning(this.getClass().getName() + ": Unknown aggregate type: " + aggr.getClass().getName());
-				} catch(Exception e) {
-					logger.log(Level.WARNING, this.getClass().getName() + ": cannot execute the JEXL query \"" + item.getExpression() + "\" : " + e.getMessage() + " due to: " + e.getCause(), e);
+		for(Expression item : getAggregates()) {
+			try {
+				Object aggr = item.evaluate(jc);
+				if(aggr == null) {
+					logger.warning(this.getClass().getName() + ": null aggregate " + item.getExpression());
+					continue;
 				}
 
-				for(String s : ctx.keySet())
-					if(elem == ctx.get(s)) objs.add(s);
+				if(aggr.getClass().isArray()) {
+					for(Object o : (Object[]) aggr) {
+						if(elem == o) {
+							objs.add(item.getExpression());
+							break;
+						}
+					}
 
-				return AbstractionObjectRefCtx.get(expression, objs);
+				} else if(aggr instanceof Iterable<?>) {
+					for(Object o : (Iterable<?>) aggr) {
+						if(elem == o) {
+							objs.add(item.getExpression());
+							break;
+						}
+					}
+
+				} else if(aggr instanceof Iterator<?>) {
+					Iterator<?> iter = (Iterator<?>) aggr;
+					while(iter.hasNext()) {
+						if(elem == iter.next()) {
+							objs.add(item.getExpression());
+							break;
+						}
+					}
+
+				} else {
+					logger.warning(this.getClass().getName() + ": Unknown aggregate type: " + aggr.getClass().getName());
+					TestFul.debug(this.getClass().getName() + ": Unknown aggregate type: " + aggr.getClass().getName());
+				}
+			} catch(Exception e) {
+				logger.log(Level.WARNING, this.getClass().getName() + ": cannot execute the JEXL query \"" + item.getExpression() + "\" : " + e.getMessage() + " due to: " + e.getCause(), e);
+				TestFul.debug(e);
+			}
+		}
+
+		return AbstractionObjectRefCtx.get(expression, objs);
 	}
 
 	@Override

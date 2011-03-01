@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import testful.TestFul;
 import testful.model.TestCluster;
 import testful.model.xml.XmlClass;
 import testful.model.xml.XmlMethod.Kind;
@@ -67,8 +68,7 @@ public class AbstractorRegistry implements ISerializable {
 
 			if (cXml != null) {
 				{ // create state abstractor
-					testful.model.xml.behavior.Behavior beh = getBehavior(cXml
-							.getExtra());
+					testful.model.xml.behavior.Behavior beh = getBehavior(cXml.getExtra());
 					if (beh != null) {
 						List<Abstractor> state = new ArrayList<Abstractor>();
 						for (testful.model.xml.behavior.Abstraction abs : beh
@@ -78,28 +78,18 @@ public class AbstractorRegistry implements ISerializable {
 								state.add(abstractor);
 						}
 						try {
-							abstractorClass.put(
-									cName,
-									new AbstractorObjectState(state
-											.toArray(new Abstractor[state
-											                        .size()])));
+							abstractorClass.put(cName, new AbstractorObjectState(state.toArray(new Abstractor[state.size()])));
 						} catch (Exception ex) {
 							logger.warning(ex.getMessage());
 						}
 					}
 				} // end of create state abstractor
 				{ // create constructor abstractor
-					for (testful.model.xml.XmlConstructor xmlCns : cXml
-							.getConstructors()) {
+					for (testful.model.xml.XmlConstructor xmlCns : cXml.getConstructors()) {
 						// create state abstractor
-						testful.model.xml.behavior.Behavior beh = getBehavior(xmlCns
-								.getExtra());
-						String bytecodeName = BytecodeUtils
-						.getBytecodeName(xmlCns);
-						if (beh == null)
-							abstractorMethod.put(cName + "." + bytecodeName,
-									new AbstractorMethod(bytecodeName, false,
-											null));
+						testful.model.xml.behavior.Behavior beh = getBehavior(xmlCns.getExtra());
+						String bytecodeName = BytecodeUtils.getBytecodeName(xmlCns);
+						if (beh == null) abstractorMethod.put(cName + "." + bytecodeName, new AbstractorMethod(bytecodeName, false, null));
 						else {
 							List<Abstractor> method = new LinkedList<Abstractor>();
 							for (testful.model.xml.behavior.Abstraction abs : beh
@@ -108,43 +98,25 @@ public class AbstractorRegistry implements ISerializable {
 								if (abstractor != null)
 									method.add(abstractor);
 							}
-							abstractorMethod
-							.put(cName + "." + bytecodeName,
-									new AbstractorMethod(
-											bytecodeName,
-											false,
-											method.toArray(new Abstractor[method
-											                              .size()])));
+							abstractorMethod.put(cName + "." + bytecodeName, new AbstractorMethod(bytecodeName, false, method.toArray(new Abstractor[method.size()])));
 						}
 					}
 				} // end of create constructor abstractor
 				{ // create method abstractor
-					for (testful.model.xml.XmlMethod xmlMeth : cXml
-							.getMethods()) {
+					for (testful.model.xml.XmlMethod xmlMeth : cXml.getMethods()) {
 						// create state abstractor
-						testful.model.xml.behavior.Behavior beh = getBehavior(xmlMeth
-								.getExtra());
-						String bytecodeName = BytecodeUtils
-						.getBytecodeName(xmlMeth);
-						if (beh == null)
-							abstractorMethod.put(
-									cName + "." + bytecodeName,
-									new AbstractorMethod(bytecodeName, xmlMeth
-											.getKind() == Kind.STATIC, null));
+						testful.model.xml.behavior.Behavior beh = getBehavior(xmlMeth.getExtra());
+						String bytecodeName = BytecodeUtils.getBytecodeName(xmlMeth);
+
+						if (beh == null) abstractorMethod.put(cName + "." + bytecodeName, new AbstractorMethod(bytecodeName, xmlMeth.getKind() == Kind.STATIC, null));
 						else {
 							List<Abstractor> method = new LinkedList<Abstractor>();
-							for (testful.model.xml.behavior.Abstraction abs : beh
-									.getAbstraction()) {
+							for (testful.model.xml.behavior.Abstraction abs : beh.getAbstraction()) {
 								Abstractor abstractor = getAbstractor(abs);
 								if (abstractor != null)
 									method.add(abstractor);
 							}
-							abstractorMethod.put(
-									cName + "." + bytecodeName,
-									new AbstractorMethod(bytecodeName, xmlMeth
-											.getKind() == Kind.STATIC, method
-											.toArray(new Abstractor[method
-											                        .size()])));
+							abstractorMethod.put(cName + "." + bytecodeName, new AbstractorMethod(bytecodeName, xmlMeth.getKind() == Kind.STATIC, method.toArray(new Abstractor[method.size()])));
 						}
 					}
 				} // end of create method abstractor
@@ -164,6 +136,7 @@ public class AbstractorRegistry implements ISerializable {
 			}
 		} catch(Exception e) {
 			logger.log(Level.WARNING, e.getMessage(), e.getMessage());
+			TestFul.debug(e);
 			return null;
 		}
 	}

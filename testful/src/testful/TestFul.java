@@ -293,7 +293,6 @@ public class TestFul {
 		}
 		logger.setLevel(loggingLevel);
 
-		boolean quiet = TestFul.getProperty(PROPERTY_QUIET, false);
 		if(!quiet) {
 			ConsoleHandler ch = new ConsoleHandler();
 			ch.setFormatter(consoleFormatter);

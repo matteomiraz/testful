@@ -24,7 +24,7 @@ public abstract class Abstraction implements Serializable {
 
 	private static final long serialVersionUID = -5699038898763653554L;
 
-	private final String expression;
+	private String expression;
 
 	/**
 	 * Default constructor
@@ -32,6 +32,10 @@ public abstract class Abstraction implements Serializable {
 	 * @param expression : the abstracted expression (e.g. "this.size()")
 	 */
 	public Abstraction(String expression) {
+		this.expression = expression;
+	}
+
+	public void setExpression(String expression) {
 		this.expression = expression;
 	}
 

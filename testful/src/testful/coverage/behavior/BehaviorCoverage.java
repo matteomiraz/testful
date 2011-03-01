@@ -44,6 +44,7 @@ public class BehaviorCoverage implements CoverageInformation {
 	private static transient Map<Abstraction, Integer> stateNumber = new LinkedHashMap<Abstraction, Integer>();
 
 	public static void resetLabels() {
+		stateNumberGenerator = 1;
 		stateNumber = new LinkedHashMap<Abstraction, Integer>();
 	}
 

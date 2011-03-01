@@ -31,8 +31,7 @@ public class AbstractionStringEmpty extends Abstraction {
 
 	@Override
 	public String toString() {
-		if(empty) return getExpression() + ": empty string";
-		else return getExpression() + ": non-empty string";
+		return getExpression() + ": " + (empty ? "empty" : "non-empty") + " string";
 	}
 
 	@Override

@@ -24,15 +24,14 @@ public class AbstractionBoolean extends Abstraction {
 
 	private final boolean value;
 
-	AbstractionBoolean(String expression, boolean value) {
+	public AbstractionBoolean(String expression, boolean value) {
 		super(expression);
 		this.value = value;
 	}
 
 	@Override
 	public String toString() {
-		if(value) return getExpression() + ": True";
-		else return getExpression() + ": False";
+		return getExpression() +  ": " + value;
 	}
 
 	@Override

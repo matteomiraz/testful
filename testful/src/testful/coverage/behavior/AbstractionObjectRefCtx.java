@@ -45,7 +45,7 @@ public class AbstractionObjectRefCtx extends Abstraction {
 
 	@Override
 	public String toString() {
-		return getExpression() + ": " + ctxRef == null ? "none" : Arrays.toString(ctxRef);
+		return getExpression() + ":" + (ctxRef == null ? "none" : Arrays.toString(ctxRef));
 	}
 
 	@Override

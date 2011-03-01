@@ -22,6 +22,8 @@ public class Behavior {
 
 	public Behavior(String s) { }
 
+	public Behavior(Behavior b) { this.n = b.n; }
+
 	// ------------
 
 	private int n = 0;

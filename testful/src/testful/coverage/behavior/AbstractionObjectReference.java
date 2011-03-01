@@ -24,7 +24,7 @@ public class AbstractionObjectReference extends Abstraction {
 
 	private final boolean isNull;
 
-	AbstractionObjectReference(String expression, boolean isNull) {
+	public AbstractionObjectReference(String expression, boolean isNull) {
 		super(expression);
 		this.isNull = isNull;
 	}

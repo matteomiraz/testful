@@ -31,8 +31,10 @@ public class TestCoverageBehaviorCUT extends SingleTestCUT {
 
 	public final Clazz bool, integer, object, string;
 	public final Reference[] cuts, bools, objects, ints, strings;
-	public final Constructorz cns, cns_bool, cns_int, cns_object, cns_string;
+	public final Constructorz cns, cns_bool, cns_int, cns_object, cns_string, cns_beh;
 	public final Methodz getN, getThree, method0, method1, method2, method3, sMethod0, sMethod1, sMethod2, sMethod3;
+
+	public final Constructorz obj_cns;
 
 	public TestCoverageBehaviorCUT() throws Exception {
 		super("test.coverage.Behavior");
@@ -52,12 +54,16 @@ public class TestCoverageBehaviorCUT extends SingleTestCUT {
 		ints    = refFactory.getReferences(integer);
 		strings = refFactory.getReferences(string);
 
-		assertEquals(5, cut.getConstructors().length);
+		assertEquals(1, object.getConstructors().length);
+		assertEquals("java.lang.Object()", (obj_cns = object.getConstructors()[0]).toString());
+
+		assertEquals(6, cut.getConstructors().length);
 		assertEquals("test.coverage.Behavior()", (cns = cut.getConstructors()[0]).toString());
 		assertEquals("test.coverage.Behavior(boolean)", (cns_bool = cut.getConstructors()[1]).toString());
 		assertEquals("test.coverage.Behavior(int)", (cns_int = cut.getConstructors()[2]).toString());
 		assertEquals("test.coverage.Behavior(java.lang.Object)", (cns_object = cut.getConstructors()[3]).toString());
 		assertEquals("test.coverage.Behavior(java.lang.String)", (cns_string = cut.getConstructors()[4]).toString());
+		assertEquals("test.coverage.Behavior(test.coverage.Behavior)", (cns_beh = cut.getConstructors()[5]).toString());
 
 		assertEquals(10, cut.getMethods().length);
 		assertEquals("getN()", (getN = cut.getMethods()[0]).toString());

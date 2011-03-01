@@ -37,8 +37,7 @@ public class AbstractionObjectState extends Abstraction {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 
-		sb.append(getExpression());
-		sb.append(" (" + getExpression() + "):");
+		sb.append(getExpression()).append(":");
 
 		for(Abstraction a : abstraction)
 			sb.append(" {").append(a.toString()).append("}");

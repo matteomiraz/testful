@@ -69,12 +69,15 @@ public class Abstractor implements Serializable {
 	 * @return the property being abstracted
 	 */
 	public Expression getExpr() {
-		if(expr == null) try {
-			expr = ExpressionFactory.createExpression(expression);
-		} catch(Exception e) {
-			// This should never happen
-			e.printStackTrace();
+		if(expr == null) {
+			try {
+				expr = ExpressionFactory.createExpression(expression);
+			} catch(Exception e) {
+				// This should never happen
+				e.printStackTrace();
+			}
 		}
+
 		return expr;
 	}
 
@@ -88,13 +91,17 @@ public class Abstractor implements Serializable {
 	public Abstraction get(Map<String, Object> ctx) {
 		Object elem = evaluateExpression(ctx);
 
+		if(elem == null) return new AbstractionObjectReference(expression, true);
+
 		if(elem instanceof Boolean) return AbstractorBoolean.get(expression, elem);
 
 		if(elem instanceof Number) return AbstractorNumber.get(expression, elem);
 
 		if(elem instanceof String) return AbstractorString.get(expression, elem);
 
-		return BehaviorTracker.getTracker().abstractState(elem);
+		final Abstraction abstraction = BehaviorTracker.getTracker().abstractState(elem);
+		abstraction.setExpression(expression);
+		return abstraction;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -105,7 +112,7 @@ public class Abstractor implements Serializable {
 		try {
 			return getExpr().evaluate(jc);
 		} catch(Exception e) {
-			logger.log(Level.WARNING, "cannot evaluate the JEXL expression \"" + expression + "\" : " + e.getMessage() + " due to: " + e.getCause(), e);
+			logger.log(Level.SEVERE, "cannot evaluate the JEXL expression \"" + expression + "\" : " + e.getMessage() + " due to: " + e.getCause(), e);
 			return null;
 		}
 	}

@@ -331,6 +331,9 @@ public class ReflectionExecutor {
 
 			Throwable exc = invocationException.getTargetException();
 
+			// TODO: log the exception if it is caused by TestFul
+			// TestFul.debug(exc); // this logs everything... including exceptions due to the user's code
+
 			// check for nasty Errors (such as OutOfMemory errors)
 			if(exc instanceof VirtualMachineError && !(exc instanceof StackOverflowError)) {
 				reset(); // early free some memory
@@ -455,6 +458,9 @@ public class ReflectionExecutor {
 			timer_cut.stop();
 
 			Throwable exc = invocationException.getTargetException();
+
+			// TODO: only log if the exception is caused by TestFul
+			TestFul.debug(exc);
 
 			// check for nasty Errors (such as OutOfMemory errors)
 			if(exc instanceof VirtualMachineError && !(exc instanceof StackOverflowError)) {

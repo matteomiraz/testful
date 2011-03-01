@@ -22,9 +22,9 @@ public class AbstractionNumber extends Abstraction {
 
 	private static final long serialVersionUID = -6456493491208206791L;
 
-	public static final String NEGATIVE = "< 0";
-	public static final String ZERO = "= 0";
-	public static final String POSITIVE = "> 0";
+	public static final String NEGATIVE = " < 0";
+	public static final String ZERO = " = 0";
+	public static final String POSITIVE = " > 0";
 
 	public static final String P_INF = "+Inf";
 	public static final String N_INF = "-Inf";

@@ -36,7 +36,8 @@ public class AbstractorMethod implements Serializable {
 	/** whether the method is static or not */
 	private final boolean isStatic;
 
-	/** the abstractors to use to discretize actual parameters */
+	/** the abstractors to use to discretise actual parameters.
+	 * <b>It is not related anyhow with the number of parameters.</b> */
 	private final Abstractor[] parameters;
 
 	/**
