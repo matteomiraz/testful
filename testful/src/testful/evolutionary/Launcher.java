@@ -18,8 +18,11 @@
 
 package testful.evolutionary;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.rmi.RemoteException;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,6 +37,7 @@ import testful.IUpdate.Callback;
 import testful.TestFul;
 import testful.TestfulException;
 import testful.coverage.TrackerDatum;
+import testful.coverage.behavior.BehaviorCoverage;
 import testful.model.Operation;
 import testful.model.TestCoverage;
 import testful.model.TestSuite;
@@ -133,6 +137,28 @@ public class Launcher {
 		if(logger.isLoggable(Level.FINE))
 			logger.fine("Optimal Coverage " + testfulProblem.getOptimal().getCoverage());
 
+		if(config.isBehavioral()) {
+
+			BehaviorCoverage behavioralCoverage = (BehaviorCoverage) testfulProblem.getOptimal().getCoverage().get(BehaviorCoverage.KEY);
+			if(behavioralCoverage != null) {
+
+				BehaviorCoverage.DOT = true;
+
+				try {
+					final File outFile = new File(config.getDirGeneratedTests(), "behavioralModel.dot");
+					PrintStream out = new PrintStream(outFile);
+					out.println(testfulProblem.getOptimal().getCoverage().get(BehaviorCoverage.KEY).toString());
+					out.close();
+					logger.info("Behavioral model saved in " + outFile.getPath());
+				} catch (Exception e) {
+					logger.log(Level.WARNING, "Cannot save the behavioral model: " + e.getMessage(), e);
+				}
+			} else {
+				logger.warning("The behavioral model is missing");
+			}
+		}
+
+
 		/* simplify tests */
 		final TestSuiteReducer reducer = new TestSuiteReducer(testfulProblem.getFinder(), config.isReloadClasses(), testfulProblem.getData());
 		for (TestCoverage t : testfulProblem.getOptimalTests())
@@ -147,8 +173,10 @@ public class Launcher {
 			classLoader = null;
 		}
 
+		final Collection<TestCoverage> reduced = reducer.getOutput();
+
 		JUnitTestGenerator gen = new JUnitTestGenerator(config.getDirGeneratedTests(), classLoader, true);
-		gen.read(reducer.getOutput());
+		gen.read(reduced);
 		gen.writeSuite();
 
 	}//main

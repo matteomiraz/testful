@@ -64,6 +64,9 @@ public class AbstractorRegistry implements ISerializable {
 		abstractorMethod = new HashMap<String, AbstractorMethod>();
 
 		for (String cName : cluster.getClasses()) {
+
+			if(cName.startsWith("java")) continue;
+
 			XmlClass cXml = xml.getXmlClass(cName);
 
 			if (cXml != null) {
@@ -86,14 +89,16 @@ public class AbstractorRegistry implements ISerializable {
 				} // end of create state abstractor
 				{ // create constructor abstractor
 					for (testful.model.xml.XmlConstructor xmlCns : cXml.getConstructors()) {
+
+						if(xmlCns.isSkip()) continue;
+
 						// create state abstractor
 						testful.model.xml.behavior.Behavior beh = getBehavior(xmlCns.getExtra());
 						String bytecodeName = BytecodeUtils.getBytecodeName(xmlCns);
 						if (beh == null) abstractorMethod.put(cName + "." + bytecodeName, new AbstractorMethod(bytecodeName, false, null));
 						else {
 							List<Abstractor> method = new LinkedList<Abstractor>();
-							for (testful.model.xml.behavior.Abstraction abs : beh
-									.getAbstraction()) {
+							for (testful.model.xml.behavior.Abstraction abs : beh.getAbstraction()) {
 								Abstractor abstractor = getAbstractor(abs);
 								if (abstractor != null)
 									method.add(abstractor);
@@ -104,6 +109,11 @@ public class AbstractorRegistry implements ISerializable {
 				} // end of create constructor abstractor
 				{ // create method abstractor
 					for (testful.model.xml.XmlMethod xmlMeth : cXml.getMethods()) {
+
+						if(xmlMeth.getKind() == Kind.SKIP) continue;
+						if(xmlMeth.getKind() == Kind.OBSERVER) continue;
+						if(xmlMeth.getKind() == Kind.PURE) continue;
+
 						// create state abstractor
 						testful.model.xml.behavior.Behavior beh = getBehavior(xmlMeth.getExtra());
 						String bytecodeName = BytecodeUtils.getBytecodeName(xmlMeth);

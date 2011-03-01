@@ -125,8 +125,10 @@ public class TestFul {
 	}
 
 	public static void debug(Throwable exc) {
-		if(DEBUG)
+		if(DEBUG) {
+			if(exc == null) exc = new NullPointerException("The exception is null");
 			loggerDebug.log(Level.WARNING, exc.getMessage(), exc);
+		}
 	}
 
 	public static void debug(String message, Throwable e) {

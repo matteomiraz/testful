@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import testful.TestFul;
 import testful.coverage.CoverageInformation;
 import testful.coverage.CoverageTestExecutor;
 import testful.coverage.TrackerDatum;
@@ -39,8 +40,8 @@ import testful.model.TestCluster;
 import testful.model.TestCoverage;
 import testful.model.TestSuite;
 import testful.model.executor.TestExecutorInput;
-import testful.runner.Job;
 import testful.runner.DataFinder;
+import testful.runner.Job;
 import testful.runner.RunnerPool;
 import testful.utils.ElementManager;
 import ec.util.MersenneTwisterFast;
@@ -124,8 +125,10 @@ public abstract class RandomTest {
 						optimal.update(testCoverage);
 					} catch(InterruptedException e) {
 						logger.log(Level.WARNING, "Interrupted: " + e.getMessage(), e);
+						TestFul.debug(e);
 					} catch(ExecutionException e) {
-						logger.log(Level.WARNING, "Error during a test evaluation: " + e.getMessage(), e);
+						logger.log(Level.WARNING, "Error during a test evaluation: " + e.getCause(), e.getCause());
+						TestFul.debug(e);
 					}
 			}
 		}, "futureWaiter");

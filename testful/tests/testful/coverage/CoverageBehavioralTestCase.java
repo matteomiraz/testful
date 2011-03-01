@@ -580,4 +580,294 @@ public class CoverageBehavioralTestCase extends GenericTestCase {
 				"--- Legend ---\n" +
 				"S0: Null Object\n", beh.toString());
 	}
+
+	public void testStaticMethodStringA() throws Exception {
+		TestCoverageBehaviorCUT cut = new TestCoverageBehaviorCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.strings[0], "a"),
+				new AssignPrimitive(cut.strings[1], "dummy"),
+				new Invoke(null, null, cut.sMethod3, new Reference[] { cut.strings[0], cut.strings[1] }),
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t, null, cut.abstractorRegistry);
+		BehaviorCoverage beh = (BehaviorCoverage) covs.get(BehaviorCoverage.KEY);
+
+		assertNotNull(beh);
+		assertEquals(1.0f, beh.getQuality());
+		assertEquals("S0\n" +
+				"  sMethod3(Ljava.lang.String;Ljava.lang.String;) - {p0: non-empty string} {p1: non-empty string} -> S0\n" +
+				"--- Legend ---\n" +
+				"S0: Null Object\n", beh.toString());
+	}
+
+	public void testStaticMethodStringB() throws Exception {
+		TestCoverageBehaviorCUT cut = new TestCoverageBehaviorCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.strings[0], ""),
+				new AssignPrimitive(cut.strings[1], "dummy"),
+				new Invoke(null, null, cut.sMethod3, new Reference[] { cut.strings[0], cut.strings[1] }),
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t, null, cut.abstractorRegistry);
+		BehaviorCoverage beh = (BehaviorCoverage) covs.get(BehaviorCoverage.KEY);
+
+		assertNotNull(beh);
+		assertEquals(1.0f, beh.getQuality());
+		assertEquals("S0\n" +
+				"  sMethod3(Ljava.lang.String;Ljava.lang.String;) - {p0: empty string} {p1: non-empty string} -> S0\n" +
+				"--- Legend ---\n" +
+				"S0: Null Object\n", beh.toString());
+	}
+
+	public void testStaticMethodStringC() throws Exception {
+		TestCoverageBehaviorCUT cut = new TestCoverageBehaviorCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.strings[0], null),
+				new AssignPrimitive(cut.strings[1], "dummy"),
+				new Invoke(null, null, cut.sMethod3, new Reference[] { cut.strings[0], cut.strings[1] }),
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t, null, cut.abstractorRegistry);
+		BehaviorCoverage beh = (BehaviorCoverage) covs.get(BehaviorCoverage.KEY);
+
+		assertNotNull(beh);
+		assertEquals(1.0f, beh.getQuality());
+		assertEquals("S0\n" +
+				"  sMethod3(Ljava.lang.String;Ljava.lang.String;) - {p0 is null} {p1: non-empty string} -> S0\n" +
+				"--- Legend ---\n" +
+				"S0: Null Object\n", beh.toString());
+	}
+
+	public void testMethod0() throws Exception {
+		TestCoverageBehaviorCUT cut = new TestCoverageBehaviorCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.ints[0], -2),
+				new AssignPrimitive(cut.bools[0], true),
+				new AssignPrimitive(cut.bools[1], false),
+
+				new CreateObject(cut.cuts[0], cut.cns_int, new Reference[] { cut.ints[0] }),
+
+				new Invoke(null, cut.cuts[0], cut.method0, new Reference[] { cut.bools[0] }),
+				new Invoke(null, cut.cuts[0], cut.method0, new Reference[] { cut.bools[0] }),
+				new Invoke(null, cut.cuts[0], cut.method0, new Reference[] { cut.bools[0] }),
+				new Invoke(null, cut.cuts[0], cut.method0, new Reference[] { cut.bools[0] }),
+				new Invoke(null, cut.cuts[0], cut.method0, new Reference[] { cut.bools[0] }),
+				new Invoke(null, cut.cuts[0], cut.method0, new Reference[] { cut.bools[0] }),
+				new Invoke(null, cut.cuts[0], cut.method0, new Reference[] { cut.bools[0] }),
+
+				new Invoke(null, cut.cuts[0], cut.method0, new Reference[] { cut.bools[1] }),
+				new Invoke(null, cut.cuts[0], cut.method0, new Reference[] { cut.bools[1] }),
+				new Invoke(null, cut.cuts[0], cut.method0, new Reference[] { cut.bools[1] }),
+				new Invoke(null, cut.cuts[0], cut.method0, new Reference[] { cut.bools[1] }),
+				new Invoke(null, cut.cuts[0], cut.method0, new Reference[] { cut.bools[1] }),
+				new Invoke(null, cut.cuts[0], cut.method0, new Reference[] { cut.bools[1] }),
+				new Invoke(null, cut.cuts[0], cut.method0, new Reference[] { cut.bools[1] }),
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t, null, cut.abstractorRegistry);
+		BehaviorCoverage beh = (BehaviorCoverage) covs.get(BehaviorCoverage.KEY);
+
+		assertNotNull(beh);
+		assertEquals(15.0f, beh.getQuality());
+		assertEquals("S0\n" +
+				"  <init>(I) - {p0 < 0} -> S1\n" +
+				"S1\n" +
+				"  method0(Z) - {p0: true} -> S2\n" +
+				"  method0(Z) - {p0: false} -> S1\n" +
+				"  method0(Z) - {p0: true} -> S1\n" +
+				"S2\n" +
+				"  method0(Z) - {p0: true} -> S3\n" +
+				"  method0(Z) - {p0: false} -> S1\n" +
+				"S3\n" +
+				"  method0(Z) - {p0: true} -> S4\n" +
+				"  method0(Z) - {p0: false} -> S2\n" +
+				"S4\n" +
+				"  method0(Z) - {p0: true} -> S5\n" +
+				"  method0(Z) - {p0: false} -> S3\n" +
+				"S5\n" +
+				"  method0(Z) - {p0: true} -> S6\n" +
+				"  method0(Z) - {p0: false} -> S4\n" +
+				"S6\n" +
+				"  method0(Z) - {p0: true} -> S6\n" +
+				"  method0(Z) - {p0: false} -> S6\n" +
+				"  method0(Z) - {p0: false} -> S5\n" +
+				"--- Legend ---\n" +
+				"S0: Null Object\n" +
+				"S1: test.coverage.Behavior: {-Inf < this.getN() < 0}\n" +
+				"S2: test.coverage.Behavior: {this.getN() = 0}\n" +
+				"S3: test.coverage.Behavior: {this.getN() = 1}\n" +
+				"S4: test.coverage.Behavior: {1 < this.getN() < this.getThree()}\n" +
+				"S5: test.coverage.Behavior: {this.getN() = this.getThree()}\n" +
+				"S6: test.coverage.Behavior: {this.getThree() < this.getN() < +Inf}\n", beh.toString());
+	}
+
+	/** see {@link CoverageBehavioralTestCase#testStaticMethodIntA()} */
+	public void testMethod1() throws Exception {
+		TestCoverageBehaviorCUT cut = new TestCoverageBehaviorCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new AssignPrimitive(cut.ints[0], 0),
+				new AssignPrimitive(cut.ints[1], 1),
+				new Invoke(null, cut.cuts[0], cut.method1, new Reference[] { cut.ints[0], cut.ints[1] }),
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t, null, cut.abstractorRegistry);
+		BehaviorCoverage beh = (BehaviorCoverage) covs.get(BehaviorCoverage.KEY);
+
+		assertNotNull(beh);
+		assertEquals(2.0f, beh.getQuality());
+		assertEquals("S0\n" +
+				"  <init>() - -> S1\n" +
+				"S1\n" +
+				"  method1(II) - {-Inf < p0 < p1} -> S1\n" +
+				"--- Legend ---\n" +
+				"S0: Null Object\n" +
+				"S1: test.coverage.Behavior: {this.getN() = 0}\n", beh.toString());
+	}
+
+	public void testMethod2a() throws Exception {
+		TestCoverageBehaviorCUT cut = new TestCoverageBehaviorCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignConstant(cut.objects[0], null),
+				new AssignConstant(cut.objects[1], null),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.method2, new Reference[] { cut.objects[0], cut.objects[1] }),
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t, null, cut.abstractorRegistry);
+		BehaviorCoverage beh = (BehaviorCoverage) covs.get(BehaviorCoverage.KEY);
+
+		assertNotNull(beh);
+		assertEquals(2.0f, beh.getQuality());
+		assertEquals("S0\n" +
+				"  <init>() - -> S1\n" +
+				"S1\n" +
+				"  method2(Ljava.lang.Object;Ljava.lang.Object;) - {p0 == p1: true} {p0.equals(p1) is null} -> S1\n" +
+				"--- Legend ---\n" +
+				"S0: Null Object\n" +
+				"S1: test.coverage.Behavior: {this.getN() = 0}\n", beh.toString());
+	}
+
+	public void testMethod2b() throws Exception {
+		TestCoverageBehaviorCUT cut = new TestCoverageBehaviorCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.objects[0], cut.obj_cns, new Reference[] { }),
+				new AssignConstant(cut.objects[1], null),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.method2, new Reference[] { cut.objects[0], cut.objects[1] }),
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t, null, cut.abstractorRegistry);
+		BehaviorCoverage beh = (BehaviorCoverage) covs.get(BehaviorCoverage.KEY);
+
+		assertNotNull(beh);
+		assertEquals(2.0f, beh.getQuality());
+		assertEquals("S0\n" +
+				"  <init>() - -> S1\n" +
+				"S1\n" +
+				"  method2(Ljava.lang.Object;Ljava.lang.Object;) - {p0 == p1: false} {p0.equals(p1): false} -> S1\n" +
+				"--- Legend ---\n" +
+				"S0: Null Object\n" +
+				"S1: test.coverage.Behavior: {this.getN() = 0}\n", beh.toString());
+	}
+
+	public void testMethod2c() throws Exception {
+		TestCoverageBehaviorCUT cut = new TestCoverageBehaviorCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignConstant(cut.objects[0], null),
+				new CreateObject(cut.objects[1], cut.obj_cns, new Reference[] { }),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.method2, new Reference[] { cut.objects[0], cut.objects[1] }),
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t, null, cut.abstractorRegistry);
+		BehaviorCoverage beh = (BehaviorCoverage) covs.get(BehaviorCoverage.KEY);
+
+		assertNotNull(beh);
+		assertEquals(2.0f, beh.getQuality());
+		assertEquals("S0\n" +
+				"  <init>() - -> S1\n" +
+				"S1\n" +
+				"  method2(Ljava.lang.Object;Ljava.lang.Object;) - {p0 == p1: false} {p0.equals(p1) is null} -> S1\n" +
+				"--- Legend ---\n" +
+				"S0: Null Object\n" +
+				"S1: test.coverage.Behavior: {this.getN() = 0}\n", beh.toString());
+	}
+
+	public void testMethod2d() throws Exception {
+		TestCoverageBehaviorCUT cut = new TestCoverageBehaviorCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.objects[0], cut.obj_cns, new Reference[] { }),
+				new CreateObject(cut.objects[1], cut.obj_cns, new Reference[] { }),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.method2, new Reference[] { cut.objects[0], cut.objects[1] }),
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t, null, cut.abstractorRegistry);
+		BehaviorCoverage beh = (BehaviorCoverage) covs.get(BehaviorCoverage.KEY);
+
+		assertNotNull(beh);
+		assertEquals(2.0f, beh.getQuality());
+		assertEquals("S0\n" +
+				"  <init>() - -> S1\n" +
+				"S1\n" +
+				"  method2(Ljava.lang.Object;Ljava.lang.Object;) - {p0 == p1: false} {p0.equals(p1): false} -> S1\n" +
+				"--- Legend ---\n" +
+				"S0: Null Object\n" +
+				"S1: test.coverage.Behavior: {this.getN() = 0}\n", beh.toString());
+	}
+
+	public void testMethod2e() throws Exception {
+		TestCoverageBehaviorCUT cut = new TestCoverageBehaviorCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new CreateObject(cut.objects[0], cut.obj_cns, new Reference[] { }),
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.method2, new Reference[] { cut.objects[0], cut.objects[0] }),
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t, null, cut.abstractorRegistry);
+		BehaviorCoverage beh = (BehaviorCoverage) covs.get(BehaviorCoverage.KEY);
+
+		assertNotNull(beh);
+		assertEquals(2.0f, beh.getQuality());
+		assertEquals("S0\n" +
+				"  <init>() - -> S1\n" +
+				"S1\n" +
+				"  method2(Ljava.lang.Object;Ljava.lang.Object;) - {p0 == p1: true} {p0.equals(p1): true} -> S1\n" +
+				"--- Legend ---\n" +
+				"S0: Null Object\n" +
+				"S1: test.coverage.Behavior: {this.getN() = 0}\n", beh.toString());
+	}
+
+	public void testMethod3d() throws Exception {
+		TestCoverageBehaviorCUT cut = new TestCoverageBehaviorCUT();
+		Test t = new Test(cut.cluster, cut.refFactory, new Operation[] {
+				new AssignPrimitive(cut.strings[0], null),
+				new AssignPrimitive(cut.strings[1], "a"),
+				new AssignPrimitive(cut.strings[2], "b"),
+
+				new CreateObject(cut.cuts[0], cut.cns, new Reference[] { }),
+				new Invoke(null, cut.cuts[0], cut.method3, new Reference[] { cut.strings[0], cut.strings[0] }),
+				new Invoke(null, cut.cuts[0], cut.method3, new Reference[] { cut.strings[0], cut.strings[1] }),
+				new Invoke(null, cut.cuts[0], cut.method3, new Reference[] { cut.strings[1], cut.strings[0] }),
+				new Invoke(null, cut.cuts[0], cut.method3, new Reference[] { cut.strings[1], cut.strings[1] }),
+				new Invoke(null, cut.cuts[0], cut.method3, new Reference[] { cut.strings[1], cut.strings[2] }),
+		});
+
+		ElementManager<String, CoverageInformation> covs = getCoverage(t, null, cut.abstractorRegistry);
+		BehaviorCoverage beh = (BehaviorCoverage) covs.get(BehaviorCoverage.KEY);
+
+		assertNotNull(beh);
+		assertEquals(5.0f, beh.getQuality());
+		assertEquals("S0\n" +
+				"  <init>() - -> S1\n" +
+				"S1\n" +
+				"  method3(Ljava.lang.String;Ljava.lang.String;) - {p0 == p1: true} {p0.equals(p1) is null} -> S1\n" +
+				"  method3(Ljava.lang.String;Ljava.lang.String;) - {p0 == p1: false} {p0.equals(p1) is null} -> S1\n" +
+				"  method3(Ljava.lang.String;Ljava.lang.String;) - {p0 == p1: false} {p0.equals(p1): false} -> S1\n" +
+				"  method3(Ljava.lang.String;Ljava.lang.String;) - {p0 == p1: true} {p0.equals(p1): true} -> S1\n" +
+				"--- Legend ---\n" +
+				"S0: Null Object\n" +
+				"S1: test.coverage.Behavior: {this.getN() = 0}\n", beh.toString());
+	}
 }

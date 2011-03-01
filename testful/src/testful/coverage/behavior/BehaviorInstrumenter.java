@@ -212,7 +212,11 @@ public class BehaviorInstrumenter implements UnifiedInstrumentator {
 
 			XmlMethod xmlMeth = xmlClass.getMethod(method.getName(), params);
 			if(xmlMeth == null) System.out.println("WARN: no xml description for method " + className + "." + method.getName() + " " + Arrays.toString(params));
-			else if(xmlMeth.getKind() == Kind.OBSERVER) return;
+			else {
+				if(xmlMeth.getKind() == Kind.SKIP) return;
+				if(xmlMeth.getKind() == Kind.OBSERVER) return;
+				if(xmlMeth.getKind() == Kind.PURE) return;
+			}
 		}
 
 		// if the method must not be skipped

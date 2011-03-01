@@ -60,8 +60,8 @@
         <parameter exchangeStateWith="" exposedByReturn="false" captured="true" mutated="true" type="java.lang.String"/>
         <parameter exchangeStateWith="" exposedByReturn="false" captured="true" mutated="true" type="java.lang.String"/>
         <extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior">
-        	<abstraction function="testful.coverage.behavior.AbstractorBoolean" expression="p0 == p1" parameters=""/>
-        	<abstraction function="testful.coverage.behavior.AbstractorBoolean" expression="p0.equals(p1)" parameters=""/>
+        	<abstraction function="testful.coverage.behavior.AbstractorString" expression="p0" parameters=""/>
+        	<abstraction function="testful.coverage.behavior.AbstractorString" expression="p1" parameters=""/>
         </extra>
     </method>
      
@@ -71,22 +71,34 @@
     
     <method kind="mutator" exposeState="false" name="method0">
         <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="boolean"/>
-        <extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior"/>
+        <extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior">
+        	<abstraction function="testful.coverage.behavior.AbstractorBoolean" expression="p0" parameters=""/>
+        </extra>
     </method>
+    
     <method kind="mutator" exposeState="false" name="method1">
         <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="int"/>
         <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="int"/>
-        <extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior"/>
+        <extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior">
+        	<abstraction function="testful.coverage.behavior.AbstractorNumber" expression="p0" parameters="p1"/>
+        </extra>
     </method>
+    
     <method kind="mutator" exposeState="false" name="method2">
         <parameter exchangeStateWith="" exposedByReturn="false" captured="true" mutated="true" type="java.lang.Object"/>
         <parameter exchangeStateWith="" exposedByReturn="false" captured="true" mutated="true" type="java.lang.Object"/>
-        <extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior"/>
+		<extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior">
+			<abstraction function="testful.coverage.behavior.AbstractorBoolean" expression="p0 == p1" parameters=""/>
+			<abstraction function="testful.coverage.behavior.AbstractorBoolean" expression="p0.equals(p1)" parameters=""/>
+		</extra>
     </method>
     <method kind="mutator" exposeState="false" name="method3">
         <parameter exchangeStateWith="" exposedByReturn="false" captured="true" mutated="true" type="java.lang.String"/>
         <parameter exchangeStateWith="" exposedByReturn="false" captured="true" mutated="true" type="java.lang.String"/>
-        <extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior"/>
+		<extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior">
+			<abstraction function="testful.coverage.behavior.AbstractorBoolean" expression="p0 == p1" parameters=""/>
+			<abstraction function="testful.coverage.behavior.AbstractorBoolean" expression="p0.equals(p1)" parameters=""/>
+		</extra>
     </method>
     
     <extra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="beh:behavior">
