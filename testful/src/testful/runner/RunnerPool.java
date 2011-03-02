@@ -230,24 +230,32 @@ public class RunnerPool implements IRunner, IJobRepository {
 			return key;
 		}
 
-		void setResult(T result) {
+		synchronized void setResult(T result) {
+
+			if(TestFul.DEBUG) {
+				if(completed) TestFul.debug(new IllegalStateException("Future already completed!"));
+				if(result == null) TestFul.debug(new Exception("The result cannot be null"));
+			}
+
 			if(completed) throw new IllegalStateException("Future already completed!");
 
-			synchronized(this) {
-				this.result = result;
-				this.completed = true;
-				notifyAll();
-			}
+			this.result = result;
+			this.completed = true;
+			notifyAll();
 		}
 
-		void setException(Exception exc) {
+		synchronized void setException(Exception exc) {
+
+			if(TestFul.DEBUG) {
+				if(completed) TestFul.debug(new IllegalStateException("Future already completed!"));
+				if(exc == null) TestFul.debug(new Exception("The exception cannot be null"));
+			}
+
 			if(completed) throw new IllegalStateException("Future already completed!");
 
-			synchronized(this) {
-				this.exc = exc;
-				this.completed = true;
-				notifyAll();
-			}
+			this.exc = exc;
+			this.completed = true;
+			notifyAll();
 		}
 
 		@Override
@@ -265,14 +273,16 @@ public class RunnerPool implements IRunner, IJobRepository {
 		}
 
 		@Override
-		public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-			if(!completed)
-				synchronized(this) {
-					if(!completed) {
-						if(unit != null && timeout >= 0) this.wait(unit.toMillis(timeout));
-						else this.wait();
-					}
-				}
+		public synchronized T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+			if(!completed) {
+				if(unit != null && timeout >= 0) this.wait(unit.toMillis(timeout));
+				else this.wait();
+			}
+
+			if(TestFul.DEBUG) {
+				if(completed && result == null && exc == null)
+					TestFul.debug(new Exception("A completed task must have the result or the exception set."));
+			}
 
 			if(!completed) throw new TimeoutException("Timeout expired!");
 
