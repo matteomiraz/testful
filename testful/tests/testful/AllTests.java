@@ -39,6 +39,7 @@ public class AllTests {
 		TestSuite suite = new TestSuite("Test for Testful");
 
 		suite.addTestSuite(TestingSetupTestCase.class);
+		suite.addTest(testful.evolutionary.AllTests.suite());
 		suite.addTest(testful.utils.AllTests.suite());
 		suite.addTest(testful.model.AllTests.suite());
 		suite.addTest(testful.coverage.AllTests.suite());

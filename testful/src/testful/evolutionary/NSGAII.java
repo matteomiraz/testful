@@ -176,7 +176,7 @@ implements IUpdate {
 
 				timer.start("nsga.localSearch");
 				if(localSearchNum == 0 && improvement instanceof LocalSearchPopulation<?>) {
-					SolutionSet<V> front = new Ranking<V>(population).next();
+					SolutionSet<V> front = Ranking.getFrontier(population);
 					logger.info("Local search on fronteer (" + front.size() + ")");
 					SolutionSet<V> mutated = ((LocalSearchPopulation<V>)improvement).execute(front);
 					if(mutated != null) problem_.evaluate(mutated);
@@ -316,7 +316,7 @@ implements IUpdate {
 		} // while
 
 		// Return the first non-dominated front
-		Ranking<V> ranking = new Ranking<V>(population);
-		return ranking.next();
+		SolutionSet<V> result = Ranking.getFrontier(population);
+		return result;
 	} // execute
 } // NSGA-II

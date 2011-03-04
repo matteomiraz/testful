@@ -16,6 +16,29 @@ import testful.TestFul;
  */
 public class Ranking<T extends Variable> implements Iterator<SolutionSet<T>> {
 
+	public static <T extends Variable> SolutionSet<T> getFrontier(SolutionSet<T> pop) {
+		List<Solution<T>> front = new LinkedList<Solution<T>>();
+
+		// dominated[i] true <==> ith element is dominated
+		boolean[] dominated = new boolean[pop.size()];
+		for (int i=0; i<pop.size(); i++) {
+			Solution<T> si = pop.get(i);
+			for (int k=i+1; k<pop.size(); k++) {
+				Solution<T> sk = pop.get(k);
+
+				int result = compare(si.getObjectives(), sk.getObjectives());
+				if (result>0) dominated[i] = true;
+				else if (result<0) dominated[k] = true;
+			}
+
+			if (!dominated[i]) front.add(si);
+		}
+
+		SolutionSet<T> ret = new SolutionSet<T>(front.size());
+		for (Solution<T> e : front) ret.add(e);
+		return ret;
+	}
+
 	private static class RankedElement<T extends Variable> {
 		final Solution<T> solution;
 
