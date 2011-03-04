@@ -56,7 +56,6 @@ public class AllTests {
 		System.exit(result.wasSuccessful() ? 0 : 1);
 	}
 
-	@SuppressWarnings("unchecked")
 	private static Test refine(Test test) {
 		if(test instanceof TestSuite) {
 

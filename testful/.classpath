@@ -13,6 +13,6 @@
 	<classpathentry kind="lib" path="lib/jl5-nightly.jar"/>
 	<classpathentry kind="lib" path="lib/args4j-2.0.17-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib/soot-2.4.0.jar" sourcepath="lib/sootsrc-2.4.0.zip"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
+	<classpathentry kind="lib" path="lib/junit-4.8.2.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
