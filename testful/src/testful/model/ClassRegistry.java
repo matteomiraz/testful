@@ -23,8 +23,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
+import testful.TestFul;
 import testful.utils.StopWatch;
 
 /**
@@ -33,8 +33,6 @@ import testful.utils.StopWatch;
  * @author matteo
  */
 public class ClassRegistry implements IClassRegistry {
-
-	private static final Logger logger = Logger.getLogger("testful.model.clazzRegistry");
 
 	private static final StopWatch timerClass = StopWatch.Disabled.singleton; // Timer.getTimer();
 
@@ -125,7 +123,7 @@ public class ClassRegistry implements IClassRegistry {
 				break;
 
 			default:
-				logger.warning("Primitive type not known: " + this);
+				TestFul.debug("Primitive type not known: " + ((PrimitiveClazz) clazz).getType());
 				ret = null;
 				break;
 			}

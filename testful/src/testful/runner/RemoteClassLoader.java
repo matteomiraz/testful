@@ -65,6 +65,7 @@ public class RemoteClassLoader extends ClassLoader implements ElementWithKey<Str
 
 		// Utilities
 		"testful.model.ClassRegistry",
+		"testful.model.ClassRegistry$1", // Fix for the sun compiler
 		"testful.runner.Executor",
 		"testful.runner.ObjectRegistry",
 	};

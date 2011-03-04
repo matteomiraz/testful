@@ -495,7 +495,7 @@
 	<!-- =================================
           target: test
          ================================= -->
-	<target name="test" depends="test.instrumenter, test.cut.instrument" description="run jUnit tests">
+	<target name="test" depends="compile, test.instrumenter, test.cut.instrument" description="run jUnit tests">
 		<javac srcdir="${base}/tests" destdir="${build.tests}" optimize="false" debug="true" includeAntRuntime="false">
 			<classpath>
 				<pathelement path="${build.classes}"/>
@@ -506,6 +506,8 @@
 		<junit printsummary="on" dir="${base}" fork="true">
 			<jvmarg value="-Dtestful.debug=true"/>
 			<jvmarg value="-Dtestful.quiet=true"/>
+			<jvmarg value="-XX:+CMSClassUnloadingEnabled"/>
+			<jvmarg value="-XX:PermSize=128m"/>
 			<formatter type="brief" usefile="false" />
 			<classpath>
 				<pathelement path="${build.tests}" />
