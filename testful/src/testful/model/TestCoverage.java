@@ -18,6 +18,7 @@
 
 package testful.model;
 
+import testful.TestFul;
 import testful.coverage.CoverageInformation;
 import testful.utils.ElementManager;
 
@@ -41,6 +42,7 @@ public class TestCoverage extends Test {
 	public ElementManager<String, CoverageInformation> getCoverage() {
 		return coverage;
 	}
+
 	/**
 	 * @author Tudor
 	 * @return a score for the existing Test (the higher, the better)
@@ -51,5 +53,20 @@ public class TestCoverage extends Test {
 			ret += i.getQuality();
 		}
 		return ret;
+	}
+
+	/* (non-Javadoc)
+	 * @see testful.model.Test#clone()
+	 */
+	@Override
+	public TestCoverage clone() {
+		final Test test = super.clone();
+
+		try {
+			return new TestCoverage(test, coverage.clone());
+		} catch (CloneNotSupportedException e) {
+			TestFul.debug(e);
+			return new TestCoverage(test, new ElementManager<String, CoverageInformation>());
+		}
 	}
 }

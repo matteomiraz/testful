@@ -39,6 +39,7 @@ import testful.TestfulException;
 import testful.coverage.TrackerDatum;
 import testful.coverage.behavior.BehaviorCoverage;
 import testful.model.Operation;
+import testful.model.OperationResultTestExecutor;
 import testful.model.TestCoverage;
 import testful.model.TestSuite;
 import testful.random.RandomTest;
@@ -165,19 +166,16 @@ public class Launcher {
 			reducer.process(t);
 
 		/* convert tests to jUnit */
-		RemoteClassLoader classLoader;
 		try {
-			classLoader = new RemoteClassLoader(testfulProblem.getFinder());
+			Collection<TestCoverage> tests = OperationResultTestExecutor.execute(testfulProblem.getFinder(), reducer.getOutput(), config.isReloadClasses());
+
+			JUnitTestGenerator gen = new JUnitTestGenerator(config.getDirGeneratedTests(), new RemoteClassLoader(testfulProblem.getFinder()), true);
+			gen.read(tests);
+			gen.writeSuite();
+
 		} catch (RemoteException e) {
 			logger.log(Level.WARNING, "Remote exception (should never happen): " + e.toString(), e);
-			classLoader = null;
 		}
-
-		final Collection<TestCoverage> reduced = reducer.getOutput();
-
-		JUnitTestGenerator gen = new JUnitTestGenerator(config.getDirGeneratedTests(), classLoader, true);
-		gen.read(reduced);
-		gen.writeSuite();
 
 	}//main
 

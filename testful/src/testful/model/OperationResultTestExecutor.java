@@ -18,11 +18,14 @@
 
 package testful.model;
 
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import testful.TestFul;
 import testful.coverage.TrackerDatum;
 import testful.model.executor.TestExecutor;
 import testful.model.executor.TestExecutorInput;
@@ -51,9 +54,10 @@ public class OperationResultTestExecutor extends TestExecutor<OperationResult[]>
 	protected void setup() throws ClassNotFoundException {
 	}
 
-	public static Future<Test> executeAsync(DataFinder finder, Test origTest, boolean reloadClasses, TrackerDatum ... data) {
+	public static <T extends Test> Future<T> executeAsync(DataFinder finder, T origTest, boolean reloadClasses, TrackerDatum ... data) {
 
-		final Test test = origTest.clone();
+		@SuppressWarnings("unchecked")
+		final T test = (T) origTest.clone();
 
 		Job<TestExecutorInput, OperationResult[], OperationResultTestExecutor> ctx =
 			new Job<TestExecutorInput, OperationResult[], OperationResultTestExecutor>(
@@ -62,7 +66,7 @@ public class OperationResultTestExecutor extends TestExecutor<OperationResult[]>
 		ctx.setReloadClasses(reloadClasses);
 
 		final Future<OperationResult[]> infosFuture = RunnerPool.getRunnerPool().execute(ctx);
-		return new Future<Test>() {
+		return new Future<T>() {
 
 			@Override
 			public boolean cancel(boolean mayInterruptIfRunning) {
@@ -80,7 +84,7 @@ public class OperationResultTestExecutor extends TestExecutor<OperationResult[]>
 			}
 
 			@Override
-			public Test get() throws InterruptedException, ExecutionException {
+			public T get() throws InterruptedException, ExecutionException {
 
 				OperationResult[] infos = infosFuture.get();
 
@@ -93,7 +97,7 @@ public class OperationResultTestExecutor extends TestExecutor<OperationResult[]>
 			}
 
 			@Override
-			public Test get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+			public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
 				OperationResult[] infos = infosFuture.get(timeout, unit);
 
 				Operation[] ops = test.getTest();
@@ -122,5 +126,24 @@ public class OperationResultTestExecutor extends TestExecutor<OperationResult[]>
 		for (int i = 0; i < ops.length; i++)
 			if(infos[i] != null)
 				ops[i].setInfo(infos[i]);
+	}
+
+	public static <T extends Test> Collection<T> execute(DataFinder finder, Collection<T> tests, boolean reloadClasses, TrackerDatum ... data) {
+		Collection<Future<T>> fTests = new LinkedList<Future<T>>();
+		for (T t : tests) {
+			OperationResult.insert(t.getTest());
+			fTests.add(OperationResultTestExecutor.executeAsync(finder, t, reloadClasses, data));
+		}
+
+		LinkedList<T> ret = new LinkedList<T>();
+		for (Future<T> f : fTests) {
+			try {
+				ret.add(f.get());
+			} catch (Exception e) {
+				TestFul.debug(e);
+			}
+		}
+
+		return ret;
 	}
 }
