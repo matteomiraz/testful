@@ -24,10 +24,10 @@ import testful.testCut.TestCoverageFaultCUT;
 import testful.testCut.TestCoverageStoppedCUT;
 
 /**
- * Test for the test execution manager (which collects the OperationResult of tests).
+ * Test for the OperationResult Test Executor (which collects the OperationResult of tests).
  * @author matteo
  */
-public class TestExecutionManagerTestCase extends GenericTestCase {
+public class OperationResultTestExecutorTestCase extends GenericTestCase {
 
 	public void testFaultA() throws Exception {
 		TestCoverageFaultCUT cut = new TestCoverageFaultCUT();

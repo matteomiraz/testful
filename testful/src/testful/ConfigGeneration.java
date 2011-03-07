@@ -41,7 +41,6 @@ implements IConfigProject.Args4j, IConfigCut.Args4j, IConfigGeneration.Args4j {
 	/** What is the maximum length of the test? */
 	private int maxTestLen;
 
-
 	public ConfigGeneration() {
 		dirGeneratedTests = new File("genTests");
 		reloadClasses = false;

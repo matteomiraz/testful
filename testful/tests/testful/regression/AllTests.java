@@ -32,6 +32,7 @@ public class AllTests {
 		suite.addTestSuite(TestReducerAutoTestCase.class);
 		suite.addTestSuite(JUnitTransformationAutoTestCase.class);
 		suite.addTestSuite(JUnitTransformationTestCase.class);
+		suite.addTestSuite(JUnitTestGeneratorTestCase.class);
 		//$JUnit-END$
 		return suite;
 	}

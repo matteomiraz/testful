@@ -25,9 +25,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import testful.TestFul;
 import testful.model.faults.FaultyExecutionException;
 import testful.utils.SerializationUtils;
 
@@ -198,14 +198,15 @@ public class OperationResult extends OperationInformation {
 
 							try {
 								Method method = classRegistry.getMethod(m);
-
 								Object res = method.invoke(o);
-								Serializable res1 = saveObject(res);
-								if(res1 != null)
-									observers.put(m.getName(), res1);
+
+								Serializable ser = (res == null) ? null : saveObject(res);
+
+								if(res != null && ser == null) Logger.getLogger("testful.model").warning("Cannot save object " + res.getClass().getName() + " returned by observer " + m);
+								else observers.put(m.getName(), ser);
 
 							} catch (Throwable e) {
-								Logger.getLogger("testful.model").log(Level.FINEST, "OperationResult: error while inspecting " + m.getName() + " (" + type + "): " + e, e);
+								TestFul.debug(e);
 							}
 						}
 					}

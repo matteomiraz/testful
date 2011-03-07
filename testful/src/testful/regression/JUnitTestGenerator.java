@@ -503,11 +503,20 @@ public class JUnitTestGenerator extends TestReader {
 		private void generateAssertions(String spaces, PrintWriter out, final Value result, final String varType, final String varName) {
 			if(result == null) return;
 
-			if(result.isNull())
+			if(result.isNull()) {
 				out.println(spaces + "assertNull(" + varName + ");");
-			else {
-				if(varType != null)
-					generateSingleAssertion(spaces, out, result.getObject(), varType, varName);
+
+			} else {
+				if(varType != null) {
+
+					final Serializable object = result.getObject();
+					if(object == null) {
+						if(result.isNull()) out.println(spaces + "assertNull(" + varName + ");");
+						else out.println(spaces + "assertNotNull(" + varName + ");");
+					} else {
+						generateSingleAssertion(spaces, out, object, varType, varName);
+					}
+				}
 
 				for (String observer : result.getObservers())
 					generateSingleAssertion(spaces, out, result.getObserver(observer), null, varName + "." + observer + "()");
@@ -516,7 +525,11 @@ public class JUnitTestGenerator extends TestReader {
 
 		private void generateSingleAssertion(String spaces, PrintWriter out, final Serializable expected, final String varType, final String varName) {
 
-			if(expected instanceof Boolean &&
+			if(expected == null) {
+
+				out.println(spaces + "assertNull(" + varName + ");");
+
+			} else if(expected instanceof Boolean &&
 					(varType == null || varType.equals("boolean") ||  varType.equals("java.lang.Boolean"))) {
 
 				out.println(spaces + "assertEquals(" + JavaUtils.escape(expected) + ", " +
@@ -537,6 +550,12 @@ public class JUnitTestGenerator extends TestReader {
 			} else if(expected instanceof String && (varType == null || varType.equals("java.lang.String"))) {
 
 				out.println(spaces + "assertEquals(" + JavaUtils.escape(expected) + ", " + varName + ");");
+
+			} else if(expected instanceof Short &&
+					(varType == null || varType.equals("short") || varType.equals("java.lang.Short"))) {
+
+				out.println(spaces + "assertEquals(" + JavaUtils.escape(expected) + ", " +
+						("short".equals(varType)  ? "" :  "(short)") + varName + ");");
 
 			} else if(expected instanceof Integer &&
 					(varType == null || varType.equals("int") || varType.equals("java.lang.Integer"))) {

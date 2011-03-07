@@ -122,7 +122,7 @@ public class JavaUtils {
 			return JavaUtils.escape((Double) value);
 
 		if(value instanceof Character)
-			return JavaUtils.escape(((Character) value).charValue());
+			return "'" + JavaUtils.escape(((Character) value).charValue()) + "'";
 
 		if(value instanceof String)
 			return JavaUtils.escape((String)value);

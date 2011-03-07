@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:class xmlns:ns2="http://testful.sourceforge.net/schema/2.0/testful.xsd">
+
+    <constructor skip="false" />
+    
+    <method kind="observer" exposeState="false" name="getByte" />
+    <method kind="observer" exposeState="false" name="getChar" />
+    <method kind="observer" exposeState="false" name="getDouble" />
+    <method kind="observer" exposeState="false" name="getFloat" />
+    <method kind="observer" exposeState="false" name="getInt" />
+    <method kind="observer" exposeState="false" name="getLong" />
+    <method kind="observer" exposeState="false" name="getShort" />
+    <method kind="observer" exposeState="false" name="getString" />
+    <method kind="observer" exposeState="false" name="isBoolean" />
+
+    <method kind="pure"     exposeState="false" name="getDummy" />
+    
+    <method kind="mutator"  exposeState="false" name="setBoolean">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="boolean"/>
+    </method>
+    <method kind="mutator"  exposeState="false" name="setByte">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="byte"/>
+    </method>
+    <method kind="mutator"  exposeState="false" name="setChar">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="char"/>
+    </method>
+    <method kind="mutator"  exposeState="false" name="setDouble">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="double"/>
+    </method>
+    <method kind="mutator"  exposeState="false" name="setDummy">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="true" mutated="true" type="test.regression.Dummy"/>
+    </method>
+    <method kind="mutator"  exposeState="false" name="setFloat">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="float"/>
+    </method>
+    <method kind="mutator"  exposeState="false" name="setInt">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="int"/>
+    </method>
+    <method kind="mutator"  exposeState="false" name="setLong">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="long"/>
+    </method>
+    <method kind="mutator"  exposeState="false" name="setShort">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="false" mutated="false" type="short"/>
+    </method>
+    <method kind="mutator"  exposeState="false" name="setString">
+        <parameter exchangeStateWith="" exposedByReturn="false" captured="true" mutated="true" type="java.lang.String"/>
+    </method>
+    
+</ns2:class>

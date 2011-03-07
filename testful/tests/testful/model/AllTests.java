@@ -34,7 +34,7 @@ public class AllTests {
 		suite.addTestSuite(TestClusterTestCase.class);
 		suite.addTestSuite(RepeatableTestCase.class);
 		suite.addTestSuite(OptimalTestCase.class);
-		suite.addTestSuite(TestExecutionManagerTestCase.class);
+		suite.addTestSuite(OperationResultTestExecutorTestCase.class);
 		suite.addTestSuite(ArrayTestCase.class);
 		//$JUnit-END$
 
