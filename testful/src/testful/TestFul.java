@@ -138,7 +138,7 @@ public class TestFul {
 
 	// ----------- command-line handling ---------------
 
-	private static final String VERSION = "1.2.0";
+	private static final String VERSION = "2.0 (alpha)";
 
 	private static final String REVISION = readRevision();
 
@@ -172,7 +172,7 @@ public class TestFul {
 	public static void printHeader(String module) {
 		if(!quiet) {
 			System.out.println("Testful v. " + VERSION + REVISION + (DEBUG ? " - debug mode" : "" ) + (module != null ? " - " + module : ""));
-			System.out.println("Copyright (c) 2010 Matteo Miraz - http://code.google.com/p/testful");
+			System.out.println("Copyright (c) 2011 Matteo Miraz - http://code.google.com/p/testful");
 			System.out.println("This program comes with ABSOLUTELY NO WARRANTY.");
 			System.out.println("This is free software, and you are welcome to redistribute it under certain conditions.");
 			System.out.println("For more information, read http://www.gnu.org/licenses/gpl-3.0.txt");
