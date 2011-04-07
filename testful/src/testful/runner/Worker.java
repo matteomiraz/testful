@@ -23,8 +23,6 @@ import java.rmi.RemoteException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import testful.utils.StopWatchNested;
-
 /**
  * A thread executing something (i.e., working)
  * @author matteo
@@ -45,11 +43,6 @@ public class Worker extends Thread {
 		setDaemon(true);
 	}
 
-	StopWatchNested t_run = StopWatchNested.getRootTimer("wRun");
-	StopWatchNested t_eval = t_run.getSubTimer("wRun.eval");
-	StopWatchNested t_resOk = t_run.getSubTimer("wRun.putResult");
-	StopWatchNested t_resExc = t_run.getSubTimer("wRun.putException");
-
 	@Override
 	public void run() {
 		if(LOG_FINE) logger.fine("Created worker " + getName());
@@ -57,8 +50,6 @@ public class Worker extends Thread {
 		try {
 			while(true) {
 				Job<?,?,?> ctx = workerManager.getJob();
-
-				t_run.start();
 
 				RemoteClassLoader cl;
 				try {
@@ -69,23 +60,14 @@ public class Worker extends Thread {
 					continue;
 				}
 
-				t_eval.start();
 				try {
 					if(LOG_FINER) logger.finer("Worker " + getName() + " is evaluating " + ctx.id);
 					Serializable result = ctx.execute(cl);
-					t_eval.stop();
-
-					t_resOk.start();
 					workerManager.putResult(ctx, result, cl);
-					t_resOk.stop();
 
 				} catch(Exception e) {
-					t_eval.stop();
-					t_resExc.start();
 					workerManager.putException(ctx, e, cl);
-					t_resExc.stop();
 				}
-				t_run.stop();
 			}
 		} catch(RemoteException e) {
 			logger.warning("Worker " + getName() + " interrupted: " + e.getMessage());

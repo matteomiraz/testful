@@ -79,7 +79,6 @@ import testful.model.transformation.SimplifierDynamic;
 import testful.model.transformation.Splitter;
 import testful.utils.ElementManager;
 import testful.utils.ElementWithKey;
-import testful.utils.StopWatchNested;
 import ec.util.MersenneTwisterFast;
 
 /**
@@ -175,92 +174,58 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 		this.probRemove = probRemove;
 	}
 
-	StopWatchNested t_ls = StopWatchNested.getRootTimer("ls");
-	StopWatchNested t_ep = t_ls.getSubTimer("ls.evalParts");
-	StopWatchNested t_gt = t_ls.getSubTimer("ls.getTargets");
-	StopWatchNested t_gb = t_ls.getSubTimer("ls.getBestTarget");
-	StopWatchNested t_hc = t_ls.getSubTimer("ls.hillClimb");
-	StopWatchNested t_ret = t_ls.getSubTimer("ls.return");
-
 	@Override
 	public Solution<Operation> execute(Solution<Operation> solution) throws JMException {
-		t_ls.start();
 		try {
-			t_ep.start();
 			@SuppressWarnings("unchecked")
 			Collection<TestCoverage> tests = evalParts(Arrays.asList(solution));
-			t_ep.stop();
 
-			t_gt.start();
 			Set<TestWithScore> testScore = getTargets(tests);
-			t_gt.stop();
 			if(LOG_FINER) logger.finer("Targets: " + testScore);
 
-			t_gb.start();
 			TestWithScore test = getBest(testScore);
-			t_gb.stop();
 			if(test == null) return null;
 
-			t_hc.start();
 			List<Operation> result = hillClimb(test);
-			t_hc.stop();
 			if(result == null) return null;
 
-			t_ret.start();
 			for(Operation op : result)
 				solution.getDecisionVariables().variables_.add(op);
-			t_ret.stop();
 
 			return solution;
 
-
 		} catch(Throwable e) {
 			throw new JMException(e);
-		} finally {
-			t_ls.stop();
 		}
 	}
 
 	@Override
 	public SolutionSet<Operation> execute(SolutionSet<Operation> solutionSet) throws JMException {
-		t_ls.start();
 		try {
 			Set<TestCoverage> tests = new LinkedHashSet<TestCoverage>();
 
-			t_ep.start();
 			tests = evalParts(solutionSet);
-			t_ep.stop();
 
-			t_gt.start();
 			Set<TestWithScore> testScore = getTargets(tests);
-			t_gt.stop();
 
 			if(LOG_FINER) logger.finer("Targets: " + testScore);
 
-			t_gb.start();
 			TestWithScore test = getBest(testScore);
-			t_gb.stop();
 			if(test == null) return null;
 
-			t_hc.start();
 			List<Operation> result = hillClimb(test);
-			t_hc.stop();
 			if(result == null) return null;
 
-			t_ret.start();
 			SolutionSet<Operation> ret = new SolutionSet<Operation>(solutionSet.size());
 			for(Solution<Operation> s : solutionSet) {
 				for(Operation op : result) s.getDecisionVariables().variables_.add(op);
 				ret.add(s);
 			}
-			t_ret.stop();
 
 			return ret;
 
 		} catch(Throwable e) {
 			throw new JMException(e);
-		} finally {
-			t_ls.stop();
 		}
 	}
 

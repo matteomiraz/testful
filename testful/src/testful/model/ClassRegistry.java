@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import testful.TestFul;
-import testful.utils.StopWatch;
 
 /**
  * ClassRegistry is a Façade to the remote class-loader
@@ -33,8 +32,6 @@ import testful.utils.StopWatch;
  * @author matteo
  */
 public class ClassRegistry implements IClassRegistry {
-
-	private static final StopWatch timerClass = StopWatch.Disabled.singleton; // Timer.getTimer();
 
 	/** When loaded by a RemoteClassLoader, the singleton stores the ClassRegistry to use. */
 	public static final IClassRegistry singleton;
@@ -55,11 +52,8 @@ public class ClassRegistry implements IClassRegistry {
 	@Override
 	public Class<?> getClass(Clazz clazz) throws ClassNotFoundException {
 
-		timerClass.start("clazzRegistry.getClass");
-
 		Class<?> cache = clazzCache.get(clazz.getId());
 		if(cache != null) {
-			timerClass.stop();
 			return cache;
 		}
 
@@ -133,7 +127,6 @@ public class ClassRegistry implements IClassRegistry {
 		}
 
 		clazzCache.put(clazz.getId(), ret);
-		timerClass.stop();
 
 		return ret;
 	}

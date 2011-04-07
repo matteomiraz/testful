@@ -39,7 +39,6 @@ import testful.model.TestCoverage;
 import testful.utils.CoverageWriter;
 import testful.utils.ElementManager;
 import testful.utils.SimpleEntry;
-import testful.utils.StopWatchNested;
 
 /**
  * Testful problem for JMetal.
@@ -119,65 +118,37 @@ public class JMProblem extends Problem<Operation> {
 		}
 	}
 
-	StopWatchNested t_eval = StopWatchNested.getRootTimer("eval");
-	StopWatchNested t_prepare = t_eval.getSubTimer("eval.prepare");
-	StopWatchNested t_prep_getTest = t_prepare.getSubTimer("eval.prepare.getTest");
-	StopWatchNested t_prep_eval = t_prepare.getSubTimer("eval.prepare.eval");
-	StopWatchNested t_prep_future = t_prepare.getSubTimer("eval.prepare.future");
-
-	StopWatchNested t_wait = t_eval.getSubTimer("eval.wait");
-	StopWatchNested t_wait_evaluateObjectives = t_wait.getSubTimer("eval.wait.evalObjs");
-
 	@Override
 	public int evaluate(Iterable<Solution<Operation>> set) throws JMException {
-		t_eval.start();
-
 		List<SimpleEntry<Future<ElementManager<String, CoverageInformation>>, Solution<Operation>>> futures = new LinkedList<SimpleEntry<Future<ElementManager<String,CoverageInformation>>,Solution<Operation>>>();
 
 		long start = System.nanoTime();
 
-		t_prepare.start();
 		int n = 0;
 		for(Solution<Operation> solution : set) {
 			n++;
-			t_prep_getTest.start();
 			Test test = problem.getTest(solution.getDecisionVariables().variables_);
-			t_prep_getTest.stop();
-
-			t_prep_eval.start();
 			Future<ElementManager<String, CoverageInformation>> future = problem.evaluate(test);
-			t_prep_eval.stop();
-
-			t_prep_future.start();
 			futures.add(new SimpleEntry<Future<ElementManager<String, CoverageInformation>>, Solution<Operation>>(future, solution));
-			t_prep_future.stop();
 		}
-		t_prepare.stop();
 
 		long prep = System.nanoTime();
 		if(LOG_FINE) logger.fine(String.format("Preparation time: %.2fms", (prep - start)/1000000.0));
 
-		t_wait.start();
 		try {
 			for(Entry<Future<ElementManager<String, CoverageInformation>>, Solution<Operation>> entry : futures) {
 				ElementManager<String, CoverageInformation> cov = entry.getKey().get();
 				Solution<Operation> solution = entry.getValue();
-
-				t_wait_evaluateObjectives.start();
 				evaluateObjectives(solution, cov);
-				t_wait_evaluateObjectives.stop();
 			}
 		} catch(Exception e) {
 			logger.log(Level.WARNING, "Error during the evaluation of an individual: " + e.getMessage(), e);
 			throw new JMException(e);
 		}
-		t_wait.stop();
 
 		long end = System.nanoTime();
 
 		if(LOG_FINE) logger.fine(String.format("Execution time: %.2fms", (end - prep)/1000000.0));
-
-		t_eval.stop();
 
 		return n;
 	}

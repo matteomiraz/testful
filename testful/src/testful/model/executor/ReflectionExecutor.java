@@ -48,8 +48,6 @@ import testful.model.TestCluster;
 import testful.model.faults.FaultyExecutionException;
 import testful.model.faults.PreconditionViolationException;
 import testful.model.faults.TestfulInternalException;
-import testful.utils.StopWatch;
-import testful.utils.StopWatchFast;
 
 /**
  * This class is able to host a pool of objects, and execute operations on them.
@@ -96,12 +94,7 @@ public class ReflectionExecutor {
 			throw new ClassCastException("ClassRegistry not initialized");
 	}
 
-	private final static StopWatch timer_exec = StopWatch.getTimer();
-	private final static StopWatchFast timer_cut = StopWatchFast.getTimer("exec.cut");
-
 	public int execute() {
-
-		timer_exec.start("exec.1");
 
 		if(LOGGER_FINEST) {
 			StringBuilder sb = new StringBuilder();
@@ -189,9 +182,6 @@ public class ReflectionExecutor {
 		stopper.done();
 
 		if(LOGGER_FINE)   logger.fine(new StringBuilder("STATS").append(" ops:").append(ops.length).append(" invalid:").append(nPre).append(" valid:").append(nValid).append(" faulty:").append(nFaulty).toString());
-
-		timer_exec.stop();
-		timer_cut.log();
 
 		return nFaulty;
 	}
@@ -315,9 +305,7 @@ public class ReflectionExecutor {
 		Object newObject = null;
 		try {
 
-			timer_cut.start();
 			newObject = cons.newInstance(initargs);
-			timer_cut.stop();
 
 			// save results
 			if(targetPos != null) set(targetPos, newObject);
@@ -327,7 +315,6 @@ public class ReflectionExecutor {
 			return;
 
 		} catch(InvocationTargetException invocationException) {
-			timer_cut.stop();
 
 			Throwable exc = invocationException.getTargetException();
 
@@ -357,8 +344,6 @@ public class ReflectionExecutor {
 			if(opRes != null) opRes.setExceptional(exc, null, cluster, ClassRegistry.singleton);
 
 		} catch(Throwable e) {
-			timer_cut.stop();
-
 			logger.log(Level.WARNING, "Reflection error in createObject(" + op + "): " + e.getMessage(), e);
 			throw new TestfulInternalException.Impl(e);
 		}
@@ -445,9 +430,7 @@ public class ReflectionExecutor {
 		Object result = null;
 		try {
 
-			timer_cut.start();
 			result = m.invoke(baseObject, args);
-			timer_cut.stop();
 
 			if(targetPos != null) set(targetPos, result);
 			if(opRes != null) opRes.setSuccessful(baseObject, result, cluster, ClassRegistry.singleton);
@@ -455,8 +438,6 @@ public class ReflectionExecutor {
 			return;
 
 		} catch(InvocationTargetException invocationException) {
-			timer_cut.stop();
-
 			Throwable exc = invocationException.getTargetException();
 
 			// TODO: log the exception if it is caused by TestFul
@@ -489,7 +470,6 @@ public class ReflectionExecutor {
 			if(opRes != null) opRes.setExceptional(exc, baseObject, cluster, ClassRegistry.singleton);
 
 		} catch(Throwable e) {
-			timer_cut.stop();
 
 			logger.log(Level.WARNING, "Reflection error in invoke(" + op + "): " + e.getMessage(), e);
 			throw new TestfulInternalException.Impl(e);
