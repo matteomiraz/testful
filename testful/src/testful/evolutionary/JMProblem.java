@@ -49,7 +49,6 @@ public class JMProblem extends Problem<Operation> {
 	private static final long serialVersionUID = -6806014368055641433L;
 
 	private static final Logger logger = Logger.getLogger("testful.evolutionary");
-	private static final boolean LOG_FINE = logger.isLoggable(Level.FINE);
 
 	/** The reference to the testful problem: it contains the test cluster, the reference factory, and it is able to evaluate tests */
 	private TestfulProblem problem;
@@ -78,7 +77,7 @@ public class JMProblem extends Problem<Operation> {
 
 		this.problem = problem;
 
-		if(logger.isLoggable(Level.FINE)) {
+		if(logger.isLoggable(Level.FINER)) {
 			coverageWriter = new CoverageWriter("testful.evolutionary.coverage");
 		} else {
 			coverageWriter = null;
@@ -122,8 +121,6 @@ public class JMProblem extends Problem<Operation> {
 	public int evaluate(Iterable<Solution<Operation>> set) throws JMException {
 		List<SimpleEntry<Future<ElementManager<String, CoverageInformation>>, Solution<Operation>>> futures = new LinkedList<SimpleEntry<Future<ElementManager<String,CoverageInformation>>,Solution<Operation>>>();
 
-		long start = System.nanoTime();
-
 		int n = 0;
 		for(Solution<Operation> solution : set) {
 			n++;
@@ -131,9 +128,6 @@ public class JMProblem extends Problem<Operation> {
 			Future<ElementManager<String, CoverageInformation>> future = problem.evaluate(test);
 			futures.add(new SimpleEntry<Future<ElementManager<String, CoverageInformation>>, Solution<Operation>>(future, solution));
 		}
-
-		long prep = System.nanoTime();
-		if(LOG_FINE) logger.fine(String.format("Preparation time: %.2fms", (prep - start)/1000000.0));
 
 		try {
 			for(Entry<Future<ElementManager<String, CoverageInformation>>, Solution<Operation>> entry : futures) {
@@ -145,10 +139,6 @@ public class JMProblem extends Problem<Operation> {
 			logger.log(Level.WARNING, "Error during the evaluation of an individual: " + e.getMessage(), e);
 			throw new JMException(e);
 		}
-
-		long end = System.nanoTime();
-
-		if(LOG_FINE) logger.fine(String.format("Execution time: %.2fms", (end - prep)/1000000.0));
 
 		return n;
 	}

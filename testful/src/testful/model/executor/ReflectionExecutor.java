@@ -60,7 +60,6 @@ import testful.model.faults.TestfulInternalException;
 public class ReflectionExecutor {
 
 	private static final Logger logger = Logger.getLogger("testful.model.ReflectionExecutor");
-	private static final boolean LOGGER_FINE   = logger.isLoggable(Level.FINE);
 	private static final boolean LOGGER_FINER  = logger.isLoggable(Level.FINER);
 	private static final boolean LOGGER_FINEST = logger.isLoggable(Level.FINEST);
 
@@ -181,7 +180,7 @@ public class ReflectionExecutor {
 
 		stopper.done();
 
-		if(LOGGER_FINE)   logger.fine(new StringBuilder("STATS").append(" ops:").append(ops.length).append(" invalid:").append(nPre).append(" valid:").append(nValid).append(" faulty:").append(nFaulty).toString());
+		if(LOGGER_FINER) logger.finer(new StringBuilder("STATS").append(" ops:").append(ops.length).append(" invalid:").append(nPre).append(" valid:").append(nValid).append(" faulty:").append(nFaulty).toString());
 
 		return nFaulty;
 	}

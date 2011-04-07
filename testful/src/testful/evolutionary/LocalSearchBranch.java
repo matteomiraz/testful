@@ -93,8 +93,8 @@ import ec.util.MersenneTwisterFast;
 public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 	private static final Logger logger = Logger.getLogger("testful.evolutionary.localSearch");
-	private static final boolean LOG_FINE = logger.isLoggable(Level.FINE);
 	private static final boolean LOG_FINER = logger.isLoggable(Level.FINER);
+	private static final boolean LOG_FINEST = logger.isLoggable(Level.FINEST);
 
 	private static final int ITERATIONS = 1000;
 
@@ -181,7 +181,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			Collection<TestCoverage> tests = evalParts(Arrays.asList(solution));
 
 			Set<TestWithScore> testScore = getTargets(tests);
-			if(LOG_FINER) logger.finer("Targets: " + testScore);
+			if(LOG_FINEST) logger.finest("Targets: " + testScore);
 
 			TestWithScore test = getBest(testScore);
 			if(test == null) return null;
@@ -208,7 +208,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 
 			Set<TestWithScore> testScore = getTargets(tests);
 
-			if(LOG_FINER) logger.finer("Targets: " + testScore);
+			if(LOG_FINEST) logger.finest("Targets: " + testScore);
 
 			TestWithScore test = getBest(testScore);
 			if(test == null) return null;
@@ -251,7 +251,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			else branchFeasible = checkFeasibility(test.test, test.target, duCov) >= 0;
 		}
 
-		if(LOG_FINE) logger.fine("coverageLocalSearch " + localSearchId + " target=" + test.target + ";iter=" + 0 + ";cov=" + covCondOrig.getQuality() + ";distance=" + covCondOrig + ";len=" + test.test.getTest().length + ";feasible=" + (branchFeasible ? "true" : "n/a"));
+		if(LOG_FINER) logger.finer("coverageLocalSearch " + localSearchId + " target=" + test.target + ";iter=" + 0 + ";cov=" + covCondOrig.getQuality() + ";distance=" + covCondOrig + ";len=" + test.test.getTest().length + ";feasible=" + (branchFeasible ? "true" : "n/a"));
 
 		List<Operation> opsOrig = new LinkedList<Operation>();
 		for(Operation op : test.test.getTest()) opsOrig.add(op);
@@ -281,7 +281,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			} else
 				stillFeasible = true;
 
-			if(LOG_FINE) logger.fine("coverageLocalSearch " + localSearchId + " target=" + test.target + ";iter=" + (i+1) + ";cov=" + covCond.getQuality() + ";distance=" + covCond + ";len=" + ops.size() + ";feasible=" + (branchFeasible ? stillFeasible : "n/a"));
+			if(LOG_FINER) logger.finer("coverageLocalSearch " + localSearchId + " target=" + test.target + ";iter=" + (i+1) + ";cov=" + covCond.getQuality() + ";distance=" + covCond + ";len=" + ops.size() + ";feasible=" + (branchFeasible ? stillFeasible : "n/a"));
 
 			if(!stillFeasible) continue;
 
@@ -961,7 +961,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			return 0;
 
 		if(values.isEmpty()){
-			logger.finer("Empty values: switch " + branchId + " is impossible");
+			logger.finest("Empty values: switch " + branchId + " is impossible");
 			return SCORE_IMPOSSIBLE;
 		}
 
@@ -973,7 +973,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 					return 0;
 			}
 
-			if(LOG_FINER) logger.finer("Detected impossible branch: " + branchId + " with values " + values);
+			if(LOG_FINEST) logger.finest("Detected impossible branch: " + branchId + " with values " + values);
 			return SCORE_IMPOSSIBLE;
 		}
 
@@ -983,7 +983,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 				return 0;
 		}
 
-		if(LOG_FINER) logger.finer("Detected impossible branch: " + branchId + " with values " + values);
+		if(LOG_FINEST) logger.finest("Detected impossible branch: " + branchId + " with values " + values);
 		return SCORE_IMPOSSIBLE;
 	}
 
@@ -999,7 +999,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 			return 0;
 
 		if(a.isEmpty() ||  b.isEmpty()){
-			logger.finer("Empty values: if is impossible");
+			logger.finest("Empty values: if is impossible");
 			return SCORE_IMPOSSIBLE;
 		}
 
@@ -1015,7 +1015,7 @@ public class LocalSearchBranch extends LocalSearchPopulation<Operation> {
 				}
 			}
 		}
-		if(LOG_FINER) logger.finer("Detected impossible IF: " + a + " " + t + " " + b);
+		if(LOG_FINEST) logger.finest("Detected impossible IF: " + a + " " + t + " " + b);
 		return SCORE_IMPOSSIBLE;
 	}
 
