@@ -114,22 +114,27 @@ public abstract class RandomTest {
 
 			@Override
 			public void run() {
-				while(keepRunning)
+				while(keepRunning) {
 					try {
-						Entry<Operation[], Future<ElementManager<String, CoverageInformation>>> entry = tests.take();
-						ElementManager<String, CoverageInformation> cov = entry.getValue().get();
-						testsDone.incrementAndGet();
-						numCall += entry.getKey().length;
+						if(tests.isEmpty()) {
+							Thread.sleep(1000);
+						} else {
+							Entry<Operation[], Future<ElementManager<String, CoverageInformation>>> entry = tests.take();
+							ElementManager<String, CoverageInformation> cov = entry.getValue().get();
+							testsDone.incrementAndGet();
+							numCall += entry.getKey().length;
 
-						final TestCoverage testCoverage = new TestCoverage(new Test(cluster, refFactory, entry.getKey()), cov);
-						optimal.update(testCoverage);
+							final TestCoverage testCoverage = new TestCoverage(new Test(cluster, refFactory, entry.getKey()), cov);
+							optimal.update(testCoverage);
+						}
 					} catch(InterruptedException e) {
 						logger.log(Level.WARNING, "Interrupted: " + e.getMessage(), e);
 						TestFul.debug(e);
 					} catch(ExecutionException e) {
-						logger.log(Level.WARNING, "Error during a test evaluation: " + e.getCause(), e.getCause());
+						logger.log(Level.WARNING, "Error during a test evaluation: " + e, e.getCause());
 						TestFul.debug(e);
 					}
+				}
 			}
 		}, "futureWaiter");
 		t.setDaemon(true);

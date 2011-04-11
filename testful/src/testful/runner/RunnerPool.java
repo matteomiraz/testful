@@ -279,12 +279,12 @@ public class RunnerPool implements IRunner, IJobRepository {
 				else this.wait();
 			}
 
+			if(!completed) throw new TimeoutException("Timeout expired!");
+
 			if(TestFul.DEBUG) {
-				if(completed && result == null && exc == null)
+				if(result == null && exc == null)
 					TestFul.debug(new Exception("A completed task must have the result or the exception set."));
 			}
-
-			if(!completed) throw new TimeoutException("Timeout expired!");
 
 			if(result != null) return result;
 
