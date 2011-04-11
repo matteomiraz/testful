@@ -44,7 +44,7 @@ public interface IConfigFitness {
 		@Option(required = false, name = "-disableDefUse", usage = "Do not attempt to maximize the def-use pairs coverage")
 		public void setDisableDefUse(boolean disable);
 
-		@Option(required = false, name = "-disableBehavioral", usage = "Do not collect and do not maximize the behavioral coverage")
-		public void setDisableBehavioral(boolean disable);
+		@Option(required = false, name = "-enableBehavioral", usage = "Collect and maximize the behavioral coverage")
+		public void setBehavioral(boolean enable);
 	}
 }

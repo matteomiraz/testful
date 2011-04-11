@@ -273,8 +273,8 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	}
 
 	@Override
-	public void setDisableBehavioral(boolean disable) {
-		configFitness.setDisableBehavioral(disable);
+	public void setBehavioral(boolean disable) {
+		configFitness.setBehavioral(disable);
 	}
 
 	// --------------- validate -----------------------

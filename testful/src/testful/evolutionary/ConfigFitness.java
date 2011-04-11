@@ -28,7 +28,7 @@ public class ConfigFitness implements IConfigFitness, IConfigFitness.Args4j {
 	private boolean basicBlock = true;
 	private boolean branch = true;
 	private boolean defUse = true;
-	private boolean behavioral = true;
+	private boolean behavioral = false;
 
 	@Override
 	public boolean isBasicBlock() {
@@ -66,7 +66,7 @@ public class ConfigFitness implements IConfigFitness, IConfigFitness.Args4j {
 	}
 
 	@Override
-	public void setDisableBehavioral(boolean disable) {
-		behavioral = !disable;
+	public void setBehavioral(boolean enable) {
+		behavioral = enable;
 	}
 }
