@@ -74,7 +74,23 @@ public class Launcher {
 	 * @throws TestfulException if something goes wrong
 	 */
 	public static void run(IConfigEvolutionary config, Callback ... callBacks) throws TestfulException {
+
 		logger.config(TestFul.printGetters(config));
+
+		{   // checking memory constraints
+
+			int maxLen = config.getMaxTestLen();
+			int popSize = config.getPopSize();
+			int avgOpSize = 400; // average operation size (as reported by jvisualvm)
+
+			long maxUsedMemory = 2L*popSize * maxLen * avgOpSize;
+
+			long availableMemory = Runtime.getRuntime().maxMemory();
+
+			if(maxUsedMemory > 0.9 * availableMemory) {
+				logger.warning("The system is going to require " + maxUsedMemory/(1024*1024) + "MByte, more than 90% of the available memory (" + availableMemory/(1024*1024) + " MByte). You can (a) increase the available RAM (b) reduce the maximum test length or (c) use a smaller population.");
+			}
+		}
 
 		PseudoRandom.setupMersenneTwisterFast(config.getSeed());
 

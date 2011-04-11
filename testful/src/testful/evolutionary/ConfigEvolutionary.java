@@ -46,7 +46,7 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	private int localSearchElements = 0;
 
 	@Option(required = false, name = "-popSize", usage = "The size of the population (# of individuals)")
-	private int popSize = 512;
+	private int popSize = 128;
 
 	@Option(required = false, name = "-fitnessInheritance", usage = "Select the type of fitness inheritance")
 	private FitnessInheritance fitnessInheritance = FitnessInheritance.UNIFORM;

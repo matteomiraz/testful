@@ -48,7 +48,7 @@ implements IConfigProject.Args4j, IConfigCut.Args4j, IConfigGeneration.Args4j {
 		time=600;
 		numVar=4;
 		numVarCut=4;
-		maxTestLen=10000;
+		maxTestLen=7500;
 	}
 
 	/* (non-Javadoc)
