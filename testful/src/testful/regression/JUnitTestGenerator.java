@@ -74,6 +74,8 @@ import testful.utils.JavaUtils;
  * @author matteo
  */
 public class JUnitTestGenerator extends TestReader {
+
+	private static final boolean createAssertions = TestFul.getProperty(TestFul.PROPERTY_JUNIT_ASSERTIONS, true);
 	private static final Logger logger = Logger.getLogger("testful.regression");
 
 	private final static TestTransformation transformation = new TestTransformationPipeline(
@@ -501,6 +503,7 @@ public class JUnitTestGenerator extends TestReader {
 		}
 
 		private void generateAssertions(String spaces, PrintWriter out, final Value result, final String varType, final String varName) {
+			if(!createAssertions) return;
 			if(result == null) return;
 
 			if(result.isNull()) {

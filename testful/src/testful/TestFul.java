@@ -61,6 +61,9 @@ public class TestFul {
 	/** Enables the testful's fault detection feature (boolean; default: enabled) */
 	public static final String PROPERTY_FAULT_DETECT = "testful.fault";
 
+	/** Create junit assertions (boolean; default: enabled) */
+	public static final String PROPERTY_JUNIT_ASSERTIONS = "testful.junit.assert";
+
 	/** Set the maximum execution time for methods and constructors (long; default: 500) */
 	public static final String PROPERTY_MAX_EXEC_TIME = "testful.maxExecTime";
 
