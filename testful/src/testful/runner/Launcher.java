@@ -147,17 +147,18 @@ public class Launcher {
 				} else if(line.equalsIgnoreCase("exit")) {
 					wm.stop();
 					System.exit(0);
-				} else if(line.endsWith("/")) try {
-					String[] list = Naming.list(line);
-					System.out.println("Found " + list.length + " services bound to " + line);
-					for(String name : list)
-						System.out.println(" * " + name);
-					System.out.println("---");
+				} else if(line.endsWith("/")) {
+					try {
+						String[] list = Naming.list(line);
+						System.out.println("Found " + list.length + " services bound to " + line);
+						for(String name : list)
+							System.out.println(" * " + name);
+						System.out.println("---");
 
-				} catch(Exception e) {
-					logger.log(Level.WARNING, e.getMessage(), e);
-				}
-				else connect(wm, line);
+					} catch(Exception e) {
+						logger.log(Level.WARNING, e.getMessage(), e);
+					}
+				}else connect(wm, line);
 			}
 		} else try {
 			while(true) {
