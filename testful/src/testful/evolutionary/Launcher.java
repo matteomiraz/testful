@@ -89,6 +89,9 @@ public class Launcher {
 
 			if(maxUsedMemory > 0.9 * availableMemory) {
 				logger.warning("The system is going to require " + maxUsedMemory/(1024*1024) + "MByte, more than 90% of the available memory (" + availableMemory/(1024*1024) + " MByte). You can (a) increase the available RAM (b) reduce the maximum test length or (c) use a smaller population.");
+			} else if (logger.isLoggable(Level.FINE)) {
+				logger.fine(String.format("The system is going to require up to %d MBytes, %5.2f%% of the available memory (%d MByte)",
+						maxUsedMemory/(1024*1024), 100.0*maxUsedMemory/availableMemory, availableMemory/(1024*1024)));
 			}
 		}
 
