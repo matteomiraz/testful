@@ -113,7 +113,7 @@ public class Launcher {
 		algorithm.setTerminationCriterion(TimeTerminationCriterion.getTimeTerminationCriterion(config.getTime() * 1000));
 
 		try {
-			testfulProblem.addReserve(genSmartPopulation(config, testfulProblem));
+			testfulProblem.addReserve(genRandomSeeds(config, testfulProblem));
 		} catch (Exception e) {
 			logger.log(Level.WARNING, "Cannot create the initial population: " + e.getMessage(), e);
 		}
@@ -207,19 +207,19 @@ public class Launcher {
 	 * @throws ClassNotFoundException
 	 * @throws FileNotFoundException
 	 */
-	private static TestSuite genSmartPopulation(IConfigEvolutionary config, TestfulProblem testfulProblem) throws TestfulException, RemoteException, ClassNotFoundException, FileNotFoundException{
-		int smartTime = config.getSmartInitialPopulation();
+	private static TestSuite genRandomSeeds(IConfigEvolutionary config, TestfulProblem testfulProblem) throws TestfulException, RemoteException, ClassNotFoundException, FileNotFoundException{
+		int time = config.getRandomSeeding();
 
-		if(smartTime <= 0) return null;
+		if(time <= 0) return null;
 
-		logger.info("Generating smart population");
+		logger.info("Using Random Search to seed the initial population");
 
 		TrackerDatum[] data = new TrackerDatum[] { };
 
 		RandomTest rt = new RandomTestSplit(testfulProblem.getFinder(), config.isReloadClasses(), testfulProblem.getCluster(), testfulProblem.getReferenceFactory(), config.getSeed(), data);
 
-		rt.test(smartTime * 1000);
+		rt.test(time * 1000);
 
 		return rt.getResults();
-	} //genSmartPopulation
+	}
 } // NSGAII_main

@@ -51,8 +51,8 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	@Option(required = false, name = "-fitnessInheritance", usage = "Select the type of fitness inheritance")
 	private FitnessInheritance fitnessInheritance = FitnessInheritance.UNIFORM;
 
-	@Option(required = false, name = "-smartAncestors", usage = "Use an enhanced initial population")
-	private int smartInitialPopulation = 60;
+	@Option(required = false, name = "-randomSeeding", usage = "Use Random Search to seed the initial population")
+	private int randomSeeding = 60;
 
 	@Option(required = false, name ="-seed", usage = "Set the seed of the random number generator")
 	private long seed = System.currentTimeMillis();
@@ -90,8 +90,8 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 	}
 
 	@Override
-	public int getSmartInitialPopulation() {
-		return smartInitialPopulation;
+	public int getRandomSeeding() {
+		return randomSeeding;
 	}
 
 	@Override
@@ -231,8 +231,8 @@ public class ConfigEvolutionary implements IConfigEvolutionary, IConfigFitness.A
 		configGenerator.setMaxTestLen(maxTestLen);
 	}
 
-	public void setSmartInitialPopulation(int smartInitialPopulation) {
-		this.smartInitialPopulation = smartInitialPopulation;
+	public void setRandomSeeding(int seedingRandom) {
+		randomSeeding = seedingRandom;
 	}
 
 	// --------------- fitness -----------------------

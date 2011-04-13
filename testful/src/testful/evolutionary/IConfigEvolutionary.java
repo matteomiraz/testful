@@ -38,7 +38,7 @@ public interface IConfigEvolutionary extends IConfigGeneration, IConfigFitness {
 
 	public FitnessInheritance getFitnessInheritance();
 
-	public int getSmartInitialPopulation();
+	public int getRandomSeeding();
 
 	/**
 	 * Returns the seed to use in the random number generator
