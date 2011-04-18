@@ -20,6 +20,8 @@ package testful.coverage.behavior;
 
 import java.util.Arrays;
 
+import testful.TestFul;
+
 public class AbstractionMethod extends Abstraction {
 
 	private static final long serialVersionUID = 8488220230181488768L;
@@ -29,7 +31,7 @@ public class AbstractionMethod extends Abstraction {
 
 	public AbstractionMethod(String methodName, boolean isStatic, Abstraction[] abs) {
 		super(methodName);
-		assert (abs != null);
+		if(TestFul.DEBUG && abs == null) TestFul.debug("abs MUST be not null");
 
 		this.isStatic = isStatic;
 		this.abs = abs;
@@ -46,9 +48,14 @@ public class AbstractionMethod extends Abstraction {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(getExpression()).append(" -");
-		for(Abstraction a : abs)
-			sb.append(" {").append(a).append("}");
+		sb.append(getExpression());
+
+		if(abs.length > 0) {
+			sb.append(" -");
+			for(Abstraction a : abs)
+				sb.append(" {").append(a).append("}");
+		}
+
 		return sb.toString();
 	}
 

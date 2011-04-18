@@ -118,13 +118,14 @@ public class Launcher {
 			logger.log(Level.WARNING, "Cannot create the initial population: " + e.getMessage(), e);
 		}
 
-		// Mutation and Crossover for Real codification
+		// Crossover
 		OnePointCrossoverVarLen<Operation> crossover = new OnePointCrossoverVarLen<Operation>();
 		crossover.setProbability(0.50);
 		crossover.setMaxLen(config.getMaxTestLen());
 
 		algorithm.setCrossover(crossover);
 
+		// Mutation
 		TestfulMutation mutation = new TestfulMutation(testfulProblem);
 		mutation.setProbability(0.05);
 		algorithm.setMutation(mutation);
@@ -165,7 +166,8 @@ public class Launcher {
 				BehaviorCoverage.DOT = true;
 
 				try {
-					final File outFile = new File(config.getDirGeneratedTests(), "behavioralModel.dot");
+					if(!config.getDirGeneratedTests().exists()) config.getDirGeneratedTests().mkdirs();
+					final File outFile = new File(config.getDirGeneratedTests(), "behavior-" + config.getCut() + ".dot");
 					PrintStream out = new PrintStream(outFile);
 					out.println(testfulProblem.getOptimal().getCoverage().get(BehaviorCoverage.KEY).toString());
 					out.close();
