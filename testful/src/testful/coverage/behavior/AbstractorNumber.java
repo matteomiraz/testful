@@ -141,8 +141,10 @@ public class AbstractorNumber extends Abstractor {
 		if(Double.isNaN(elem)) {
 			String label = null;
 			for(int i = 0; i < values.length; i++)
-				if(values[i] != null && Double.isNaN(values[i])) if(label == null) label = intervalsString[i];
-				else label += "," + intervalsString[i];
+				if(values[i] != null && Double.isNaN(values[i])) {
+					if(label == null) label = intervalsString[i];
+					else label += "," + intervalsString[i];
+				}
 
 			if(label == null) return new AbstractionNumber(expression, expression + " is " + AbstractionNumber.NaN);
 			return new AbstractionNumber(expression, expression + " = " + label);
@@ -182,17 +184,18 @@ public class AbstractorNumber extends Abstractor {
 		Expression[] intervals = getIntervals();
 
 		Double[] ret = new Double[intervals.length];
-		for(int i = 0; i < intervals.length; i++)
+		for(int i = 0; i < intervals.length; i++) {
 			try {
 				if(intervals[i] != null) {
 					Number evaluate = (Number) intervals[i].evaluate(jc);
 					if(evaluate != null) ret[i] = evaluate.doubleValue();
 				}
 			} catch(Exception e) {
-				logger.log(Level.WARNING, "Cannot execute the JEXL query \"" + intervals[i].getExpression() + "\" : " + e.getMessage() + " due to: " + e.getCause(), e);
+				logger.log(Level.WARNING, "Cannot execute the JEXL query \"" + intervals[i].getExpression() + "\" : " + e, e);
 			}
+		}
 
-			return ret;
+		return ret;
 	}
 
 	@Override

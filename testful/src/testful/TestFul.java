@@ -270,7 +270,7 @@ public class TestFul {
 			sb.append(record.getMessage());
 			sb.append("\n");
 
-			if (record.getThrown() != null) {
+			if (DEBUG && record.getThrown() != null) {
 				try {
 					StringWriter sw = new StringWriter();
 					PrintWriter pw = new PrintWriter(sw);
