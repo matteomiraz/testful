@@ -145,7 +145,7 @@ public class AbstractorRegistry implements ISerializable {
 				return cns.newInstance(abs.getExpression(), abs.getParameters());
 			}
 		} catch(Exception e) {
-			logger.log(Level.WARNING, e.getMessage(), e.getMessage());
+			logger.log(Level.WARNING, "Cannot get abstractions for " + abs + ": " + e, e);
 			TestFul.debug(e);
 			return null;
 		}

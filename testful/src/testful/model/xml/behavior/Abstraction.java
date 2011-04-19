@@ -37,7 +37,7 @@ public class Abstraction {
 
 	/** the parameters for parametric abstraction functions */
 	@XmlAttribute(required = false)
-	protected String parameters;
+	protected String parameters = "";
 
 	/**
 	 * Returns the abstraction function to use
@@ -85,5 +85,13 @@ public class Abstraction {
 	 */
 	public void setParameters(String parameters) {
 		this.parameters = parameters;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "function:" + function + " expr:" + expression + " params:" + parameters;
 	}
 }

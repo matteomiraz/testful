@@ -78,24 +78,20 @@ public class BehaviorCoverage implements CoverageInformation {
 	// constructors are called with pre = null
 	public boolean add(Abstraction pre, AbstractionMethod partition, Abstraction post) {
 		if(partition == null) {
-			if(TestFul.DEBUG) {
-				StringBuilder sb = new StringBuilder();
-				sb.append("WARNING: null partition\n");
-
-				for(StackTraceElement ste : Thread.currentThread().getStackTrace())
-					sb.append("  ").append(ste.toString()).append("\n");
-
-				System.out.println(sb.toString());
-			}
+			TestFul.debug("null partition");
 			return false;
 		}
 
 		if(partition.isStatic()) {
 			pre = new AbstractionObjectReference("", true);
 			post = new AbstractionObjectReference("", true);
-		} else if(pre == null) pre = new AbstractionObjectReference("", true);
-
-		if(TestFul.DEBUG && post == null) TestFul.debug("post is NULL!", new NullPointerException());
+		} else {
+			if(pre == null) pre = new AbstractionObjectReference("", true);
+			if(post == null) {
+				TestFul.debug("post is NULL");
+				return false;
+			}
+		}
 
 		Set<Operation> state = stateMachine.get(pre);
 		if(state == null) {
