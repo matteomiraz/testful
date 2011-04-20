@@ -35,8 +35,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.TestFul;
-import testful.coverage.CoverageTestExecutor;
 import testful.coverage.CoverageInformation;
+import testful.coverage.CoverageTestExecutor;
 import testful.coverage.TrackerDatum;
 import testful.model.AssignConstant;
 import testful.model.AssignPrimitive;

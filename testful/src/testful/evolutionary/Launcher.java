@@ -169,7 +169,7 @@ public class Launcher {
 					if(!config.getDirGeneratedTests().exists()) config.getDirGeneratedTests().mkdirs();
 					final File outFile = new File(config.getDirGeneratedTests(), "behavior-" + config.getCut() + ".dot");
 					PrintStream out = new PrintStream(outFile);
-					out.println(testfulProblem.getOptimal().getCoverage().get(BehaviorCoverage.KEY).toString());
+					out.println(behavioralCoverage.toString());
 					out.close();
 					logger.info("Behavioral model saved in " + outFile.getPath());
 				} catch (Exception e) {

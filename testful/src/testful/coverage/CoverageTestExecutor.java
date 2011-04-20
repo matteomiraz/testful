@@ -21,8 +21,8 @@ package testful.coverage;
 import testful.model.Test;
 import testful.model.executor.TestExecutor;
 import testful.model.executor.TestExecutorInput;
-import testful.runner.Job;
 import testful.runner.DataFinder;
+import testful.runner.Job;
 import testful.utils.ElementManager;
 
 public class CoverageTestExecutor extends TestExecutor<ElementManager<String, CoverageInformation>> {

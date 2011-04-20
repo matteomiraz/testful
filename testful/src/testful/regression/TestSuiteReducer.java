@@ -52,10 +52,10 @@ import testful.model.transformation.Splitter;
 import testful.model.transformation.TestTransformation;
 import testful.model.transformation.TestTransformationPipeline;
 import testful.runner.ClassType;
-import testful.runner.Job;
 import testful.runner.DataFinder;
 import testful.runner.DataFinderCaching;
 import testful.runner.DataFinderImpl;
+import testful.runner.Job;
 import testful.runner.RunnerPool;
 import testful.utils.ElementManager;
 

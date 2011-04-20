@@ -18,6 +18,7 @@
 
 package testful.evolutionary;
 
+
 /**
  * Specify the information to use to drive as fitness.
  * @see IConfigFitness

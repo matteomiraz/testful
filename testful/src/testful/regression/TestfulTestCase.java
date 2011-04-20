@@ -39,10 +39,10 @@ import testful.model.TestReader;
 import testful.model.executor.TestExecutor;
 import testful.model.executor.TestExecutorInput;
 import testful.runner.ClassType;
-import testful.runner.Job;
 import testful.runner.DataFinder;
 import testful.runner.DataFinderCaching;
 import testful.runner.DataFinderImpl;
+import testful.runner.Job;
 import testful.runner.RunnerPool;
 
 /**

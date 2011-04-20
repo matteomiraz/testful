@@ -105,6 +105,10 @@ public abstract class RandomTest {
 		return optimal.getCoverage();
 	}
 
+	public Iterable<TestCoverage> getOptimalTests() {
+		return optimal.get();
+	}
+
 	public int getRunningJobs() {
 		return tests.size();
 	}

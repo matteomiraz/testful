@@ -204,9 +204,19 @@ public class ConfigRandom implements IConfigRandom, IConfigGeneration.Args4j, IC
 		configGenerator.setMaxTestLen(maxTestLen);
 	}
 
-	/* (non-Javadoc)
-	 * @see testful.IConfig#validate()
-	 */
+	private boolean behavioral = false;
+
+	@Option(required = false, name = "-enableBehavioral", usage = "Collect and maximize the behavioral coverage")
+	public void setBehavioral(boolean enable) {
+		behavioral = enable;
+	}
+
+	@Override
+	public boolean isBehavioral() {
+		return behavioral;
+	}
+
+	// --------------- validate -----------------------
 	@Override
 	public void validate() throws CmdLineException {
 		// everything is ok!

@@ -36,4 +36,6 @@ public interface IConfigRandom extends IConfigGeneration {
 	 * @return the seed of the random number generator
 	 */
 	public long getSeed();
+
+	public boolean isBehavioral();
 }

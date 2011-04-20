@@ -18,23 +18,34 @@
 
 package testful.random;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.rmi.RemoteException;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.TestFul;
 import testful.TestfulException;
 import testful.coverage.CoverageInformation;
+import testful.coverage.TrackerDatum;
+import testful.coverage.behavior.AbstractorRegistry;
+import testful.coverage.behavior.BehaviorCoverage;
 import testful.model.Operation;
+import testful.model.OperationResultTestExecutor;
 import testful.model.ReferenceFactory;
 import testful.model.TestCluster;
 import testful.model.TestClusterBuilder;
+import testful.model.TestCoverage;
+import testful.regression.JUnitTestGenerator;
+import testful.regression.TestSuiteReducer;
 import testful.runner.ClassType;
 import testful.runner.DataFinder;
 import testful.runner.DataFinderCaching;
 import testful.runner.DataFinderImpl;
+import testful.runner.ObjectType;
 import testful.runner.RemoteClassLoader;
 import testful.utils.ElementManager;
 
@@ -63,14 +74,16 @@ public class Launcher {
 		DataFinder finder;
 		TestCluster cluster;
 		try {
-			finder = new DataFinderCaching(new DataFinderImpl(new ClassType(config)));
+
+			final ClassType classType = new ClassType(config);
+			final ObjectType objectType = new ObjectType();
+			finder = new DataFinderCaching(new DataFinderImpl(classType, objectType));
 
 			TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(finder), config);
-
 			cluster = clusterBuilder.getTestCluster();
-			// TODO: objectType.addObject(cluster);
+			objectType.addObject(cluster);
 
-			// TODO: if(config.isBehavioral()) objectType.addObject(new AbstractorRegistry(cluster, clusterBuilder.getXmlRegistry()));
+			if(config.isBehavioral()) objectType.addObject(new AbstractorRegistry(cluster, clusterBuilder.getXmlRegistry()));
 
 		} catch (RemoteException e) {
 			// never happens
@@ -97,8 +110,9 @@ public class Launcher {
 
 		rt.test(config.getTime() * 1000);
 
+		ElementManager<String, CoverageInformation> coverage = rt.getExecutionInformation();
+
 		if(TestFul.logDir != null) {
-			ElementManager<String, CoverageInformation> coverage = rt.getExecutionInformation();
 			for(CoverageInformation info : coverage) {
 				try {
 					PrintWriter writer = new PrintWriter(TestFul.createFileWithBackup(TestFul.logDir, "coverage-" + info.getKey() + ".txt"));
@@ -110,6 +124,45 @@ public class Launcher {
 					logger.log(Level.WARNING, "Cannot write to file: " + e.getMessage(), e);
 				}
 			}
+		}
+
+		if(config.isBehavioral()) {
+
+			BehaviorCoverage behavioralCoverage = (BehaviorCoverage) coverage.get(BehaviorCoverage.KEY);
+			if(behavioralCoverage != null) {
+
+				BehaviorCoverage.DOT = true;
+
+				try {
+					if(!config.getDirGeneratedTests().exists()) config.getDirGeneratedTests().mkdirs();
+					final File outFile = new File(config.getDirGeneratedTests(), "behavior-" + config.getCut() + ".dot");
+					PrintStream out = new PrintStream(outFile);
+					out.println(behavioralCoverage.toString());
+					out.close();
+					logger.info("Behavioral model saved in " + outFile.getPath());
+				} catch (Exception e) {
+					logger.log(Level.WARNING, "Cannot save the behavioral model: " + e.getMessage(), e);
+				}
+			} else {
+				logger.warning("The behavioral model is missing");
+			}
+		}
+
+		/* simplify tests */
+		final TestSuiteReducer reducer = new TestSuiteReducer(finder, config.isReloadClasses(), new TrackerDatum[0]);
+		for (TestCoverage t : rt.getOptimalTests())
+			reducer.process(t);
+
+		/* convert tests to jUnit */
+		try {
+			Collection<TestCoverage> tests = OperationResultTestExecutor.execute(finder, reducer.getOutput(), config.isReloadClasses());
+
+			JUnitTestGenerator gen = new JUnitTestGenerator(config.getDirGeneratedTests(), new RemoteClassLoader(finder), true);
+			gen.read(tests);
+			gen.writeSuite();
+
+		} catch (RemoteException e) {
+			logger.log(Level.WARNING, "Remote exception (should never happen): " + e.toString(), e);
 		}
 	}
 }
