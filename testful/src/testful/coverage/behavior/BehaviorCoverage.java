@@ -61,7 +61,7 @@ public class BehaviorCoverage implements CoverageInformation {
 
 	private Map<Abstraction, Set<Operation>> stateMachine;
 
-	private BehaviorCoverage() {
+	public BehaviorCoverage() {
 		stateMachine = new LinkedHashMap<Abstraction, Set<Operation>>();
 		stateMachine.put(new AbstractionObjectReference("", true), new LinkedHashSet<Operation>());
 	}
@@ -224,7 +224,6 @@ public class BehaviorCoverage implements CoverageInformation {
 	 */
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
-		// TODO Auto-generated method stub
 		out.writeObject(stateMachine);
 	}
 
@@ -234,7 +233,6 @@ public class BehaviorCoverage implements CoverageInformation {
 	@Override
 	@SuppressWarnings("unchecked")
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-		// TODO Auto-generated method stub
 		stateMachine = (Map<Abstraction, Set<Operation>>) in.readObject();
 	}
 }
