@@ -76,7 +76,7 @@ public class CoverageBehavioralTestCase extends GenericTestCase {
 		assertNotNull(beh);
 		assertEquals(1.0f, beh.getQuality());
 		assertEquals("S0\n" +
-				"  <init>() - -> S1\n" +
+				"  <init>() -> S1\n" +
 				"--- Legend ---\n" +
 				"S0: Null Object\n" +
 				"S1: test.coverage.Behavior: {this.getN() = 0}\n", beh.toString());
@@ -717,7 +717,7 @@ public class CoverageBehavioralTestCase extends GenericTestCase {
 		assertNotNull(beh);
 		assertEquals(2.0f, beh.getQuality());
 		assertEquals("S0\n" +
-				"  <init>() - -> S1\n" +
+				"  <init>() -> S1\n" +
 				"S1\n" +
 				"  method1(II) - {-Inf < p0 < p1} -> S1\n" +
 				"--- Legend ---\n" +
@@ -740,7 +740,7 @@ public class CoverageBehavioralTestCase extends GenericTestCase {
 		assertNotNull(beh);
 		assertEquals(2.0f, beh.getQuality());
 		assertEquals("S0\n" +
-				"  <init>() - -> S1\n" +
+				"  <init>() -> S1\n" +
 				"S1\n" +
 				"  method2(Ljava.lang.Object;Ljava.lang.Object;) - {p0 == p1: true} {p0.equals(p1) is null} -> S1\n" +
 				"--- Legend ---\n" +
@@ -763,7 +763,7 @@ public class CoverageBehavioralTestCase extends GenericTestCase {
 		assertNotNull(beh);
 		assertEquals(2.0f, beh.getQuality());
 		assertEquals("S0\n" +
-				"  <init>() - -> S1\n" +
+				"  <init>() -> S1\n" +
 				"S1\n" +
 				"  method2(Ljava.lang.Object;Ljava.lang.Object;) - {p0 == p1: false} {p0.equals(p1): false} -> S1\n" +
 				"--- Legend ---\n" +
@@ -786,7 +786,7 @@ public class CoverageBehavioralTestCase extends GenericTestCase {
 		assertNotNull(beh);
 		assertEquals(2.0f, beh.getQuality());
 		assertEquals("S0\n" +
-				"  <init>() - -> S1\n" +
+				"  <init>() -> S1\n" +
 				"S1\n" +
 				"  method2(Ljava.lang.Object;Ljava.lang.Object;) - {p0 == p1: false} {p0.equals(p1) is null} -> S1\n" +
 				"--- Legend ---\n" +
@@ -809,7 +809,7 @@ public class CoverageBehavioralTestCase extends GenericTestCase {
 		assertNotNull(beh);
 		assertEquals(2.0f, beh.getQuality());
 		assertEquals("S0\n" +
-				"  <init>() - -> S1\n" +
+				"  <init>() -> S1\n" +
 				"S1\n" +
 				"  method2(Ljava.lang.Object;Ljava.lang.Object;) - {p0 == p1: false} {p0.equals(p1): false} -> S1\n" +
 				"--- Legend ---\n" +
@@ -831,7 +831,7 @@ public class CoverageBehavioralTestCase extends GenericTestCase {
 		assertNotNull(beh);
 		assertEquals(2.0f, beh.getQuality());
 		assertEquals("S0\n" +
-				"  <init>() - -> S1\n" +
+				"  <init>() -> S1\n" +
 				"S1\n" +
 				"  method2(Ljava.lang.Object;Ljava.lang.Object;) - {p0 == p1: true} {p0.equals(p1): true} -> S1\n" +
 				"--- Legend ---\n" +
@@ -860,7 +860,7 @@ public class CoverageBehavioralTestCase extends GenericTestCase {
 		assertNotNull(beh);
 		assertEquals(5.0f, beh.getQuality());
 		assertEquals("S0\n" +
-				"  <init>() - -> S1\n" +
+				"  <init>() -> S1\n" +
 				"S1\n" +
 				"  method3(Ljava.lang.String;Ljava.lang.String;) - {p0 == p1: true} {p0.equals(p1) is null} -> S1\n" +
 				"  method3(Ljava.lang.String;Ljava.lang.String;) - {p0 == p1: false} {p0.equals(p1) is null} -> S1\n" +
