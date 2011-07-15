@@ -107,6 +107,7 @@ public class Instrumenter {
 
 	private static final boolean preWriter           = false;
 	private static final boolean deadCodeRemoverPre  = true;
+	private static final boolean bvcWriter           = false;
 	private static final boolean instrumenter        = true;
 	private static final boolean postWriter          = false;
 	private static final boolean nopEliminator       = true;
@@ -144,7 +145,7 @@ public class Instrumenter {
 	}
 
 	@SuppressWarnings("unused")
-	public static void run(IConfigProject config, List<String> toInstrument, UnifiedInstrumentator ... instrumenters) {
+	public static void run(IConfigProject config, boolean bvc, List<String> toInstrument, UnifiedInstrumentator ... instrumenters) {
 
 		TestfulInstrumenter instr = null;
 
@@ -172,6 +173,23 @@ public class Instrumenter {
 			if(last == null) PackManager.v().getPack("jtp").add(new Transform(newPhase, ActiveBodyTransformer.v(UnreachableCodeEliminator.v())));
 			else PackManager.v().getPack("jtp").insertAfter(new Transform(newPhase, ActiveBodyTransformer.v(UnreachableCodeEliminator.v())), last);
 			last = newPhase;
+		}
+
+		if(bvc) {
+			logger.fine("Enabled phase: " + "jtp.bvc");
+			if(last == null) PackManager.v().getPack("jtp").add(new Transform("jtp.bvc", ActiveBodyTransformer.v(BoundaryValueCoverageTransformer.singleton)));
+			else PackManager.v().getPack("jtp").insertAfter(new Transform("jtp.bvc", ActiveBodyTransformer.v(BoundaryValueCoverageTransformer.singleton)), last);
+			last = "jtp.bvc";
+
+			logger.fine("Enabled phase: " + "jtp.bvcNopEliminator");
+			PackManager.v().getPack("jtp").insertAfter(new Transform("jtp.bvcNopEliminator", ActiveBodyTransformer.v(NopEliminator.v())), last);
+			last = "jtp.bvcNopEliminator";
+
+			if(bvcWriter) {
+				logger.fine("Enabled phase: " + "jtp.bvcWriter");
+				PackManager.v().getPack("jtp").insertAfter(new Transform("jtp.bvcWriter", ActiveBodyTransformer.v(JimpleWriter.singleton)), last);
+				last = "jtp.bvcWriter";
+			}
 		}
 
 		if(instrumenter) {

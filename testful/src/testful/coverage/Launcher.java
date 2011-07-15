@@ -112,6 +112,25 @@ public class Launcher {
 			return behavioralCoverage;
 		}
 
+		@Option(required = false, name = "-bvc", usage = "Enable Boundary Value Coverage")
+		private boolean boundaryValueCoverage;
+
+		/**
+		 * Check if the Boundary Value Coverage is enabled
+		 * @return true if the Boundary Value Coverage is enabled
+		 */
+		public boolean isBoundaryValueCoverage() {
+			return boundaryValueCoverage;
+		}
+
+		/**
+		 * Enables (or Disables) the Boundary Value Coverage is enabled
+		 * @param boundaryValueCoverage true to enable
+		 */
+		public void setBoundaryValueCoverage(boolean boundaryValueCoverage) {
+			this.boundaryValueCoverage = boundaryValueCoverage;
+		}
+
 		/**
 		 * @param project instrument the whole project
 		 */
@@ -221,9 +240,9 @@ public class Launcher {
 
 
 			if(config.stopperOnly) {
-				Instrumenter.run(config, toInstrument, testful.coverage.stopper.ExecutionStopperInstrumenter.singleton );
+				Instrumenter.run(config, false, toInstrument, testful.coverage.stopper.ExecutionStopperInstrumenter.singleton );
 			} else {
-				Instrumenter.run(config, toInstrument,
+				Instrumenter.run(config, config.isBoundaryValueCoverage(), toInstrument,
 						new testful.coverage.whiteBox.WhiteInstrumenter(config),
 						new testful.coverage.behavior.BehaviorInstrumenter(config),
 						testful.coverage.stopper.ExecutionStopperInstrumenter.singleton
