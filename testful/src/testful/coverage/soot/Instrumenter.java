@@ -110,10 +110,10 @@ public class Instrumenter {
 	private static final boolean bvcWriter           = false;
 	private static final boolean nphWriter           = false;
 	private static final boolean instrumenter        = true;
-	private static final boolean postWriter          = true;
+	private static final boolean postWriter          = false;
 	private static final boolean nopEliminator       = true;
 	private static final boolean deadCodeRemoverPost = true;
-	private static final boolean finalWriter         = true;
+	private static final boolean finalWriter         = false;
 
 	public static void prepare(IConfigProject config, List<String> toInstrument) {
 		String[] SOOT_CONF = new String[] { "-validate", "-keep-line-number", "-f", "c", "-output-dir", config.getDirInstrumented().getAbsolutePath() };
