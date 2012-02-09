@@ -131,6 +131,25 @@ public class Launcher {
 			this.boundaryValueCoverage = boundaryValueCoverage;
 		}
 
+		@Option(required = false, name = "-nullPointer", usage = "Enable Coverage of null pointers")
+		private boolean nullPointer;
+
+		/**
+		 * 
+		 * @return the nullPointer
+		 */
+		public boolean isNullPointerHandling() {
+			return nullPointer;
+		}
+
+		/**
+		 * @param nullPointerHandling the nullPointerHandling to set
+		 */
+		public void setNullPointerHandling(boolean nullPointerHandling) {
+			nullPointer = nullPointerHandling;
+		}
+
+
 		/**
 		 * @param project instrument the whole project
 		 */
@@ -240,13 +259,13 @@ public class Launcher {
 
 
 			if(config.stopperOnly) {
-				Instrumenter.run(config, false, toInstrument, testful.coverage.stopper.ExecutionStopperInstrumenter.singleton );
+				Instrumenter.run(config, false, false, toInstrument, testful.coverage.stopper.ExecutionStopperInstrumenter.singleton );
 			} else {
-				Instrumenter.run(config, config.isBoundaryValueCoverage(), toInstrument,
+				Instrumenter.run(config, config.isBoundaryValueCoverage(), config.isNullPointerHandling(), toInstrument,
 						new testful.coverage.whiteBox.WhiteInstrumenter(config),
 						new testful.coverage.behavior.BehaviorInstrumenter(config),
 						testful.coverage.stopper.ExecutionStopperInstrumenter.singleton
-				);
+						);
 			}
 
 		} catch (Exception e) {

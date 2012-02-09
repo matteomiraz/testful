@@ -49,6 +49,7 @@ import soot.IntegerType;
 import soot.Local;
 import soot.LongType;
 import soot.Modifier;
+import soot.NullType;
 import soot.PatchingChain;
 import soot.PrimType;
 import soot.RefLikeType;
@@ -434,6 +435,9 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 
 			return Condition.DataType.Reference;
 		}
+
+		if(type instanceof NullType)
+			return Condition.DataType.Reference;
 
 		if(type instanceof ArrayType)
 			return Condition.DataType.Array;
@@ -1809,7 +1813,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					newUnits.add(Jimple.v().newAssignStmt(
 							localDataAccessD,
 							Jimple.v().newInstanceFieldRef(fr.getBase(), tracker.makeRef())
-					));
+							));
 
 					newUnits.add(Jimple.v().newAssignStmt(
 							localDataAccessU,
@@ -1847,7 +1851,7 @@ public class WhiteInstrumenter implements UnifiedInstrumentator {
 					newUnits.add(Jimple.v().newAssignStmt(
 							localDataAccessD,
 							Jimple.v().newStaticFieldRef(tracker.makeRef())
-					));
+							));
 
 					newUnits.add(Jimple.v().newAssignStmt(
 							localDataAccessU,

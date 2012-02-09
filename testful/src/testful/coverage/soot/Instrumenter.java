@@ -108,11 +108,12 @@ public class Instrumenter {
 	private static final boolean preWriter           = false;
 	private static final boolean deadCodeRemoverPre  = true;
 	private static final boolean bvcWriter           = false;
+	private static final boolean nphWriter           = false;
 	private static final boolean instrumenter        = true;
-	private static final boolean postWriter          = false;
+	private static final boolean postWriter          = true;
 	private static final boolean nopEliminator       = true;
 	private static final boolean deadCodeRemoverPost = true;
-	private static final boolean finalWriter         = false;
+	private static final boolean finalWriter         = true;
 
 	public static void prepare(IConfigProject config, List<String> toInstrument) {
 		String[] SOOT_CONF = new String[] { "-validate", "-keep-line-number", "-f", "c", "-output-dir", config.getDirInstrumented().getAbsolutePath() };
@@ -145,7 +146,7 @@ public class Instrumenter {
 	}
 
 	@SuppressWarnings("unused")
-	public static void run(IConfigProject config, boolean bvc, List<String> toInstrument, UnifiedInstrumentator ... instrumenters) {
+	public static void run(IConfigProject config, boolean bvc, boolean nph, List<String> toInstrument, UnifiedInstrumentator ... instrumenters) {
 
 		TestfulInstrumenter instr = null;
 
@@ -189,6 +190,23 @@ public class Instrumenter {
 				logger.fine("Enabled phase: " + "jtp.bvcWriter");
 				PackManager.v().getPack("jtp").insertAfter(new Transform("jtp.bvcWriter", ActiveBodyTransformer.v(JimpleWriter.singleton)), last);
 				last = "jtp.bvcWriter";
+			}
+		}
+
+		if(nph) {
+			logger.fine("Enabled phase: " + "jtp.nph");
+			if(last == null) PackManager.v().getPack("jtp").add(new Transform("jtp.nph", ActiveBodyTransformer.v(NullPointerHandlingTransformer.singleton)));
+			else PackManager.v().getPack("jtp").insertAfter(new Transform("jtp.nph", ActiveBodyTransformer.v(NullPointerHandlingTransformer.singleton)), last);
+			last = "jtp.nph";
+
+			logger.fine("Enabled phase: " + "jtp.nphNopEliminator");
+			PackManager.v().getPack("jtp").insertAfter(new Transform("jtp.nphNopEliminator", ActiveBodyTransformer.v(NopEliminator.v())), last);
+			last = "jtp.nphNopEliminator";
+
+			if(nphWriter) {
+				logger.fine("Enabled phase: " + "jtp.nphWriter");
+				PackManager.v().getPack("jtp").insertAfter(new Transform("jtp.nphWriter", ActiveBodyTransformer.v(JimpleWriter.singleton)), last);
+				last = "jtp.nphWriter";
 			}
 		}
 

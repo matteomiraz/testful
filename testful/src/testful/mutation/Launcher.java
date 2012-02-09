@@ -52,10 +52,10 @@ public class Launcher {
 
 		ConfigHandler.track = config.isTrack();
 
-		Instrumenter.run(config, false, config.getGenMutant(),
+		Instrumenter.run(config, false, false, config.getGenMutant(),
 				ExecutionStopperInstrumenter.singleton,
 				new MutatorFunctions(config)
-		);
+				);
 	}
 
 	public static void run(ConfigMutation config) {
