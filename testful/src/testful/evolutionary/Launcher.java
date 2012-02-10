@@ -180,16 +180,28 @@ public class Launcher {
 			}
 		}
 
+		logger.info("Test generation completed.");
+
+		/** generated tests */
+		Collection<TestCoverage> tests = testfulProblem.getOptimalTests();
 
 		/* simplify tests */
-		final TestSuiteReducer reducer = new TestSuiteReducer(testfulProblem.getFinder(), config.isReloadClasses(), testfulProblem.getData());
-		for (TestCoverage t : testfulProblem.getOptimalTests())
-			reducer.process(t);
+		if(TestFul.getProperty(TestFul.PROPERTY_JUNIT_SIMPLIFY, true)) {
+			logger.info("Simplifying tests");
+
+			final TestSuiteReducer reducer = new TestSuiteReducer(testfulProblem.getFinder(), config.isReloadClasses(), testfulProblem.getData());
+			for (TestCoverage t : tests)
+				reducer.process(t);
+
+			tests = reducer.getOutput();
+		}
+
+		logger.info("Monitoring class behavior to generate oracles");
+		tests = OperationResultTestExecutor.execute(testfulProblem.getFinder(), tests, config.isReloadClasses());
 
 		/* convert tests to jUnit */
 		try {
-			Collection<TestCoverage> tests = OperationResultTestExecutor.execute(testfulProblem.getFinder(), reducer.getOutput(), config.isReloadClasses());
-
+			logger.info("Creating jUnit testcases");
 			JUnitTestGenerator gen = new JUnitTestGenerator(config.getDirGeneratedTests(), new RemoteClassLoader(testfulProblem.getFinder()), true);
 			gen.read(tests);
 			gen.writeSuite();
@@ -198,6 +210,7 @@ public class Launcher {
 			logger.log(Level.WARNING, "Remote exception (should never happen): " + e.toString(), e);
 		}
 
+		logger.info("All Done");
 	}//main
 
 	/**

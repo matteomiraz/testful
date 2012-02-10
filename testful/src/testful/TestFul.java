@@ -61,6 +61,9 @@ public class TestFul {
 	/** Enables the testful's fault detection feature (boolean; default: enabled) */
 	public static final String PROPERTY_FAULT_DETECT = "testful.fault";
 
+	/** Simplify generated tests (boolean; default: enabled) */
+	public static final String PROPERTY_JUNIT_SIMPLIFY = "testful.junit.simplify";
+
 	/** Create junit assertions (boolean; default: enabled) */
 	public static final String PROPERTY_JUNIT_ASSERTIONS = "testful.junit.assert";
 
