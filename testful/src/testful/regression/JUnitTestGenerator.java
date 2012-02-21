@@ -118,7 +118,8 @@ public class JUnitTestGenerator extends TestReader {
 			}
 		}
 
-		test = transformation.perform(test);
+		if(TestFul.getProperty(TestFul.PROPERTY_JUNIT_SIMPLIFY, true))
+			test = transformation.perform(test);
 
 		// add to a jUnit test
 		testCase.add(name, test);
