@@ -63,8 +63,6 @@ public class ReflectionExecutor {
 	private static final boolean LOGGER_FINER  = logger.isLoggable(Level.FINER);
 	private static final boolean LOGGER_FINEST = logger.isLoggable(Level.FINEST);
 
-	private static final long serialVersionUID = -1696826206324780022L;
-
 	/** The internal object repository */
 	private final Object[] repository;
 	private final Operation[] ops;
