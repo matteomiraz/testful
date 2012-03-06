@@ -35,6 +35,7 @@ import org.kohsuke.args4j.Option;
 import testful.ConfigProject;
 import testful.IConfigProject;
 import testful.TestFul;
+import testful.model.OperationResult;
 import testful.model.TestReader;
 import testful.model.executor.TestExecutor;
 import testful.model.executor.TestExecutorInput;
@@ -58,11 +59,14 @@ public class TestfulTestCase extends TestCase {
 
 	private static final Logger logger = Logger.getLogger("testful.regression");
 
+	private final boolean enableAssertions;
 	private final DataFinder finder;
 	private final List<String> tests;
 
 	public TestfulTestCase(Config config) throws ClassNotFoundException {
 		super("testFul"); // the name of the method to run
+
+		enableAssertions = !config.disableAssertions;
 
 		try {
 			finder = new DataFinderCaching(new DataFinderImpl(new ClassType(config)));
@@ -104,11 +108,12 @@ public class TestfulTestCase extends TestCase {
 
 				logger.info("Executing " + test.getTest().length + " operations, read from " + fileName);
 
-				// OperationResult.Verifier.insertOperationResultVerifier(test.getTest());
+				if(enableAssertions) OperationResult.Verifier.insertOperationResultVerifier(test.getTest());
+				else OperationResult.remove(test.getTest());
 
 				Job<TestExecutorInput, Boolean, FaultTestExecutor> ctx =
-					new Job<TestExecutorInput, Boolean, FaultTestExecutor>(
-							FaultTestExecutor.class, finder, new TestExecutorInput(test, true));
+						new Job<TestExecutorInput, Boolean, FaultTestExecutor>(
+								FaultTestExecutor.class, finder, new TestExecutorInput(test, true));
 
 				ctx.setReloadClasses(true);
 
@@ -133,8 +138,8 @@ public class TestfulTestCase extends TestCase {
 
 	public static class Config extends ConfigProject implements IConfigProject.Args4j {
 
-		@Option(required = false, name = "-exitOnBug", usage = "Exit when a bug is found")
-		public boolean exitOnBug;
+		@Option(required = false, name = "-disableAssertions", usage = "Do not use the recorded behavior to create assertions")
+		public boolean disableAssertions;
 
 		@Argument
 		public List<String> tests = new ArrayList<String>();
