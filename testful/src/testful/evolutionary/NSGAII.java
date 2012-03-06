@@ -138,7 +138,6 @@ implements IUpdate {
 
 		//Initialize the variables
 		population = new SolutionSet<V>(populationSize);
-		int evaluations = 0;
 
 		int currentGeneration = 0;
 		problem_.setCurrentGeneration(currentGeneration, 0);
@@ -150,7 +149,6 @@ implements IUpdate {
 
 		// Evaluating initial population
 		logger.info(String.format("(%5.2f%%) Generation 0 (initial population) - %s to go", getTerminationCriterion().getProgressPercent(), getTerminationCriterion().getRemaining()));
-		evaluations += problem_.evaluate(population);
 
 		for(Solution<V> solution : population)
 			problem_.evaluateConstraints(solution);
@@ -193,7 +191,6 @@ implements IUpdate {
 				mutationOperator.execute(offSpring[1]);
 				offspringPopulation.add(offSpring[0]);
 				offspringPopulation.add(offSpring[1]);
-				evaluations += 2;
 			}
 
 			// select individuals to evaluate
