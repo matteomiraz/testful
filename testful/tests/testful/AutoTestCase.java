@@ -102,7 +102,7 @@ public abstract class AutoTestCase extends GenericTestCase {
 	}
 
 	protected boolean autoTest(String cut, int size, long seed) throws Exception {
-		System.out.printf("[%40s] on %30s seed: %20d ", this.getClass().getSimpleName(), cut, seed);
+		System.out.printf("[%40s] on %30s size: %4d seed: %20d ", this.getClass().getSimpleName(), cut, size, seed);
 		System.out.flush();
 
 		Test orig = createRandomTest(cut, size, seed);
@@ -174,7 +174,7 @@ public abstract class AutoTestCase extends GenericTestCase {
 		int rLength = 0;
 		for(Test t : res) rLength += t.getTest().length;
 
-		return String.format("%3d --(%5.1fms)--> %3d", orig.getTest().length, (minStop - minStart)/1000000.0, rLength);
+		return String.format(" --(%5.1fms)--> %3d", orig.getTest().length, (minStop - minStart)/1000000.0, rLength);
 	}
 
 	private void checkSetup(ElementManager<String, CoverageInformation> origCov) throws TestFailedException {
