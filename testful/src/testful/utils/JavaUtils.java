@@ -21,6 +21,7 @@ package testful.utils;
 import java.io.File;
 import java.lang.reflect.Modifier;
 import java.util.BitSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.logging.Logger;
@@ -58,6 +59,26 @@ public class JavaUtils {
 
 		return true;
 
+	}
+
+	public static <T> int getIndex(Iterable<T> it, T elem) {
+		return getIndex(it.iterator(), elem);
+	}
+
+	public static <T> int getIndex(Iterator<T> it, T elem) {
+		int i = 0;
+		while(it.hasNext()) {
+			if(it.next() == elem) return i;
+			i++;
+		}
+		return -1;
+	}
+
+	public static <T> int getIndex(T[] array, T elem) {
+		for(int i = 0; i < array.length; i++)
+			if(array[i] == elem) return i;
+
+		return -1;
 	}
 
 	public static <T> int[] getIndexes(T[] array, T elem) {
