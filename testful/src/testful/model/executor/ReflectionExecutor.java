@@ -153,6 +153,8 @@ public class ReflectionExecutor {
 			} catch(Throwable e) {
 
 				if (e instanceof TestfulInternalException) {
+					TestFul.debug(e);
+
 					// clean the test execution
 					nPre++;
 					reset();
