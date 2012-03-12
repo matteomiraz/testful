@@ -174,7 +174,7 @@ public abstract class AutoTestCase extends GenericTestCase {
 		int rLength = 0;
 		for(Test t : res) rLength += t.getTest().length;
 
-		return String.format(" --(%5.1fms)--> %3d", orig.getTest().length, (minStop - minStart)/1000000.0, rLength);
+		return String.format(" --(%5.1fms)--> %3d", (minStop - minStart)/1000000.0, rLength);
 	}
 
 	private void checkSetup(ElementManager<String, CoverageInformation> origCov) throws TestFailedException {
