@@ -19,12 +19,14 @@
 package testful.model;
 
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import testful.TestFul;
@@ -204,6 +206,9 @@ public class OperationResult extends OperationInformation {
 
 								if(res != null && ser == null) Logger.getLogger("testful.model").warning("Cannot save object " + res.getClass().getName() + " returned by observer " + m);
 								else observers.put(m.getName(), ser);
+
+							} catch (InvocationTargetException e) {
+								Logger.getLogger("testful.model").log(Level.FINE, "Observer " + m + " throwed an exception " + e, e);
 
 							} catch (Throwable e) {
 								TestFul.debug(e);
