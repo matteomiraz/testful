@@ -31,23 +31,51 @@ public class ArrayTestCase extends GenericTestCase {
 		TestClusterBuilder clusterBuilder = new TestClusterBuilder(new RemoteClassLoader(GenericTestCase.getFinder()), config);
 		TestCluster cluster = clusterBuilder.getTestCluster();
 
-		assertEquals(2, cluster.getClusterSize());
+		// cluster.getCluster()
+		assertEquals(3, cluster.getCluster().length);
+		assertEquals("java.lang.Integer", cluster.getCluster()[0].toString());
+		assertEquals("test.model.Array", cluster.getCluster()[1].toString());
+		assertEquals("testful.intArray", cluster.getCluster()[2].toString());
 
-		final Clazz cut = cluster.getCut();
-		final Clazz iClass = cluster.getCluster(0);
-		assertEquals("java.lang.Integer", iClass.getClassName());
+		// cluster.getCut().getConstructors()
+		assertEquals(2, cluster.getCut().getConstructors().length);
+		assertEquals("test.model.Array()", cluster.getCut().getConstructors()[0].toString());
+		assertEquals("test.model.Array(testful.intArray)", cluster.getCut().getConstructors()[1].toString());
 
-		assertEquals(1, cut.getConstructors().length);
-		assertEquals(0, cut.getConstructors()[0].getParameterTypes().length);
+		// cluster.getCut().getMethods()
+		assertEquals(8, cluster.getCut().getMethods().length);
+		assertEquals("m1(testful.intArray)", cluster.getCut().getMethods()[0].toString());
+		assertEquals("m2(int)", cluster.getCut().getMethods()[1].toString());
+		assertEquals("m2_testful(int)", cluster.getCut().getMethods()[2].toString());
+		assertEquals("m3(testful.intArray)", cluster.getCut().getMethods()[3].toString());
+		assertEquals("m4(testful.intArray)", cluster.getCut().getMethods()[4].toString());
+		assertEquals("m5(int)", cluster.getCut().getMethods()[5].toString());
+		assertEquals("m5_testful(int)", cluster.getCut().getMethods()[6].toString());
+		assertEquals("m6(testful.intArray)", cluster.getCut().getMethods()[7].toString());
 
-		assertEquals(2, cut.getMethods().length);
-		assertEquals("m2", cut.getMethods()[0].getName());
-		assertEquals("m5", cut.getMethods()[1].getName());
+		// cluster.getCut().getConstants()
+		assertEquals(1, cluster.getCut().getConstants().length);
+		assertEquals("test.model.Array.a", cluster.getCut().getConstants()[0].toString());
 
-		assertEquals(1, cut.getConstants().length);
+		Clazz intArray = cluster.getCluster()[2];
+		// intArray.getConstructors()
+		assertEquals(2, intArray.getConstructors().length);
+		assertEquals("testful.intArray()", intArray.getConstructors()[0].toString());
+		assertEquals("testful.intArray(testful.intArray)", intArray.getConstructors()[1].toString());
 
-		assertEquals(4, iClass.getConstants().length);
-		assertEquals("test.model.Array.i", iClass.getConstants()[3].toString());
+		// intArray.getMethods()
+		assertEquals(9, intArray.getMethods().length);
+		assertEquals("addHead(int)", intArray.getMethods()[0].toString());
+		assertEquals("addTail(int)", intArray.getMethods()[1].toString());
+		assertEquals("delHead()", intArray.getMethods()[2].toString());
+		assertEquals("delTail()", intArray.getMethods()[3].toString());
+		assertEquals("set(int, int)", intArray.getMethods()[4].toString());
+		assertEquals("setHead(int)", intArray.getMethods()[5].toString());
+		assertEquals("setTail(int)", intArray.getMethods()[6].toString());
+		assertEquals("toArray()", intArray.getMethods()[7].toString());
+		assertEquals("toArray_testful()", intArray.getMethods()[8].toString());
+
+		// intArray.getConstants()
+		assertEquals(0, intArray.getConstants().length);
 	}
-
 }

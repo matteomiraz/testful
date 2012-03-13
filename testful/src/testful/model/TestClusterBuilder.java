@@ -166,7 +166,7 @@ public class TestClusterBuilder {
 			if(xmlMethod != null && !xmlMethod.isSkip()) {
 
 				Clazz returnType;
-				// ISSUE #1: if you need array support, vote here: http://code.google.com/p/testful/issues/detail?id=1
+				// ISSUE #1: if you need enum support, vote here: http://code.google.com/p/testful/issues/detail?id=1
 				if(meth.getReturnType() ==  Void.TYPE || meth.getReturnType().isArray() || meth.getReturnType().isEnum())
 					returnType = null;
 				else

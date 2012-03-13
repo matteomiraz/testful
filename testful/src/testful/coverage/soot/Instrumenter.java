@@ -21,9 +21,11 @@ package testful.coverage.soot;
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -48,6 +50,7 @@ import soot.jimple.Stmt;
 import soot.jimple.TableSwitchStmt;
 import soot.jimple.toolkits.scalar.NopEliminator;
 import soot.jimple.toolkits.scalar.UnreachableCodeEliminator;
+import soot.options.Options;
 import soot.tagkit.LineNumberTag;
 import soot.tagkit.StringTag;
 import soot.util.Chain;
@@ -145,7 +148,7 @@ public class Instrumenter {
 		SootMain.singleton.processCmdLine(params);
 	}
 
-	@SuppressWarnings("unused")
+	@SuppressWarnings({ "unused", "unchecked" })
 	public static void run(IConfigProject config, boolean bvc, boolean nph, List<String> toInstrument, UnifiedInstrumentator ... instrumenters) {
 
 		TestfulInstrumenter instr = null;
@@ -153,9 +156,21 @@ public class Instrumenter {
 		if(instrumenter) {
 			instr = new TestfulInstrumenter(instrumenters);
 
-			for(String className : toInstrument) {
+			Set<String> done = new HashSet<String>();
+			while(!toInstrument.isEmpty()) {
+				String className = toInstrument.remove(0);
 				Scene.v().loadClassAndSupport(className);
 				SootClass sClass = Scene.v().getSootClass(className);
+
+				List<String> addClasses = ArraySupport.addArraySupport(sClass);
+				for (String addClass : addClasses) {
+					if(done.contains(addClass)) continue;
+					if(toInstrument.contains(addClass)) continue;
+
+					toInstrument.add(addClass);
+					Options.v().classes().add(addClass);
+				}
+
 				instr.preprocess(sClass);
 			}
 		}
@@ -302,6 +317,8 @@ public class Instrumenter {
 		 * @param sClass the class being preprocessed
 		 */
 		public void preprocess(SootClass sClass) {
+			if(sClass.getName().startsWith("testful")) return;
+
 			if(sClass.isInterface()) {
 				logger.warning("Skipping " + sClass.getName() + ": it is an interface");
 				return;
@@ -316,6 +333,8 @@ public class Instrumenter {
 		protected void internalTransform(Body oldBody, String phaseName, Map options) {
 			final SootMethod method = oldBody.getMethod();
 			final String methodName = method.getName();
+
+			if(method.getDeclaringClass().getName().startsWith("testful")) return;
 
 			if(method.hasTag(Skip.NAME)) {
 				logger.fine("Skipping " + method.getName());

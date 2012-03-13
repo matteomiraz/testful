@@ -49,6 +49,8 @@ public class NullPointerHandlingTransformer extends BodyTransformer {
 	@Override
 	protected void internalTransform(Body body, String phaseName, @SuppressWarnings("rawtypes") Map options) {
 
+		if(body.getMethod().getDeclaringClass().getName().startsWith("testful")) return;
+
 		final Local thisLocal = body.getMethod().isStatic() ? null : body.getThisLocal();
 		List<Unit> toInsertForParams = new LinkedList<Unit>();
 

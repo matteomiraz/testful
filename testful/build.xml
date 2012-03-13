@@ -424,6 +424,7 @@
 			<arg value="apache.FractionNoStatic"/>
 			<arg value="test.coverage.Stopped"/>
 			<arg value="test.model.array.StringMatrix"/>
+			<arg value="test.model.Array"/>
 		</java>
 
 		<java jar="${artifacts}/instrumenter.jar" fork="true">

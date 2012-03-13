@@ -31,6 +31,10 @@ public interface PreconditionViolationException extends Serializable {
 
 		private static final long serialVersionUID = 7500467195429874425L;
 
+		public static void throwException() {
+			throw new Impl("Invalid precondition", null);
+		}
+
 		public Impl(String msg, Throwable e) {
 			super(msg, e);
 		}

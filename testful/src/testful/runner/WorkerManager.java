@@ -54,11 +54,14 @@ public class WorkerManager implements IWorkerManager, IJobRepository {
 	private final BlockingQueue<Job<?,?,?>> jobs;
 	private final Map<String, IJobRepository> results;
 
-	private final static int MAX_ELEMS = 20;
+	private final static int MAX_ELEMS = 3;
 	private final static long MIN_AGE = 15 * 60 * 1000; // 15 min
 	private final static long MIN_UNUSED = 5 * 60 * 1000; //  5 min
 
+	/** the datafinders. Key=dataFinder's key; Value=dataFinder */
 	private final CachingMap<String, DataFinder> finders;
+
+	/** Key=dataFinder's key; Value=queue of available classloader */
 	private final CachingMap<String, Queue<RemoteClassLoader>> classLoaders;
 
 	private AtomicLong executedJobs = new AtomicLong();

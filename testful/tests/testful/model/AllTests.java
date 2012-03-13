@@ -31,6 +31,7 @@ public class AllTests {
 		TestSuite suite = new TestSuite(AllTests.class.getName());
 
 		//$JUnit-BEGIN$
+		suite.addTestSuite(ArrayAdapterTestCase.class);
 		suite.addTestSuite(TestClusterTestCase.class);
 		suite.addTestSuite(RepeatableTestCase.class);
 		suite.addTestSuite(OptimalTestCase.class);

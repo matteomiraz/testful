@@ -88,6 +88,8 @@ public class BoundaryValueCoverageTransformer extends BodyTransformer {
 	@Override
 	protected void internalTransform(Body body, String phaseName, @SuppressWarnings("rawtypes") Map options) {
 
+		if(body.getMethod().getDeclaringClass().getName().startsWith("testful")) return;
+
 		AtomicInteger localProgressiveNumber = new AtomicInteger();
 
 		Iterator<Unit> it = body.getUnits().snapshotIterator();

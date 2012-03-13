@@ -121,7 +121,7 @@ public class StaticValue implements Serializable, Comparable<StaticValue> {
 		if(!Modifier.isPublic(modifiers)) return true;
 		if(!Modifier.isStatic(modifiers)) return true;
 
-		// ISSUE #1: if you need array support, vote here: http://code.google.com/p/testful/issues/detail?id=1
+		// ISSUE #1: if you need array or enum support, vote here: http://code.google.com/p/testful/issues/detail?id=1
 		if(field.getType().isArray()) return true;
 		if(field.getType().isEnum()) return true;
 
